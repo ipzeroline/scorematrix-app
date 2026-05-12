@@ -8,6 +8,7 @@ import { LeaderboardPreview } from "@/components/home/LeaderboardPreview";
 import { MissionsPreview } from "@/components/home/MissionsPreview";
 import { RewardsPreview } from "@/components/home/RewardsPreview";
 import { NewsSection } from "@/components/home/NewsSection";
+import { LOCALE_CODES } from "@/i18n";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -23,10 +24,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     keywords: t("keywords"),
     alternates: {
       canonical: `/${locale}`,
-      languages: {
-        th: "/th",
-        en: "/en",
-      },
+      languages: Object.fromEntries(
+        LOCALE_CODES.map((code) => [code, `/${code}`])
+      ),
     },
     openGraph: {
       title: t("title"),
@@ -91,13 +91,13 @@ export default async function DashboardPage() {
 
       <section className="rounded-xl border border-gray-800 bg-[#0a0a0f] p-5 md:p-6">
         <div className="max-w-4xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-400">
+          <p className="text-sm md:text-base font-semibold leading-relaxed tracking-normal text-cyan-300">
             {t("seoContent.eyebrow")}
           </p>
-          <h2 className="mt-2 font-display text-2xl font-bold text-white">
+          <h2 className="mt-2 font-display text-2xl md:text-3xl font-bold leading-tight text-white">
             {t("seoContent.title")}
           </h2>
-          <p className="mt-3 text-sm leading-6 text-gray-400">
+          <p className="mt-3 text-base leading-7 text-gray-300">
             {t("seoContent.description")}
           </p>
         </div>
