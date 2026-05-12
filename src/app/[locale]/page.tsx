@@ -9,6 +9,12 @@ import { MissionsPreview } from "@/components/home/MissionsPreview";
 import { RewardsPreview } from "@/components/home/RewardsPreview";
 import { NewsSection } from "@/components/home/NewsSection";
 import { LOCALE_CODES } from "@/i18n";
+import { MatchStatus } from "@/types/common";
+import {
+  loadFixturesForDate,
+  loadLiveFixtures,
+  pickRandomFixture,
+} from "@/lib/football-page-data";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -46,6 +52,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DashboardPage() {
   const t = await getTranslations("dashboard");
+  const [homepageFixtures, liveFixtures] = await Promise.all([
+    loadHomepageFixtures(),
+    loadLiveFixtures(),
+  ]);
+  const aiFixture =
+    pickRandomFixture(homepageFixtures.filter((fixture) => fixture.status === MatchStatus.UPCOMING)) ??
+    pickRandomFixture(homepageFixtures) ??
+    pickRandomFixture(liveFixtures);
 
   return (
     <div className="flex flex-col gap-8 pb-8">
@@ -56,12 +70,12 @@ export default async function DashboardPage() {
 
       {/* Live Match Highlights */}
       <section>
-        <LiveMatchHighlights />
+        <LiveMatchHighlights fixtures={liveFixtures} apiMode />
       </section>
 
       {/* Today's Matches */}
       <section>
-        <TodayMatches />
+        <TodayMatches fixtures={homepageFixtures} />
       </section>
 
       {/* AI Match of the Day */}
@@ -72,7 +86,7 @@ export default async function DashboardPage() {
         >
           {t("aiMatchOfTheDay")}
         </h2>
-        <AIMatchOfTheDay />
+        <AIMatchOfTheDay fixture={aiFixture} />
       </section>
 
       {/* Bottom 3-column grid: Leaderboard, Missions, Rewards */}
@@ -117,4 +131,8 @@ export default async function DashboardPage() {
       </section>
     </div>
   );
+}
+
+async function loadHomepageFixtures() {
+  return loadFixturesForDate(16);
 }

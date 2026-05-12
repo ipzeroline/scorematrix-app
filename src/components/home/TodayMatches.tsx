@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
+import type { ApiFootballFixture } from "@/lib/api-football";
 
 interface TodayMatch {
   id: string;
@@ -101,14 +103,24 @@ const allMatches: TodayMatch[] = [
 
 const leagues = ["All", "Premier", "La Liga", "Bundesliga", "Serie A", "Ligue 1"];
 
-export function TodayMatches() {
+interface TodayMatchesProps {
+  fixtures?: ApiFootballFixture[];
+}
+
+export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState("All");
+  const apiMatches = fixtures.map(mapFixtureToTodayMatch);
+  const matches = apiMatches.length > 0 ? apiMatches : allMatches;
+  const leagueTabs =
+    apiMatches.length > 0
+      ? ["All", ...Array.from(new Set(apiMatches.map((match) => match.league)))]
+      : leagues;
 
   const filtered =
     activeTab === "All"
-      ? allMatches
-      : allMatches.filter((m) => m.league === activeTab);
+      ? matches
+      : matches.filter((m) => m.league === activeTab);
 
   return (
     <div className="flex flex-col gap-4">
@@ -122,7 +134,7 @@ export function TodayMatches() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-        {leagues.map((league) => (
+        {leagueTabs.map((league) => (
           <button
             key={league}
             onClick={() => setActiveTab(league)}
@@ -162,9 +174,7 @@ export function TodayMatches() {
             {/* Teams */}
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-gray-700/50 flex items-center justify-center text-sm font-bold text-gray-300">
-                  {match.homeTeam.charAt(0)}
-                </div>
+                <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} />
                 <span className="text-xs text-gray-300 text-center leading-tight truncate w-full">
                   {match.homeTeam}
                 </span>
@@ -175,9 +185,7 @@ export function TodayMatches() {
               </span>
 
               <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-gray-700/50 flex items-center justify-center text-sm font-bold text-gray-300">
-                  {match.awayTeam.charAt(0)}
-                </div>
+                <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} />
                 <span className="text-xs text-gray-300 text-center leading-tight truncate w-full">
                   {match.awayTeam}
                 </span>
@@ -188,4 +196,24 @@ export function TodayMatches() {
       </div>
     </div>
   );
+}
+
+function mapFixtureToTodayMatch(fixture: ApiFootballFixture): TodayMatch {
+  return {
+    id: fixture.id,
+    homeTeam: fixture.home.name,
+    homeCrest: fixture.home.logo ?? "",
+    awayTeam: fixture.away.name,
+    awayCrest: fixture.away.logo ?? "",
+    kickoffTime: formatKickoff(fixture.kickoffTime),
+    league: fixture.league.name,
+    leagueEmoji: "",
+  };
+}
+
+function formatKickoff(value: string): string {
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }

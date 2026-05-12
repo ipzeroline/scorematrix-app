@@ -4,7 +4,9 @@ import { useRef, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types";
+import type { ApiFootballFixture } from "@/lib/api-football";
 
 interface LiveMatch {
   id: string;
@@ -16,6 +18,7 @@ interface LiveMatch {
   awayScore: number;
   minute: number;
   league: string;
+  status: MatchStatus;
 }
 
 const liveMatches: LiveMatch[] = [
@@ -29,6 +32,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 1,
     minute: 67,
     league: "Premier",
+    status: MatchStatus.LIVE,
   },
   {
     id: "live-2",
@@ -40,6 +44,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 1,
     minute: 34,
     league: "La Liga",
+    status: MatchStatus.LIVE,
   },
   {
     id: "live-3",
@@ -51,6 +56,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 0,
     minute: 52,
     league: "Bundesliga",
+    status: MatchStatus.LIVE,
   },
   {
     id: "live-4",
@@ -62,6 +68,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 0,
     minute: 15,
     league: "Serie A",
+    status: MatchStatus.LIVE,
   },
   {
     id: "live-5",
@@ -73,14 +80,31 @@ const liveMatches: LiveMatch[] = [
     awayScore: 2,
     minute: 78,
     league: "Ligue 1",
+    status: MatchStatus.LIVE,
   },
 ];
 
-export function LiveMatchHighlights() {
+interface LiveMatchHighlightsProps {
+  fixtures?: ApiFootballFixture[];
+  apiMode?: boolean;
+}
+
+export function LiveMatchHighlights({
+  fixtures = [],
+  apiMode = false,
+}: LiveMatchHighlightsProps) {
   const t = useTranslations();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const apiMatches = fixtures
+    .filter((fixture) => fixture.status === MatchStatus.LIVE)
+    .map(mapFixtureToLiveMatch);
+  const displayMatches = apiMode
+    ? apiMatches
+    : apiMatches.length > 0
+      ? apiMatches
+      : liveMatches;
 
   const updateScrollButtons = useCallback(() => {
     const el = scrollRef.current;
@@ -109,11 +133,15 @@ export function LiveMatchHighlights() {
           {t("dashboard.liveNow")}
         </h2>
         <span className="text-sm text-gray-400">
-          {t("dashboard.matchCount", { count: liveMatches.length })}
+          {t("dashboard.matchCount", { count: displayMatches.length })}
         </span>
       </div>
 
-      {/* Horizontal scroll wrapper */}
+      {displayMatches.length === 0 ? (
+        <Card className="border-gray-800/80 p-5 text-sm text-gray-400">
+          {t("livescore.noMatches")}
+        </Card>
+      ) : (
       <div className="relative">
         {canScrollLeft && (
           <button
@@ -144,7 +172,7 @@ export function LiveMatchHighlights() {
           className="flex gap-4 overflow-x-auto scrollbar-hide pb-1"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {liveMatches.map((match) => (
+          {displayMatches.map((match) => (
             <Card
               key={match.id}
               neon="cyan"
@@ -156,15 +184,13 @@ export function LiveMatchHighlights() {
                 <span className="text-[10px] text-gray-500 uppercase tracking-wider">
                   {match.league}
                 </span>
-                <StatusBadge status={MatchStatus.LIVE} />
+                <StatusBadge status={match.status} />
               </div>
 
               {/* Teams and score */}
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
-                    {match.homeTeam.charAt(0)}
-                  </div>
+                  <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
                   <span className="text-sm text-gray-300 text-center truncate w-full">
                     {match.homeTeam}
                   </span>
@@ -180,9 +206,7 @@ export function LiveMatchHighlights() {
                 </div>
 
                 <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
-                    {match.awayTeam.charAt(0)}
-                  </div>
+                  <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
                   <span className="text-sm text-gray-300 text-center truncate w-full">
                     {match.awayTeam}
                   </span>
@@ -192,6 +216,22 @@ export function LiveMatchHighlights() {
           ))}
         </div>
       </div>
+      )}
     </div>
   );
+}
+
+function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
+  return {
+    id: fixture.id,
+    homeTeam: fixture.home.name,
+    homeCrest: fixture.home.logo ?? "",
+    awayTeam: fixture.away.name,
+    awayCrest: fixture.away.logo ?? "",
+    homeScore: fixture.score.home ?? 0,
+    awayScore: fixture.score.away ?? 0,
+    minute: fixture.elapsed ?? 0,
+    league: fixture.league.name,
+    status: fixture.status,
+  };
 }

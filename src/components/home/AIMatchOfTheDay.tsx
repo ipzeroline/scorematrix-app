@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
+import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
+import type { ApiFootballFixture } from "@/lib/api-football";
 
 const matchOfTheDay = {
   matchId: "motd-1",
@@ -21,11 +23,17 @@ const matchOfTheDay = {
   awayWinProbability: 16,
 };
 
-export function AIMatchOfTheDay() {
+interface AIMatchOfTheDayProps {
+  fixture?: ApiFootballFixture;
+}
+
+export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
   const t = useTranslations();
   const {
     homeTeam,
+    homeCrest,
     awayTeam,
+    awayCrest,
     kickoffTime,
     league,
     leagueEmoji,
@@ -33,7 +41,7 @@ export function AIMatchOfTheDay() {
     homeWinProbability,
     drawProbability,
     awayWinProbability,
-  } = matchOfTheDay;
+  } = fixture ? mapFixtureToAiMatch(fixture) : matchOfTheDay;
   const keyFactors = [
     t("dashboard.aiFactors.homeForm"),
     t("dashboard.aiFactors.awayInjury"),
@@ -66,9 +74,7 @@ export function AIMatchOfTheDay() {
         <div className="flex items-center justify-center gap-6 mb-6">
           {/* Home team */}
           <div className="flex flex-col items-center gap-2">
-            <div className="w-16 h-16 rounded-full bg-gray-700/50 border-2 border-cyan-500/30 flex items-center justify-center text-xl font-bold text-white">
-              {homeTeam.charAt(0)}
-            </div>
+            <ApiTeamLogo name={homeTeam} logo={homeCrest} size="lg" accent="cyan" />
             <span className="text-sm font-semibold text-white text-center leading-tight">
               {homeTeam}
             </span>
@@ -87,9 +93,7 @@ export function AIMatchOfTheDay() {
 
           {/* Away team */}
           <div className="flex flex-col items-center gap-2">
-            <div className="w-16 h-16 rounded-full bg-gray-700/50 border-2 border-gray-700 flex items-center justify-center text-xl font-bold text-white">
-              {awayTeam.charAt(0)}
-            </div>
+            <ApiTeamLogo name={awayTeam} logo={awayCrest} size="lg" accent="gray" />
             <span className="text-sm font-semibold text-white text-center leading-tight">
               {awayTeam}
             </span>
@@ -172,4 +176,38 @@ export function AIMatchOfTheDay() {
       </div>
     </Card>
   );
+}
+
+function mapFixtureToAiMatch(fixture: ApiFootballFixture) {
+  const seed = fixture.id
+    .split("")
+    .reduce((total, char) => total + char.charCodeAt(0), 0);
+  const homeWinProbability = 42 + (seed % 22);
+  const drawProbability = 18 + (seed % 12);
+  const awayWinProbability = Math.max(
+    8,
+    100 - homeWinProbability - drawProbability
+  );
+
+  return {
+    matchId: fixture.id,
+    homeTeam: fixture.home.name,
+    homeCrest: fixture.home.logo ?? "",
+    awayTeam: fixture.away.name,
+    awayCrest: fixture.away.logo ?? "",
+    kickoffTime: formatKickoff(fixture.kickoffTime),
+    league: fixture.league.name,
+    leagueEmoji: "",
+    confidenceScore: Math.min(92, homeWinProbability + 22),
+    homeWinProbability,
+    drawProbability,
+    awayWinProbability,
+  };
+}
+
+function formatKickoff(value: string): string {
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
