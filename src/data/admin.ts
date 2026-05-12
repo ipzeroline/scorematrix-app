@@ -1,0 +1,41 @@
+import type { AdminStats, AdminLog } from '@/types/admin';
+
+export const adminStats: AdminStats = {
+  totalUsers: 12450,
+  activeUsersToday: 1892,
+  totalPredictions: 148230,
+  totalRedemptions: 234,
+  pendingRedemptions: 23,
+  totalPremiumRevenue: 45000,
+  fraudAlerts: 3,
+  apiSyncStatus: 'connected' as const,
+  lastSyncAt: '2026-05-12T14:30:00Z',
+};
+
+export const adminLogs: AdminLog[] = [
+  { id: 'log-001', action: 'user_login', userId: 'user-001', username: 'admin_master', detail: 'Admin login from dashboard', timestamp: new Date(Date.now() - 1 * 3600000).toISOString() },
+  { id: 'log-002', action: 'user_login', userId: 'user-002', username: 'mod_support', detail: 'Moderator login', timestamp: new Date(Date.now() - 2 * 3600000).toISOString() },
+  { id: 'log-003', action: 'prediction_created', userId: 'user-005', username: 'player5', detail: 'Placed prediction on match-018 (Atletico Madrid B vs Real Catalonia)', timestamp: new Date(Date.now() - 3 * 3600000).toISOString() },
+  { id: 'log-004', action: 'redemption_approved', userId: 'user-010', username: 'player10', detail: 'Approved redemption of reward-002 (ScoreMatrix Scarf)', timestamp: new Date(Date.now() - 8 * 86400000).toISOString() },
+  { id: 'log-005', action: 'redemption_cancelled', userId: 'user-013', username: 'player13', detail: 'Cancelled redemption of reward-005 (ScoreMatrix Hoodie) - insufficient stock', timestamp: new Date(Date.now() - 78 * 86400000).toISOString() },
+  { id: 'log-006', action: 'league_created', userId: 'user-025', username: 'player25', detail: 'Created private league "Asian Football Fans"', timestamp: new Date(Date.now() - 130 * 86400000).toISOString() },
+  { id: 'log-007', action: 'fraud_alert', userId: 'user-087', username: 'player87', detail: 'Suspicious prediction pattern detected: 15 consecutive exact score predictions within 60 seconds', timestamp: new Date(Date.now() - 12 * 3600000).toISOString() },
+  { id: 'log-008', action: 'user_banned', userId: 'user-099', username: 'player99', detail: 'Account banned for repeated terms of service violations', timestamp: new Date(Date.now() - 48 * 3600000).toISOString() },
+  { id: 'log-009', action: 'api_sync', userId: 'system', username: 'system', detail: 'Live match data sync completed for 15 matches', timestamp: new Date(Date.now() - 1 * 3600000).toISOString() },
+  { id: 'log-010', action: 'system_update', userId: 'system', username: 'system', detail: 'AI Insights 2.0 model deployed successfully', timestamp: new Date(Date.now() - 24 * 3600000).toISOString() },
+  { id: 'log-011', action: 'reward_created', userId: 'user-001', username: 'admin_master', detail: 'Added new reward: ScoreMatrix Hoodie', timestamp: new Date(Date.now() - 90 * 86400000).toISOString() },
+  { id: 'log-012', action: 'user_report', userId: 'user-034', username: 'player34', detail: 'Reported user-087 for suspicious prediction activity', timestamp: new Date(Date.now() - 13 * 3600000).toISOString() },
+  { id: 'log-013', action: 'mission_reset', userId: 'system', username: 'system', detail: 'Daily missions reset for all users', timestamp: new Date(Date.now() - 12 * 3600000).toISOString() },
+  { id: 'log-014', action: 'achievement_unlocked', userId: 'user-050', username: 'player50', detail: 'Unlocked achievement: Prophet (streak of 10)', timestamp: new Date(Date.now() - 6 * 3600000).toISOString() },
+  { id: 'log-015', action: 'league_join', userId: 'user-071', username: 'player71', detail: 'Joined private league "Weekend Warriors"', timestamp: new Date(Date.now() - 35 * 86400000).toISOString() },
+  { id: 'log-016', action: 'mission_claimed', userId: 'user-023', username: 'player23', detail: 'Claimed weekly mission reward: Prediction Machine (500 pts, 250 XP)', timestamp: new Date(Date.now() - 2 * 3600000).toISOString() },
+  { id: 'log-017', action: 'fraud_alert', userId: 'user-045', username: 'player45', detail: 'Multiple account detection: IP match with user-046 and user-047', timestamp: new Date(Date.now() - 36 * 3600000).toISOString() },
+  { id: 'log-018', action: 'leaderboard_update', userId: 'system', username: 'system', detail: 'Daily leaderboard calculated and published', timestamp: new Date(Date.now() - 0.5 * 3600000).toISOString() },
+  { id: 'log-019', action: 'prediction_locked', userId: 'system', username: 'system', detail: 'Bulk lock: 150 predictions locked for upcoming matches', timestamp: new Date(Date.now() - 0.1 * 3600000).toISOString() },
+  { id: 'log-020', action: 'admin_action', userId: 'user-001', username: 'admin_master', detail: 'Updated league tier for J1 League Japan', timestamp: new Date(Date.now() - 72 * 3600000).toISOString() },
+  { id: 'log-021', action: 'api_sync_error', userId: 'system', username: 'system', detail: 'Failed to sync live data for match-011: timeout after 30s. Retrying...', timestamp: new Date(Date.now() - 6 * 3600000).toISOString() },
+  { id: 'log-022', action: 'system_health', userId: 'system', username: 'system', detail: 'System health check: all services operational. CPU 45%, Memory 62%, DB connections 18/50', timestamp: new Date(Date.now() - 0.2 * 3600000).toISOString() },
+  { id: 'log-023', action: 'redemption_shipped', userId: 'user-007', username: 'player7', detail: 'Shipped redemption red-019 (ScoreMatrix Water Bottle) - tracking TRK-2024-7841-A', timestamp: new Date(Date.now() - 17 * 86400000).toISOString() },
+  { id: 'log-024', action: 'fraud_alert', userId: 'user-062', username: 'player62', detail: 'Credit card chargeback detected for premium credit purchase', timestamp: new Date(Date.now() - 72 * 3600000).toISOString() },
+  { id: 'log-025', action: 'news_published', userId: 'user-001', username: 'admin_master', detail: 'Published news article: "ScoreMatrix Major Update: AI Insights 2.0 Launches"', timestamp: new Date(Date.now() - 12 * 3600000).toISOString() },
+];

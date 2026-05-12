@@ -1,0 +1,456 @@
+{
+  "seo": {
+    "home": {
+      "title": "ScoreMatrix | ทายผลบอล ผลสด และรางวัล",
+      "description": "ScoreMatrix คือแพลตฟอร์มทายผลบอลแบบใช้ทักษะ พร้อมผลบอลสด AI วิเคราะห์ กระดานอันดับ ภารกิจ และรางวัลที่แลกได้ โดยไม่มีการพนันด้วยเงินจริง",
+      "keywords": "ทายผลบอล, วิเคราะห์บอลวันนี้, ผลบอลสด, AI วิเคราะห์ฟุตบอล, รางวัลฟุตบอล, กระดานอันดับทายผล, เกมทายผลใช้ทักษะ, แอปฟุตบอลไม่มีการพนัน"
+    },
+    "matches": {
+      "title": "การแข่งขัน | ตารางบอลและศูนย์รวมแมตช์ ScoreMatrix",
+      "description": "ดูการแข่งขันสด คู่ที่กำลังจะมาถึง และผลการแข่งขันย้อนหลังจากหลายลีก พร้อมฟอร์มทีม สถานะแมตช์ เวลาแข่ง และทางเข้าทายผลบน ScoreMatrix",
+      "keywords": "ตารางบอล, โปรแกรมบอล, แมตช์ฟุตบอล, บอลสด, คู่แข่งขันวันนี้, ตารางการแข่งขันฟุตบอล, ศูนย์รวมแมตช์, ScoreMatrix matches"
+    }
+  },
+  "common": {
+    "appName": "ScoreMatrix",
+    "tagline": "ทายผล. แข่งขัน. ชนะ.",
+    "freePoints": "แต้มฟรี",
+    "premiumCredits": "พรีเมียมเครดิต",
+    "noGambling": "ไม่มีการถอนเงินสด ไม่มีการพนันด้วยเงินจริง",
+    "loading": "กำลังโหลด...",
+    "error": "เกิดข้อผิดพลาด",
+    "retry": "ลองใหม่",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "confirm": "ยืนยัน",
+    "search": "ค้นหา",
+    "filter": "กรอง",
+    "important": "สำคัญ",
+    "or": "หรือ",
+    "vs": "VS",
+    "scrollLeft": "เลื่อนไปซ้าย",
+    "scrollRight": "เลื่อนไปขวา",
+    "viewAll": "ดูทั้งหมด",
+    "showMore": "แสดงเพิ่ม",
+    "showLess": "แสดงน้อยลง",
+    "close": "ปิด",
+    "back": "กลับ",
+    "next": "ถัดไป",
+    "previous": "ก่อนหน้า",
+    "today": "วันนี้",
+    "tomorrow": "พรุ่งนี้",
+    "yesterday": "เมื่อวาน",
+    "points": "แต้ม",
+    "credits": "เครดิต",
+    "disclaimer": "ScoreMatrix เป็นเกมทายผลที่ใช้ทักษะ แต้มไม่มีมูลค่าเป็นเงินสดและไม่สามารถถอนเป็นเงินได้"
+  },
+  "nav": {
+    "home": "หน้าแรก",
+    "livescore": "ผลสด",
+    "matches": "การแข่งขัน",
+    "livescoreShort": "สด",
+    "predict": "ทายผล",
+    "aiInsight": "AI วิเคราะห์",
+    "leaderboard": "อันดับ",
+    "missions": "ภารกิจ",
+    "rewards": "รางวัล",
+    "leagues": "ลีก",
+    "news": "ข่าวสาร",
+    "profile": "โปรไฟล์",
+    "wallet": "กระเป๋า",
+    "settings": "ตั้งค่า",
+    "admin": "ผู้ดูแล",
+    "rankShort": "อันดับ"
+  },
+  "auth": {
+    "login": "เข้าสู่ระบบ",
+    "register": "สมัครสมาชิก",
+    "logout": "ออกจากระบบ",
+    "email": "อีเมล",
+    "password": "รหัสผ่าน",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "username": "ชื่อผู้ใช้",
+    "noAccount": "ยังไม่มีบัญชี?",
+    "hasAccount": "มีบัญชีอยู่แล้ว?",
+    "loginSuccess": "เข้าสู่ระบบสำเร็จ",
+    "registerSuccess": "สร้างบัญชีสำเร็จ"
+  },
+  "dashboard": {
+    "heroTitle": "ทายผลบอล. รับแต้ม. แลกรางวัล.",
+    "heroSubtitle": "แพลตฟอร์มทายผลที่ใช้ทักษะขั้นสุด",
+    "liveNow": "แข่งขันสด",
+    "todayMatches": "การแข่งขันวันนี้",
+    "aiMatchOfTheDay": "คู่เด่นจาก AI",
+    "leaderboardPreview": "นักทายอันดับต้น",
+    "missionsPreview": "ภารกิจประจำวัน",
+    "rewardsPreview": "รางวัลแนะนำ",
+    "latestNews": "ข่าวสารและบทวิเคราะห์ล่าสุด",
+    "startPredicting": "เริ่มทายผล",
+    "viewAiInsight": "ดู AI วิเคราะห์",
+    "viewFullLeaderboard": "ดูอันดับทั้งหมด",
+    "viewAllRewards": "ดูรางวัลทั้งหมด",
+    "matchCount": "{count} คู่",
+    "completedCount": "สำเร็จ {progress}/{target}",
+    "stockLeft": "เหลือ {count}",
+    "daysAgo": "{count} วันที่แล้ว",
+    "xpToNextLevel": "อีก {xp} XP ถึงเลเวล {level}",
+    "heroSlides": {
+      "predict": {
+        "headline": "ทายผล. แข่งขัน. ชนะ.",
+        "subtitle": "เข้าร่วมแพลตฟอร์มทายผลบอล รับแต้ม ไต่อันดับ และแลกรางวัลสุดพิเศษ",
+        "cta": "เริ่มทายผล"
+      },
+      "ai": {
+        "headline": "วิเคราะห์การแข่งขันด้วย AI",
+        "subtitle": "ดูบทวิเคราะห์เชิงลึก คะแนนความมั่นใจ และความน่าจะเป็น เพื่อทายผลอย่างมั่นใจขึ้น",
+        "cta": "ดู AI วิเคราะห์"
+      },
+      "rewards": {
+        "headline": "สะสมแต้มแลกรางวัลพรีเมียม",
+        "subtitle": "ใช้แต้มและเครดิตแลกสินค้า บัตรกำนัลดิจิทัล และไอเท็มลิมิเต็ด",
+        "cta": "ดูรางวัล"
+      },
+      "goToSlide": "ไปยังสไลด์ {index}"
+    },
+    "aiFactors": {
+      "homeForm": "ฟอร์มเจ้าบ้าน: ชนะ 4 จาก 5 นัดล่าสุด",
+      "awayInjury": "ทีมเยือนขาดกองหน้าคนสำคัญจากอาการบาดเจ็บ",
+      "headToHead": "สถิติพบกัน: เจ้าบ้านชนะ 3 จาก 4 นัดล่าสุด",
+      "possession": "เจ้าบ้านได้เปรียบการครองบอล: ค่าเฉลี่ยฤดูกาล 58%"
+    },
+    "missions": {
+      "predict5": {
+        "title": "ทายผล 5 คู่",
+        "description": "ทายผลการแข่งขันใดก็ได้ให้ครบ 5 คู่วันนี้"
+      },
+      "perfectAccuracy": {
+        "title": "แม่นยำต่อเนื่อง",
+        "description": "ทายถูก 3 ครั้งติดต่อกัน"
+      },
+      "socialShare": {
+        "title": "แชร์กับชุมชน",
+        "description": "แชร์คำทายของคุณบนฟีดชุมชน"
+      }
+    },
+    "rewardItems": {
+      "jersey": {
+        "name": "เสื้อ ScoreMatrix",
+        "description": "เสื้อทีมรุ่นลิมิเต็ด"
+      },
+      "steam": {
+        "name": "บัตร Steam $10",
+        "description": "บัตรกำนัลเกมแบบดิจิทัล"
+      },
+      "badge": {
+        "name": "ตราทอง",
+        "description": "ตราโปรไฟล์สุดพิเศษ"
+      },
+      "scarf": {
+        "name": "ผ้าพันคอ Matchday",
+        "description": "ผ้าพันคอแบรนด์ ScoreMatrix"
+      }
+    },
+    "newsCategories": {
+      "analysis": "วิเคราะห์",
+      "news": "ข่าว",
+      "feature": "สกู๊ป",
+      "tips": "ทิปส์"
+    },
+    "newsItems": {
+      "aiChanging": {
+        "title": "AI กำลังเปลี่ยนการทายผลบอลอย่างไร",
+        "summary": "โมเดลแมชชีนเลิร์นนิงทำนายผลการแข่งขันได้ดีขึ้นกว่าเดิม นี่คือวิธีที่ ScoreMatrix ใช้ AI เพื่อช่วยให้คุณได้เปรียบ"
+      },
+      "unbeatenRun": {
+        "title": "London United ไร้พ่ายต่อเนื่อง 12 นัด",
+        "summary": "ผลงานครึ่งหลังที่เหนือกว่าช่วยให้จ่าฝูงคว้าชัยสบาย ๆ และเดินหน้าสู่ตำแหน่งแชมป์"
+      },
+      "topPredictors": {
+        "title": "10 นักทายยอดเยี่ยมประจำสัปดาห์",
+        "summary": "เราพาไปดูสมาชิกชุมชนที่มีความแม่นยำและสตรีคสูงที่สุดในสัปดาห์นี้"
+      },
+      "tips": {
+        "title": "5 เคล็ดลับทายผลบอลให้ดีขึ้น",
+        "summary": "ตั้งแต่การวิเคราะห์ฟอร์มจนถึงปัจจัยอาการบาดเจ็บ นี่คือกลยุทธ์ที่นำไปใช้ได้จริงเพื่อเพิ่มความแม่นยำ"
+      },
+      "transfer": {
+        "title": "ตลาดนักเตะ: ดีลใหญ่ล่าสุด",
+        "summary": "ตั้งแต่ดีลระดับบล็อกบัสเตอร์จนถึงการยืมตัวที่น่าประหลาดใจ เราสรุปการย้ายทีมที่ส่งผลมากที่สุด"
+      },
+      "xg": {
+        "title": "เข้าใจ xG: คู่มือจากข้อมูล",
+        "summary": "Expected goals หรือ xG คือหนึ่งในสถิติทรงพลังของฟุตบอลยุคใหม่ เรียนรู้วิธีใช้กับการทายผลของคุณ"
+      }
+    },
+    "seoContent": {
+      "eyebrow": "การทายผลบอลแบบใช้ทักษะ",
+      "title": "ทายผลบอล ผลบอลสด และรางวัลในแพลตฟอร์มเดียว",
+      "description": "ScoreMatrix รวมตารางแข่งขัน ผลบอลสด บทวิเคราะห์จาก AI ภารกิจทายผล และการแข่งขันบนกระดานอันดับไว้ในประสบการณ์เดียว ผู้เล่นสะสมแต้มจากความรู้ฟุตบอลและความสม่ำเสมอ แล้วนำแต้มไปแลกรางวัลดิจิทัลหรือสินค้า โดยไม่มีการถอนเงินสดหรือการพนันด้วยเงินจริง",
+      "cards": {
+        "predictions": {
+          "title": "ทายผลพร้อมข้อมูลประกอบ",
+          "text": "ดูฟอร์มทีม สถิติพบกัน เวลาแข่ง และคะแนนความมั่นใจจาก AI ก่อนส่งคำทาย"
+        },
+        "liveScores": {
+          "title": "ติดตามผลบอลสด",
+          "text": "ดูสถานะแมตช์ สกอร์สด และโปรแกรมแข่งขันจากลีกยุโรปและเอเชีย"
+        },
+        "rewards": {
+          "title": "รับรางวัลอย่างปลอดภัย",
+          "text": "ทำภารกิจ ไต่อันดับ และใช้แต้มแลกรางวัลที่ไม่ใช่เงินสดในแพลตฟอร์มความบันเทิงที่โปร่งใส"
+        }
+      }
+    }
+  },
+  "matches": {
+    "title": "การแข่งขัน",
+    "subtitle": "ศูนย์รวมแมตช์สำหรับดูบอลสด โปรแกรมที่กำลังจะมาถึง คู่เด่นสำหรับทายผล และผลย้อนหลังจากลีกที่รองรับ",
+    "mockupBadge": "Mockup ศูนย์รวมแมตช์",
+    "liveCenter": "ศูนย์บอลสด",
+    "featured": "คู่เด่น",
+    "boardTitle": "บอร์ดคู่เด่น",
+    "featureCards": {
+      "scheduleTitle": "มุมมองตารางครบถ้วน",
+      "scheduleText": "ดูโปรแกรมที่กำลังจะมาถึง พร้อมเวลาแข่ง บริบทลีก และลิงก์เข้าสู่การทายผล",
+      "noGamblingTitle": "ประสบการณ์เน้นทักษะ",
+      "noGamblingText": "การทายผลอิงจากความรู้ฟุตบอลและแต้มในแพลตฟอร์ม ไม่มีการเดิมพันด้วยเงินจริง",
+      "liveTitle": "สัญญาณสถานะแมตช์",
+      "liveText": "สแกนสถานะสด กำลังจะแข่ง และจบแล้วได้รวดเร็ว เหมาะกับวันที่มีหลายคู่พร้อมกัน"
+    }
+  },
+  "livescore": {
+    "title": "ผลการแข่งขันสด",
+    "allMatches": "ทั้งหมด",
+    "live": "สด",
+    "upcoming": "กำลังจะแข่ง",
+    "finished": "จบแล้ว",
+    "filterLeague": "กรองตามลีก",
+    "allLeagues": "ทุกลีก",
+    "searchTeams": "ค้นหาทีม...",
+    "tryAdjustingFilters": "ลองปรับตัวกรองของคุณ",
+    "filterCountry": "กรองตามประเทศ",
+    "filterTime": "กรองตามเวลา",
+    "noMatches": "ไม่พบการแข่งขัน",
+    "kickoff": "เริ่มแข่ง",
+    "fullTime": "จบ",
+    "minute": "'"
+  },
+  "matchDetail": {
+    "overview": "ภาพรวม",
+    "events": "เหตุการณ์",
+    "lineups": "ผู้เล่น",
+    "stats": "สถิติ",
+    "aiInsight": "AI วิเคราะห์",
+    "predict": "ทายผล",
+    "possession": "การครองบอล",
+    "shots": "การยิง",
+    "shotsOnTarget": "ยิงเข้ากรอบ",
+    "corners": "เตะมุม",
+    "fouls": "ฟาวล์",
+    "yellowCards": "ใบเหลือง",
+    "redCards": "ใบแดง",
+    "offsides": "ล้ำหน้า",
+    "passes": "การส่งบอล",
+    "passAccuracy": "ความแม่นยำการส่ง",
+    "formation": "แผนการเล่น",
+    "startingXI": "ตัวจริง",
+    "substitutes": "ตัวสำรอง",
+    "venue": "สนาม",
+    "round": "รอบที่"
+  },
+  "prediction": {
+    "title": "ทายผล",
+    "upcomingMatches": "การแข่งขันที่กำลังจะมาถึง",
+    "predictScore": "ทายสกอร์",
+    "predictResult": "ทายผล",
+    "homeWin": "เจ้าบ้านชนะ",
+    "draw": "เสมอ",
+    "awayWin": "ทีมเยือนชนะ",
+    "submitPrediction": "ส่งคำทาย",
+    "lockWarning": "คำทายจะล็อคเมื่อเริ่มการแข่งขัน",
+    "locked": "ล็อคแล้ว",
+    "predictionHistory": "ประวัติการทาย",
+    "yourPrediction": "คำทายของคุณ",
+    "actualResult": "ผลจริง",
+    "pointsEarned": "แต้มที่ได้รับ",
+    "noPredictions": "ยังไม่มีการทาย",
+    "correct": "ถูกต้อง",
+    "incorrect": "ไม่ถูกต้อง",
+    "partial": "ถูกบางส่วน",
+    "pending": "รอดำเนินการ",
+    "streak": "สตรีค",
+    "combo": "โบนัสคอมโบ",
+    "bestStreak": "สตรีคสูงสุด",
+    "streakCount": "สตรีค {count}",
+    "noUpcomingMatches": "ไม่มีคู่ที่กำลังจะมาถึง",
+    "checkBackLater": "กลับมาดูคู่ที่เปิดให้ทายภายหลัง",
+    "startPredictingHistory": "เริ่มทายผลเพื่อสร้างประวัติของคุณ",
+    "predicted": "ทายไว้"
+  },
+  "aiInsight": {
+    "title": "AI วิเคราะห์",
+    "confidenceScore": "ความมั่นใจ AI",
+    "matchHeat": "ความมันส์",
+    "probability": "ความน่าจะเป็นชนะ",
+    "homeAdvantage": "ความได้เปรียบเจ้าบ้าน",
+    "formComparison": "เปรียบเทียบฟอร์ม",
+    "headToHead": "สถิติที่ผ่านมา",
+    "injuryImpact": "ผลกระทบจากอาการบาดเจ็บ",
+    "upsetAlert": "แจ้งเตือนพลิกล็อค",
+    "communitySentiment": "ความคิดเห็นชุมชน",
+    "keyFactors": "ปัจจัยสำคัญ",
+    "last5": "5 นัดล่าสุด",
+    "highImpact": "ผลกระทบสูง",
+    "lowImpact": "ผลกระทบต่ำ",
+    "noData": "ไม่มีข้อมูลวิเคราะห์"
+  },
+  "gamification": {
+    "dailyMissions": "ภารกิจประจำวัน",
+    "weeklyMissions": "ภารกิจประจำสัปดาห์",
+    "missions": "ภารกิจ",
+    "achievements": "ความสำเร็จ",
+    "xp": "XP",
+    "level": "เลเวล",
+    "rank": "อันดับ",
+    "progress": "ความคืบหน้า",
+    "claim": "รับรางวัล",
+    "claimed": "รับแล้ว",
+    "complete": "เสร็จสิ้น",
+    "incomplete": "ยังไม่เสร็จ",
+    "resetIn": "รีเซ็ตใน",
+    "unlocked": "ปลดล็อคแล้ว",
+    "locked": "ล็อคอยู่"
+  },
+  "leaderboard": {
+    "title": "กระดานอันดับ",
+    "daily": "รายวัน",
+    "weekly": "รายสัปดาห์",
+    "seasonal": "รายฤดูกาล",
+    "rank": "อันดับ",
+    "user": "ผู้ใช้",
+    "points": "แต้ม",
+    "accuracy": "ความแม่นยำ",
+    "streak": "สตรีค",
+    "noEntries": "ยังไม่มีรายการ",
+    "yourPosition": "อันดับของคุณ"
+  },
+  "rewards": {
+    "title": "รางวัล",
+    "catalog": "แคตตาล็อกรางวัล",
+    "all": "ทั้งหมด",
+    "merchandise": "สินค้า",
+    "digital": "ดิจิทัล",
+    "cosmetic": "ของตกแต่ง",
+    "voucher": "บัตรกำนัล",
+    "freePointsCost": "แต้มฟรี",
+    "premiumCreditsCost": "พรีเมียมเครดิต",
+    "inStock": "มีสินค้า",
+    "outOfStock": "หมด",
+    "redeem": "แลก",
+    "redemptionHistory": "ประวัติการแลก",
+    "confirmRedemption": "ยืนยันการแลก",
+    "redemptionSuccess": "แลกรางวัลสำเร็จ",
+    "shippingStatus": "สถานะการจัดส่ง",
+    "trackingNumber": "หมายเลขติดตาม",
+    "estimatedDelivery": "วันที่จัดส่งโดยประมาณ",
+    "noRedemptions": "ยังไม่มีการแลก",
+    "disclaimerFull": "แต้มไม่สามารถแลกเป็นเงินสดได้ รางวัลเป็นสินค้าและของดิจิทัลเท่านั้น ScoreMatrix เป็นแพลตฟอร์มทายผลที่ใช้ทักษะ ไม่ใช่บริการพนัน",
+    "insufficientPoints": "แต้มไม่เพียงพอ",
+    "insufficientCredits": "เครดิตไม่เพียงพอ"
+  },
+  "leagues": {
+    "title": "ลีกส่วนตัว",
+    "myLeagues": "ลีกของฉัน",
+    "joinLeague": "เข้าร่วมลีก",
+    "createLeague": "สร้างลีก",
+    "inviteCode": "รหัสเชิญ",
+    "members": "สมาชิก",
+    "leagueName": "ชื่อลีก",
+    "maxMembers": "สมาชิกสูงสุด",
+    "noLeagues": "ยังไม่มีลีก"
+  },
+  "news": {
+    "title": "ข่าวสารและบทวิเคราะห์",
+    "readMore": "อ่านต่อ",
+    "minRead": "นาที",
+    "by": "โดย",
+    "noArticles": "ไม่พบบทความ"
+  },
+  "profile": {
+    "title": "โปรไฟล์",
+    "editProfile": "แก้ไขโปรไฟล์",
+    "myStats": "สถิติของฉัน",
+    "totalPredictions": "การทายทั้งหมด",
+    "accuracy": "ความแม่นยำ",
+    "currentStreak": "สตรีคปัจจุบัน",
+    "bestStreak": "สตรีคสูงสุด",
+    "achievements": "ความสำเร็จ",
+    "recentPredictions": "การทายล่าสุด"
+  },
+  "wallet": {
+    "title": "กระเป๋าและแต้ม",
+    "freePointsTitle": "แต้มทายผลฟรี",
+    "freePointsDesc": "ได้รับจากการทายผล ภารกิจ และความสำเร็จ ใช้แลกรางวัล",
+    "premiumCreditsTitle": "พรีเมียมเครดิต",
+    "premiumCreditsDesc": "ซื้อเพิ่มสำหรับของตกแต่งพิเศษ ไม่จำเป็นสำหรับฟีเจอร์หลัก",
+    "earningHistory": "ประวัติการได้รับ",
+    "spendingHistory": "ประวัติการใช้",
+    "noTransactions": "ยังไม่มีรายการ",
+    "legalNotice": "แต้มฟรีและพรีเมียมเครดิตไม่มีมูลค่าเป็นเงินสด ไม่สามารถถอน โอน หรือแลกเป็นเงินจริงได้ ScoreMatrix เป็นแพลตฟอร์มความบันเทิงที่ใช้ทักษะ"
+  },
+  "settings": {
+    "title": "ตั้งค่า",
+    "language": "ภาษา",
+    "notifications": "การแจ้งเตือนทางอีเมล",
+    "publicProfile": "โปรไฟล์สาธารณะ",
+    "darkMode": "โหมดมืด",
+    "saved": "บันทึกการตั้งค่าแล้ว",
+    "notificationsDesc": "แจ้งเตือนการแข่งขันและอัปเดตรางวัล",
+    "publicProfileDesc": "แสดงบนกระดานอันดับ",
+    "alwaysEnabled": "เปิดใช้งานตลอด",
+    "on": "เปิด",
+    "saveSettings": "บันทึกการตั้งค่า"
+  },
+  "admin": {
+    "dashboard": "แดชบอร์ดผู้ดูแล",
+    "users": "จัดการผู้ใช้",
+    "matches": "จัดการการแข่งขัน",
+    "rewardsAdmin": "จัดการรางวัล",
+    "scores": "ตั้งค่าคะแนน",
+    "languages": "จัดการภาษา",
+    "banners": "จัดการแบนเนอร์",
+    "redemption": "ตรวจสอบการแลก",
+    "fraud": "ตรวจสอบทุจริต",
+    "apiSync": "สถานะ API",
+    "totalUsers": "ผู้ใช้ทั้งหมด",
+    "activeUsersToday": "ใช้งานวันนี้",
+    "totalPredictions": "การทายทั้งหมด",
+    "pendingRedemptions": "การแลกที่รอดำเนินการ",
+    "fraudAlerts": "การแจ้งเตือนทุจริต",
+    "connected": "เชื่อมต่อแล้ว",
+    "degraded": "ลดประสิทธิภาพ",
+    "disconnected": "ไม่ได้เชื่อมต่อ"
+  },
+  "legal": {
+    "terms": "ข้อตกลงการใช้งาน",
+    "privacy": "นโยบายความเป็นส่วนตัว",
+    "rewardRules": "กฎการรับรางวัล",
+    "legalNotice": "ประกาศทางกฎหมาย",
+    "faq": "คำถามที่พบบ่อย",
+    "contact": "ติดต่อเรา",
+    "about": "เกี่ยวกับ ScoreMatrix"
+  },
+  "footer": {
+    "platform": "แพลตฟอร์ม",
+    "features": "ฟีเจอร์",
+    "legal": "กฎหมาย",
+    "copyright": "© {year} ScoreMatrix สงวนลิขสิทธิ์"
+  },
+  "status": {
+    "live": "สด",
+    "upcoming": "กำลังจะแข่ง",
+    "finished": "จบแล้ว",
+    "postponed": "เลื่อน",
+    "cancelled": "ยกเลิก"
+  }
+}
