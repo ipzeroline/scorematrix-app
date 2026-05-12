@@ -17,10 +17,15 @@ export default function SettingsPage() {
   const [publicProfile, setPublicProfile] = useState(true);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    if (language !== locale) {
-      router.push(pathname.replace(`/${locale}`, `/${language}`));
+  const switchLanguage = (newLocale: string) => {
+    setLanguage(newLocale);
+
+    if (newLocale !== locale) {
+      router.push(pathname.replace(`/${locale}`, `/${newLocale}`));
     }
+  };
+
+  const handleSave = () => {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -41,7 +46,7 @@ export default function SettingsPage() {
         </div>
         <select
           value={language}
-          onChange={(e) => setLanguage(e.target.value)}
+          onChange={(e) => switchLanguage(e.target.value)}
           className="w-full rounded-lg border border-gray-700 bg-[#0a0a0f] px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 cursor-pointer"
         >
           {LOCALES.map((l) => (

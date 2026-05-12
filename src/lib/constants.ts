@@ -36,7 +36,4 @@ export const POINTS = {
   comboMultiplier: 1.5,
 } as const;
 
-export const LOCALES = [
-  { code: "th", label: "Thai", native: "ไทย" },
-  { code: "en", label: "English", native: "English" },
-] as const;
+export { LOCALES } from "@/i18n";

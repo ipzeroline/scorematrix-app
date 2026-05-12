@@ -19,8 +19,8 @@
   --color-red: #ef4444;
   --color-purple: #8b5cf6;
   --color-purple-dim: #7c3aed;
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-space-grotesk);
+  --font-sans: var(--font-inter), "Noto Sans Thai", "Noto Sans Lao", "Noto Sans Myanmar", "Noto Sans Khmer", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  --font-display: var(--font-space-grotesk), var(--font-sans);
 }
 
 * {
@@ -28,6 +28,7 @@
 }
 
 html {
+  font-size: 17px;
   scroll-behavior: smooth;
 }
 
@@ -35,8 +36,24 @@ body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:lang(th),
+:lang(lo),
+:lang(my),
+:lang(km),
+:lang(zh) {
+  line-height: 1.72;
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 18px;
+  }
 }
 
 /* Scrollbar */

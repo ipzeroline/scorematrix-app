@@ -1,0 +1,456 @@
+{
+  "seo": {
+    "home": {
+      "title": "ScoreMatrix | Football Predictions, Live Scores and Rewards",
+      "description": "ScoreMatrix is a skill-based football prediction platform with live scores, AI match insights, leaderboards, missions and redeemable rewards. No real money gambling.",
+      "keywords": "football predictions, soccer predictions, live scores, AI football analysis, football rewards, prediction leaderboard, skill-based prediction game, no gambling football app"
+    },
+    "matches": {
+      "title": "Matches | ScoreMatrix Football Schedule and Live Match Center",
+      "description": "Explore live, upcoming and finished football matches across global leagues with form trends, match status, kickoff times and prediction entry points on ScoreMatrix.",
+      "keywords": "football matches, match schedule, live football matches, upcoming matches, football fixtures, soccer fixtures, match center, ScoreMatrix matches"
+    }
+  },
+  "common": {
+    "appName": "ScoreMatrix",
+    "tagline": "ទស្សន៍ទាយ។ ប្រកួតប្រជែង។ ឈ្នះ។",
+    "freePoints": "ពិន្ទុឥតគិតថ្លៃ",
+    "premiumCredits": "ក្រេឌីតព្រីមៀម",
+    "noGambling": "មិនអាចដកសាច់ប្រាក់បាន។ មិនមានល្បែងស៊ីសងប្រាក់ពិត។",
+    "loading": "កំពុងផ្ទុក...",
+    "error": "មានបញ្ហាកើតឡើង",
+    "retry": "សាកល្បងម្តងទៀត",
+    "save": "រក្សាទុក",
+    "cancel": "បោះបង់",
+    "confirm": "បញ្ជាក់",
+    "search": "ស្វែងរក",
+    "filter": "តម្រង",
+    "important": "សំខាន់",
+    "or": "ឬ",
+    "vs": "VS",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "viewAll": "មើលទាំងអស់",
+    "showMore": "Show More",
+    "showLess": "Show Less",
+    "close": "បិទ",
+    "back": "ត្រឡប់ក្រោយ",
+    "next": "បន្ទាប់",
+    "previous": "មុន",
+    "today": "ថ្ងៃនេះ",
+    "tomorrow": "ថ្ងៃស្អែក",
+    "yesterday": "ម្សិលមិញ",
+    "points": "ពិន្ទុ",
+    "credits": "ក្រេឌីត",
+    "disclaimer": "ScoreMatrix គឺជាហ្គេមទស្សន៍ទាយដែលផ្អែកលើជំនាញ។ ពិន្ទុគ្មានតម្លៃជាសាច់ប្រាក់ និងមិនអាចដកជាលុយបានទេ។"
+  },
+  "nav": {
+    "home": "ទំព័រដើម",
+    "livescore": "ពិន្ទុផ្ទាល់",
+    "matches": "ការប្រកួត",
+    "livescoreShort": "ផ្ទាល់",
+    "predict": "ទស្សន៍ទាយ",
+    "aiInsight": "វិភាគ AI",
+    "leaderboard": "តារាងចំណាត់ថ្នាក់",
+    "missions": "បេសកកម្ម",
+    "rewards": "រង្វាន់",
+    "leagues": "លីគ",
+    "news": "ព័ត៌មាន",
+    "profile": "ប្រវត្តិរូប",
+    "wallet": "កាបូប",
+    "settings": "ការកំណត់",
+    "admin": "អ្នកគ្រប់គ្រង",
+    "rankShort": "Rank"
+  },
+  "auth": {
+    "login": "ចូលប្រើ",
+    "register": "ចុះឈ្មោះ",
+    "logout": "ចាកចេញ",
+    "email": "អ៊ីមែល",
+    "password": "ពាក្យសម្ងាត់",
+    "confirmPassword": "Confirm Password",
+    "username": "ឈ្មោះអ្នកប្រើ",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Account created successfully"
+  },
+  "dashboard": {
+    "heroTitle": "ទស្សន៍ទាយបាល់ទាត់។ ទទួលពិន្ទុ។ ប្ដូររង្វាន់។",
+    "heroSubtitle": "វេទិកាទស្សន៍ទាយផ្អែកលើជំនាញ",
+    "liveNow": "កំពុងផ្សាយផ្ទាល់",
+    "todayMatches": "ការប្រកួតថ្ងៃនេះ",
+    "aiMatchOfTheDay": "គូប្រកួត AI ប្រចាំថ្ងៃ",
+    "leaderboardPreview": "អ្នកទស្សន៍ទាយកំពូល",
+    "missionsPreview": "បេសកកម្មប្រចាំថ្ងៃ",
+    "rewardsPreview": "រង្វាន់ណែនាំ",
+    "latestNews": "ព័ត៌មាន និងវិភាគថ្មីៗ",
+    "startPredicting": "ចាប់ផ្តើមទស្សន៍ទាយ",
+    "viewAiInsight": "មើលវិភាគ AI",
+    "viewFullLeaderboard": "មើលតារាងពេញ",
+    "viewAllRewards": "មើលរង្វាន់ទាំងអស់",
+    "matchCount": "{count} ប្រកួត",
+    "completedCount": "បានបញ្ចប់ {progress}/{target}",
+    "stockLeft": "នៅសល់ {count}",
+    "daysAgo": "{count} ថ្ងៃមុន",
+    "xpToNextLevel": "ត្រូវការ {xp} XP ដល់កម្រិត {level}",
+    "heroSlides": {
+      "predict": {
+        "headline": "ទស្សន៍ទាយ។ ប្រកួតប្រជែង។ ឈ្នះ។",
+        "subtitle": "ចូលរួមវេទិកាទស្សន៍ទាយបាល់ទាត់ ទទួលពិន្ទុ ឡើងចំណាត់ថ្នាក់ និងប្ដូររង្វាន់។",
+        "cta": "ចាប់ផ្តើមទស្សន៍ទាយ"
+      },
+      "ai": {
+        "headline": "វិភាគការប្រកួតដោយ AI",
+        "subtitle": "ទទួលបានការវិភាគស៊ីជម្រៅ ពិន្ទុជំនឿចិត្ត និងប្រូបាប៊ីលីតេឈ្នះ។",
+        "cta": "មើលវិភាគ AI"
+      },
+      "rewards": {
+        "headline": "ទទួលរង្វាន់ព្រីមៀម",
+        "subtitle": "ប្ដូរពិន្ទុ និងក្រេឌីតសម្រាប់ទំនិញ ប័ណ្ណឌីជីថល និងវត្ថុកំណត់។",
+        "cta": "មើលរង្វាន់"
+      },
+      "goToSlide": "Go to slide {index}"
+    },
+    "aiFactors": {
+      "homeForm": "Home form: 4 wins in last 5 matches",
+      "awayInjury": "Away team missing key striker due to injury",
+      "headToHead": "Head-to-head: Home team won 3 of last 4 meetings",
+      "possession": "Home possession advantage: 58% season average"
+    },
+    "missions": {
+      "predict5": {
+        "title": "Predict 5 Matches",
+        "description": "Make predictions for any 5 matches today."
+      },
+      "perfectAccuracy": {
+        "title": "Perfect Accuracy",
+        "description": "Get 3 predictions correct in a row."
+      },
+      "socialShare": {
+        "title": "Social Share",
+        "description": "Share your prediction on the community feed."
+      }
+    },
+    "rewardItems": {
+      "jersey": {
+        "name": "ScoreMatrix Jersey",
+        "description": "Limited edition team jersey"
+      },
+      "steam": {
+        "name": "$10 Steam Voucher",
+        "description": "Digital gaming voucher"
+      },
+      "badge": {
+        "name": "Golden Badge",
+        "description": "Exclusive profile badge"
+      },
+      "scarf": {
+        "name": "Matchday Scarf",
+        "description": "ScoreMatrix branded scarf"
+      }
+    },
+    "newsCategories": {
+      "analysis": "Analysis",
+      "news": "News",
+      "feature": "Feature",
+      "tips": "Tips"
+    },
+    "newsItems": {
+      "aiChanging": {
+        "title": "How AI Is Changing Football Predictions",
+        "summary": "Machine learning models are now better than ever at predicting match outcomes. Here is how ScoreMatrix leverages AI to give you the edge."
+      },
+      "unbeatenRun": {
+        "title": "London United Extends Unbeaten Run to 12",
+        "summary": "A dominant second-half performance sealed a comfortable win for the league leaders as they continue their march toward the title."
+      },
+      "topPredictors": {
+        "title": "Top 10 Predictors This Week: Who Is on Fire?",
+        "summary": "We spotlight the community members with the highest accuracy and streak records this week."
+      },
+      "tips": {
+        "title": "5 Tips for Better Match Predictions",
+        "summary": "From analyzing form tables to factoring in injuries, here are five actionable strategies to improve your prediction accuracy."
+      },
+      "transfer": {
+        "title": "Transfer Window: Biggest Moves So Far",
+        "summary": "From blockbuster signings to surprise loan deals, we break down the most impactful moves of the transfer window."
+      },
+      "xg": {
+        "title": "Understanding xG: A Data-Driven Guide",
+        "summary": "Expected goals (xG) is one of the most powerful metrics in modern football. Learn how to use it in your predictions."
+      }
+    },
+    "seoContent": {
+      "eyebrow": "Skill-based football predictions",
+      "title": "Football match predictions, live scores and rewards in one platform",
+      "description": "ScoreMatrix brings match schedules, live football scores, AI-powered insight, prediction missions and leaderboard competition into one skill-based experience. Players earn points through football knowledge and consistency, then redeem those points for digital and merchandise rewards without cash withdrawal or real-money gambling.",
+      "cards": {
+        "predictions": {
+          "title": "Predict with context",
+          "text": "Review team form, head-to-head notes, kickoff times and AI confidence before submitting your match prediction."
+        },
+        "liveScores": {
+          "title": "Track live scores",
+          "text": "Follow live match status, scores and upcoming fixtures across European and Asian football leagues."
+        },
+        "rewards": {
+          "title": "Earn rewards safely",
+          "text": "Complete missions, climb leaderboards and redeem points for non-cash rewards in a transparent entertainment platform."
+        }
+      }
+    }
+  },
+  "matches": {
+    "title": "ការប្រកួត",
+    "subtitle": "មជ្ឈមណ្ឌលការប្រកួតសម្រាប់ពិន្ទុផ្ទាល់ កាលវិភាគ ការទស្សន៍ទាយ និងលទ្ធផល។",
+    "mockupBadge": "Match Center Mockup",
+    "liveCenter": "មជ្ឈមណ្ឌលផ្ទាល់",
+    "featured": "គូពិសេស",
+    "boardTitle": "Featured Match Board",
+    "featureCards": {
+      "scheduleTitle": "Full schedule view",
+      "scheduleText": "Browse upcoming fixtures with kickoff windows, league context and direct prediction links.",
+      "noGamblingTitle": "Skill-first experience",
+      "noGamblingText": "Match predictions are based on football knowledge and platform points, with no real money wagering.",
+      "liveTitle": "Live status signals",
+      "liveText": "Scan live, upcoming and finished status quickly so the match list stays useful during busy game days."
+    }
+  },
+  "livescore": {
+    "title": "ពិន្ទុផ្ទាល់",
+    "allMatches": "ការប្រកួតទាំងអស់",
+    "live": "ផ្ទាល់",
+    "upcoming": "នឹងមកដល់",
+    "finished": "បានបញ្ចប់",
+    "filterLeague": "Filter by League",
+    "allLeagues": "All Leagues",
+    "searchTeams": "ស្វែងរកក្រុម...",
+    "tryAdjustingFilters": "Try adjusting your filters.",
+    "filterCountry": "Filter by Country",
+    "filterTime": "Filter by Time",
+    "noMatches": "No matches found",
+    "kickoff": "Kickoff",
+    "fullTime": "FT",
+    "minute": "'"
+  },
+  "matchDetail": {
+    "overview": "Overview",
+    "events": "Events",
+    "lineups": "Lineups",
+    "stats": "Match Stats",
+    "aiInsight": "AI Insight",
+    "predict": "Predict",
+    "possession": "Possession",
+    "shots": "Shots",
+    "shotsOnTarget": "Shots on Target",
+    "corners": "Corners",
+    "fouls": "Fouls",
+    "yellowCards": "Yellow Cards",
+    "redCards": "Red Cards",
+    "offsides": "Offsides",
+    "passes": "Passes",
+    "passAccuracy": "Pass Accuracy",
+    "formation": "Formation",
+    "startingXI": "Starting XI",
+    "substitutes": "Substitutes",
+    "venue": "Venue",
+    "round": "Round"
+  },
+  "prediction": {
+    "title": "ការទស្សន៍ទាយ",
+    "upcomingMatches": "Upcoming Matches",
+    "predictScore": "ទស្សន៍ទាយពិន្ទុ",
+    "predictResult": "Predict Result",
+    "homeWin": "ម្ចាស់ផ្ទះឈ្នះ",
+    "draw": "ស្មើ",
+    "awayWin": "ភ្ញៀវឈ្នះ",
+    "submitPrediction": "Submit Prediction",
+    "lockWarning": "Predictions lock at kickoff",
+    "locked": "Locked",
+    "predictionHistory": "Prediction History",
+    "yourPrediction": "Your Prediction",
+    "actualResult": "Actual Result",
+    "pointsEarned": "Points Earned",
+    "noPredictions": "No predictions yet",
+    "correct": "Correct",
+    "incorrect": "Incorrect",
+    "partial": "Partial",
+    "pending": "Pending",
+    "streak": "Streak",
+    "combo": "Combo Bonus",
+    "bestStreak": "Best Streak",
+    "streakCount": "{count} streak",
+    "noUpcomingMatches": "No upcoming matches",
+    "checkBackLater": "Check back later for matches to predict.",
+    "startPredictingHistory": "Start predicting matches to build your history.",
+    "predicted": "Predicted"
+  },
+  "aiInsight": {
+    "title": "វិភាគ AI",
+    "confidenceScore": "AI Confidence",
+    "matchHeat": "Match Heat",
+    "probability": "Win Probability",
+    "homeAdvantage": "Home Advantage",
+    "formComparison": "Form Comparison",
+    "headToHead": "Head-to-Head",
+    "injuryImpact": "Injury Impact",
+    "upsetAlert": "Upset Alert",
+    "communitySentiment": "Community Sentiment",
+    "keyFactors": "Key Factors",
+    "last5": "Last 5",
+    "highImpact": "High Impact",
+    "lowImpact": "Low Impact",
+    "noData": "No insight data available"
+  },
+  "gamification": {
+    "dailyMissions": "បេសកកម្មប្រចាំថ្ងៃ",
+    "weeklyMissions": "Weekly Missions",
+    "missions": "Missions",
+    "achievements": "Achievements",
+    "xp": "XP",
+    "level": "Level",
+    "rank": "Rank",
+    "progress": "Progress",
+    "claim": "Claim",
+    "claimed": "Claimed",
+    "complete": "Complete",
+    "incomplete": "Incomplete",
+    "resetIn": "Resets in",
+    "unlocked": "Unlocked",
+    "locked": "Locked"
+  },
+  "leaderboard": {
+    "title": "តារាងចំណាត់ថ្នាក់",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "seasonal": "Seasonal",
+    "rank": "Rank",
+    "user": "User",
+    "points": "Points",
+    "accuracy": "Accuracy",
+    "streak": "Streak",
+    "noEntries": "No entries yet",
+    "yourPosition": "Your Position"
+  },
+  "rewards": {
+    "title": "រង្វាន់",
+    "catalog": "Reward Catalog",
+    "all": "All",
+    "merchandise": "Merchandise",
+    "digital": "Digital",
+    "cosmetic": "Cosmetic",
+    "voucher": "Voucher",
+    "freePointsCost": "Free Points",
+    "premiumCreditsCost": "Premium Credits",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "redeem": "ប្ដូរ",
+    "redemptionHistory": "Redemption History",
+    "confirmRedemption": "Confirm Redemption",
+    "redemptionSuccess": "Redemption Successful",
+    "shippingStatus": "Shipping Status",
+    "trackingNumber": "Tracking Number",
+    "estimatedDelivery": "Estimated Delivery",
+    "noRedemptions": "No redemptions yet",
+    "disclaimerFull": "Points cannot be exchanged for cash. Rewards are merchandise and digital goods only. ScoreMatrix is a skill-based prediction platform, not a gambling service.",
+    "insufficientPoints": "Insufficient Points",
+    "insufficientCredits": "Insufficient Credits"
+  },
+  "leagues": {
+    "title": "Private Leagues",
+    "myLeagues": "My Leagues",
+    "joinLeague": "Join League",
+    "createLeague": "Create League",
+    "inviteCode": "Invite Code",
+    "members": "Members",
+    "leagueName": "League Name",
+    "maxMembers": "Max Members",
+    "noLeagues": "No leagues yet"
+  },
+  "news": {
+    "title": "News & Analysis",
+    "readMore": "Read More",
+    "minRead": "min read",
+    "by": "by",
+    "noArticles": "No articles found"
+  },
+  "profile": {
+    "title": "Profile",
+    "editProfile": "Edit Profile",
+    "myStats": "My Stats",
+    "totalPredictions": "Total Predictions",
+    "accuracy": "Accuracy",
+    "currentStreak": "Current Streak",
+    "bestStreak": "Best Streak",
+    "achievements": "Achievements",
+    "recentPredictions": "Recent Predictions"
+  },
+  "wallet": {
+    "title": "Wallet & Points",
+    "freePointsTitle": "Free Prediction Points",
+    "freePointsDesc": "Earned through predictions, missions, and achievements. Redeem for rewards.",
+    "premiumCreditsTitle": "Premium Credits",
+    "premiumCreditsDesc": "Optional purchase for exclusive cosmetic items. Not required for core features.",
+    "earningHistory": "Earning History",
+    "spendingHistory": "Spending History",
+    "noTransactions": "No transactions yet",
+    "legalNotice": "Free Points and Premium Credits have no cash value. They cannot be withdrawn, transferred, or exchanged for real money. ScoreMatrix is a skill-based entertainment platform."
+  },
+  "settings": {
+    "title": "ការកំណត់",
+    "language": "ភាសា",
+    "notifications": "Email Notifications",
+    "publicProfile": "Public Profile",
+    "darkMode": "Dark Mode",
+    "saved": "Settings saved",
+    "notificationsDesc": "Match reminders and reward updates",
+    "publicProfileDesc": "Show on leaderboards",
+    "alwaysEnabled": "Always enabled",
+    "on": "ON",
+    "saveSettings": "Save Settings"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "users": "User Management",
+    "matches": "Match Management",
+    "rewardsAdmin": "Reward Management",
+    "scores": "Score Configuration",
+    "languages": "Language Management",
+    "banners": "Banner Management",
+    "redemption": "Redemption Audit",
+    "fraud": "Fraud Monitoring",
+    "apiSync": "API Sync Status",
+    "totalUsers": "Total Users",
+    "activeUsersToday": "Active Today",
+    "totalPredictions": "Total Predictions",
+    "pendingRedemptions": "Pending Redemptions",
+    "fraudAlerts": "Fraud Alerts",
+    "connected": "Connected",
+    "degraded": "Degraded",
+    "disconnected": "Disconnected"
+  },
+  "legal": {
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy",
+    "rewardRules": "Reward Rules",
+    "legalNotice": "Legal Notice",
+    "faq": "FAQ",
+    "contact": "Contact Us",
+    "about": "About ScoreMatrix"
+  },
+  "footer": {
+    "platform": "វេទិកា",
+    "features": "មុខងារ",
+    "legal": "ផ្លូវច្បាប់",
+    "copyright": "© {year} ScoreMatrix. All rights reserved."
+  },
+  "status": {
+    "live": "ផ្ទាល់",
+    "upcoming": "នឹងមកដល់",
+    "finished": "បានបញ្ចប់",
+    "postponed": "POSTPONED",
+    "cancelled": "CANCELLED"
+  }
+}

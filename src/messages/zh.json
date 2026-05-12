@@ -1,0 +1,456 @@
+{
+  "seo": {
+    "home": {
+      "title": "ScoreMatrix | 足球预测、即时比分与奖励",
+      "description": "ScoreMatrix 是一个以技巧为核心的足球预测平台，提供即时比分、AI 赛事分析、排行榜、任务和可兑换奖励。不涉及真钱赌博。",
+      "keywords": "足球预测, 即时比分, AI 足球分析, 足球奖励, 预测排行榜, 技巧型预测游戏, 无赌博足球应用"
+    },
+    "matches": {
+      "title": "比赛 | ScoreMatrix 足球赛程与即时赛事中心",
+      "description": "在 ScoreMatrix 浏览全球联赛的直播、即将开始和已结束比赛，包括球队状态、比赛时间和预测入口。",
+      "keywords": "足球比赛, 赛程, 即时比分, 即将开始比赛, 足球赛程, 比赛中心, ScoreMatrix matches"
+    }
+  },
+  "common": {
+    "appName": "ScoreMatrix",
+    "tagline": "预测。竞争。获胜。",
+    "freePoints": "免费积分",
+    "premiumCredits": "高级点数",
+    "noGambling": "不可提现。不涉及真钱赌博。",
+    "loading": "加载中...",
+    "error": "出现错误",
+    "retry": "重试",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "search": "搜索",
+    "filter": "筛选",
+    "important": "重要",
+    "or": "或",
+    "vs": "VS",
+    "scrollLeft": "向左滚动",
+    "scrollRight": "向右滚动",
+    "viewAll": "查看全部",
+    "showMore": "显示更多",
+    "showLess": "收起",
+    "close": "关闭",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "today": "今天",
+    "tomorrow": "明天",
+    "yesterday": "昨天",
+    "points": "积分",
+    "credits": "点数",
+    "disclaimer": "ScoreMatrix 是技巧型预测游戏。积分没有现金价值，也不能提现。"
+  },
+  "nav": {
+    "home": "首页",
+    "livescore": "即时比分",
+    "matches": "比赛",
+    "livescoreShort": "直播",
+    "predict": "预测",
+    "aiInsight": "AI 分析",
+    "leaderboard": "排行榜",
+    "missions": "任务",
+    "rewards": "奖励",
+    "leagues": "联赛",
+    "news": "新闻",
+    "profile": "资料",
+    "wallet": "钱包",
+    "settings": "设置",
+    "admin": "管理",
+    "rankShort": "排名"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出登录",
+    "email": "电子邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "username": "用户名",
+    "noAccount": "还没有账号？",
+    "hasAccount": "已有账号？",
+    "loginSuccess": "登录成功",
+    "registerSuccess": "账号创建成功"
+  },
+  "dashboard": {
+    "heroTitle": "预测足球。赚取积分。领取奖励。",
+    "heroSubtitle": "终极技巧型预测平台",
+    "liveNow": "正在直播",
+    "todayMatches": "今日比赛",
+    "aiMatchOfTheDay": "今日 AI 推荐比赛",
+    "leaderboardPreview": "顶级预测者",
+    "missionsPreview": "每日任务",
+    "rewardsPreview": "精选奖励",
+    "latestNews": "最新新闻与分析",
+    "startPredicting": "开始预测",
+    "viewAiInsight": "查看 AI 分析",
+    "viewFullLeaderboard": "查看完整排行榜",
+    "viewAllRewards": "查看全部奖励",
+    "matchCount": "{count} 场比赛",
+    "completedCount": "已完成 {progress}/{target}",
+    "stockLeft": "剩余 {count}",
+    "daysAgo": "{count} 天前",
+    "xpToNextLevel": "还需 {xp} XP 到达等级 {level}",
+    "heroSlides": {
+      "predict": {
+        "headline": "预测。竞争。获胜。",
+        "subtitle": "加入足球预测平台，赚取积分，冲击排行榜并兑换专属奖励。",
+        "cta": "开始预测"
+      },
+      "ai": {
+        "headline": "AI 驱动的赛事分析",
+        "subtitle": "通过信心分和胜率获得深入分析，用数据做出更聪明的预测。",
+        "cta": "探索 AI 分析"
+      },
+      "rewards": {
+        "headline": "赢取高级奖励",
+        "subtitle": "用积分和点数兑换周边、数字礼券和限量物品。",
+        "cta": "查看奖励"
+      },
+      "goToSlide": "转到第 {index} 张"
+    },
+    "aiFactors": {
+      "homeForm": "主队状态：近 5 场赢 4 场",
+      "awayInjury": "客队关键前锋因伤缺阵",
+      "headToHead": "交锋记录：主队近 4 次赢 3 次",
+      "possession": "主队控球优势：赛季平均 58%"
+    },
+    "missions": {
+      "predict5": {
+        "title": "预测 5 场比赛",
+        "description": "今天完成任意 5 场比赛预测。"
+      },
+      "perfectAccuracy": {
+        "title": "连续准确",
+        "description": "连续 3 次预测正确。"
+      },
+      "socialShare": {
+        "title": "社区分享",
+        "description": "在社区动态分享你的预测。"
+      }
+    },
+    "rewardItems": {
+      "jersey": {
+        "name": "ScoreMatrix 球衣",
+        "description": "限量版球队球衣"
+      },
+      "steam": {
+        "name": "$10 Steam 礼品卡",
+        "description": "数字游戏礼券"
+      },
+      "badge": {
+        "name": "金色徽章",
+        "description": "专属资料徽章"
+      },
+      "scarf": {
+        "name": "比赛日围巾",
+        "description": "ScoreMatrix 品牌围巾"
+      }
+    },
+    "newsCategories": {
+      "analysis": "分析",
+      "news": "新闻",
+      "feature": "专题",
+      "tips": "技巧"
+    },
+    "newsItems": {
+      "aiChanging": {
+        "title": "AI 如何改变足球预测",
+        "summary": "机器学习模型现在比以往更擅长预测比赛结果。了解 ScoreMatrix 如何利用 AI 帮你获得优势。"
+      },
+      "unbeatenRun": {
+        "title": "London United 将不败纪录扩大到 12 场",
+        "summary": "强势的下半场表现帮助榜首球队轻松取胜，继续向冠军迈进。"
+      },
+      "topPredictors": {
+        "title": "本周十大预测高手",
+        "summary": "我们聚焦本周准确率和连胜纪录最高的社区成员。"
+      },
+      "tips": {
+        "title": "提升比赛预测的 5 个技巧",
+        "summary": "从球队状态到伤病因素，这些实用策略可以提高你的预测准确率。"
+      },
+      "transfer": {
+        "title": "转会窗口：目前最大转会",
+        "summary": "从重磅签约到意外租借，我们解析最有影响力的转会。"
+      },
+      "xg": {
+        "title": "理解 xG：数据指南",
+        "summary": "预期进球 xG 是现代足球最强大的指标之一。学习如何用于预测。"
+      }
+    },
+    "seoContent": {
+      "eyebrow": "技巧型足球预测",
+      "title": "足球预测、即时比分和奖励集中在一个平台",
+      "description": "ScoreMatrix 将赛程、即时比分、AI 分析、预测任务和排行榜竞争整合为一个技巧型体验。玩家通过足球知识和稳定表现赚取积分，并兑换数字或实体奖励，无现金提现或真钱赌博。",
+      "cards": {
+        "predictions": {
+          "title": "带着数据预测",
+          "text": "提交预测前查看球队状态、交锋记录、开赛时间和 AI 信心分。"
+        },
+        "liveScores": {
+          "title": "追踪即时比分",
+          "text": "关注欧洲和亚洲联赛的比赛状态、比分和赛程。"
+        },
+        "rewards": {
+          "title": "安全赢取奖励",
+          "text": "完成任务、冲榜并用积分兑换非现金奖励。"
+        }
+      }
+    }
+  },
+  "matches": {
+    "title": "比赛",
+    "subtitle": "用于查看直播、赛程、精选预测和近期赛果的高效赛事中心。",
+    "mockupBadge": "赛事中心预览",
+    "liveCenter": "直播中心",
+    "featured": "精选",
+    "boardTitle": "精选比赛看板",
+    "featureCards": {
+      "scheduleTitle": "完整赛程视图",
+      "scheduleText": "浏览即将开始的比赛，包括开赛时间、联赛背景和预测入口。",
+      "noGamblingTitle": "以技巧为先的体验",
+      "noGamblingText": "比赛预测基于足球知识和平台积分，不涉及真钱下注。",
+      "liveTitle": "实时状态信号",
+      "liveText": "快速查看直播、即将开始和已结束状态，适合比赛密集的日子。"
+    }
+  },
+  "livescore": {
+    "title": "即时比分",
+    "allMatches": "全部比赛",
+    "live": "直播",
+    "upcoming": "即将开始",
+    "finished": "已结束",
+    "filterLeague": "按联赛筛选",
+    "allLeagues": "全部联赛",
+    "searchTeams": "搜索球队...",
+    "tryAdjustingFilters": "请尝试调整筛选条件。",
+    "filterCountry": "按国家筛选",
+    "filterTime": "按时间筛选",
+    "noMatches": "未找到比赛",
+    "kickoff": "开赛",
+    "fullTime": "全场",
+    "minute": "'"
+  },
+  "matchDetail": {
+    "overview": "概览",
+    "events": "事件",
+    "lineups": "阵容",
+    "stats": "比赛数据",
+    "aiInsight": "AI Insight",
+    "predict": "预测",
+    "possession": "控球率",
+    "shots": "射门",
+    "shotsOnTarget": "射正",
+    "corners": "角球",
+    "fouls": "犯规",
+    "yellowCards": "黄牌",
+    "redCards": "红牌",
+    "offsides": "越位",
+    "passes": "传球",
+    "passAccuracy": "传球成功率",
+    "formation": "阵型",
+    "startingXI": "首发阵容",
+    "substitutes": "替补",
+    "venue": "场地",
+    "round": "轮次"
+  },
+  "prediction": {
+    "title": "预测",
+    "upcomingMatches": "即将开始的比赛",
+    "predictScore": "预测比分",
+    "predictResult": "预测结果",
+    "homeWin": "主胜",
+    "draw": "平局",
+    "awayWin": "客胜",
+    "submitPrediction": "提交预测",
+    "lockWarning": "预测将在开赛时锁定",
+    "locked": "已锁定",
+    "predictionHistory": "预测历史",
+    "yourPrediction": "你的预测",
+    "actualResult": "实际结果",
+    "pointsEarned": "获得积分",
+    "noPredictions": "还没有预测",
+    "correct": "正确",
+    "incorrect": "错误",
+    "partial": "部分正确",
+    "pending": "待定",
+    "streak": "连续",
+    "combo": "连击奖励",
+    "bestStreak": "最佳连续",
+    "streakCount": "{count} 连续",
+    "noUpcomingMatches": "暂无即将开始的比赛",
+    "checkBackLater": "稍后再来查看可预测比赛。",
+    "startPredictingHistory": "开始预测比赛来建立历史记录。",
+    "predicted": "已预测"
+  },
+  "aiInsight": {
+    "title": "AI 分析",
+    "confidenceScore": "AI 信心",
+    "matchHeat": "比赛热度",
+    "probability": "获胜概率",
+    "homeAdvantage": "主场优势",
+    "formComparison": "状态对比",
+    "headToHead": "交锋记录",
+    "injuryImpact": "伤病影响",
+    "upsetAlert": "冷门提醒",
+    "communitySentiment": "社区倾向",
+    "keyFactors": "关键因素",
+    "last5": "近 5 场",
+    "highImpact": "高影响",
+    "lowImpact": "低影响",
+    "noData": "暂无分析数据"
+  },
+  "gamification": {
+    "dailyMissions": "每日任务",
+    "weeklyMissions": "每周任务",
+    "missions": "任务",
+    "achievements": "成就",
+    "xp": "XP",
+    "level": "等级",
+    "rank": "排名",
+    "progress": "进度",
+    "claim": "领取",
+    "claimed": "已领取",
+    "complete": "完成",
+    "incomplete": "未完成",
+    "resetIn": "重置于",
+    "unlocked": "已解锁",
+    "locked": "已锁定"
+  },
+  "leaderboard": {
+    "title": "排行榜",
+    "daily": "每日",
+    "weekly": "每周",
+    "seasonal": "赛季",
+    "rank": "排名",
+    "user": "用户",
+    "points": "积分",
+    "accuracy": "准确率",
+    "streak": "连续",
+    "noEntries": "暂无记录",
+    "yourPosition": "你的位置"
+  },
+  "rewards": {
+    "title": "奖励",
+    "catalog": "奖励目录",
+    "all": "全部",
+    "merchandise": "周边",
+    "digital": "数字",
+    "cosmetic": "装饰",
+    "voucher": "礼券",
+    "freePointsCost": "免费积分",
+    "premiumCreditsCost": "高级点数",
+    "inStock": "有库存",
+    "outOfStock": "缺货",
+    "redeem": "兑换",
+    "redemptionHistory": "兑换历史",
+    "confirmRedemption": "确认兑换",
+    "redemptionSuccess": "兑换成功",
+    "shippingStatus": "配送状态",
+    "trackingNumber": "追踪号码",
+    "estimatedDelivery": "预计送达",
+    "noRedemptions": "暂无兑换",
+    "disclaimerFull": "积分不能兑换现金。奖励仅限商品和数字物品。ScoreMatrix 是技巧型预测平台，不是赌博服务。",
+    "insufficientPoints": "积分不足",
+    "insufficientCredits": "点数不足"
+  },
+  "leagues": {
+    "title": "私人联赛",
+    "myLeagues": "我的联赛",
+    "joinLeague": "加入联赛",
+    "createLeague": "创建联赛",
+    "inviteCode": "邀请码",
+    "members": "成员",
+    "leagueName": "联赛名称",
+    "maxMembers": "最多成员",
+    "noLeagues": "暂无联赛"
+  },
+  "news": {
+    "title": "新闻与分析",
+    "readMore": "阅读更多",
+    "minRead": "分钟阅读",
+    "by": "作者",
+    "noArticles": "未找到文章"
+  },
+  "profile": {
+    "title": "资料",
+    "editProfile": "编辑资料",
+    "myStats": "我的统计",
+    "totalPredictions": "总预测数",
+    "accuracy": "准确率",
+    "currentStreak": "当前连续",
+    "bestStreak": "最佳连续",
+    "achievements": "成就",
+    "recentPredictions": "近期预测"
+  },
+  "wallet": {
+    "title": "钱包与积分",
+    "freePointsTitle": "免费预测积分",
+    "freePointsDesc": "通过预测、任务和成就获得，可兑换奖励。",
+    "premiumCreditsTitle": "高级点数",
+    "premiumCreditsDesc": "可选购买，用于专属装饰物品，核心功能无需购买。",
+    "earningHistory": "收入历史",
+    "spendingHistory": "支出历史",
+    "noTransactions": "暂无交易",
+    "legalNotice": "免费积分和高级点数没有现金价值，不能提现、转让或兑换真钱。ScoreMatrix 是技巧型娱乐平台。"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "notifications": "邮件通知",
+    "publicProfile": "公开资料",
+    "darkMode": "深色模式",
+    "saved": "设置已保存",
+    "notificationsDesc": "比赛提醒和奖励更新",
+    "publicProfileDesc": "显示在排行榜上",
+    "alwaysEnabled": "始终开启",
+    "on": "开启",
+    "saveSettings": "保存设置"
+  },
+  "admin": {
+    "dashboard": "管理后台",
+    "users": "用户管理",
+    "matches": "比赛管理",
+    "rewardsAdmin": "奖励管理",
+    "scores": "分数配置",
+    "languages": "语言管理",
+    "banners": "横幅管理",
+    "redemption": "兑换审核",
+    "fraud": "风险监控",
+    "apiSync": "API 同步状态",
+    "totalUsers": "用户总数",
+    "activeUsersToday": "今日活跃",
+    "totalPredictions": "预测总数",
+    "pendingRedemptions": "待处理兑换",
+    "fraudAlerts": "风险警报",
+    "connected": "已连接",
+    "degraded": "不稳定",
+    "disconnected": "已断开"
+  },
+  "legal": {
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "rewardRules": "奖励规则",
+    "legalNotice": "法律声明",
+    "faq": "FAQ",
+    "contact": "联系我们",
+    "about": "关于 ScoreMatrix"
+  },
+  "footer": {
+    "platform": "平台",
+    "features": "功能",
+    "legal": "法律",
+    "copyright": "© {year} ScoreMatrix。保留所有权利。"
+  },
+  "status": {
+    "live": "直播中",
+    "upcoming": "即将开始",
+    "finished": "已结束",
+    "postponed": "延期",
+    "cancelled": "取消"
+  }
+}
