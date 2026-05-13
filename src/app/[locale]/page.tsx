@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { Sparkles } from "lucide-react";
 import { HeroBanner } from "@/components/home/HeroBanner";
 import { WorldFootballFeature } from "@/components/home/WorldFootballFeature";
 import { LiveMatchHighlights } from "@/components/home/LiveMatchHighlights";
@@ -86,7 +87,14 @@ export default async function DashboardPage() {
         <div className="ai-section-heading relative mb-4 overflow-hidden rounded-xl border border-magenta-500/20 bg-[#120d1a] px-4 py-3">
           <div className="ai-section-heading-wave absolute inset-0" />
           <div className="relative flex items-center gap-3">
-            <span className="ai-section-heading-node h-8 w-8 shrink-0 rounded-lg border border-magenta-400/40 bg-magenta-500/10" />
+            <span className="ai-section-heading-node grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-magenta-400/40 bg-magenta-500/10 text-magenta-200">
+              <Sparkles
+                size={20}
+                strokeWidth={2.3}
+                className="drop-shadow-[0_0_8px_rgba(217,70,239,0.85)]"
+                aria-hidden="true"
+              />
+            </span>
             <h2
               className="font-display text-xl font-bold tracking-normal text-white text-glow-magenta"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}

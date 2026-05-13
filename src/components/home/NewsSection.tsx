@@ -2,6 +2,14 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  BarChart3,
+  Lightbulb,
+  Newspaper,
+  Sparkles,
+  Trophy,
+  type LucideIcon,
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -17,12 +25,16 @@ interface NewsItem {
 
 const categoryMeta: Record<
   string,
-  { label: string; variant: "cyan" | "magenta" | "green" | "gold" }
+  {
+    label: string;
+    variant: "cyan" | "magenta" | "green" | "gold";
+    icon: LucideIcon;
+  }
 > = {
-  analysis: { label: "Analysis", variant: "cyan" },
-  news: { label: "News", variant: "magenta" },
-  feature: { label: "Feature", variant: "green" },
-  tips: { label: "Tips", variant: "gold" },
+  analysis: { label: "Analysis", variant: "cyan", icon: BarChart3 },
+  news: { label: "News", variant: "magenta", icon: Newspaper },
+  feature: { label: "Feature", variant: "green", icon: Trophy },
+  tips: { label: "Tips", variant: "gold", icon: Lightbulb },
 };
 
 const newsArticles: NewsItem[] = [
@@ -98,30 +110,60 @@ export function NewsSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h2
-          className="text-xl font-bold font-display text-white"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          {t("dashboard.latestNews")}
-        </h2>
-        <Link
-          href={`/${locale}/news`}
-          className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
-        >
-          {t("common.viewAll")} &rarr;
-        </Link>
+      <div className="news-section-heading relative overflow-hidden rounded-xl border border-amber-500/20 bg-[#130f0a] px-4 py-3">
+        <div className="news-section-heading-ticker absolute inset-0" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="news-section-icon grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-amber-400/35 bg-amber-400/10 text-amber-200">
+              <Newspaper
+                size={20}
+                strokeWidth={2.3}
+                className="drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
+                aria-hidden="true"
+              />
+            </span>
+            <h2
+              className="font-display truncate text-xl font-bold tracking-normal text-white"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {t("dashboard.latestNews")}
+            </h2>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Sparkles
+              size={18}
+              strokeWidth={2.2}
+              className="shrink-0 text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,0.65)]"
+              aria-hidden="true"
+            />
+            <Link
+              href={`/${locale}/news`}
+              className="whitespace-nowrap text-xs font-medium text-amber-300 transition-colors hover:text-amber-200"
+            >
+              {t("common.viewAll")} &rarr;
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {newsArticles.map((article) => {
           const meta = categoryMeta[article.category];
+          const CategoryIcon = meta.icon;
           return (
-            <Card key={article.id} hover className="flex flex-col gap-3">
+            <Card
+              key={article.id}
+              hover
+              className="news-article-card relative flex flex-col gap-3 overflow-hidden"
+            >
+              <div className="news-article-card-sheen absolute inset-0" />
               {/* Category badge */}
-              <div className="flex items-center justify-between">
+              <div className="relative flex items-center justify-between">
                 <Badge variant={meta.variant} size="sm">
-                  {t(`dashboard.newsCategories.${article.category}`)}
+                  <span className="flex items-center gap-1.5">
+                    <CategoryIcon size={12} strokeWidth={2.4} aria-hidden="true" />
+                    <span>{t(`dashboard.newsCategories.${article.category}`)}</span>
+                  </span>
                 </Badge>
                 <span className="text-[10px] text-gray-600">
                   {formatNewsDate(article.date, t)}
@@ -129,17 +171,17 @@ export function NewsSection() {
               </div>
 
               {/* Title */}
-              <h3 className="text-base font-semibold text-white leading-snug line-clamp-2">
+              <h3 className="relative text-base font-semibold text-white leading-snug line-clamp-2">
                 {t(`dashboard.newsItems.${article.titleKey}`)}
               </h3>
 
               {/* Summary */}
-              <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">
+              <p className="relative text-xs text-gray-400 leading-relaxed line-clamp-2">
                 {t(`dashboard.newsItems.${article.summaryKey}`)}
               </p>
 
               {/* Meta row */}
-              <div className="flex items-center justify-between mt-auto pt-1 border-t border-gray-800/50">
+              <div className="relative flex items-center justify-between mt-auto pt-1 border-t border-gray-800/50">
                 <span className="text-[11px] text-gray-500">
                   {article.author}
                 </span>

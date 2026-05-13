@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
@@ -148,8 +149,13 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       <div className="today-matches-heading relative overflow-hidden rounded-xl border border-cyan-500/20 bg-[#081017] px-4 py-3">
         <div className="today-matches-heading-scan absolute inset-0" />
         <div className="relative flex items-center gap-3">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-green-400/30 bg-green-400/10">
-            <span className="h-3 w-3 rounded-full border-2 border-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.65)]" />
+          <span className="today-matches-icon grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-green-400/30 bg-green-400/10 text-cyan-200">
+            <CalendarDays
+              size={20}
+              strokeWidth={2.2}
+              className="drop-shadow-[0_0_8px_rgba(34,211,238,0.75)]"
+              aria-hidden="true"
+            />
           </span>
           <h2
             className="font-display text-xl font-bold tracking-normal text-white text-glow-cyan"

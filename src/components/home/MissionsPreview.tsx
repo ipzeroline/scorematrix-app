@@ -1,6 +1,14 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import {
+  CheckCircle2,
+  Clock3,
+  Share2,
+  Target,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PointsBadge } from "@/components/shared/PointsBadge";
@@ -16,6 +24,7 @@ interface MissionItem {
   completed: boolean;
   claimed: boolean;
   color: "cyan" | "green" | "gold" | "purple" | "magenta";
+  icon: LucideIcon;
 }
 
 const dailyMissions: MissionItem[] = [
@@ -29,6 +38,7 @@ const dailyMissions: MissionItem[] = [
     completed: false,
     claimed: false,
     color: "cyan",
+    icon: Target,
   },
   {
     id: "ms-2",
@@ -40,6 +50,7 @@ const dailyMissions: MissionItem[] = [
     completed: true,
     claimed: false,
     color: "green",
+    icon: CheckCircle2,
   },
   {
     id: "ms-3",
@@ -51,6 +62,7 @@ const dailyMissions: MissionItem[] = [
     completed: false,
     claimed: false,
     color: "purple",
+    icon: Share2,
   },
 ];
 
@@ -58,37 +70,51 @@ export function MissionsPreview() {
   const t = useTranslations();
 
   return (
-    <Card className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3
-          className="text-lg font-bold font-display text-white"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          {t("gamification.dailyMissions")}
-        </h3>
-        <span className="text-[10px] text-gray-500">
+    <Card className="missions-preview-card relative flex h-full flex-col overflow-hidden border-purple-500/20 !bg-[#10101b]">
+      <div className="missions-preview-grid absolute inset-0" />
+      <div className="relative mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="missions-preview-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-purple-400/35 bg-purple-500/10 text-purple-200">
+            <Zap size={21} strokeWidth={2.35} aria-hidden="true" />
+          </span>
+          <h3
+            className="truncate text-lg font-bold font-display text-white"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            {t("gamification.dailyMissions")}
+          </h3>
+        </div>
+        <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-green-400/20 bg-green-400/10 px-2 py-1 text-[10px] text-green-200">
+          <Clock3 size={12} strokeWidth={2.4} aria-hidden="true" />
           {t("gamification.resetIn")} 6h 23m
         </span>
       </div>
 
-      <div className="flex flex-col gap-4 flex-1">
-        {dailyMissions.map((mission) => (
+      <div className="relative flex flex-col gap-4 flex-1">
+        {dailyMissions.map((mission) => {
+          const MissionIcon = mission.icon;
+          return (
           <div
             key={mission.id}
-            className={`rounded-lg p-3 border ${
+            className={`mission-preview-item rounded-lg p-3 border ${
               mission.completed
                 ? "border-green-500/20 bg-green-500/5"
-                : "border-gray-800 bg-[#0a0a0f]"
+                : "border-purple-500/15 bg-[#0a0a0f]/80"
             }`}
           >
             <div className="flex items-start justify-between mb-1.5">
-              <div>
-                <h4 className="text-sm font-semibold text-white">
-                  {t(`dashboard.missions.${mission.titleKey}`)}
-                </h4>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  {t(`dashboard.missions.${mission.descriptionKey}`)}
-                </p>
+              <div className="flex min-w-0 items-start gap-2.5">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+                  <MissionIcon size={16} strokeWidth={2.35} aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <h4 className="text-sm font-semibold text-white">
+                    {t(`dashboard.missions.${mission.titleKey}`)}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {t(`dashboard.missions.${mission.descriptionKey}`)}
+                  </p>
+                </div>
               </div>
               <div className="flex-shrink-0">
                 <PointsBadge
@@ -116,7 +142,7 @@ export function MissionsPreview() {
               </Button>
             ) : mission.claimed ? (
               <span className="text-xs text-green-400 flex items-center gap-1">
-                &#10003; {t("gamification.claimed")}
+                <CheckCircle2 size={13} aria-hidden="true" /> {t("gamification.claimed")}
               </span>
             ) : (
               <span className="text-xs text-gray-500">
@@ -127,7 +153,8 @@ export function MissionsPreview() {
               </span>
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </Card>
   );

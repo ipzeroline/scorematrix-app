@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { Crown, Medal as MedalIcon, Trophy, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -82,11 +83,11 @@ function RankBadge({ rank }: { rank: number }) {
 
 function Medal({ rank }: { rank: number }) {
   if (rank === 1)
-    return <span className="text-xs" role="img" aria-label="gold">&#129351;</span>;
+    return <MedalIcon size={14} className="text-amber-300" aria-hidden="true" />;
   if (rank === 2)
-    return <span className="text-xs" role="img" aria-label="silver">&#129352;</span>;
+    return <MedalIcon size={14} className="text-slate-200" aria-hidden="true" />;
   if (rank === 3)
-    return <span className="text-xs" role="img" aria-label="bronze">&#129353;</span>;
+    return <MedalIcon size={14} className="text-orange-400" aria-hidden="true" />;
   return null;
 }
 
@@ -95,21 +96,30 @@ export function LeaderboardPreview() {
   const t = useTranslations();
 
   return (
-    <Card className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3
-          className="text-lg font-bold font-display text-white"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          {t("leaderboard.title")}
-        </h3>
-        <Badge variant="gold" size="sm">
-          {t("leaderboard.weekly")}
+    <Card className="leaderboard-preview-card relative flex h-full flex-col overflow-hidden border-amber-500/20 !bg-[#151107]">
+      <div className="leaderboard-preview-sheen absolute inset-0" />
+      <div className="relative mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="leaderboard-preview-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-amber-400/35 bg-amber-400/10 text-amber-200">
+            <Trophy size={21} strokeWidth={2.35} aria-hidden="true" />
+          </span>
+          <h3
+            className="truncate text-lg font-bold font-display text-white"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            {t("leaderboard.title")}
+          </h3>
+        </div>
+        <Badge variant="gold" size="sm" className="shrink-0">
+          <span className="flex items-center gap-1.5">
+            <Crown size={12} strokeWidth={2.4} aria-hidden="true" />
+            <span>{t("leaderboard.weekly")}</span>
+          </span>
         </Badge>
       </div>
 
       {/* Table header */}
-      <div className="grid grid-cols-[32px_1fr_72px_56px] gap-2 px-1 mb-2 text-[10px] text-gray-500 uppercase tracking-wider">
+      <div className="relative grid grid-cols-[32px_1fr_72px_56px] gap-2 px-1 mb-2 text-[10px] text-amber-200/50 uppercase tracking-wider">
         <span>#</span>
         <span>{t("leaderboard.user")}</span>
         <span className="text-right">{t("leaderboard.points")}</span>
@@ -121,7 +131,7 @@ export function LeaderboardPreview() {
         {topUsers.map((user) => (
           <div
             key={user.rank}
-            className="grid grid-cols-[32px_1fr_72px_56px] gap-2 items-center px-1 py-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+            className="leaderboard-preview-row grid grid-cols-[32px_1fr_72px_56px] gap-2 items-center px-1 py-2 rounded-lg transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1">
               <Medal rank={user.rank} />
@@ -138,7 +148,8 @@ export function LeaderboardPreview() {
             <span className="text-sm font-mono font-bold text-green-400 text-right">
               {user.points.toLocaleString()}
             </span>
-            <span className="text-sm font-mono text-gray-400 text-right">
+            <span className="flex items-center justify-end gap-1 text-sm font-mono text-amber-100/75">
+              <TrendingUp size={12} className="text-green-300" aria-hidden="true" />
               {user.accuracy}%
             </span>
           </div>

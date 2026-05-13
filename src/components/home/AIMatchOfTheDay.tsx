@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { Brain } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -67,7 +68,10 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
               {leagueEmoji} {league}
             </Badge>
             <Badge variant="magenta" size="sm">
-              {t("dashboard.aiMatchOfTheDay")}
+              <span className="flex items-center gap-1.5">
+                <Brain size={12} strokeWidth={2.4} aria-hidden="true" />
+                <span>{t("dashboard.aiMatchOfTheDay")}</span>
+              </span>
             </Badge>
           </div>
           <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">

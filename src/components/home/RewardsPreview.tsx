@@ -2,6 +2,15 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  Award,
+  BadgeCheck,
+  Gamepad2,
+  Gift,
+  Shirt,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PointsBadge } from "@/components/shared/PointsBadge";
@@ -77,40 +86,63 @@ const categoryColors: Record<string, "cyan" | "magenta" | "green" | "gold" | "re
   Digital: "green",
 };
 
+const categoryIcons: Record<string, LucideIcon> = {
+  Merchandise: Shirt,
+  Voucher: Gamepad2,
+  Cosmetic: Award,
+  Digital: BadgeCheck,
+};
+
+const categoryIconClasses: Record<string, string> = {
+  Merchandise: "text-cyan-200 bg-cyan-400/10 border-cyan-400/25",
+  Voucher: "text-amber-200 bg-amber-400/10 border-amber-400/25",
+  Cosmetic: "text-purple-200 bg-purple-400/10 border-purple-400/25",
+  Digital: "text-green-200 bg-green-400/10 border-green-400/25",
+};
+
 export function RewardsPreview() {
   const locale = useLocale();
   const t = useTranslations();
 
   return (
-    <Card className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3
-          className="text-lg font-bold font-display text-white"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          {t("rewards.title")}
-        </h3>
-        <Badge variant="default" size="sm">
-          {t("rewards.redeem")}
+    <Card className="rewards-preview-card relative flex h-full flex-col overflow-hidden border-pink-500/20 !bg-[#160d15]">
+      <div className="rewards-preview-orb absolute -right-14 -top-16 h-36 w-36 rounded-full bg-pink-500/20 blur-3xl" />
+      <div className="relative mb-4 flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="rewards-preview-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-pink-400/35 bg-pink-500/10 text-pink-200">
+            <Gift size={21} strokeWidth={2.35} aria-hidden="true" />
+          </span>
+          <h3
+            className="truncate text-lg font-bold font-display text-white"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            {t("rewards.title")}
+          </h3>
+        </div>
+        <Badge variant="magenta" size="sm" className="shrink-0">
+          <span className="flex items-center gap-1.5">
+            <Sparkles size={12} strokeWidth={2.4} aria-hidden="true" />
+            <span>{t("rewards.redeem")}</span>
+          </span>
         </Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 flex-1">
-        {rewards.map((reward) => (
+      <div className="relative grid grid-cols-2 gap-3 flex-1">
+        {rewards.map((reward) => {
+          const RewardIcon = categoryIcons[reward.category] ?? Gift;
+          return (
           <div
             key={reward.id}
-            className="rounded-lg border border-gray-800 bg-[#0a0a0f] overflow-hidden hover:border-gray-600 transition-colors cursor-pointer"
+            className="reward-preview-item rounded-lg border border-pink-500/15 bg-[#0a0a0f]/85 overflow-hidden transition-colors cursor-pointer"
           >
             {/* Image placeholder */}
-            <div className="h-20 bg-gray-800 flex items-center justify-center">
-              <span className="text-2xl text-gray-600">
-                {reward.category === "Merchandise"
-                  ? "👕"
-                  : reward.category === "Voucher"
-                  ? "🎮"
-                  : reward.category === "Cosmetic"
-                  ? "🏅"
-                  : "🎁"}
+            <div className="reward-preview-image flex h-20 items-center justify-center">
+              <span
+                className={`grid h-11 w-11 place-items-center rounded-xl border ${
+                  categoryIconClasses[reward.category] || "border-pink-400/25 bg-pink-400/10 text-pink-200"
+                }`}
+              >
+                <RewardIcon size={24} strokeWidth={2.2} aria-hidden="true" />
               </span>
             </div>
 
@@ -123,7 +155,10 @@ export function RewardsPreview() {
                   variant={categoryColors[reward.category] || "default"}
                   size="sm"
                 >
-                  {t(`rewards.${reward.category.toLowerCase()}`)}
+                  <span className="flex items-center gap-1">
+                    <RewardIcon size={11} strokeWidth={2.35} aria-hidden="true" />
+                    <span>{t(`rewards.${reward.category.toLowerCase()}`)}</span>
+                  </span>
                 </Badge>
               </div>
 
@@ -171,7 +206,8 @@ export function RewardsPreview() {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <Link

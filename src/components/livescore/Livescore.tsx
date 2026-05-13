@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { RefreshCw, Search } from "lucide-react";
+import { Activity, RefreshCw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -104,8 +104,16 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
     <div className="max-w-4xl mx-auto space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold font-display text-white">
-            {t("livescore.title")}
+          <h1 className="flex items-center gap-2 text-xl font-bold font-display text-white">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-green-400/30 bg-green-400/10 text-green-300 shadow-[0_0_18px_rgba(16,185,129,0.16)]">
+              <Activity
+                size={20}
+                strokeWidth={2.35}
+                className="drop-shadow-[0_0_8px_rgba(16,185,129,0.75)]"
+                aria-hidden="true"
+              />
+            </span>
+            <span className="min-w-0 truncate">{t("livescore.title")}</span>
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
             <Badge variant={payload.source === "api-football" ? "green" : "gold"}>
@@ -208,11 +216,14 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                 </div>
                 <div className="space-y-1">
                   {leagueMatches.map((match) => (
-                    <div key={match.id} className="relative">
-                    <Link href={`/${locale}/livescore/${match.id}`} className="block">
+                    <Link
+                      key={match.id}
+                      href={`/${locale}/livescore/${match.id}`}
+                      className="block"
+                    >
                       <Card
                         hover
-                        className="grid grid-cols-[64px_minmax(0,1fr)_48px] items-center gap-2 p-3 pb-12 sm:grid-cols-[84px_minmax(0,1fr)_56px] sm:gap-3 sm:pb-3 sm:pr-28"
+                        className="grid grid-cols-[64px_minmax(0,1fr)_48px] items-center gap-2 p-3 sm:grid-cols-[84px_minmax(0,1fr)_56px] sm:gap-3"
                       >
                         <StatusBadge status={match.status} />
                         <div className="flex-1 min-w-0">
@@ -243,15 +254,6 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                         </span>
                       </Card>
                     </Link>
-                    <Link
-                      href={`/${locale}/predict/${match.id}`}
-                      className="absolute bottom-2 right-2 sm:bottom-1/2 sm:translate-y-1/2"
-                    >
-                      <Button size="sm" variant="gold">
-                        {t("prediction.predictScore")}
-                      </Button>
-                    </Link>
-                    </div>
                   ))}
                 </div>
               </div>
