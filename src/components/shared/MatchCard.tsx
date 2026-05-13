@@ -210,8 +210,8 @@ export function MatchCard({
                 isLive={isLive}
               />
               {isLive && match.minute !== null && (
-                <span className="flex items-center gap-1 text-xs text-red-400 font-mono">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-live-pulse" />
+                <span className="flex items-center gap-1 text-xs text-green-400 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-live-pulse" />
                   {match.minute}&apos;
                 </span>
               )}

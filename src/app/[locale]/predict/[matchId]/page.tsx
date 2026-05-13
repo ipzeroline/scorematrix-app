@@ -107,6 +107,7 @@ function buildPredictMatch(
     leagueLogo: fixture.league.logo,
     round: fixture.league.round,
     time: formatFixtureTime(fixture.kickoffTime),
+    kickoffTime: fixture.kickoffTime,
     venue: fixture.venue,
   };
 }

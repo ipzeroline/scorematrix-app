@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
@@ -126,17 +126,49 @@ export function LiveMatchHighlights({
     setTimeout(updateScrollButtons, 300);
   };
 
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || displayMatches.length <= 1) return;
+
+    const interval = window.setInterval(() => {
+      const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
+
+      el.scrollTo({
+        left: isAtEnd ? 0 : el.scrollLeft + 292,
+        behavior: "smooth",
+      });
+      setTimeout(updateScrollButtons, 420);
+    }, 3600);
+
+    return () => window.clearInterval(interval);
+  }, [displayMatches.length, updateScrollButtons]);
+
   return (
     <div className="flex flex-col gap-4">
       {/* Title row */}
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-        <h2 className="text-xl font-bold font-display text-white" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          {t("dashboard.liveNow")}
-        </h2>
-        <span className="text-sm text-gray-400">
-          {t("dashboard.matchCount", { count: displayMatches.length })}
-        </span>
+      <div className="cyber-live-header relative overflow-hidden rounded-xl border border-cyan-500/20 bg-[#070a10] px-4 py-3">
+        <div className="absolute inset-0 cyber-live-header-scan" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-green-300/70 to-transparent" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="relative flex h-3 w-3 shrink-0">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70 animate-ping" />
+              <span className="relative inline-flex h-3 w-3 rounded-full bg-green-400 shadow-[0_0_16px_rgba(74,222,128,0.95)]" />
+            </span>
+            <h2
+              className="font-display truncate whitespace-nowrap text-xl font-bold tracking-normal text-white text-glow-cyan"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {t("dashboard.liveNow")}
+            </h2>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="whitespace-nowrap rounded-lg border border-green-400/30 bg-green-500/10 px-3 py-1 font-mono text-sm font-bold text-green-300 shadow-[0_0_18px_rgba(16,185,129,0.16)]">
+              {t("dashboard.matchCount", { count: displayMatches.length })}
+            </span>
+          </div>
+        </div>
       </div>
 
       {displayMatches.length === 0 ? (
@@ -183,7 +215,7 @@ export function LiveMatchHighlights({
               <Card
                 neon="cyan"
                 hover
-                className="w-64"
+                className="cyber-live-card w-64"
               >
                 {/* League badge */}
                 <div className="flex items-center justify-between mb-3">
@@ -206,7 +238,7 @@ export function LiveMatchHighlights({
                     <span className="text-2xl font-bold font-mono text-white">
                       {match.homeScore} - {match.awayScore}
                     </span>
-                    <span className="text-xs text-red-400 font-mono">
+                    <span className="text-xs text-green-400 font-mono">
                       {match.minute}&apos;
                     </span>
                   </div>

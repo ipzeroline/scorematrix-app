@@ -54,10 +54,12 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
 
   return (
     <Card
-      neon="cyan"
-      className="border-cyan-500/30 !bg-gradient-to-br from-[#12121a] to-cyan-500/5 p-0 overflow-hidden"
+      neon="magenta"
+      className="ai-match-card relative overflow-hidden border-magenta-500/30 !bg-gradient-to-br from-[#15111f] via-[#101421] to-cyan-500/5 p-0"
     >
-      <div className="p-5 md:p-6">
+      <div className="ai-match-orb absolute -right-16 -top-20 h-44 w-44 rounded-full bg-magenta-500/20 blur-3xl" />
+      <div className="ai-match-grid absolute inset-0" />
+      <div className="relative p-5 md:p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
@@ -84,7 +86,7 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
           </div>
 
           {/* Confidence score */}
-          <div className="flex flex-col items-center gap-1">
+          <div className="ai-confidence-ring flex h-28 w-28 shrink-0 flex-col items-center justify-center rounded-full border border-cyan-400/30 bg-[#080b12]/80">
             <span className="text-4xl font-bold font-mono text-cyan-400">
               {confidenceScore}
               <span className="text-lg text-cyan-400/60">%</span>

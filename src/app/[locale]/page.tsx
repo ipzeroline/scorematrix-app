@@ -83,12 +83,18 @@ export default async function DashboardPage() {
 
       {/* AI Match of the Day */}
       <section>
-        <h2
-          className="text-xl font-bold font-display text-white mb-4"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          {t("aiMatchOfTheDay")}
-        </h2>
+        <div className="ai-section-heading relative mb-4 overflow-hidden rounded-xl border border-magenta-500/20 bg-[#120d1a] px-4 py-3">
+          <div className="ai-section-heading-wave absolute inset-0" />
+          <div className="relative flex items-center gap-3">
+            <span className="ai-section-heading-node h-8 w-8 shrink-0 rounded-lg border border-magenta-400/40 bg-magenta-500/10" />
+            <h2
+              className="font-display text-xl font-bold tracking-normal text-white text-glow-magenta"
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+            >
+              {t("aiMatchOfTheDay")}
+            </h2>
+          </div>
+        </div>
         <AIMatchOfTheDay fixture={aiFixture} />
       </section>
 

@@ -119,7 +119,7 @@ export function LiveScoreTable({
                       onClick={() => onMatchClick?.(match.id)}
                       className={cn(
                         "flex items-center gap-3 px-4 py-3 hover:bg-[#1a1a2e] transition-colors cursor-pointer",
-                        isLive && "bg-red-500/5"
+                        isLive && "bg-green-500/5"
                       )}
                     >
                       {/* Time / Status */}
@@ -166,7 +166,7 @@ export function LiveScoreTable({
                             {match.homeScore} - {match.awayScore}
                           </span>
                         ) : isLive ? (
-                          <span className="text-xs text-red-400 font-mono">
+                          <span className="text-xs text-green-400 font-mono">
                             {match.minute}&apos;
                           </span>
                         ) : (

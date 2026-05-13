@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Brain,
@@ -23,6 +23,7 @@ import { Select } from "@/components/ui/Select";
 import { PointsBadge } from "@/components/shared/PointsBadge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
+import { cn } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 
 const scoreOptions = [0, 1, 2, 3, 4, 5];
@@ -48,6 +49,7 @@ export interface PredictMatch {
   leagueLogo: string | null;
   round: string;
   time: string;
+  kickoffTime: string;
   venue: string;
 }
 
@@ -74,6 +76,20 @@ export function PredictMatchForm({
   const [confidence, setConfidence] = useState("safe");
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+  const kickoffTimestamp = useMemo(
+    () => new Date(match.kickoffTime).getTime(),
+    [match.kickoffTime]
+  );
+  const remainingMs = Math.max(0, kickoffTimestamp - now);
+  const countdown = formatCountdown(remainingMs);
+  const isLocked = remainingMs <= 0;
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   const completion = useMemo(() => {
     return [
@@ -103,7 +119,8 @@ export function PredictMatchForm({
     confidence,
   ]);
 
-  const canSubmit = result !== "" && homeScore !== null && awayScore !== null;
+  const canSubmit =
+    !isLocked && result !== "" && homeScore !== null && awayScore !== null;
   const confidenceOptions = [
     { value: "safe", label: t("confidence.safe") },
     { value: "confident", label: t("confidence.confident") },
@@ -128,9 +145,49 @@ export function PredictMatchForm({
             {t("subtitle")}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
-          <Timer size={15} />
-          {t("locksIn", { time: "2h 30m" })}
+        <div
+          className={cn(
+            "predict-lock-countdown group relative overflow-hidden rounded-xl border px-3 py-2 shadow-[0_0_24px_rgba(245,158,11,0.12)]",
+            isLocked
+              ? "border-red-500/30 bg-red-500/10 text-red-300"
+              : "border-amber-500/25 bg-gradient-to-r from-amber-500/10 via-[#17120a] to-cyan-500/10 text-amber-200"
+          )}
+        >
+          <div className="absolute inset-0 opacity-70 predict-countdown-scan" />
+          <div className="relative flex items-center gap-3">
+            <span
+              className={cn(
+                "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-black/30",
+                isLocked ? "border-red-400/30" : "border-amber-300/30"
+              )}
+            >
+              <Timer size={16} className={cn(!isLocked && "animate-pulse")} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                {isLocked
+                  ? t("locked")
+                  : t("locksIn", { time: countdown.compact })}
+              </p>
+              <div className="mt-1 flex items-center gap-1.5 font-mono">
+                {countdown.parts.map((part, index) => (
+                  <div key={part.label} className="flex items-center gap-1.5">
+                    {index > 0 && (
+                      <span className="text-xs font-bold text-amber-300/70">
+                        :
+                      </span>
+                    )}
+                    <span className="min-w-8 rounded-md border border-white/10 bg-black/35 px-1.5 py-0.5 text-center text-sm font-bold text-white shadow-inner">
+                      {part.value}
+                    </span>
+                    <span className="text-[9px] uppercase tracking-wider text-gray-500">
+                      {part.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -584,6 +641,35 @@ function PlayerColumn({
       </div>
     </div>
   );
+}
+
+function formatCountdown(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const padded = (value: number) => value.toString().padStart(2, "0");
+  const parts =
+    days > 0
+      ? [
+          { label: "d", value: padded(days) },
+          { label: "h", value: padded(hours) },
+          { label: "m", value: padded(minutes) },
+        ]
+      : [
+          { label: "h", value: padded(hours) },
+          { label: "m", value: padded(minutes) },
+          { label: "s", value: padded(seconds) },
+        ];
+
+  return {
+    compact:
+      days > 0
+        ? `${days}d ${padded(hours)}h ${padded(minutes)}m`
+        : `${padded(hours)}h ${padded(minutes)}m ${padded(seconds)}s`,
+    parts,
+  };
 }
 
 function TeamBlock({

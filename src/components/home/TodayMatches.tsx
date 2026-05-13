@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
 
@@ -16,7 +17,13 @@ interface TodayMatch {
   awayCrest: string;
   kickoffTime: string;
   league: string;
+  leagueLogo: string | null;
   leagueEmoji: string;
+}
+
+interface LeagueTab {
+  name: string;
+  logo: string | null;
 }
 
 const allMatches: TodayMatch[] = [
@@ -28,6 +35,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "20:00",
     league: "Premier",
+    leagueLogo: null,
     leagueEmoji: "🇬🇧",
   },
   {
@@ -38,6 +46,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "21:00",
     league: "La Liga",
+    leagueLogo: null,
     leagueEmoji: "🇪🇸",
   },
   {
@@ -48,6 +57,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "18:30",
     league: "Bundesliga",
+    leagueLogo: null,
     leagueEmoji: "🇩🇪",
   },
   {
@@ -58,6 +68,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "20:45",
     league: "Serie A",
+    leagueLogo: null,
     leagueEmoji: "🇮🇹",
   },
   {
@@ -68,6 +79,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "21:00",
     league: "Ligue 1",
+    leagueLogo: null,
     leagueEmoji: "🇫🇷",
   },
   {
@@ -78,6 +90,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "17:30",
     league: "Premier",
+    leagueLogo: null,
     leagueEmoji: "🇬🇧",
   },
   {
@@ -88,6 +101,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "19:00",
     league: "La Liga",
+    leagueLogo: null,
     leagueEmoji: "🇪🇸",
   },
   {
@@ -98,6 +112,7 @@ const allMatches: TodayMatch[] = [
     awayCrest: "",
     kickoffTime: "15:30",
     league: "Bundesliga",
+    leagueLogo: null,
     leagueEmoji: "🇩🇪",
   },
 ];
@@ -116,8 +131,11 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   const matches = apiMatches.length > 0 ? apiMatches : allMatches;
   const leagueTabs =
     apiMatches.length > 0
-      ? ["All", ...Array.from(new Set(apiMatches.map((match) => match.league)))]
-      : leagues;
+      ? buildLeagueTabs(apiMatches)
+      : [
+          { name: "All", logo: null },
+          ...leagues.map((league) => ({ name: league, logo: null })),
+        ];
 
   const filtered =
     activeTab === "All"
@@ -127,26 +145,37 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Section heading */}
-      <h2
-        className="text-xl font-bold font-display text-white"
-        style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-      >
-        {t("dashboard.todayMatches")}
-      </h2>
+      <div className="today-matches-heading relative overflow-hidden rounded-xl border border-cyan-500/20 bg-[#081017] px-4 py-3">
+        <div className="today-matches-heading-scan absolute inset-0" />
+        <div className="relative flex items-center gap-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-green-400/30 bg-green-400/10">
+            <span className="h-3 w-3 rounded-full border-2 border-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.65)]" />
+          </span>
+          <h2
+            className="font-display text-xl font-bold tracking-normal text-white text-glow-cyan"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            {t("dashboard.todayMatches")}
+          </h2>
+        </div>
+      </div>
 
       {/* Filter tabs */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
         {leagueTabs.map((league) => (
           <button
-            key={league}
-            onClick={() => setActiveTab(league)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ${
-              activeTab === league
+            key={league.name}
+            onClick={() => setActiveTab(league.name)}
+            className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+              activeTab === league.name
                 ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
                 : "bg-[#12121a] text-gray-400 border border-gray-800 hover:border-gray-600"
             }`}
           >
-            {league === "All" ? t("rewards.all") : league}
+            {league.name !== "All" && (
+              <ApiLeagueLogo name={league.name} logo={league.logo} size="xs" />
+            )}
+            <span>{league.name === "All" ? t("rewards.all") : league.name}</span>
           </button>
         ))}
       </div>
@@ -155,11 +184,18 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {filtered.map((match) => (
           <Link key={match.id} href={`/${locale}/livescore/${match.id}`}>
-            <Card hover className="flex h-full flex-col gap-3">
+            <Card hover className="today-match-card flex h-full flex-col gap-3">
               {/* League & time */}
               <div className="flex items-center justify-between">
                 <Badge variant="default" size="sm">
-                  {match.leagueEmoji} {match.league}
+                  <span className="flex items-center gap-1.5">
+                    <ApiLeagueLogo
+                      name={match.league}
+                      logo={match.leagueLogo}
+                      size="xs"
+                    />
+                    <span>{match.leagueEmoji} {match.league}</span>
+                  </span>
                 </Badge>
                 <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
                   {match.kickoffTime}
@@ -211,8 +247,24 @@ function mapFixtureToTodayMatch(fixture: ApiFootballFixture): TodayMatch {
     awayCrest: fixture.away.logo ?? "",
     kickoffTime: formatKickoff(fixture.kickoffTime),
     league: fixture.league.name,
+    leagueLogo: fixture.league.logo,
     leagueEmoji: "",
   };
+}
+
+function buildLeagueTabs(matches: TodayMatch[]): LeagueTab[] {
+  const tabs = new Map<string, LeagueTab>();
+
+  for (const match of matches) {
+    if (!tabs.has(match.league)) {
+      tabs.set(match.league, {
+        name: match.league,
+        logo: match.leagueLogo,
+      });
+    }
+  }
+
+  return [{ name: "All", logo: null }, ...tabs.values()];
 }
 
 function formatKickoff(value: string): string {

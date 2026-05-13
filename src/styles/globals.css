@@ -99,8 +99,8 @@ body {
   50% { opacity: 0.7; }
 }
 @keyframes livePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
 }
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -161,6 +161,66 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
 }
+@keyframes predictCountdownScan {
+  0% { transform: translateX(-140%); opacity: 0; }
+  35% { opacity: 0.7; }
+  100% { transform: translateX(140%); opacity: 0; }
+}
+@keyframes predictCountdownGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.14), inset 0 0 18px rgba(245, 158, 11, 0.04); }
+  50% { box-shadow: 0 0 30px rgba(34, 211, 238, 0.18), inset 0 0 22px rgba(245, 158, 11, 0.08); }
+}
+@keyframes cyberLiveHeaderGlow {
+  0%, 100% { box-shadow: 0 0 22px rgba(34, 211, 238, 0.1), inset 0 0 18px rgba(16, 185, 129, 0.04); }
+  50% { box-shadow: 0 0 34px rgba(16, 185, 129, 0.18), inset 0 0 24px rgba(34, 211, 238, 0.08); }
+}
+@keyframes cyberLiveHeaderScan {
+  0% { transform: translateX(-130%); opacity: 0; }
+  25% { opacity: 0.55; }
+  100% { transform: translateX(130%); opacity: 0; }
+}
+@keyframes cyberLiveCardPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(34, 211, 238, 0.08); }
+  50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.12); }
+}
+@keyframes todayMatchesHeadingGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(34, 211, 238, 0.09), inset 0 0 16px rgba(16, 185, 129, 0.04); }
+  50% { box-shadow: 0 0 30px rgba(34, 211, 238, 0.17), inset 0 0 24px rgba(16, 185, 129, 0.08); }
+}
+@keyframes todayMatchesScan {
+  0% { transform: translateX(-120%); opacity: 0; }
+  30% { opacity: 0.5; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+@keyframes todayMatchCardLift {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 12px rgba(34, 211, 238, 0.05); }
+  50% { transform: translateY(-2px); box-shadow: 0 0 20px rgba(16, 185, 129, 0.09); }
+}
+@keyframes aiHeadingWave {
+  0% { transform: translateX(-110%) skewX(-18deg); opacity: 0; }
+  35% { opacity: 0.55; }
+  100% { transform: translateX(120%) skewX(-18deg); opacity: 0; }
+}
+@keyframes aiNodePulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(217, 70, 239, 0.18), inset 0 0 12px rgba(34, 211, 238, 0.05); }
+  50% { box-shadow: 0 0 28px rgba(217, 70, 239, 0.36), inset 0 0 18px rgba(34, 211, 238, 0.12); }
+}
+@keyframes aiMatchAura {
+  0%, 100% { box-shadow: 0 0 24px rgba(217, 70, 239, 0.13), inset 0 0 28px rgba(34, 211, 238, 0.04); }
+  50% { box-shadow: 0 0 42px rgba(34, 211, 238, 0.16), inset 0 0 34px rgba(217, 70, 239, 0.07); }
+}
+@keyframes aiOrbDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.72; }
+  50% { transform: translate3d(-28px, 34px, 0) scale(1.16); opacity: 0.95; }
+}
+@keyframes aiGridShift {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
+@keyframes aiConfidenceRing {
+  0%, 100% { box-shadow: 0 0 22px rgba(34, 211, 238, 0.18), 0 0 0 0 rgba(217, 70, 239, 0.22); }
+  50% { box-shadow: 0 0 34px rgba(217, 70, 239, 0.24), 0 0 0 8px rgba(217, 70, 239, 0); }
+}
 
 .animate-neon-pulse { animation: neonPulse 2s ease-in-out infinite; }
 .animate-live-pulse { animation: livePulse 2s ease-in-out infinite; }
@@ -185,6 +245,50 @@ body {
 .predict-scanline { animation: predictScanline 3.6s ease-in-out infinite alternate; }
 .predict-vs-pulse { animation: predictVsPulse 2.8s ease-in-out infinite; }
 .predict-team-float { animation: predictTeamFloat 3.2s ease-in-out infinite; }
+.predict-lock-countdown { animation: predictCountdownGlow 3.4s ease-in-out infinite; }
+.predict-countdown-scan {
+  background: linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.12) 46%, rgba(34,211,238,0.18) 50%, transparent 58%);
+  animation: predictCountdownScan 2.8s ease-in-out infinite;
+}
+.cyber-live-header { animation: cyberLiveHeaderGlow 3.2s ease-in-out infinite; }
+.cyber-live-header-scan {
+  background:
+    linear-gradient(105deg, transparent 0%, rgba(34,211,238,0.12) 44%, rgba(16,185,129,0.16) 50%, transparent 58%),
+    linear-gradient(rgba(34,211,238,0.06) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 8px;
+  animation: cyberLiveHeaderScan 2.9s ease-in-out infinite;
+}
+.cyber-live-card { animation: cyberLiveCardPulse 4s ease-in-out infinite; }
+.today-matches-heading { animation: todayMatchesHeadingGlow 3.8s ease-in-out infinite; }
+.today-matches-heading-scan {
+  background:
+    linear-gradient(105deg, transparent 0%, rgba(34,211,238,0.13) 44%, rgba(16,185,129,0.16) 50%, transparent 58%),
+    repeating-linear-gradient(90deg, rgba(34,211,238,0.06) 0 1px, transparent 1px 18px);
+  animation: todayMatchesScan 3.4s ease-in-out infinite;
+}
+.today-match-card {
+  animation: todayMatchCardLift 4.6s ease-in-out infinite;
+  background-image: linear-gradient(180deg, rgba(34,211,238,0.035), transparent 45%);
+}
+.ai-section-heading {
+  box-shadow: 0 0 22px rgba(217, 70, 239, 0.08), inset 0 0 18px rgba(34, 211, 238, 0.04);
+}
+.ai-section-heading-wave {
+  background: linear-gradient(105deg, transparent 0%, rgba(217,70,239,0.18) 44%, rgba(34,211,238,0.12) 50%, transparent 58%);
+  animation: aiHeadingWave 3.1s ease-in-out infinite;
+}
+.ai-section-heading-node { animation: aiNodePulse 2.8s ease-in-out infinite; }
+.ai-match-card { animation: aiMatchAura 4s ease-in-out infinite; }
+.ai-match-orb { animation: aiOrbDrift 5.5s ease-in-out infinite; }
+.ai-match-grid {
+  background-image:
+    linear-gradient(rgba(217,70,239,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34,211,238,0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.9), transparent 78%);
+  animation: aiGridShift 8s linear infinite;
+}
+.ai-confidence-ring { animation: aiConfidenceRing 2.8s ease-in-out infinite; }
 
 /* Glass morphism */
 .glass {

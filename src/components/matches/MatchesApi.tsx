@@ -2,12 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, CalendarDays, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  Activity,
+  CalendarDays,
+  Search,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import { cn } from "@/lib/utils";
@@ -20,6 +28,8 @@ interface MatchesApiProps {
 export function MatchesApi({ fixtures }: MatchesApiProps) {
   const locale = useLocale();
   const t = useTranslations();
+  const [activeLeague, setActiveLeague] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const liveCount = fixtures.filter((match) => match.status === MatchStatus.LIVE).length;
   const upcomingCount = fixtures.filter(
     (match) => match.status === MatchStatus.UPCOMING
@@ -27,7 +37,17 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
   const finishedCount = fixtures.filter(
     (match) => match.status === MatchStatus.FINISHED
   ).length;
-  const leagueGroups = groupFixturesByLeague(fixtures);
+  const allLeagueGroups = groupFixturesByLeague(fixtures);
+  const searchedFixtures = filterFixtures(fixtures, searchQuery);
+  const leagueGroups = groupFixturesByLeague(searchedFixtures);
+  const activeLeagueGroups =
+    activeLeague === "All"
+      ? leagueGroups
+      : leagueGroups.filter(({ key }) => key === activeLeague);
+  const activeMatchCount = activeLeagueGroups.reduce(
+    (total, group) => total + group.matches.length,
+    0
+  );
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
@@ -71,7 +91,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
 
         <Card className="grid grid-cols-3 gap-3 p-4 lg:grid-cols-1">
           {[
-            { label: t("livescore.live"), value: liveCount, color: "text-red-400" },
+            { label: t("livescore.live"), value: liveCount, color: "text-green-400" },
             {
               label: t("livescore.upcoming"),
               value: upcomingCount,
@@ -99,16 +119,30 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
       </section>
 
       <Card className="overflow-hidden p-0">
-        <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
+        <div className="flex flex-col gap-3 border-b border-gray-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <Sparkles size={14} className="text-cyan-400" />
             <h2 className="text-sm font-semibold text-white">
               {t("matches.boardTitle")}
             </h2>
           </div>
-          <Badge variant="cyan" size="sm">
-            {t("dashboard.matchCount", { count: fixtures.length })}
-          </Badge>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <label className="relative block">
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              />
+              <input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={t("livescore.searchTeams")}
+                className="h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 sm:w-64"
+              />
+            </label>
+            <Badge variant="cyan" size="sm" className="w-fit">
+              {t("dashboard.matchCount", { count: activeMatchCount })}
+            </Badge>
+          </div>
         </div>
 
         {fixtures.length === 0 ? (
@@ -117,7 +151,58 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
           </div>
         ) : (
           <div className="space-y-4 bg-[#08080d] p-3 sm:p-4">
-            {leagueGroups.map(({ key, league, matches }) => {
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <button
+                onClick={() => setActiveLeague("All")}
+                className={cn(
+                  "flex shrink-0 items-center rounded-lg border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200",
+                  activeLeague === "All"
+                    ? "border-cyan-500/30 bg-cyan-500/20 text-cyan-400"
+                    : "border-gray-800 bg-[#12121a] text-gray-400 hover:border-gray-600"
+                )}
+              >
+                {t("rewards.all")}
+              </button>
+              {allLeagueGroups.map(({ key, league }) => {
+                const filteredCount =
+                  leagueGroups.find((group) => group.key === key)?.matches.length ?? 0;
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setActiveLeague(key)}
+                    className={cn(
+                      "flex shrink-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200",
+                      activeLeague === key
+                        ? "border-cyan-500/30 bg-cyan-500/20 text-cyan-400"
+                        : "border-gray-800 bg-[#12121a] text-gray-400 hover:border-gray-600"
+                    )}
+                  >
+                    <ApiLeagueLogo
+                      name={league.name}
+                      logo={league.logo}
+                      size="xs"
+                    />
+                    <span>{league.name}</span>
+                    <span className="rounded border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
+                      {filteredCount}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {activeMatchCount === 0 ? (
+              <div className="rounded-lg border border-gray-800 bg-[#101018] p-10 text-center">
+                <p className="text-sm font-semibold text-white">
+                  {t("livescore.noMatches")}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {t("livescore.tryAdjustingFilters")}
+                </p>
+              </div>
+            ) : (
+              activeLeagueGroups.map(({ key, league, matches }) => {
               const leagueLive = matches.filter(
                 (match) => match.status === MatchStatus.LIVE
               ).length;
@@ -147,7 +232,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                               {league.name}
                             </h3>
                             {leagueLive > 0 && (
-                              <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.9)]" />
+                              <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-green-400 shadow-[0_0_12px_rgba(74,222,128,0.9)]" />
                             )}
                           </div>
                           <p className="truncate text-[11px] text-gray-500">
@@ -158,7 +243,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
 
                       <div className="flex flex-wrap items-center gap-2">
                         <LeagueMetric label={t("matches.metricMatches")} value={matches.length} tone="gray" />
-                        <LeagueMetric label={t("livescore.live")} value={leagueLive} tone="red" />
+                        <LeagueMetric label={t("livescore.live")} value={leagueLive} tone="green" />
                         <LeagueMetric label={t("livescore.upcoming")} value={leagueUpcoming} tone="cyan" />
                         <LeagueMetric label={t("livescore.fullTime")} value={leagueFinished} tone="green" />
                       </div>
@@ -221,11 +306,17 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                               </Link>
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Link href={`/${locale}/predict/${match.id}`}>
-                                <Button size="sm" variant="gold">
-                                  {t("prediction.predictScore")}
-                                </Button>
-                              </Link>
+                              {match.status === MatchStatus.UPCOMING ? (
+                                <Link href={`/${locale}/predict/${match.id}`}>
+                                  <Button size="sm" variant="gold">
+                                    {t("prediction.predictScore")}
+                                  </Button>
+                                </Link>
+                              ) : (
+                                <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
+                                  -
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -234,7 +325,8 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                   </div>
                 </section>
               );
-            })}
+            })
+            )}
           </div>
         )}
       </Card>
@@ -268,6 +360,28 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
         })}
       </section>
     </div>
+  );
+}
+
+function filterFixtures(fixtures: ApiFootballFixture[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return fixtures;
+  }
+
+  return fixtures.filter((fixture) =>
+    [
+      fixture.home.name,
+      fixture.away.name,
+      fixture.league.name,
+      fixture.league.country,
+      fixture.league.round,
+      fixture.statusShort,
+      fixture.venue,
+    ]
+      .filter((value): value is string => typeof value === "string")
+      .some((value) => value.toLowerCase().includes(normalizedQuery))
   );
 }
 

@@ -98,7 +98,7 @@ export function MatchesMockup() {
 
         <Card className="grid grid-cols-3 gap-3 p-4 lg:grid-cols-1">
           {[
-            { label: t("livescore.live"), value: liveCount, color: "text-red-400" },
+            { label: t("livescore.live"), value: liveCount, color: "text-green-400" },
             {
               label: t("livescore.upcoming"),
               value: upcomingCount,

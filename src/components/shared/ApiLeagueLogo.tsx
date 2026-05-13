@@ -5,10 +5,11 @@ import Image from "next/image";
 interface ApiLeagueLogoProps {
   name: string;
   logo?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
 }
 
 const sizes = {
+  xs: { outer: "h-5 w-5", image: 16 },
   sm: { outer: "h-9 w-9", image: 28 },
   md: { outer: "h-12 w-12", image: 38 },
   lg: { outer: "h-16 w-16", image: 52 },

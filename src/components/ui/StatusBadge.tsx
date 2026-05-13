@@ -8,7 +8,7 @@ const statusConfig: Record<
   [MatchStatus.LIVE]: {
     label: "LIVE",
     className:
-      "bg-red-500/20 text-red-400 border-red-500/30",
+      "bg-green-500/20 text-green-400 border-green-500/30",
     pulse: true,
   },
   [MatchStatus.UPCOMING]: {
@@ -46,7 +46,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       )}
     >
       {config.pulse && (
-        <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-live-pulse" />
+        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-live-pulse" />
       )}
       {config.label}
     </span>
