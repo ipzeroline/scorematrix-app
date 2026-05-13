@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { HeroBanner } from "@/components/home/HeroBanner";
+import { WorldFootballFeature } from "@/components/home/WorldFootballFeature";
 import { LiveMatchHighlights } from "@/components/home/LiveMatchHighlights";
 import { TodayMatches } from "@/components/home/TodayMatches";
 import { AIMatchOfTheDay } from "@/components/home/AIMatchOfTheDay";
@@ -67,6 +68,8 @@ export default async function DashboardPage() {
       <section>
         <HeroBanner />
       </section>
+
+      <WorldFootballFeature />
 
       {/* Live Match Highlights */}
       <section>

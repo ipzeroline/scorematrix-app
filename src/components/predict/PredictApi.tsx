@@ -12,13 +12,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
-import { Zap } from "lucide-react";
+import { Brain, Gauge, Medal, ShieldCheck, Trophy, Users, Zap } from "lucide-react";
 
-interface PredictApiDemoProps {
+interface PredictApiProps {
   fixtures: ApiFootballFixture[];
 }
 
-export function PredictApiDemo({ fixtures }: PredictApiDemoProps) {
+export function PredictApi({ fixtures }: PredictApiProps) {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
   const [tab, setTab] = useState("upcoming");
@@ -145,7 +145,70 @@ export function PredictApiDemo({ fixtures }: PredictApiDemoProps) {
           )}
         </div>
       )}
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <InfoPanel
+          icon={Trophy}
+          title="การทายระยะยาว"
+          items={[
+            "แชมป์ลีก/ทัวร์นาเมนต์",
+            "ทีมตกชั้น",
+            "ดาวซัลโวสูงสุด",
+            "ผู้เล่นยอดเยี่ยม",
+            "4 ทีมสุดท้าย / รอบรองชนะเลิศ",
+          ]}
+        />
+        <InfoPanel
+          icon={Users}
+          title="รูปแบบการแข่งขันในเว็บ"
+          items={[
+            "ลีกส่วนตัวกับเพื่อน",
+            "ระบบคะแนนสะสม",
+            "โบนัสสกอร์ตรง",
+            "Streak Bonus",
+            "Leaderboard รายสัปดาห์/รายเดือน/ตลอดกาล",
+          ]}
+        />
+        <InfoPanel
+          icon={Brain}
+          title="ฟีเจอร์เสริม"
+          items={[
+            "Confidence Level",
+            "ทายด้วย AI",
+            "ประวัติการทายย้อนหลัง",
+            "Badge / Achievement",
+            "วิเคราะห์ความแม่นของตัวเอง",
+          ]}
+        />
+      </section>
     </div>
+  );
+}
+
+function InfoPanel({
+  icon: Icon,
+  title,
+  items,
+}: {
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  items: string[];
+}) {
+  return (
+    <Card className="p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <Icon size={17} className="text-cyan-400" />
+        <h2 className="text-sm font-semibold text-white">{title}</h2>
+      </div>
+      <ul className="space-y-2">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-2 text-xs text-gray-400">
+            <ShieldCheck size={13} className="mt-0.5 shrink-0 text-green-400" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }
 

@@ -6,7 +6,7 @@ import {
 } from "@/lib/api-football";
 import { MatchStatus } from "@/types/common";
 
-export async function loadFixturesForDate(limit = 50): Promise<ApiFootballFixture[]> {
+export async function loadFixturesForDate(limit?: number): Promise<ApiFootballFixture[]> {
   const date = new Date().toISOString().slice(0, 10);
 
   try {

@@ -216,7 +216,8 @@
       "noGamblingText": "比赛预测基于足球知识和平台积分，不涉及真钱下注。",
       "liveTitle": "实时状态信号",
       "liveText": "快速查看直播、即将开始和已结束状态，适合比赛密集的日子。"
-    }
+    },
+    "metricMatches": "比赛"
   },
   "livescore": {
     "title": "即时比分",
@@ -256,7 +257,31 @@
     "startingXI": "首发阵容",
     "substitutes": "替补",
     "venue": "场地",
-    "round": "轮次"
+    "round": "轮次",
+    "unavailableTitle": "暂无比赛详情",
+    "noApiFixtureId": "此比赛没有 API-Football fixture id。",
+    "venueUnavailable": "暂无场地信息",
+    "statsGroups": "统计组",
+    "playerStats": "球员统计",
+    "matchEvents": "比赛事件",
+    "noEventData": "暂无事件数据",
+    "analysisGraph": "比赛分析图表",
+    "analysisGraphHint": "基于 API-Football 比赛统计生成，包括控球、射门、牌数、传球和角球。",
+    "balancedStat": "均衡",
+    "teamStatistics": "球队统计",
+    "noTeamStatistics": "暂无球队统计",
+    "h2h": "历史交锋",
+    "noH2hData": "暂无历史交锋数据",
+    "noLineupData": "暂无阵容、教练或阵型数据",
+    "coach": "教练",
+    "formationPitch": "阵型球场",
+    "noGridData": "暂无球员场上位置数据",
+    "unavailable": "暂无",
+    "noPlayerStatistics": "暂无球员统计",
+    "playerStatsTitleSuffix": "球员统计",
+    "captain": "队长",
+    "loadError": "无法加载比赛详情",
+    "backToMatches": "返回比赛列表"
   },
   "prediction": {
     "title": "预测",
@@ -452,5 +477,142 @@
     "finished": "已结束",
     "postponed": "延期",
     "cancelled": "取消"
+  },
+  "football": {
+    "leaguesTitle": "足球联赛",
+    "leaguesDescription": "联赛组件：所有启用的 API-Football 赛事。",
+    "leagueCount": "{count} 个联赛",
+    "teamCount": "{count} 支球队",
+    "season": "{season} 赛季",
+    "countryUnavailable": "暂无国家信息",
+    "leagueSchedule": "联赛赛程",
+    "standings": "积分榜",
+    "teamUnavailable": "暂无球队资料",
+    "playerUnavailable": "暂无球员资料。",
+    "founded": "{year} 年成立",
+    "nationalTeam": "国家队",
+    "club": "俱乐部",
+    "code": "代码",
+    "city": "城市",
+    "teamSeasonStats": "球队赛季统计",
+    "wins": "胜",
+    "draws": "平",
+    "losses": "负",
+    "cleanSheets": "零封",
+    "played": "已赛",
+    "goalsFor": "进球",
+    "goalsAgainst": "失球",
+    "teamStatsHint": "传入联赛和赛季以显示球队赛季统计。",
+    "nationalityUnavailable": "暂无国籍",
+    "ageYears": "{age} 岁",
+    "height": "身高 {value}",
+    "weight": "体重 {value}",
+    "injured": "受伤",
+    "playerProfileStats": "球员资料统计",
+    "table": {
+      "time": "时间",
+      "home": "主队",
+      "score": "比分",
+      "away": "客队",
+      "status": "状态",
+      "team": "球队",
+      "playedShort": "赛",
+      "goalDiffShort": "净胜",
+      "pointsShort": "分",
+      "competition": "赛事",
+      "appearancesShort": "出场",
+      "minutesShort": "分钟",
+      "positionShort": "位置",
+      "ratingShort": "评分",
+      "goalsAssistsShort": "进/助",
+      "cards": "牌",
+      "player": "球员"
+    }
+  },
+  "worldFootball": {
+    "eyebrow": "2026 世界足球",
+    "hostLine": "加拿大 - 墨西哥 - 美国",
+    "title": "把全球足球年的氛围带到首页",
+    "description": "以大赛氛围追踪赛季：主办国、城市脉动、实时赛程和联赛路径汇入同一个比赛中心。",
+    "hosts": "主办",
+    "cityPulse": "城市脉动",
+    "ctaMatches": "查看比赛",
+    "ctaLeagues": "浏览联赛",
+    "stats": {
+      "teams": "球队",
+      "cities": "主办城市",
+      "countries": "主办国"
+    }
+  },
+  "predictionForm": {
+    "badge": "比赛预测",
+    "title": "预测比赛",
+    "subtitle": "选择基础赛果、精确比分、深度玩法和信心等级。",
+    "locksIn": "{time} 后锁定",
+    "submit": "提交预测",
+    "common": {
+      "yes": "有",
+      "no": "没有",
+      "cancel": "取消",
+      "confirm": "确认",
+      "vs": "VS"
+    },
+    "basic": {
+      "title": "基础预测",
+      "subtitle": "必填：胜平负、精确比分和获胜球队。",
+      "result": "胜 / 平 / 负",
+      "fullScore": "精确比分",
+      "winnerTeam": "获胜球队",
+      "scorePreview": "你的预测：{home} - {away}",
+      "selectScores": "请选择两队比分"
+    },
+    "outcome": {
+      "homeWin": "{team} 胜",
+      "awayWin": "{team} 胜",
+      "draw": "平局"
+    },
+    "deep": {
+      "title": "深度预测",
+      "subtitle": "预测更多比赛细节，增加乐趣和奖励机会。",
+      "firstScorer": "首位进球者",
+      "totalGoals": "总进球",
+      "over25": "大于 2.5",
+      "under25": "小于 2.5",
+      "firstGoalTeam": "先进球队",
+      "noGoal": "无进球",
+      "halfTimeScore": "半场比分",
+      "extraTime": "是否加时",
+      "penalties": "是否点球"
+    },
+    "confidence": {
+      "title": "信心等级",
+      "subtitle": "信心越高潜在得分越多，但猜错损失也更大。",
+      "safe": "稳妥 x1.0",
+      "confident": "自信 x1.5",
+      "bold": "大胆 x2.0"
+    },
+    "summary": {
+      "title": "预测单",
+      "overUnder": "大/小 2.5"
+    },
+    "side": {
+      "streak": "连中",
+      "pointsCorrect": "每中得分",
+      "balance": "余额"
+    },
+    "ai": {
+      "title": "AI 辅助预测",
+      "description": "AI 建议：接近 2-1，总进球大于 2.5，主队更可能先进球。",
+      "use": "使用 AI 建议"
+    },
+    "submitted": {
+      "title": "预测已提交！",
+      "description": "比赛结束后将计算积分。"
+    },
+    "confirm": {
+      "title": "确认预测",
+      "youPredict": "你的预测",
+      "lockNotice": "预测将在开赛时锁定，之后无法修改。"
+    }
   }
 }

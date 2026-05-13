@@ -3,7 +3,8 @@ import { leagues } from "@/data/leagues";
 import { teams } from "@/data/teams";
 import { MatchStatus } from "@/types/common";
 
-const API_FOOTBALL_BASE_URL = "https://v3.football.api-sports.io";
+const API_FOOTBALL_BASE_URL =
+  process.env.API_FOOTBALL_BASE_URL ?? "https://v3.football.api-sports.io";
 
 export type ApiFootballSource = "api-football" | "mock";
 
@@ -99,7 +100,176 @@ interface ApiFootballFixtureResponse {
   };
 }
 
+export interface ApiFootballLeagueEntry {
+  league: {
+    id: number;
+    name: string;
+    type: string;
+    logo: string | null;
+  };
+  country: {
+    name: string;
+    code: string | null;
+    flag: string | null;
+  };
+  seasons: {
+    year: number;
+    start: string;
+    end: string;
+    current: boolean;
+  }[];
+}
+
+export interface ApiFootballStandingLeague {
+  id: number;
+  name: string;
+  country: string;
+  logo: string | null;
+  flag: string | null;
+  season: number;
+  standings: ApiFootballStanding[][];
+}
+
+export interface ApiFootballStanding {
+  rank: number;
+  team: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
+  points: number;
+  goalsDiff: number;
+  group: string;
+  form: string | null;
+  status: string;
+  description: string | null;
+  all: ApiFootballStandingRecord;
+}
+
+export interface ApiFootballStandingRecord {
+  played: number;
+  win: number;
+  draw: number;
+  lose: number;
+  goals: {
+    for: number;
+    against: number;
+  };
+}
+
+export interface ApiFootballTeamProfile {
+  team: {
+    id: number;
+    name: string;
+    code: string | null;
+    country: string;
+    founded: number | null;
+    national: boolean;
+    logo: string | null;
+  };
+  venue: {
+    id: number | null;
+    name: string | null;
+    address: string | null;
+    city: string | null;
+    capacity: number | null;
+    surface: string | null;
+    image: string | null;
+  };
+}
+
+export interface ApiFootballTeamSeasonStats {
+  fixtures: {
+    played: StatSplit;
+    wins: StatSplit;
+    draws: StatSplit;
+    loses: StatSplit;
+  };
+  goals: {
+    for: {
+      total: StatSplit;
+      average: Record<"home" | "away" | "total", string>;
+    };
+    against: {
+      total: StatSplit;
+      average: Record<"home" | "away" | "total", string>;
+    };
+  };
+  clean_sheet: StatSplit;
+  failed_to_score: StatSplit;
+  form: string | null;
+}
+
+interface StatSplit {
+  home: number;
+  away: number;
+  total: number;
+}
+
+export interface ApiFootballPlayerProfile {
+  player: {
+    id: number;
+    name: string;
+    firstname: string;
+    lastname: string;
+    age: number | null;
+    birth: {
+      date: string | null;
+      place: string | null;
+      country: string | null;
+    };
+    nationality: string | null;
+    height: string | null;
+    weight: string | null;
+    injured: boolean;
+    photo: string | null;
+  };
+  statistics: {
+    team: {
+      id: number;
+      name: string;
+      logo: string | null;
+    };
+    league: {
+      id: number;
+      name: string;
+      country: string;
+      logo: string | null;
+      season: number;
+    };
+    games: {
+      appearences: number | null;
+      lineups: number | null;
+      minutes: number | null;
+      position: string | null;
+      rating: string | null;
+    };
+    goals: {
+      total: number | null;
+      assists: number | null;
+    };
+    shots: {
+      total: number | null;
+      on: number | null;
+    };
+    passes: {
+      total: number | null;
+      key: number | null;
+      accuracy: number | string | null;
+    };
+    tackles: {
+      total: number | null;
+      interceptions: number | null;
+    };
+    cards: {
+      yellow: number | null;
+      red: number | null;
+    };
+  }[];
+}
+
 export interface GetFixturesOptions {
+  id?: string;
   date?: string;
   live?: boolean;
   league?: string;
@@ -117,6 +287,122 @@ export interface GetFixturesResult {
     requestsRemaining: string | null;
     requestsLimit: string | null;
   };
+}
+
+export interface ApiFootballEvent {
+  time: {
+    elapsed: number;
+    extra: number | null;
+  };
+  team: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
+  player: {
+    id: number | null;
+    name: string | null;
+  };
+  assist: {
+    id: number | null;
+    name: string | null;
+  };
+  type: string;
+  detail: string;
+  comments: string | null;
+}
+
+export interface ApiFootballLineup {
+  team: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
+  coach: {
+    id: number | null;
+    name: string | null;
+    photo: string | null;
+  };
+  formation: string | null;
+  startXI: ApiFootballLineupPlayer[];
+  substitutes: ApiFootballLineupPlayer[];
+}
+
+export interface ApiFootballLineupPlayer {
+  player: {
+    id: number | null;
+    name: string;
+    number: number | null;
+    pos: string | null;
+    grid: string | null;
+  };
+}
+
+export interface ApiFootballTeamStatistics {
+  team: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
+  statistics: {
+    type: string;
+    value: string | number | null;
+  }[];
+}
+
+export interface ApiFootballPlayerStats {
+  team: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
+  players: {
+    player: {
+      id: number;
+      name: string;
+      photo: string | null;
+    };
+    statistics: {
+      games: {
+        minutes: number | null;
+        number: number | null;
+        position: string | null;
+        rating: string | null;
+        captain: boolean;
+        substitute: boolean;
+      };
+      goals: {
+        total: number | null;
+        assists: number | null;
+      };
+      shots: {
+        total: number | null;
+        on: number | null;
+      };
+      passes: {
+        total: number | null;
+        key: number | null;
+        accuracy: string | null;
+      };
+      tackles: {
+        total: number | null;
+      };
+      cards: {
+        yellow: number | null;
+        red: number | null;
+      };
+    }[];
+  }[];
+}
+
+export interface GetFixtureDetailsResult {
+  source: ApiFootballSource;
+  fetchedAt: string;
+  fixture: ApiFootballFixture;
+  events: ApiFootballEvent[];
+  lineups: ApiFootballLineup[];
+  statistics: ApiFootballTeamStatistics[];
+  playerStats: ApiFootballPlayerStats[];
 }
 
 export class ApiFootballError extends Error {
@@ -167,9 +453,11 @@ export async function getApiFootballFixtures(
     throw new ApiFootballError("API-Football returned errors", 502, payload.errors);
   }
 
-  const fixtures = payload.response
-    .map(mapFixture)
-    .slice(0, options.limit ?? 30);
+  const mappedFixtures = payload.response.map(mapFixture);
+  const fixtures =
+    typeof options.limit === "number"
+      ? mappedFixtures.slice(0, options.limit)
+      : mappedFixtures;
 
   return {
     source: "api-football",
@@ -184,8 +472,132 @@ export async function getApiFootballFixtures(
   };
 }
 
-export function getMockApiFootballFixtures(limit = 30): ApiFootballFixture[] {
-  return matches.slice(0, limit).map((match) => {
+export async function getApiFootballFixtureDetails(
+  fixtureId: number
+): Promise<GetFixtureDetailsResult> {
+  const [fixtureResult, events, lineups, statistics, playerStats] =
+    await Promise.all([
+      getApiFootballFixtures({ id: String(fixtureId), limit: 1 }),
+      fetchApiFootballList<ApiFootballEvent>("/fixtures/events", {
+        fixture: String(fixtureId),
+      }),
+      fetchApiFootballList<ApiFootballLineup>("/fixtures/lineups", {
+        fixture: String(fixtureId),
+      }),
+      fetchApiFootballList<ApiFootballTeamStatistics>("/fixtures/statistics", {
+        fixture: String(fixtureId),
+      }),
+      fetchApiFootballList<ApiFootballPlayerStats>("/fixtures/players", {
+        fixture: String(fixtureId),
+      }),
+    ]);
+
+  const fixture = fixtureResult.fixtures[0];
+
+  if (!fixture) {
+    throw new ApiFootballError("Fixture not found", 404);
+  }
+
+  return {
+    source: "api-football",
+    fetchedAt: new Date().toISOString(),
+    fixture,
+    events,
+    lineups,
+    statistics,
+    playerStats,
+  };
+}
+
+export async function getApiFootballLeagues(options: {
+  id?: number;
+  current?: boolean;
+  search?: string;
+} = {}) {
+  const query: Record<string, string> = {};
+  if (options.id) query.id = String(options.id);
+  if (options.current) query.current = "true";
+  if (options.search) query.search = options.search;
+
+  return fetchApiFootballList<ApiFootballLeagueEntry>("/leagues", query);
+}
+
+export async function getApiFootballStandings(league: number, season: number) {
+  const result = await fetchApiFootballList<{ league: ApiFootballStandingLeague }>(
+    "/standings",
+    {
+      league: String(league),
+      season: String(season),
+    }
+  );
+
+  return result[0]?.league ?? null;
+}
+
+export async function getApiFootballLeagueSchedule(
+  league: number,
+  season: number,
+  limit = 80
+) {
+  const result = await getApiFootballFixtures({
+    league: String(league),
+    season: String(season),
+  });
+
+  return result.fixtures.slice(0, limit);
+}
+
+export async function getApiFootballTeamProfile(
+  team: number,
+  league?: number,
+  season?: number
+) {
+  const [profiles, stats] = await Promise.all([
+    fetchApiFootballList<ApiFootballTeamProfile>("/teams", { id: String(team) }),
+    league && season
+      ? fetchApiFootballData<ApiFootballTeamSeasonStats>("/teams/statistics", {
+          team: String(team),
+          league: String(league),
+          season: String(season),
+        })
+      : Promise.resolve(null),
+  ]);
+
+  return {
+    profile: profiles[0] ?? null,
+    stats,
+  };
+}
+
+export async function getApiFootballPlayerProfile(player: number, season: number) {
+  const profiles = await fetchApiFootballList<ApiFootballPlayerProfile>("/players", {
+    id: String(player),
+    season: String(season),
+  });
+
+  return profiles[0] ?? null;
+}
+
+export async function getApiFootballH2H(
+  homeTeam: number,
+  awayTeam: number,
+  limit = 10
+) {
+  const result = await fetchApiFootballList<ApiFootballFixtureResponse>(
+    "/fixtures/headtohead",
+    {
+      h2h: `${homeTeam}-${awayTeam}`,
+    }
+  );
+
+  return result.map(mapFixture).slice(0, limit);
+}
+
+export function getMockApiFootballFixtures(limit?: number): ApiFootballFixture[] {
+  const mockMatches =
+    typeof limit === "number" ? matches.slice(0, limit) : matches;
+
+  return mockMatches.map((match) => {
     const league = leagues.find((item) => item.id === match.leagueId);
     const home = teams.find((item) => item.id === match.homeTeamId);
     const away = teams.find((item) => item.id === match.awayTeamId);
@@ -235,14 +647,67 @@ function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> 
     return { live: "all" };
   }
 
-  const query: Record<string, string> = {
-    date: options.date ?? new Date().toISOString().slice(0, 10),
-  };
+  const query: Record<string, string> = {};
+
+  if (options.id) {
+    query.id = options.id;
+  } else if (!options.league || !options.season) {
+    query.date = options.date ?? new Date().toISOString().slice(0, 10);
+  }
 
   if (options.league) query.league = options.league;
   if (options.season) query.season = options.season;
 
   return query;
+}
+
+async function fetchApiFootballList<T>(
+  pathname: string,
+  query: Record<string, string>
+): Promise<T[]> {
+  return fetchApiFootballData<T[]>(pathname, query);
+}
+
+async function fetchApiFootballData<T>(
+  pathname: string,
+  query: Record<string, string>
+): Promise<T> {
+  const apiKey = process.env.API_FOOTBALL_KEY;
+
+  if (!apiKey) {
+    throw new ApiFootballError("Missing API_FOOTBALL_KEY", 500);
+  }
+
+  const url = new URL(pathname, API_FOOTBALL_BASE_URL);
+  Object.entries(query).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+
+  const response = await fetch(url, {
+    headers: {
+      "x-apisports-key": apiKey,
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+
+  const payload = (await response.json()) as Omit<ApiFootballResponse<unknown>, "response"> & {
+    response: T;
+  };
+
+  if (!response.ok) {
+    throw new ApiFootballError(
+      "API-Football request failed",
+      response.status,
+      payload.errors
+    );
+  }
+
+  if (hasApiErrors(payload.errors)) {
+    throw new ApiFootballError("API-Football returned errors", 502, payload.errors);
+  }
+
+  return payload.response;
 }
 
 function mapFixture(item: ApiFootballFixtureResponse): ApiFootballFixture {

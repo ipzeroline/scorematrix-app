@@ -11,6 +11,8 @@ import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
+import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 
@@ -26,12 +28,12 @@ export interface FixturesPayload {
   warning?: string;
 }
 
-interface LivescoreDemoProps {
+interface LivescoreProps {
   initialPayload: FixturesPayload;
   locale: string;
 }
 
-export function LivescoreDemo({ initialPayload, locale }: LivescoreDemoProps) {
+export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState("all");
   const [league, setLeague] = useState("");
@@ -107,7 +109,7 @@ export function LivescoreDemo({ initialPayload, locale }: LivescoreDemoProps) {
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
             <Badge variant={payload.source === "api-football" ? "green" : "gold"}>
-              {payload.source === "api-football" ? "API-Football" : "Demo fallback"}
+              {payload.source === "api-football" ? "API-Football" : "Fallback"}
             </Badge>
             <span>Synced {new Date(payload.fetchedAt).toLocaleTimeString()}</span>
             {payload.rateLimit.requestsRemaining && (
@@ -181,38 +183,56 @@ export function LivescoreDemo({ initialPayload, locale }: LivescoreDemoProps) {
         <div className="space-y-4">
           {[...new Set(filtered.map((m) => m.league.name))].map((leagueName) => {
             const leagueMatches = filtered.filter((m) => m.league.name === leagueName);
+            const leagueInfo = leagueMatches[0]?.league;
             return (
               <div key={leagueName}>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {leagueName}
-                  </h3>
-                  <span className="text-[10px] text-gray-600">
-                    {leagueMatches[0]?.league.country}
+                <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-gradient-to-r from-cyan-500/10 via-[#101018] to-magenta-500/10 px-3 py-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <ApiLeagueLogo
+                      name={leagueName}
+                      logo={leagueInfo?.logo}
+                      size="sm"
+                    />
+                    <div className="min-w-0">
+                      <h3 className="truncate text-xs font-semibold uppercase tracking-wider text-white">
+                        {leagueName}
+                      </h3>
+                      <span className="block truncate text-[10px] text-gray-500">
+                        {leagueInfo?.country}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-md border border-cyan-500/20 bg-black/20 px-2 py-1 text-[10px] font-semibold text-cyan-300">
+                    {leagueMatches.length} matches
                   </span>
                 </div>
                 <div className="space-y-1">
                   {leagueMatches.map((match) => (
-                    <Link
-                      key={match.id}
-                      href={`/${locale}/livescore/${match.id}`}
-                      className="block"
-                    >
-                      <Card hover className="flex items-center gap-3 p-3">
+                    <div key={match.id} className="relative">
+                    <Link href={`/${locale}/livescore/${match.id}`} className="block">
+                      <Card
+                        hover
+                        className="grid grid-cols-[64px_minmax(0,1fr)_48px] items-center gap-2 p-3 pb-12 sm:grid-cols-[84px_minmax(0,1fr)_56px] sm:gap-3 sm:pb-3 sm:pr-28"
+                      >
                         <StatusBadge status={match.status} />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-sm text-white truncate">
-                              {match.home.name}
-                            </span>
+                          <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] sm:gap-3">
+                            <TeamInline
+                              name={match.home.name}
+                              logo={match.home.logo}
+                              align="right"
+                              accent="cyan"
+                            />
                             <span className="text-sm font-mono font-bold text-white mx-2 shrink-0">
                               {match.score.home !== null
                                 ? `${match.score.home} - ${match.score.away}`
                                 : t("common.vs")}
                             </span>
-                            <span className="text-sm text-white truncate">
-                              {match.away.name}
-                            </span>
+                            <TeamInline
+                              name={match.away.name}
+                              logo={match.away.logo}
+                              accent="magenta"
+                            />
                           </div>
                           <p className="mt-1 truncate text-[10px] text-gray-600">
                             {match.venue || match.league.round}
@@ -223,6 +243,15 @@ export function LivescoreDemo({ initialPayload, locale }: LivescoreDemoProps) {
                         </span>
                       </Card>
                     </Link>
+                    <Link
+                      href={`/${locale}/predict/${match.id}`}
+                      className="absolute bottom-2 right-2 sm:bottom-1/2 sm:translate-y-1/2"
+                    >
+                      <Button size="sm" variant="gold">
+                        {t("prediction.predictScore")}
+                      </Button>
+                    </Link>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -247,4 +276,28 @@ function formatFixtureTime(match: ApiFootballFixture): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function TeamInline({
+  name,
+  logo,
+  align = "left",
+  accent,
+}: {
+  name: string;
+  logo: string | null;
+  align?: "left" | "right";
+  accent: "cyan" | "magenta";
+}) {
+  return (
+    <div
+      className={`flex min-w-0 items-center gap-2 ${
+        align === "right" ? "justify-end text-right" : ""
+      }`}
+    >
+      {align === "left" && <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />}
+      <span className="truncate text-sm text-white">{name}</span>
+      {align === "right" && <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />}
+    </div>
+  );
 }

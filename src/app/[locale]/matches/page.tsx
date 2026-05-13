@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { MatchesApiDemo } from "@/components/matches/MatchesApiDemo";
+import { MatchesApi } from "@/components/matches/MatchesApi";
 import { loadFixturesForDate, sortFixtures } from "@/lib/football-page-data";
 
 type Props = {
@@ -39,7 +39,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function MatchesPage() {
-  const fixtures = sortFixtures(await loadFixturesForDate(50));
+  const fixtures = sortFixtures(await loadFixturesForDate());
 
-  return <MatchesApiDemo fixtures={fixtures} />;
+  return <MatchesApi fixtures={fixtures} />;
 }

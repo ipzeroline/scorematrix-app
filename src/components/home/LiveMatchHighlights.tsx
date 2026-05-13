@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
@@ -93,6 +94,7 @@ export function LiveMatchHighlights({
   fixtures = [],
   apiMode = false,
 }: LiveMatchHighlightsProps) {
+  const locale = useLocale();
   const t = useTranslations();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -173,46 +175,51 @@ export function LiveMatchHighlights({
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {displayMatches.map((match) => (
-            <Card
+            <Link
               key={match.id}
-              neon="cyan"
-              hover
-              className="flex-shrink-0 w-64"
+              href={`/${locale}/livescore/${match.id}`}
+              className="flex-shrink-0"
             >
-              {/* League badge */}
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider">
-                  {match.league}
-                </span>
-                <StatusBadge status={match.status} />
-              </div>
-
-              {/* Teams and score */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
-                  <span className="text-sm text-gray-300 text-center truncate w-full">
-                    {match.homeTeam}
+              <Card
+                neon="cyan"
+                hover
+                className="w-64"
+              >
+                {/* League badge */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                    {match.league}
                   </span>
+                  <StatusBadge status={match.status} />
                 </div>
 
-                <div className="flex flex-col items-center gap-0.5">
-                  <span className="text-2xl font-bold font-mono text-white">
-                    {match.homeScore} - {match.awayScore}
-                  </span>
-                  <span className="text-xs text-red-400 font-mono">
-                    {match.minute}&apos;
-                  </span>
-                </div>
+                {/* Teams and score */}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                    <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
+                    <span className="text-sm text-gray-300 text-center truncate w-full">
+                      {match.homeTeam}
+                    </span>
+                  </div>
 
-                <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
-                  <span className="text-sm text-gray-300 text-center truncate w-full">
-                    {match.awayTeam}
-                  </span>
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-2xl font-bold font-mono text-white">
+                      {match.homeScore} - {match.awayScore}
+                    </span>
+                    <span className="text-xs text-red-400 font-mono">
+                      {match.minute}&apos;
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                    <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
+                    <span className="text-sm text-gray-300 text-center truncate w-full">
+                      {match.awayTeam}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

@@ -216,7 +216,8 @@
       "noGamblingText": "การทายผลอิงจากความรู้ฟุตบอลและแต้มในแพลตฟอร์ม ไม่มีการเดิมพันด้วยเงินจริง",
       "liveTitle": "สัญญาณสถานะแมตช์",
       "liveText": "สแกนสถานะสด กำลังจะแข่ง และจบแล้วได้รวดเร็ว เหมาะกับวันที่มีหลายคู่พร้อมกัน"
-    }
+    },
+    "metricMatches": "คู่แข่ง"
   },
   "livescore": {
     "title": "ผลการแข่งขันสด",
@@ -256,7 +257,31 @@
     "startingXI": "ตัวจริง",
     "substitutes": "ตัวสำรอง",
     "venue": "สนาม",
-    "round": "รอบที่"
+    "round": "รอบที่",
+    "unavailableTitle": "ไม่พบรายละเอียดการแข่งขัน",
+    "noApiFixtureId": "คู่นี้ไม่มีรหัสการแข่งขันจาก API-Football",
+    "venueUnavailable": "ไม่พบข้อมูลสนาม",
+    "statsGroups": "ชุดสถิติ",
+    "playerStats": "สถิตินักเตะ",
+    "matchEvents": "เหตุการณ์การแข่งขัน",
+    "noEventData": "ยังไม่มีข้อมูลเหตุการณ์",
+    "analysisGraph": "กราฟวิเคราะห์การแข่งขัน",
+    "analysisGraphHint": "สร้างจากสถิติ API-Football เช่น ครองบอล ยิง ใบเตือน การส่งบอล และเตะมุม",
+    "balancedStat": "สูสี",
+    "teamStatistics": "สถิติทีม",
+    "noTeamStatistics": "ยังไม่มีข้อมูลสถิติทีม",
+    "h2h": "สถิติพบกันย้อนหลัง",
+    "noH2hData": "ยังไม่มีข้อมูลการพบกันย้อนหลัง",
+    "noLineupData": "ยังไม่มีข้อมูลผู้เล่น โค้ช หรือแผนการเล่น",
+    "coach": "โค้ช",
+    "formationPitch": "สนามแผนการเล่น",
+    "noGridData": "ยังไม่มีตำแหน่งนักเตะบนสนาม",
+    "unavailable": "ไม่พบข้อมูล",
+    "noPlayerStatistics": "ยังไม่มีข้อมูลสถิตินักเตะ",
+    "playerStatsTitleSuffix": "สถิตินักเตะ",
+    "captain": "กัปตัน",
+    "loadError": "ไม่สามารถโหลดรายละเอียดการแข่งขันได้",
+    "backToMatches": "กลับไปหน้าการแข่งขัน"
   },
   "prediction": {
     "title": "ทายผล",
@@ -452,5 +477,142 @@
     "finished": "จบแล้ว",
     "postponed": "เลื่อน",
     "cancelled": "ยกเลิก"
+  },
+  "football": {
+    "leaguesTitle": "ลีกฟุตบอล",
+    "leaguesDescription": "วิดเจ็ตลีก: รายการแข่งขันที่เปิดใช้งานจาก API-Football",
+    "leagueCount": "{count} ลีก",
+    "teamCount": "{count} ทีม",
+    "season": "ฤดูกาล {season}",
+    "countryUnavailable": "ไม่พบข้อมูลประเทศ",
+    "leagueSchedule": "โปรแกรมการแข่งขันลีก",
+    "standings": "ตารางคะแนน",
+    "teamUnavailable": "ไม่พบข้อมูลทีม",
+    "playerUnavailable": "ไม่พบข้อมูลนักเตะ",
+    "founded": "ก่อตั้ง {year}",
+    "nationalTeam": "ทีมชาติ",
+    "club": "สโมสร",
+    "code": "รหัสทีม",
+    "city": "เมือง",
+    "teamSeasonStats": "สถิติทีมประจำฤดูกาล",
+    "wins": "ชนะ",
+    "draws": "เสมอ",
+    "losses": "แพ้",
+    "cleanSheets": "คลีนชีต",
+    "played": "ลงเล่น",
+    "goalsFor": "ประตูได้",
+    "goalsAgainst": "ประตูเสีย",
+    "teamStatsHint": "เลือกลีกและฤดูกาลเพื่อแสดงสถิติทีมประจำฤดูกาล",
+    "nationalityUnavailable": "ไม่พบสัญชาติ",
+    "ageYears": "{age} ปี",
+    "height": "ส่วนสูง {value}",
+    "weight": "น้ำหนัก {value}",
+    "injured": "บาดเจ็บ",
+    "playerProfileStats": "สถิติโปรไฟล์นักเตะ",
+    "table": {
+      "time": "เวลา",
+      "home": "เจ้าบ้าน",
+      "score": "สกอร์",
+      "away": "ทีมเยือน",
+      "status": "สถานะ",
+      "team": "ทีม",
+      "playedShort": "แข่ง",
+      "goalDiffShort": "ผลต่าง",
+      "pointsShort": "แต้ม",
+      "competition": "รายการ",
+      "appearancesShort": "ลง",
+      "minutesShort": "นาที",
+      "positionShort": "ตำแหน่ง",
+      "ratingShort": "เรต",
+      "goalsAssistsShort": "ประตู/แอสซิสต์",
+      "cards": "ใบ",
+      "player": "นักเตะ"
+    }
+  },
+  "worldFootball": {
+    "eyebrow": "ฟุตบอลโลก 2026",
+    "hostLine": "แคนาดา - เม็กซิโก - สหรัฐฯ",
+    "title": "เพิ่มบรรยากาศฟุตบอลระดับโลกให้ทั้งฤดูกาล",
+    "description": "ติดตามฤดูกาลด้วยกลิ่นอายทัวร์นาเมนต์ใหญ่: ประเทศเจ้าภาพ เมืองแข่งขัน ผลสด และเส้นทางลีกต่าง ๆ รวมอยู่ในศูนย์การแข่งขันเดียว",
+    "hosts": "เจ้าภาพ",
+    "cityPulse": "เมืองแข่งขัน",
+    "ctaMatches": "ดูการแข่งขัน",
+    "ctaLeagues": "ดูลีกทั้งหมด",
+    "stats": {
+      "teams": "ทีม",
+      "cities": "เมืองเจ้าภาพ",
+      "countries": "ประเทศเจ้าภาพ"
+    }
+  },
+  "predictionForm": {
+    "badge": "ทายผลแมตช์",
+    "title": "ทายผลการแข่งขัน",
+    "subtitle": "เลือกได้ทั้งผลพื้นฐาน สกอร์รวม รายละเอียดเชิงลึก และระดับความมั่นใจ",
+    "locksIn": "ล็อกใน {time}",
+    "submit": "ส่งคำทาย",
+    "common": {
+      "yes": "มี",
+      "no": "ไม่มี",
+      "cancel": "ยกเลิก",
+      "confirm": "ยืนยัน",
+      "vs": "VS"
+    },
+    "basic": {
+      "title": "การทายพื้นฐาน",
+      "subtitle": "ต้องมี: ผลแพ้/ชนะ/เสมอ, สกอร์รวม และทีมที่ชนะ",
+      "result": "ผลแพ้/ชนะ/เสมอ",
+      "fullScore": "สกอร์รวม",
+      "winnerTeam": "ทีมที่ชนะ",
+      "scorePreview": "สกอร์ที่ทาย: {home} - {away}",
+      "selectScores": "เลือกสกอร์ของทั้งสองทีม"
+    },
+    "outcome": {
+      "homeWin": "{team} ชนะ",
+      "awayWin": "{team} ชนะ",
+      "draw": "เสมอ"
+    },
+    "deep": {
+      "title": "การทายเชิงลึก",
+      "subtitle": "เพิ่มความสนุกและโอกาสได้โบนัสจากรายละเอียดของเกม",
+      "firstScorer": "ผู้ทำประตูแรก",
+      "totalGoals": "จำนวนประตูรวม",
+      "over25": "มากกว่า 2.5",
+      "under25": "น้อยกว่า 2.5",
+      "firstGoalTeam": "ทีมที่ยิงก่อน",
+      "noGoal": "ไม่มีประตู",
+      "halfTimeScore": "ครึ่งแรกจบเท่าไหร่",
+      "extraTime": "มีการต่อเวลาหรือไม่",
+      "penalties": "มีลูกโทษหรือไม่"
+    },
+    "confidence": {
+      "title": "ระดับความมั่นใจ",
+      "subtitle": "มั่นใจมากได้คะแนนเยอะขึ้น แต่ถ้าผิดก็เสียโอกาสมากขึ้น",
+      "safe": "ปลอดภัย x1.0",
+      "confident": "มั่นใจ x1.5",
+      "bold": "กล้าเสี่ยง x2.0"
+    },
+    "summary": {
+      "title": "สรุปใบส่งทายผล",
+      "overUnder": "สูง/ต่ำ 2.5"
+    },
+    "side": {
+      "streak": "สตรีค",
+      "pointsCorrect": "แต้ม/ทายถูก",
+      "balance": "ยอดแต้ม"
+    },
+    "ai": {
+      "title": "ทายด้วย AI",
+      "description": "AI แนะนำ: สกอร์ใกล้เคียง 2-1, ประตูรวมมากกว่า 2.5 และเจ้าบ้านมีโอกาสยิงก่อน",
+      "use": "ใช้คำแนะนำ AI"
+    },
+    "submitted": {
+      "title": "ส่งคำทายแล้ว!",
+      "description": "ระบบจะคำนวณคะแนนหลังจบการแข่งขัน"
+    },
+    "confirm": {
+      "title": "ยืนยันคำทาย",
+      "youPredict": "คุณกำลังทาย",
+      "lockNotice": "คำทายจะล็อกเมื่อเริ่มแข่งและไม่สามารถแก้ไขได้"
+    }
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -28,8 +29,10 @@ interface AIMatchOfTheDayProps {
 }
 
 export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
+  const locale = useLocale();
   const t = useTranslations();
   const {
+    matchId,
     homeTeam,
     homeCrest,
     awayTeam,
@@ -170,9 +173,11 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
           </ul>
         </div>
 
-        <Button variant="outline" size="md" className="w-full">
-          {t("dashboard.viewAiInsight")}
-        </Button>
+        <Link href={`/${locale}/livescore/${matchId}`}>
+          <Button variant="outline" size="md" className="w-full">
+            {t("dashboard.viewAiInsight")}
+          </Button>
+        </Link>
       </div>
     </Card>
   );

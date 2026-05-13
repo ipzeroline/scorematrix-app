@@ -1,8 +1,8 @@
-import { PredictApiDemo } from "@/components/predict/PredictApiDemo";
+import { PredictApi } from "@/components/predict/PredictApi";
 import { loadFixturesForDate, sortFixtures } from "@/lib/football-page-data";
 
 export default async function PredictPage() {
   const fixtures = sortFixtures(await loadFixturesForDate(50));
 
-  return <PredictApiDemo fixtures={fixtures} />;
+  return <PredictApi fixtures={fixtures} />;
 }

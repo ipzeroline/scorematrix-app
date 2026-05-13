@@ -1,4 +1,4 @@
-import { LivescoreDemo, type FixturesPayload } from "@/components/livescore/LivescoreDemo";
+import { Livescore, type FixturesPayload } from "@/components/livescore/Livescore";
 import {
   ApiFootballError,
   getApiFootballFixtures,
@@ -13,7 +13,7 @@ export default async function LivescorePage({ params }: Props) {
   const { locale } = await params;
   const initialPayload = await loadInitialFixtures();
 
-  return <LivescoreDemo initialPayload={initialPayload} locale={locale} />;
+  return <Livescore initialPayload={initialPayload} locale={locale} />;
 }
 
 async function loadInitialFixtures(): Promise<FixturesPayload> {

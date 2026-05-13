@@ -216,7 +216,8 @@
       "noGamblingText": "Match predictions are based on football knowledge and platform points, with no real money wagering.",
       "liveTitle": "Live status signals",
       "liveText": "Scan live, upcoming and finished status quickly so the match list stays useful during busy game days."
-    }
+    },
+    "metricMatches": "Matches"
   },
   "livescore": {
     "title": "တိုက်ရိုက်ရလဒ်",
@@ -256,7 +257,31 @@
     "startingXI": "Starting XI",
     "substitutes": "Substitutes",
     "venue": "Venue",
-    "round": "Round"
+    "round": "Round",
+    "unavailableTitle": "Match details unavailable",
+    "noApiFixtureId": "This match does not have an API-Football fixture id.",
+    "venueUnavailable": "Venue unavailable",
+    "statsGroups": "Stats groups",
+    "playerStats": "Player stats",
+    "matchEvents": "Match events",
+    "noEventData": "No event data available yet",
+    "analysisGraph": "Match analysis graph",
+    "analysisGraphHint": "Built from API-Football fixture statistics such as possession, shots, cards, passes and corners.",
+    "balancedStat": "Even",
+    "teamStatistics": "Team statistics",
+    "noTeamStatistics": "No team statistics available yet",
+    "h2h": "Historical head-to-head",
+    "noH2hData": "No head-to-head data available yet",
+    "noLineupData": "No lineup, coach or formation data available yet",
+    "coach": "Coach",
+    "formationPitch": "Formation pitch",
+    "noGridData": "No player grid data available yet",
+    "unavailable": "Unavailable",
+    "noPlayerStatistics": "No player statistics available yet",
+    "playerStatsTitleSuffix": "player stats",
+    "captain": "Captain",
+    "loadError": "Unable to load match details",
+    "backToMatches": "Back to matches"
   },
   "prediction": {
     "title": "ခန့်မှန်းချက်များ",
@@ -452,5 +477,142 @@
     "finished": "ပြီးဆုံး",
     "postponed": "POSTPONED",
     "cancelled": "CANCELLED"
+  },
+  "football": {
+    "leaguesTitle": "Football leagues",
+    "leaguesDescription": "League widget: all active API-Football competitions.",
+    "leagueCount": "{count, plural, one {# league} other {# leagues}}",
+    "teamCount": "{count, plural, one {# team} other {# teams}}",
+    "season": "Season {season}",
+    "countryUnavailable": "Country unavailable",
+    "leagueSchedule": "League schedule",
+    "standings": "Standings",
+    "teamUnavailable": "Team profile unavailable",
+    "playerUnavailable": "Player profile unavailable.",
+    "founded": "Founded {year}",
+    "nationalTeam": "National team",
+    "club": "Club",
+    "code": "Code",
+    "city": "City",
+    "teamSeasonStats": "Team season statistics",
+    "wins": "Wins",
+    "draws": "Draws",
+    "losses": "Losses",
+    "cleanSheets": "Clean sheets",
+    "played": "Played",
+    "goalsFor": "Goals for",
+    "goalsAgainst": "Goals against",
+    "teamStatsHint": "Pass a league and season to show team season statistics.",
+    "nationalityUnavailable": "Nationality N/A",
+    "ageYears": "{age} years",
+    "height": "Height {value}",
+    "weight": "Weight {value}",
+    "injured": "Injured",
+    "playerProfileStats": "Player profile statistics",
+    "table": {
+      "time": "Time",
+      "home": "Home",
+      "score": "Score",
+      "away": "Away",
+      "status": "Status",
+      "team": "Team",
+      "playedShort": "P",
+      "goalDiffShort": "GD",
+      "pointsShort": "Pts",
+      "competition": "Competition",
+      "appearancesShort": "App",
+      "minutesShort": "Min",
+      "positionShort": "Pos",
+      "ratingShort": "Rate",
+      "goalsAssistsShort": "G/A",
+      "cards": "Cards",
+      "player": "Player"
+    }
+  },
+  "worldFootball": {
+    "eyebrow": "World football 2026",
+    "hostLine": "Canada - Mexico - USA",
+    "title": "The global football year is on the horizon",
+    "description": "Follow the season with a tournament mood: host nations, city pulses, live fixtures and league paths flowing into one match center.",
+    "hosts": "Host",
+    "cityPulse": "City pulse",
+    "ctaMatches": "Explore matches",
+    "ctaLeagues": "Browse leagues",
+    "stats": {
+      "teams": "Teams",
+      "cities": "Host cities",
+      "countries": "Host countries"
+    }
+  },
+  "predictionForm": {
+    "badge": "Match Prediction",
+    "title": "Predict Match",
+    "subtitle": "Pick basic results, exact score, deeper props and confidence level.",
+    "locksIn": "Locks in {time}",
+    "submit": "Submit prediction",
+    "common": {
+      "yes": "Yes",
+      "no": "No",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "vs": "VS"
+    },
+    "basic": {
+      "title": "Basic prediction",
+      "subtitle": "Required: result, exact score and winner team.",
+      "result": "Result / win / draw",
+      "fullScore": "Exact score",
+      "winnerTeam": "Winner team",
+      "scorePreview": "Your prediction: {home} - {away}",
+      "selectScores": "Select scores for both teams"
+    },
+    "outcome": {
+      "homeWin": "{team} win",
+      "awayWin": "{team} win",
+      "draw": "Draw"
+    },
+    "deep": {
+      "title": "Deep prediction",
+      "subtitle": "Add more fun and earn bonus chances from match details.",
+      "firstScorer": "First goalscorer",
+      "totalGoals": "Total goals",
+      "over25": "Over 2.5",
+      "under25": "Under 2.5",
+      "firstGoalTeam": "Team to score first",
+      "noGoal": "No goal",
+      "halfTimeScore": "Half-time score",
+      "extraTime": "Extra time?",
+      "penalties": "Penalties?"
+    },
+    "confidence": {
+      "title": "Confidence Level",
+      "subtitle": "Higher confidence can score more, but misses hurt more.",
+      "safe": "Safe x1.0",
+      "confident": "Confident x1.5",
+      "bold": "Bold x2.0"
+    },
+    "summary": {
+      "title": "Prediction slip",
+      "overUnder": "Over/Under 2.5"
+    },
+    "side": {
+      "streak": "Streak",
+      "pointsCorrect": "Pts/Correct",
+      "balance": "Balance"
+    },
+    "ai": {
+      "title": "Predict with AI",
+      "description": "AI tip: close to 2-1, over 2.5 total goals, and the home team has a strong chance to score first.",
+      "use": "Use AI suggestion"
+    },
+    "submitted": {
+      "title": "Prediction submitted!",
+      "description": "Points will be calculated after the match finishes."
+    },
+    "confirm": {
+      "title": "Confirm prediction",
+      "youPredict": "You are predicting",
+      "lockNotice": "This prediction will lock at kickoff and cannot be changed."
+    }
   }
 }

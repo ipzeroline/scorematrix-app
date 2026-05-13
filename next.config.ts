@@ -11,6 +11,26 @@ const nextConfig: NextConfig = {
         hostname: "media.api-sports.io",
         pathname: "/football/teams/**",
       },
+      {
+        protocol: "https",
+        hostname: "media.api-sports.io",
+        pathname: "/football/leagues/**",
+      },
+      {
+        protocol: "https",
+        hostname: "media.api-sports.io",
+        pathname: "/football/players/**",
+      },
+      {
+        protocol: "https",
+        hostname: "media.api-sports.io",
+        pathname: "/football/coachs/**",
+      },
+      {
+        protocol: "https",
+        hostname: "media.api-sports.io",
+        pathname: "/football/venues/**",
+      },
     ],
   },
 };
