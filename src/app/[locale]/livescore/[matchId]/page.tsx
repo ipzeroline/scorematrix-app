@@ -28,6 +28,7 @@ import {
   getApiFootballFixtureDetails,
   getApiFootballH2H,
 } from "@/lib/api-football";
+import { MatchStatus } from "@/types/common";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -121,13 +122,15 @@ export default async function MatchDetailPage({ params }: Props) {
           <p className="mt-4 text-xs text-gray-500">
             {fixture.venue || t("matchDetail.venueUnavailable")}
           </p>
-          <div className="mt-4 flex justify-center">
-            <Link href={`/${locale}/predict/${fixture.id}`} className="w-full sm:w-auto">
-              <Button variant="gold" size="md" className="w-full sm:w-auto">
-                {t("prediction.predictScore")}
-              </Button>
-            </Link>
-          </div>
+          {fixture.status === MatchStatus.UPCOMING && (
+            <div className="mt-4 flex justify-center">
+              <Link href={`/${locale}/predict/${fixture.id}`} className="w-full sm:w-auto">
+                <Button variant="gold" size="md" className="w-full sm:w-auto">
+                  {t("prediction.predictScore")}
+                </Button>
+              </Link>
+            </div>
+          )}
         </Card>
 
         <section className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">

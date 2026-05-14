@@ -12,6 +12,7 @@ import {
   getApiFootballLeagues,
   getApiFootballStandings,
 } from "@/lib/api-football";
+import { MatchStatus } from "@/types/common";
 
 type Props = {
   params: Promise<{ locale: string; leagueId: string }>;
@@ -92,11 +93,17 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                   </div>
                 </Link>
                 <div className="flex justify-start md:justify-end">
-                  <Link href={`/${locale}/predict/${match.id}`}>
-                    <Button size="sm" variant="gold">
-                      {t("prediction.predictScore")}
-                    </Button>
-                  </Link>
+                  {match.status === MatchStatus.UPCOMING ? (
+                    <Link href={`/${locale}/predict/${match.id}`}>
+                      <Button size="sm" variant="gold">
+                        {t("prediction.predictScore")}
+                      </Button>
+                    </Link>
+                  ) : (
+                    <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
+                      -
+                    </span>
+                  )}
                 </div>
               </div>
             ))}
