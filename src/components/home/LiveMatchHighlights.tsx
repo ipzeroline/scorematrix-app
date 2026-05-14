@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
@@ -97,8 +97,6 @@ export function LiveMatchHighlights({
   const locale = useLocale();
   const t = useTranslations();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
   const apiMatches = fixtures
     .filter((fixture) => fixture.status === MatchStatus.LIVE)
     .map(mapFixtureToLiveMatch);
@@ -107,24 +105,6 @@ export function LiveMatchHighlights({
     : apiMatches.length > 0
       ? apiMatches
       : liveMatches;
-
-  const updateScrollButtons = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 0);
-    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-  }, []);
-
-  const scroll = (direction: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const amount = 300;
-    el.scrollBy({
-      left: direction === "left" ? -amount : amount,
-      behavior: "smooth",
-    });
-    setTimeout(updateScrollButtons, 300);
-  };
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -137,11 +117,10 @@ export function LiveMatchHighlights({
         left: isAtEnd ? 0 : el.scrollLeft + 292,
         behavior: "smooth",
       });
-      setTimeout(updateScrollButtons, 420);
     }, 3600);
 
     return () => window.clearInterval(interval);
-  }, [displayMatches.length, updateScrollButtons]);
+  }, [displayMatches.length]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -176,85 +155,57 @@ export function LiveMatchHighlights({
           {t("livescore.noMatches")}
         </Card>
       ) : (
-      <div className="relative">
-        {canScrollLeft && (
-          <button
-            onClick={() => scroll("left")}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-[#1a1a2e]/90 border border-gray-700 text-gray-300 hover:text-white hover:border-cyan-500/50 transition-colors flex items-center justify-center"
-            aria-label={t("common.scrollLeft")}
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            className="flex gap-4 overflow-x-auto scrollbar-hide pb-1"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
-        )}
-        {canScrollRight && (
-          <button
-            onClick={() => scroll("right")}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-[#1a1a2e]/90 border border-gray-700 text-gray-300 hover:text-white hover:border-cyan-500/50 transition-colors flex items-center justify-center"
-            aria-label={t("common.scrollRight")}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
-        )}
-
-        <div
-          ref={scrollRef}
-          onScroll={updateScrollButtons}
-          className="flex gap-4 overflow-x-auto scrollbar-hide pb-1"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-        >
-          {displayMatches.map((match) => (
-            <Link
-              key={match.id}
-              href={`/${locale}/livescore/${match.id}`}
-              className="flex-shrink-0"
-            >
-              <Card
-                neon="cyan"
-                hover
-                className="cyber-live-card w-64"
+            {displayMatches.map((match) => (
+              <Link
+                key={match.id}
+                href={`/${locale}/livescore/${match.id}`}
+                className="flex-shrink-0"
               >
-                {/* League badge */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">
-                    {match.league}
-                  </span>
-                  <StatusBadge status={match.status} />
-                </div>
-
-                {/* Teams and score */}
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                    <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
-                    <span className="text-sm text-gray-300 text-center truncate w-full">
-                      {match.homeTeam}
+                <Card neon="cyan" hover className="cyber-live-card w-64">
+                  {/* League badge */}
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                      {match.league}
                     </span>
+                    <StatusBadge status={match.status} />
                   </div>
 
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-2xl font-bold font-mono text-white">
-                      {match.homeScore} - {match.awayScore}
-                    </span>
-                    <span className="text-xs text-green-400 font-mono">
-                      {match.minute}&apos;
-                    </span>
-                  </div>
+                  {/* Teams and score */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                      <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
+                      <span className="text-sm text-gray-300 text-center truncate w-full">
+                        {match.homeTeam}
+                      </span>
+                    </div>
 
-                  <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                    <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
-                    <span className="text-sm text-gray-300 text-center truncate w-full">
-                      {match.awayTeam}
-                    </span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-2xl font-bold font-mono text-white">
+                        {match.homeScore} - {match.awayScore}
+                      </span>
+                      <span className="text-xs text-green-400 font-mono">
+                        {match.minute}&apos;
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                      <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
+                      <span className="text-sm text-gray-300 text-center truncate w-full">
+                        {match.awayTeam}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </Link>
-          ))}
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
       )}
     </div>
   );

@@ -33,7 +33,8 @@
       "Bash(curl -s -o /dev/null -w \"Root \\(/\\) redirect to: %{redirect_url}\\\\n\" http://localhost:3000/)",
       "Bash(curl -s -o /dev/null -w \"/th page: %{http_code}\\\\n\" http://localhost:3000/th)",
       "Bash(curl -s -o /dev/null -w \"/th/livescore: %{http_code}\\\\n\" http://localhost:3000/th/livescore)",
-      "Bash(curl -s -o /dev/null -w \"/en still works: %{http_code}\\\\n\" http://localhost:3000/en)"
+      "Bash(curl -s -o /dev/null -w \"/en still works: %{http_code}\\\\n\" http://localhost:3000/en)",
+      "Bash(npx tsc *)"
     ]
   }
 }

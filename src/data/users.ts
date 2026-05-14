@@ -18,7 +18,10 @@ function generateUsers(): User[] {
       id,
       username: `player${i}`,
       email: `player${i}@scormatrix.app`,
+      displayName: `Player ${i}`,
       avatar: avatars[i % 2],
+      bio: "",
+      favoriteTeam: null,
       role: i <= 2 ? 'admin' : 'user',
       stats: {
         freePoints: Math.floor(Math.random() * 50000),
@@ -48,6 +51,7 @@ function generateUsers(): User[] {
   users[0] = {
     ...users[0],
     username: 'admin_master',
+    displayName: 'Admin Master',
     email: 'admin@scormatrix.app',
     role: 'admin',
     stats: {
@@ -70,6 +74,7 @@ function generateUsers(): User[] {
   users[1] = {
     ...users[1],
     username: 'mod_support',
+    displayName: 'Mod Support',
     email: 'mod@scormatrix.app',
     role: 'admin',
     stats: {

@@ -4,7 +4,10 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  displayName: string;
   avatar: string | null;
+  bio: string;
+  favoriteTeam: string | null;
   role: 'user' | 'admin';
   stats: UserStats;
   preferences: UserPreferences;
