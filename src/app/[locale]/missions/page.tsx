@@ -1,188 +1,316 @@
 "use client";
-import { Card } from "@/components/ui/Card";
+
+import { useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import { Award, CalendarClock, CheckCircle2, Flame, Star, Trophy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { PointsBadge } from "@/components/shared/PointsBadge";
 import { Tabs } from "@/components/ui/Tabs";
-import { useState } from "react";
-import { Zap, Star, Clock } from "lucide-react";
+import { PointsBadge } from "@/components/shared/PointsBadge";
+import { dailyMissions, weeklyMissions } from "@/data/missions";
+import {
+  achievementItems,
+  getMissionPageCopy,
+} from "@/data/mission-page-content";
+import type { Mission } from "@/types/mission";
+import { MissionType } from "@/types/common";
+import { cn } from "@/lib/utils";
 
-const DAILY_MISSIONS = [
-  { id: "d1", title: "Predict 3 Matches", desc: "Submit predictions for 3 different matches today", category: "predict", progress: 2, target: 3, points: 50, xp: 100, completed: false, claimed: false },
-  { id: "d2", title: "Perfect Accuracy", desc: "Get 1 exact score prediction correct", category: "accuracy", progress: 0, target: 1, points: 100, xp: 200, completed: false, claimed: false },
-  { id: "d3", title: "Daily Login Streak", desc: "Log in for 7 consecutive days", category: "daily_login", progress: 5, target: 7, points: 30, xp: 50, completed: false, claimed: false },
-  { id: "d4", title: "Share a Match", desc: "Share a match prediction with friends", category: "social", progress: 1, target: 1, points: 20, xp: 30, completed: true, claimed: false },
-  { id: "d5", title: "Predict a Draw", desc: "Correctly predict a draw result", category: "predict", progress: 0, target: 1, points: 75, xp: 150, completed: false, claimed: false },
-];
+type TabKey = "daily" | "weekly" | "achievements";
 
-const WEEKLY_MISSIONS = [
-  { id: "w1", title: "Predict 20 Matches", desc: "Submit 20 predictions this week", category: "predict", progress: 14, target: 20, points: 200, xp: 500, completed: false, claimed: false },
-  { id: "w2", title: "Win Streak 5", desc: "Get 5 correct predictions in a row", category: "streak", progress: 3, target: 5, points: 300, xp: 750, completed: false, claimed: false },
-  { id: "w3", title: "Accuracy Champion", desc: "Maintain 70%+ accuracy for the week", category: "accuracy", progress: 68, target: 70, points: 500, xp: 1000, completed: false, claimed: false },
-];
-
-const ACHIEVEMENTS = [
-  { name: "Rookie", desc: "Submit first prediction", unlocked: true, icon: "🌟" },
-  { name: "Hot Streak", desc: "5 consecutive correct", unlocked: true, icon: "🔥" },
-  { name: "Centurion", desc: "100 predictions", unlocked: true, icon: "💯" },
-  { name: "Sharpshooter", desc: "10 exact scores", unlocked: false, icon: "🎯" },
-  { name: "Marathon", desc: "Predict 30 days straight", unlocked: false, icon: "🏃" },
-  { name: "Prophet", desc: "Predict an upset correctly", unlocked: true, icon: "🔮" },
-  { name: "Social Star", desc: "Invite 5 friends", unlocked: false, icon: "⭐" },
-  { name: "Veteran", desc: "Level 25 reached", unlocked: false, icon: "👑" },
-];
+const categoryColors: Record<string, "cyan" | "green" | "gold" | "purple" | "magenta"> = {
+  predict: "cyan",
+  streak: "gold",
+  accuracy: "green",
+  social: "purple",
+  daily_login: "magenta",
+};
 
 export default function MissionsPage() {
-  const [tab, setTab] = useState("daily");
-  const [showClaimed, setShowClaimed] = useState<Record<string, boolean>>({});
+  const { locale } = useParams<{ locale: string }>();
+  const copy = getMissionPageCopy(locale);
+  const [tab, setTab] = useState<TabKey>("daily");
+  const [claimed, setClaimed] = useState<Record<string, boolean>>({});
 
-  const claim = (id: string) => {
-    setShowClaimed((prev) => ({ ...prev, [id]: true }));
-  };
+  const daily = useMemo(
+    () => dailyMissions.map((mission) => withCopy(mission, copy)),
+    [copy]
+  );
+  const weekly = useMemo(
+    () => weeklyMissions.map((mission) => withCopy(mission, copy)),
+    [copy]
+  );
+  const availableRewards = [...daily, ...weekly]
+    .filter((mission) => mission.completed)
+    .reduce((sum, mission) => sum + mission.rewardPoints, 0);
+  const completedToday = daily.filter((mission) => mission.completed).length;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold font-display text-white">
-            Missions
-          </h1>
-          <p className="text-sm text-gray-500">
-            Complete missions to earn points and XP
-          </p>
-        </div>
-        <div className="text-right">
-          <div className="flex items-center gap-2">
-            <Star size={16} className="text-purple-400" />
-            <span className="text-sm text-purple-400 font-mono">
-              Level 12 • 2,840 XP
-            </span>
+    <div className="mx-auto max-w-5xl space-y-6 pb-8">
+      <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b1018] p-5 md:p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(34,211,238,0.14),transparent_30%),radial-gradient(circle_at_82%_22%,rgba(168,85,247,0.12),transparent_28%)]" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <Badge variant="purple" size="md">
+              {copy.levelLine}
+            </Badge>
+            <h1 className="mt-3 font-display text-3xl font-black text-white md:text-4xl">
+              {copy.title}
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
+              {copy.subtitle}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 lg:w-[430px]">
+            <HeroStat
+              icon={CheckCircle2}
+              label={copy.completedToday}
+              value={`${completedToday}/${daily.length}`}
+              tone="text-green-300"
+            />
+            <HeroStat
+              icon={Trophy}
+              label={copy.totalRewards}
+              value={availableRewards.toLocaleString()}
+              tone="text-amber-300"
+            />
+            <HeroStat
+              icon={Flame}
+              label={copy.activeStreak}
+              value={`7 ${copy.days}`}
+              tone="text-red-300"
+            />
           </div>
         </div>
-      </div>
+      </section>
 
       <Tabs
         tabs={[
-          { key: "daily", label: "Daily", count: DAILY_MISSIONS.length },
-          { key: "weekly", label: "Weekly", count: WEEKLY_MISSIONS.length },
-          { key: "achievements", label: "Achievements", count: ACHIEVEMENTS.length },
+          { key: "daily", label: copy.daily, count: daily.length },
+          { key: "weekly", label: copy.weekly, count: weekly.length },
+          { key: "achievements", label: copy.achievements, count: achievementItems.length },
         ]}
         activeTab={tab}
-        onChange={setTab}
+        onChange={(key) => setTab(key as TabKey)}
       />
 
       {tab === "daily" && (
-        <div className="space-y-3">
-          {DAILY_MISSIONS.map((m) => (
-            <Card key={m.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 mr-4">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-sm font-semibold text-white">
-                      {m.title}
-                    </h4>
-                    {m.completed && !showClaimed[m.id] && (
-                      <Badge variant="green">Ready</Badge>
-                    )}
-                    {showClaimed[m.id] && (
-                      <Badge variant="green">Claimed</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 mb-2">{m.desc}</p>
-                  <ProgressBar
-                    value={m.progress}
-                    max={m.target}
-                    color="cyan"
-                    size="sm"
-                    showLabel
-                  />
-                </div>
-                <div className="text-right shrink-0">
-                  <PointsBadge
-                    type="free"
-                    amount={m.points}
-                    size="sm"
-                    showLabel
-                  />
-                  <p className="text-[10px] text-purple-400 mt-1">
-                    +{m.xp} XP
-                  </p>
-                  {m.completed && !showClaimed[m.id] ? (
-                    <Button
-                      size="sm"
-                      variant="gold"
-                      className="mt-2"
-                      onClick={() => claim(m.id)}
-                    >
-                      Claim
-                    </Button>
-                  ) : showClaimed[m.id] ? (
-                    <p className="text-xs text-green-400 mt-2">✓ Claimed</p>
-                  ) : null}
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <MissionList
+          intro={copy.dailyIntro}
+          missions={daily}
+          copy={copy}
+          claimed={claimed}
+          onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
+        />
       )}
 
       {tab === "weekly" && (
-        <div className="space-y-3">
-          {WEEKLY_MISSIONS.map((m) => (
-            <Card key={m.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0 mr-4">
-                  <h4 className="text-sm font-semibold text-white mb-1">
-                    {m.title}
-                  </h4>
-                  <p className="text-xs text-gray-500 mb-2">{m.desc}</p>
-                  <ProgressBar
-                    value={m.progress}
-                    max={m.target}
-                    color="purple"
-                    size="sm"
-                    showLabel
-                  />
-                </div>
-                <div className="text-right shrink-0">
-                  <PointsBadge
-                    type="free"
-                    amount={m.points}
-                    size="sm"
-                    showLabel
-                  />
-                  <p className="text-[10px] text-purple-400 mt-1">
-                    +{m.xp} XP
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <MissionList
+          intro={copy.weeklyIntro}
+          missions={weekly}
+          copy={copy}
+          claimed={claimed}
+          onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
+        />
       )}
 
       {tab === "achievements" && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {ACHIEVEMENTS.map((a, i) => (
-            <Card
-              key={i}
-              className={`p-4 text-center ${
-                a.unlocked ? "" : "opacity-50"
-              }`}
-            >
-              <div className="text-2xl mb-2">{a.icon}</div>
-              <h4 className="text-xs font-semibold text-white mb-1">
-                {a.name}
-              </h4>
-              <p className="text-[10px] text-gray-500">{a.desc}</p>
-              {!a.unlocked && (
-                <p className="text-[10px] text-gray-600 mt-2">🔒 Locked</p>
-              )}
-            </Card>
-          ))}
-        </div>
+        <section>
+          <p className="mb-4 text-sm leading-6 text-gray-500">
+            {copy.achievementsIntro}
+          </p>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {achievementItems.map((achievement) => {
+              const item = copy.achievementsList[achievement.id as keyof typeof copy.achievementsList];
+              return (
+                <Card
+                  key={achievement.id}
+                  className={cn(
+                    "p-4 text-center",
+                    !achievement.unlocked && "opacity-55"
+                  )}
+                >
+                  <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 font-mono text-sm font-black text-cyan-200">
+                    {achievement.icon}
+                  </div>
+                  <h3 className="text-sm font-bold text-white">{item.name}</h3>
+                  <p className="mt-2 text-xs leading-5 text-gray-500">
+                    {item.desc}
+                  </p>
+                  <Badge
+                    variant={achievement.unlocked ? "green" : "default"}
+                    className="mt-3"
+                  >
+                    {achievement.unlocked ? copy.unlocked : copy.locked}
+                  </Badge>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
       )}
     </div>
   );
+}
+
+function HeroStat({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: typeof Star;
+  label: string;
+  value: string;
+  tone: string;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-800 bg-black/25 p-3">
+      <Icon size={16} className={tone} />
+      <p className="mt-2 font-mono text-lg font-black text-white">{value}</p>
+      <p className="mt-1 text-[10px] leading-tight text-gray-500">{label}</p>
+    </div>
+  );
+}
+
+function MissionList({
+  intro,
+  missions,
+  copy,
+  claimed,
+  onClaim,
+}: {
+  intro: string;
+  missions: Mission[];
+  copy: ReturnType<typeof getMissionPageCopy>;
+  claimed: Record<string, boolean>;
+  onClaim: (id: string) => void;
+}) {
+  return (
+    <section>
+      <p className="mb-4 text-sm leading-6 text-gray-500">{intro}</p>
+      <div className="grid gap-3 lg:grid-cols-2">
+        {missions.map((mission) => (
+          <MissionPanel
+            key={mission.id}
+            mission={mission}
+            copy={copy}
+            claimed={Boolean(claimed[mission.id])}
+            onClaim={onClaim}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function MissionPanel({
+  mission,
+  copy,
+  claimed,
+  onClaim,
+}: {
+  mission: Mission;
+  copy: ReturnType<typeof getMissionPageCopy>;
+  claimed: boolean;
+  onClaim: (id: string) => void;
+}) {
+  const progress = Math.min(mission.progress, mission.target);
+  const complete = mission.completed || progress >= mission.target;
+  const progressColor = complete ? "green" : categoryColors[mission.category] ?? "cyan";
+
+  return (
+    <Card className={cn("p-4", complete && !claimed && "border-green-500/30")}>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Badge variant={mission.type === MissionType.DAILY ? "cyan" : "purple"}>
+              {mission.type === MissionType.DAILY ? copy.daily : copy.weekly}
+            </Badge>
+            <Badge variant={categoryColors[mission.category] ?? "cyan"}>
+              {copy.categories[mission.category]}
+            </Badge>
+          </div>
+          <h3 className="truncate text-sm font-bold text-white">{mission.title}</h3>
+        </div>
+        <StatusBadge complete={complete} claimed={claimed} copy={copy} />
+      </div>
+
+      <p className="mb-3 text-xs leading-5 text-gray-400">{mission.description}</p>
+
+      <div className="mb-3">
+        <div className="mb-1 flex justify-between text-[10px]">
+          <span className="text-gray-500">{copy.progress}</span>
+          <span className="font-mono text-gray-400">
+            {progress}/{mission.target}
+          </span>
+        </div>
+        <ProgressBar value={progress} max={mission.target} color={progressColor} size="sm" />
+      </div>
+
+      <div className="flex items-center gap-2">
+        <PointsBadge type="free" amount={mission.rewardPoints} size="sm" showLabel />
+        <span className="font-mono text-xs font-bold text-purple-300">
+          +{mission.rewardXP} {copy.xp}
+        </span>
+      </div>
+
+      <div className="mt-3 flex items-center justify-between border-t border-gray-800/70 pt-3">
+        <span className="flex items-center gap-1 text-[10px] text-gray-500">
+          <CalendarClock size={12} />
+          {copy.resetsIn.replace("{time}", getTimeUntilReset(mission.resetAt, copy))}
+        </span>
+        {complete && !claimed ? (
+          <Button variant="gold" size="sm" onClick={() => onClaim(mission.id)}>
+            <Award size={14} />
+            {copy.claimReward}
+          </Button>
+        ) : claimed ? (
+          <span className="flex items-center gap-1 text-xs font-semibold text-green-300">
+            <CheckCircle2 size={14} />
+            {copy.claimed}
+          </span>
+        ) : (
+          <span className="flex items-center gap-1 text-[10px] text-gray-500">
+            <Zap size={12} />
+            {copy.keepGoing}
+          </span>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function StatusBadge({
+  complete,
+  claimed,
+  copy,
+}: {
+  complete: boolean;
+  claimed: boolean;
+  copy: ReturnType<typeof getMissionPageCopy>;
+}) {
+  if (claimed) return <Badge variant="green">{copy.claimed}</Badge>;
+  if (complete) return <Badge variant="gold">{copy.ready}</Badge>;
+  return <Badge variant="default">{copy.inProgress}</Badge>;
+}
+
+function withCopy(mission: Mission, copy: ReturnType<typeof getMissionPageCopy>): Mission {
+  const translated = copy.missions[mission.id as keyof typeof copy.missions];
+  return translated
+    ? { ...mission, title: translated.title, description: translated.desc }
+    : mission;
+}
+
+function getTimeUntilReset(resetAt: string, copy: ReturnType<typeof getMissionPageCopy>) {
+  const diff = new Date(resetAt).getTime() - Date.now();
+  if (diff <= 0) return copy.resetting;
+  const hours = Math.floor(diff / 3600000);
+  const minutes = Math.floor((diff % 3600000) / 60000);
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m`;
+  return copy.resetSoon;
 }

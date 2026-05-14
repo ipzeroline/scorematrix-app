@@ -2,84 +2,23 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, CalendarDays, Globe2, Trophy } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/Badge";
 import { WorldCupGroupsBoard } from "@/components/world-cup/WorldCupGroupsBoard";
-import { LOCALE_CODES, type LocaleCode } from "@/i18n";
+import { LOCALE_CODES } from "@/i18n";
 import { worldCupGroups } from "@/data/world-cup-2026";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
-const copyByLocaleDefault = {
-  title: "World Cup 2026 Groups",
-  description:
-    "Pick Group A-L to scan teams, standings and matchup cards in a quick sports-results layout.",
-  eyebrow: "FIFA World Cup 2026",
-  backHome: "Back home",
-  allGroups: "Groups A-L",
-  standings: "Standings",
-  matches: "Matches",
-  played: "P",
-  wins: "W",
-  draws: "D",
-  losses: "L",
-  goalDifference: "GD",
-  points: "Pts",
-  fifaRank: "FIFA rank",
-  nextFixtures: "Group fixtures",
-  groupStageSchedule: "Group stage fixtures",
-  matchday: "Matchday",
-  timeZone: "Times shown in Thailand time",
-  winner: "Current 1st",
-  runnerUp: "Current 2nd",
-  third: "Current 3rd",
-  sourceNote:
-    "Before kickoff, every team starts on 0 points. The table is ordered by group draw position for quick scanning.",
-  statTeams: "48 teams",
-  statGroups: "12 groups",
-  statKickoff: "11 Jun 2026",
-};
-
-const copyByLocale: Record<string, typeof copyByLocaleDefault> = {
-  th: {
-    title: "ตารางกลุ่มฟุตบอลโลก 2026",
-    description:
-      "เลือกกลุ่ม A-L เพื่อดูทีมในกลุ่ม ตารางอันดับ และคู่แข่งขันแบบหน้าผลกีฬาที่อ่านเร็ว",
-    eyebrow: "FIFA World Cup 2026",
-    backHome: "กลับหน้าแรก",
-    allGroups: "กลุ่ม A-L",
-    standings: "ตารางคะแนน",
-    matches: "คู่แข่งขัน",
-    played: "แข่ง",
-    wins: "ชนะ",
-    draws: "เสมอ",
-    losses: "แพ้",
-    goalDifference: "ได้เสีย",
-    points: "แต้ม",
-    fifaRank: "อันดับ FIFA",
-    nextFixtures: "โปรแกรมในกลุ่ม",
-    groupStageSchedule: "การแข่งขันรอบแบ่งกลุ่ม",
-    matchday: "นัดที่",
-    timeZone: "เวลาแสดงตามเวลาไทย",
-    winner: "อันดับ 1 ตอนนี้",
-    runnerUp: "อันดับ 2 ตอนนี้",
-    third: "อันดับ 3 ตอนนี้",
-    sourceNote:
-      "ก่อนเริ่มทัวร์นาเมนต์ ทุกทีมยังมี 0 คะแนน ตารางนี้จัดตามลำดับทีมในกลุ่มเพื่อให้กดดูง่าย",
-    statTeams: "48 ทีม",
-    statGroups: "12 กลุ่ม",
-    statKickoff: "11 มิ.ย. 2026",
-  },
-};
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const copy = getCopy(locale);
+  const t = await getTranslations({ locale, namespace: "worldCup2026" });
 
   return {
-    title: `${copy.title} | ScoreMatrix`,
-    description: copy.description,
+    title: `${t("title")} | ScoreMatrix`,
+    description: t("description"),
     alternates: {
       canonical: `/${locale}/world-cup-2026`,
       languages: Object.fromEntries(
@@ -87,8 +26,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ),
     },
     openGraph: {
-      title: `${copy.title} | ScoreMatrix`,
-      description: copy.description,
+      title: `${t("title")} | ScoreMatrix`,
+      description: t("description"),
       type: "website",
       locale,
       url: `/${locale}/world-cup-2026`,
@@ -99,7 +38,43 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function WorldCup2026Page({ params }: Props) {
   const { locale } = await params;
-  const copy = getCopy(locale);
+  const t = await getTranslations({ locale, namespace: "worldCup2026" });
+  const copy = {
+    title: t("title"),
+    description: t("description"),
+    eyebrow: t("eyebrow"),
+    backHome: t("backHome"),
+    allGroups: t("allGroups"),
+    groupLabel: t("groupLabel"),
+    groupSpotlights: Object.fromEntries(
+      worldCupGroups.map((group) => [group.id, t(`spotlights.${group.id}`)])
+    ),
+    standings: t("standings"),
+    team: t("team"),
+    teamsCount: t("teamsCount", { count: 4 }),
+    matches: t("matches"),
+    match: t("match"),
+    vs: t("vs"),
+    flagAlt: t("flagAlt"),
+    played: t("played"),
+    wins: t("wins"),
+    draws: t("draws"),
+    losses: t("losses"),
+    goalDifference: t("goalDifference"),
+    points: t("points"),
+    fifaRank: t("fifaRank"),
+    nextFixtures: t("nextFixtures"),
+    groupStageSchedule: t("groupStageSchedule"),
+    matchday: t("matchday"),
+    timeZone: t("timeZone"),
+    winner: t("winner"),
+    runnerUp: t("runnerUp"),
+    third: t("third"),
+    sourceNote: t("sourceNote"),
+    statTeams: t("statTeams"),
+    statGroups: t("statGroups"),
+    statKickoff: t("statKickoff"),
+  };
 
   return (
     <div className="flex flex-col gap-5 pb-8">
@@ -166,8 +141,4 @@ export default async function WorldCup2026Page({ params }: Props) {
       <WorldCupGroupsBoard groups={worldCupGroups} copy={copy} locale={locale} />
     </div>
   );
-}
-
-function getCopy(locale: string) {
-  return copyByLocale[locale as LocaleCode] ?? copyByLocaleDefault;
 }

@@ -60,7 +60,8 @@
     "wallet": "កាបូប",
     "settings": "ការកំណត់",
     "admin": "អ្នកគ្រប់គ្រង",
-    "rankShort": "Rank"
+    "rankShort": "Rank",
+    "affiliate": "អញ្ជើញមិត្ត"
   },
   "auth": {
     "login": "ចូលប្រើ",
@@ -158,7 +159,9 @@
     "forgotPasswordSubtitle": "បញ្ចូលអ៊ីមែលដែលបានប្រើចុះឈ្មោះ។ យើងនឹងផ្ញើតំណកំណត់ពាក្យសម្ងាត់ថ្មី។",
     "resetLinkSent": "បានផ្ញើសំណើហើយ។ ប្រសិនបើអ៊ីមែលនេះមានគណនី អ្នកនឹងទទួលបានតំណកំណត់ពាក្យសម្ងាត់ថ្មី។",
     "sendResetLink": "ផ្ញើតំណកំណត់ពាក្យសម្ងាត់ថ្មី",
-    "rememberedPassword": "ចងចាំពាក្យសម្ងាត់បានហើយ?"
+    "rememberedPassword": "ចងចាំពាក្យសម្ងាត់បានហើយ?",
+    "referralCode": "កូដអ្នកណែនាំ",
+    "referralCodeHint": "បើមិត្តភក្តិអញ្ជើញអ្នក កូដនឹងបង្ហាញនៅទីនេះ ដើម្បីឱ្យគណនីទាំងពីរទទួលរង្វាន់បន្ទាប់ពីបំពេញលក្ខខណ្ឌ។"
   },
   "wallet": {
     "title": "កាបូបពិន្ទុ និងក្រេឌីត",
@@ -576,13 +579,13 @@
     "disconnected": "Disconnected"
   },
   "legal": {
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy",
-    "rewardRules": "Reward Rules",
-    "legalNotice": "Legal Notice",
-    "faq": "FAQ",
-    "contact": "Contact Us",
-    "about": "About ScoreMatrix"
+    "terms": "លក្ខខណ្ឌប្រើប្រាស់",
+    "privacy": "គោលការណ៍ឯកជនភាព",
+    "rewardRules": "ច្បាប់រង្វាន់",
+    "legalNotice": "សេចក្តីជូនដំណឹងផ្លូវច្បាប់",
+    "faq": "សំណួរញឹកញាប់",
+    "contact": "ទំនាក់ទំនង",
+    "about": "អំពី"
   },
   "footer": {
     "platform": "វេទិកា",
@@ -649,18 +652,18 @@
     }
   },
   "worldFootball": {
-    "eyebrow": "World football 2026",
-    "hostLine": "Canada - Mexico - USA",
-    "title": "The global football year is on the horizon",
-    "description": "Follow the season with a tournament mood: host nations, city pulses, live fixtures and league paths flowing into one match center.",
-    "hosts": "Host",
-    "cityPulse": "City pulse",
+    "eyebrow": "World Cup 2026",
+    "hostLine": "កាណាដា - ម៉ិកស៊ិក - សហរដ្ឋអាមេរិក",
+    "title": "នាំបរិយាកាសបាល់ទាត់ពិភពលោកមកកាន់រដូវកាលទាំងមូល",
+    "description": "តាមដានរដូវកាលជាមួយអារម្មណ៍ពានធំ៖ ប្រទេសម្ចាស់ផ្ទះ ទីក្រុងប្រកួត លទ្ធផលបន្តផ្ទាល់ និងផ្លូវលីគទាំងអស់នៅក្នុងមជ្ឈមណ្ឌលប្រកួតតែមួយ។",
+    "hosts": "ម្ចាស់ផ្ទះ",
+    "cityPulse": "ទីក្រុងប្រកួត",
     "ctaMatches": "Explore matches",
     "ctaLeagues": "Browse leagues",
     "stats": {
-      "teams": "Teams",
-      "cities": "Host cities",
-      "countries": "Host countries"
+      "teams": "ក្រុម",
+      "cities": "ទីក្រុងម្ចាស់ផ្ទះ",
+      "countries": "ប្រទេសម្ចាស់ផ្ទះ"
     },
     "countdownLabel": "រាប់ថយក្រោយដល់ការចាប់ផ្ដើម",
     "kickoffLine": "ប្រកួតបើកឆាក: 11 មិថុនា 2026, Mexico City",
@@ -670,6 +673,12 @@
       "hours": "ម៉ោង",
       "minutes": "នាទី",
       "seconds": "វិនាទី"
+    },
+    "ctaGroups": "មើលតារាងពូល World Cup",
+    "hostCountries": {
+      "canada": "កាណាដា",
+      "mexico": "ម៉ិកស៊ិក",
+      "usa": "សហរដ្ឋអាមេរិក"
     }
   },
   "predictionForm": {
@@ -741,6 +750,93 @@
       "title": "Confirm prediction",
       "youPredict": "You are predicting",
       "lockNotice": "This prediction will lock at kickoff and cannot be changed."
+    }
+  },
+  "worldCup2026": {
+    "title": "តារាងពូល World Cup 2026",
+    "description": "ជ្រើសពូល A-L ដើម្បីមើលក្រុម តារាងចំណាត់ថ្នាក់ និងគូប្រកួតក្នុងទម្រង់លទ្ធផលកីឡាដែលអានបានរហ័ស។",
+    "eyebrow": "FIFA World Cup 2026",
+    "backHome": "ត្រឡប់ទៅទំព័រដើម",
+    "allGroups": "ពូល A-L",
+    "groupLabel": "ពូល",
+    "standings": "តារាងចំណាត់ថ្នាក់",
+    "team": "ក្រុម",
+    "teamsCount": "{count} ក្រុម",
+    "matches": "ការប្រកួត",
+    "match": "ប្រកួត",
+    "vs": "VS",
+    "flagAlt": "ទង់ជាតិ",
+    "played": "ប្រកួត",
+    "wins": "ឈ្នះ",
+    "draws": "ស្មើ",
+    "losses": "ចាញ់",
+    "goalDifference": "គ្រាប់បាល់ចំណេញ",
+    "points": "ពិន្ទុ",
+    "fifaRank": "ចំណាត់ថ្នាក់ FIFA",
+    "nextFixtures": "កម្មវិធីក្នុងពូល",
+    "groupStageSchedule": "កម្មវិធីប្រកួតវគ្គចែកពូល",
+    "matchday": "ប្រកួតទី",
+    "timeZone": "ពេលវេលាបង្ហាញតាមម៉ោងថៃ",
+    "winner": "លេខ 1 បច្ចុប្បន្ន",
+    "runnerUp": "លេខ 2 បច្ចុប្បន្ន",
+    "third": "លេខ 3 បច្ចុប្បន្ន",
+    "sourceNote": "មុនពេលការប្រកួតចាប់ផ្តើម ក្រុមទាំងអស់មាន 0 ពិន្ទុ។ តារាងនេះរៀបតាមលំដាប់ចាប់ឆ្នោតក្នុងពូល ដើម្បីឱ្យមើលបានងាយ។",
+    "statTeams": "48 ក្រុម",
+    "statGroups": "12 ពូល",
+    "statKickoff": "11 មិថុនា 2026",
+    "spotlights": {
+      "A": "ផ្លូវប្រកួតបើកឆាក៖ Mexico City, Guadalajara, Atlanta",
+      "B": "កាណាដាចាប់ផ្តើមក្នុងផ្ទះ ជាមួយការសាកល្បងពីអឺរ៉ុប",
+      "C": "ប្រេស៊ីល និងម៉ារ៉ុកជាចំណុចសំខាន់នៃពូលដែលគួរឱ្យតាមដានបំផុតមួយ",
+      "D": "សហរដ្ឋអាមេរិកនៅជាមួយប៉ារ៉ាហ្គាយ អូស្ត្រាលី និងទួរគី",
+      "E": "អាល្លឺម៉ង់ជួបអេក្វាឌ័រ, Cote d’Ivoire និង Curacao",
+      "F": "ហូឡង់ ជប៉ុន ស៊ុយអែត និងទុយនេស៊ីនាំមកនូវរចនាប័ទ្មខុសៗគ្នា",
+      "G": "បែលហ្ស៊ិក អេហ្ស៊ីប និងអ៊ីរ៉ង់ត្រៀមប្រជែងជាមួយនូវែលសេឡង់",
+      "H": "អេស្ប៉ាញ និងអ៊ុយរុយហ្គាយនៅជាមួយអារ៉ាប៊ីសាអូឌីត និង Cape Verde",
+      "I": "បារាំង សេណេហ្គាល់ ន័រវែស និងអ៊ីរ៉ាក់ធ្វើឱ្យពូលនេះប្រកួតប្រជែងខ្លាំង",
+      "J": "អាហ្សង់ទីនចាប់ផ្តើមការពារជើងឯកជាមួយអាល់ហ្សេរី អូទ្រីស និងហ្ស៊កដានី",
+      "K": "ព័រទុយហ្គាល់ជួបកូឡុំប៊ី អ៊ូសបេគីស្ថាន និង DR Congo",
+      "L": "អង់គ្លេស ក្រូអាស៊ី ហ្គាណា និងប៉ាណាម៉ាបិទផែនទីវគ្គចែកពូល"
+    }
+  },
+  "affiliate": {
+    "eyebrow": "អញ្ជើញមិត្ត",
+    "title": "ប្រព័ន្ធ Affiliate",
+    "description": "ចែករំលែកតំណអញ្ជើញ ScoreMatrix របស់អ្នក។ នៅពេលមិត្តភក្តិសมัคร និងបំពេញលក្ខខណ្ឌ អ្នកនឹងទទួលបានពិន្ទុ និងក្រេឌីតពិសេស។",
+    "yourCode": "កូដអញ្ជើញរបស់អ្នក",
+    "copyLink": "ចម្លងតំណអញ្ជើញ",
+    "copied": "បានចម្លង",
+    "clicks": "ចុចតំណ",
+    "signups": "បានสมัคร",
+    "qualified": "បំពេញលក្ខខណ្ឌ",
+    "conversion": "អត្រាបម្លែង",
+    "referralsTitle": "សកម្មភាពអញ្ជើញ",
+    "referralsSubtitle": "តាមដានមិត្តដែលបានចូលរួមតាមតំណរបស់អ្នក។",
+    "pending": "កំពុងរង់ចាំ {count}",
+    "pointsShort": "ពិន្ទុ",
+    "rewardsTitle": "កម្រិតរង្វាន់",
+    "earned": "ទទួលបាន {points} ពិន្ទុ និង {credits} ក្រេឌីត",
+    "nextMilestone": "ត្រូវការ {count} នាក់ទៀតដែលបំពេញលក្ខខណ្ឌ ដើម្បីបើកកម្រិតបន្ទាប់",
+    "tier": "មិត្តបំពេញលក្ខខណ្ឌ {count} នាក់",
+    "tierReward": "+{points} ពិន្ទុ / +{credits} ក្រេឌីត",
+    "status": {
+      "registered": "បានสมัคร",
+      "qualified": "បំពេញលក្ខខណ្ឌ",
+      "rewarded": "បានទទួលរង្វាន់"
+    },
+    "steps": {
+      "1": {
+        "title": "ចែករំលែកតំណ",
+        "text": "ផ្ញើតំណអញ្ជើញទៅមិត្តភក្តិ ឬបង្ហោះក្នុងសហគមន៍បាល់ទាត់របស់អ្នក។"
+      },
+      "2": {
+        "title": "មិត្តភក្តិសมัคร",
+        "text": "កូដអ្នកណែនាំនឹងភ្ជាប់ក្នុងទម្រង់សมัครដោយស្វ័យប្រវត្តិ។"
+      },
+      "3": {
+        "title": "ទទួលរង្វាន់",
+        "text": "រង្វាន់នឹងបើកបន្ទាប់ពីគណនីដែលបានអញ្ជើញបំពេញលក្ខខណ្ឌ។"
+      }
     }
   }
 }

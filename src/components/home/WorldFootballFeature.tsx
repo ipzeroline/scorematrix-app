@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, Globe2, MapPinned, Rows3, Trophy } from "lucide-react";
+import { ArrowRight, Globe2, MapPinned, Rows3, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -30,8 +30,6 @@ const worldCupKickoff = new Date("2026-06-11T13:00:00-06:00").getTime();
 export function WorldFootballFeature() {
   const locale = useLocale();
   const t = useTranslations("worldFootball");
-  const worldCupGroupsLabel =
-    locale === "th" ? "ดูตารางกลุ่มบอลโลก" : "World Cup groups";
   const [now, setNow] = useState(() => Date.now());
   const countdownParts = useMemo(
     () => getCountdownParts(worldCupKickoff - now),
@@ -122,21 +120,19 @@ export function WorldFootballFeature() {
 
           <div className="mt-4 flex flex-wrap gap-2 md:mt-5">
             <Link href={`/${locale}/world-cup-2026`}>
-              <Button size="sm" variant="gold" neon>
-                <Rows3 size={14} />
-                {worldCupGroupsLabel}
-              </Button>
-            </Link>
-            <Link href={`/${locale}/matches`}>
-              <Button size="sm" neon>
-                <CalendarDays size={14} />
-                {t("ctaMatches")}
-              </Button>
-            </Link>
-            <Link href={`/${locale}/football/leagues`}>
-              <Button size="sm" variant="outline">
-                <Globe2 size={14} />
-                {t("ctaLeagues")}
+              <Button
+                size="md"
+                variant="gold"
+                neon
+                className="group relative overflow-hidden border border-amber-300/35 bg-amber-400 px-4 text-sm font-bold text-black shadow-[0_0_18px_rgba(245,158,11,0.22)] hover:bg-amber-300 hover:shadow-[0_0_24px_rgba(245,158,11,0.32)]"
+              >
+                <span className="absolute inset-y-0 left-0 w-10 -translate-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 group-hover:translate-x-32" />
+                <Rows3 size={16} className="relative" />
+                <span className="relative">{t("ctaGroups")}</span>
+                <ArrowRight
+                  size={16}
+                  className="relative transition-transform duration-300 group-hover:translate-x-1"
+                />
               </Button>
             </Link>
           </div>
@@ -168,19 +164,25 @@ export function WorldFootballFeature() {
             <p className="text-[9px] uppercase tracking-wider text-gray-500 md:text-[10px]">
               {t("hosts")}
             </p>
-            <p className="text-xs font-bold text-white md:text-sm">Canada</p>
+            <p className="text-xs font-bold text-white md:text-sm">
+              {t("hostCountries.canada")}
+            </p>
           </div>
           <div className="absolute right-3 top-3 rounded-lg border border-amber-500/30 bg-black/50 px-2.5 py-1.5 text-right backdrop-blur md:right-4 md:top-4 md:px-3 md:py-2">
             <p className="text-[9px] uppercase tracking-wider text-gray-500 md:text-[10px]">
               {t("hosts")}
             </p>
-            <p className="text-xs font-bold text-white md:text-sm">Mexico</p>
+            <p className="text-xs font-bold text-white md:text-sm">
+              {t("hostCountries.mexico")}
+            </p>
           </div>
           <div className="absolute bottom-3 left-3 rounded-lg border border-green-500/30 bg-black/50 px-2.5 py-1.5 backdrop-blur md:bottom-4 md:left-4 md:px-3 md:py-2">
             <p className="text-[9px] uppercase tracking-wider text-gray-500 md:text-[10px]">
               {t("hosts")}
             </p>
-            <p className="text-xs font-bold text-white md:text-sm">USA</p>
+            <p className="text-xs font-bold text-white md:text-sm">
+              {t("hostCountries.usa")}
+            </p>
           </div>
 
           <div className="absolute bottom-3 right-3 max-w-[132px] rounded-lg border border-gray-700 bg-black/50 p-2 backdrop-blur md:bottom-4 md:right-4 md:max-w-[150px]">

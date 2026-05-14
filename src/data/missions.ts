@@ -1,10 +1,6 @@
 import { MissionType } from '@/types/common';
 import type { Mission } from '@/types/mission';
 
-function hoursFromNow(h: number): string {
-  return new Date(Date.now() + h * 3600000).toISOString();
-}
-
 function endOfDay(): string {
   const d = new Date();
   d.setHours(23, 59, 59, 999);

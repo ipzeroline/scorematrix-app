@@ -60,7 +60,8 @@
     "wallet": "ກະເປົາ",
     "settings": "ຕັ້ງຄ່າ",
     "admin": "ຜູ້ດູແລ",
-    "rankShort": "ອັນດັບ"
+    "rankShort": "ອັນດັບ",
+    "affiliate": "ຊວນໝູ່"
   },
   "auth": {
     "login": "ເຂົ້າລະບົບ",
@@ -158,7 +159,9 @@
     "forgotPasswordSubtitle": "ປ້ອນອີເມວທີ່ໃຊ້ສະໝັກ ລະບົບຈະສົ່ງລິ້ງສຳລັບຕັ້ງລະຫັດໃໝ່",
     "resetLinkSent": "ສົ່ງຄຳຂໍແລ້ວ. ຖ້າອີເມວນີ້ມີບັນຊີ ທ່ານຈະໄດ້ຮັບລິ້ງຕັ້ງລະຫັດໃໝ່.",
     "sendResetLink": "ສົ່ງລິ້ງຕັ້ງລະຫັດໃໝ່",
-    "rememberedPassword": "ຈື່ລະຫັດໄດ້ແລ້ວ?"
+    "rememberedPassword": "ຈື່ລະຫັດໄດ້ແລ້ວ?",
+    "referralCode": "ລະຫັດຜູ້ແນະນຳ",
+    "referralCodeHint": "ຖ້າໝູ່ຊວນທ່ານ ລະຫັດຈະສະແດງທີ່ນີ້ເພື່ອໃຫ້ທັງສອງບັນຊີໄດ້ຮັບລາງວັນຫຼັງຜ່ານເງື່ອນໄຂ"
   },
   "wallet": {
     "title": "ກະເປົາຄະແນນ ແລະເຄຣດິດ",
@@ -576,13 +579,13 @@
     "disconnected": "Disconnected"
   },
   "legal": {
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy",
-    "rewardRules": "Reward Rules",
-    "legalNotice": "Legal Notice",
-    "faq": "FAQ",
-    "contact": "Contact Us",
-    "about": "About ScoreMatrix"
+    "terms": "ເງື່ອນໄຂການໃຊ້ງານ",
+    "privacy": "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ",
+    "rewardRules": "ກົດການຮັບລາງວັນ",
+    "legalNotice": "ແຈ້ງການທາງກົດໝາຍ",
+    "faq": "ຄຳຖາມທີ່ພົບເລື້ອຍ",
+    "contact": "ຕິດຕໍ່",
+    "about": "ກ່ຽວກັບ"
   },
   "footer": {
     "platform": "ແພລດຟອມ",
@@ -649,18 +652,18 @@
     }
   },
   "worldFootball": {
-    "eyebrow": "World football 2026",
-    "hostLine": "Canada - Mexico - USA",
-    "title": "The global football year is on the horizon",
-    "description": "Follow the season with a tournament mood: host nations, city pulses, live fixtures and league paths flowing into one match center.",
-    "hosts": "Host",
-    "cityPulse": "City pulse",
+    "eyebrow": "ບານໂລກ 2026",
+    "hostLine": "ການາດາ - ເມັກຊິໂກ - ສະຫະລັດ",
+    "title": "ເພີ່ມບັນຍາກາດບານລະດັບໂລກໃຫ້ທັງລະດູການ",
+    "description": "ຕິດຕາມລະດູການດ້ວຍບັນຍາກາດທົວນາເມັນໃຫຍ່: ປະເທດເຈົ້າພາບ, ເມືອງແຂ່ງຂັນ, ຜົນສົດ ແລະ ເສັ້ນທາງລີກຕ່າງໆ ລວມໃນສູນການແຂ່ງຂັນດຽວ",
+    "hosts": "ເຈົ້າພາບ",
+    "cityPulse": "ເມືອງແຂ່ງຂັນ",
     "ctaMatches": "Explore matches",
     "ctaLeagues": "Browse leagues",
     "stats": {
-      "teams": "Teams",
-      "cities": "Host cities",
-      "countries": "Host countries"
+      "teams": "ທີມ",
+      "cities": "ເມືອງເຈົ້າພາບ",
+      "countries": "ປະເທດເຈົ້າພາບ"
     },
     "countdownLabel": "ນັບຖອຍຫຼັງສູ່ການເລີ່ມແຂ່ງ",
     "kickoffLine": "ນັດເປີດສະໜາມ: 11 ມິ.ຖ. 2026, Mexico City",
@@ -670,6 +673,12 @@
       "hours": "ຊົ່ວໂມງ",
       "minutes": "ນາທີ",
       "seconds": "ວິນາທີ"
+    },
+    "ctaGroups": "ເບິ່ງຕາຕະລາງກຸ່ມບານໂລກ",
+    "hostCountries": {
+      "canada": "ການາດາ",
+      "mexico": "ເມັກຊິໂກ",
+      "usa": "ສະຫະລັດ"
     }
   },
   "predictionForm": {
@@ -741,6 +750,93 @@
       "title": "Confirm prediction",
       "youPredict": "You are predicting",
       "lockNotice": "This prediction will lock at kickoff and cannot be changed."
+    }
+  },
+  "worldCup2026": {
+    "title": "ຕາຕະລາງກຸ່ມບານໂລກ 2026",
+    "description": "ເລືອກກຸ່ມ A-L ເພື່ອເບິ່ງທີມ, ຕາຕະລາງຄະແນນ ແລະ ຄູ່ແຂ່ງໃນຮູບແບບຜົນກິລາທີ່ອ່ານໄວ",
+    "eyebrow": "FIFA World Cup 2026",
+    "backHome": "ກັບໜ້າຫຼັກ",
+    "allGroups": "ກຸ່ມ A-L",
+    "groupLabel": "ກຸ່ມ",
+    "standings": "ຕາຕະລາງຄະແນນ",
+    "team": "ທີມ",
+    "teamsCount": "{count} ທີມ",
+    "matches": "ການແຂ່ງຂັນ",
+    "match": "ແມັດ",
+    "vs": "VS",
+    "flagAlt": "ທຸງຊາດ",
+    "played": "ແຂ່ງ",
+    "wins": "ຊະນະ",
+    "draws": "ສະເໝີ",
+    "losses": "ແພ້",
+    "goalDifference": "ຜົນຕ່າງ",
+    "points": "ຄະແນນ",
+    "fifaRank": "ອັນດັບ FIFA",
+    "nextFixtures": "ໂປຣແກຣມໃນກຸ່ມ",
+    "groupStageSchedule": "ການແຂ່ງຂັນຮອບແບ່ງກຸ່ມ",
+    "matchday": "ນັດທີ",
+    "timeZone": "ເວລາສະແດງຕາມເວລາໄທ",
+    "winner": "ອັນດັບ 1 ຕອນນີ້",
+    "runnerUp": "ອັນດັບ 2 ຕອນນີ້",
+    "third": "ອັນດັບ 3 ຕອນນີ້",
+    "sourceNote": "ກ່ອນເລີ່ມທົວນາເມັນ ທຸກທີມມີ 0 ຄະແນນ. ຕາຕະລາງນີ້ຈັດຕາມລໍາດັບການຈັບສະຫຼາກໃນກຸ່ມເພື່ອໃຫ້ເບິ່ງງ່າຍ",
+    "statTeams": "48 ທີມ",
+    "statGroups": "12 ກຸ່ມ",
+    "statKickoff": "11 ມິ.ຖ. 2026",
+    "spotlights": {
+      "A": "ເສັ້ນທາງເປີດສະໜາມ: Mexico City, Guadalajara, Atlanta",
+      "B": "ການາດາເລີ່ມທີ່ບ້ານ ພ້ອມບົດທົດສອບຈາກເອີຣົບ",
+      "C": "ບຣາຊິນ ແລະ ໂມຣັອກໂກນໍາກຸ່ມທີ່ນ່າຕິດຕາມທີ່ສຸດກຸ່ມໜຶ່ງ",
+      "D": "ສະຫະລັດຢູ່ຮ່ວມກັບ ປາຣາກວາຍ, ອົດສະຕຣາລີ ແລະ ຕຸຣກີ",
+      "E": "ເຢຍລະມັນພົບ ເອກວາດໍ, Cote d’Ivoire ແລະ Curacao",
+      "F": "ເນເທີແລນ, ຍີ່ປຸ່ນ, ສະວີເດນ ແລະ ຕູນິເຊຍ ມາດ້ວຍສະໄຕລ໌ທີ່ແຕກຕ່າງ",
+      "G": "ເບວຢຽມ, ອີຢິບ ແລະ ອີຣານ ລຸ້ນຄຸມເກມກັບນິວຊີແລນ",
+      "H": "ສະເປນ ແລະ ອຸຣຸກວາຍຢູ່ຮ່ວມກັບ ຊາອຸດີອາຣະເບຍ ແລະ Cape Verde",
+      "I": "ຝຣັ່ງ, ເຊເນກັນ, ນໍເວ ແລະ ອີຣັກ ເຮັດໃຫ້ກຸ່ມນີ້ແນ່ນຫຼາຍ",
+      "J": "ອາເຈນຕິນາເລີ່ມເສັ້ນທາງປ້ອງກັນແຊ້ມກັບ ອານຈີເຣຍ, ອອສເຕຣຍ ແລະ ຈໍແດນ",
+      "K": "ໂປຣຕຸເກດພົບ ໂຄລົມເບຍ, ອຸສເບກິສະຖານ ແລະ DR Congo",
+      "L": "ອັງກິດ, ໂຄຣເອເຊຍ, ການາ ແລະ ປານາມາ ປິດແຜນທີ່ຮອບແບ່ງກຸ່ມ"
+    }
+  },
+  "affiliate": {
+    "eyebrow": "ຊວນໝູ່",
+    "title": "ລະບົບ Affiliate",
+    "description": "ແຊຣ໌ລິ້ງຊວນໝູ່ຂອງທ່ານ. ເມື່ອໝູ່ສະໝັກ ແລະ ຜ່ານເງື່ອນໄຂ ທ່ານຈະໄດ້ຮັບຄະແນນ ແລະ ເຄຣດິດພຣີມຽມ",
+    "yourCode": "ລະຫັດຊວນໝູ່ຂອງທ່ານ",
+    "copyLink": "ຄັດລອກລິ້ງຊວນ",
+    "copied": "ຄັດລອກແລ້ວ",
+    "clicks": "ຄລິກລິ້ງ",
+    "signups": "ສະໝັກແລ້ວ",
+    "qualified": "ຜ່ານເງື່ອນໄຂ",
+    "conversion": "ອັດຕາແປງ",
+    "referralsTitle": "ກິດຈະກຳຊວນໝູ່",
+    "referralsSubtitle": "ຕິດຕາມໝູ່ທີ່ສະໝັກຜ່ານລິ້ງຂອງທ່ານ",
+    "pending": "ລໍຖ້າ {count}",
+    "pointsShort": "ຄະແນນ",
+    "rewardsTitle": "ຂັ້ນລາງວັນ",
+    "earned": "ສະສົມແລ້ວ {points} ຄະແນນ ແລະ {credits} ເຄຣດິດ",
+    "nextMilestone": "ອີກ {count} ຄົນທີ່ຜ່ານເງື່ອນໄຂເພື່ອປົດລັອກຂັ້ນຕໍ່ໄປ",
+    "tier": "ໝູ່ຜ່ານເງື່ອນໄຂ {count} ຄົນ",
+    "tierReward": "+{points} ຄະແນນ / +{credits} ເຄຣດິດ",
+    "status": {
+      "registered": "ສະໝັກແລ້ວ",
+      "qualified": "ຜ່ານເງື່ອນໄຂ",
+      "rewarded": "ໄດ້ຮັບລາງວັນແລ້ວ"
+    },
+    "steps": {
+      "1": {
+        "title": "ແຊຣ໌ລິ້ງຂອງທ່ານ",
+        "text": "ສົ່ງລິ້ງຊວນໃຫ້ໝູ່ ຫຼື ໂພສໃນຊຸມຊົນບານເຕະຂອງທ່ານ"
+      },
+      "2": {
+        "title": "ໝູ່ສະໝັກສະມາຊິກ",
+        "text": "ລະຫັດຜູ້ແນະນຳຈະຖືກໃສ່ໃນຟອມສະໝັກອັດຕະໂນມັດ"
+      },
+      "3": {
+        "title": "ຮັບລາງວັນ",
+        "text": "ລາງວັນຈະປົດລັອກຫຼັງບັນຊີທີ່ຖືກຊວນຜ່ານເງື່ອນໄຂ"
+      }
     }
   }
 }

@@ -13,8 +13,15 @@ import type {
 
 type Copy = {
   allGroups: string;
+  groupLabel: string;
+  groupSpotlights: Record<string, string>;
   standings: string;
+  team: string;
+  teamsCount: string;
   matches: string;
+  match: string;
+  vs: string;
+  flagAlt: string;
   played: string;
   wins: string;
   draws: string;
@@ -61,10 +68,10 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                 {copy.allGroups}
               </Badge>
               <h2 className="mt-2 font-display text-2xl font-bold text-white">
-                {selectedGroup.name}
+                {copy.groupLabel} {selectedGroup.id}
               </h2>
               <p className="mt-1 text-sm leading-6 text-gray-400">
-                {selectedGroup.spotlight}
+                {copy.groupSpotlights[selectedGroup.id] ?? selectedGroup.spotlight}
               </p>
             </div>
             <div className="rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-right">
@@ -72,7 +79,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                 {copy.standings}
               </p>
               <p className="font-mono text-lg font-black text-white">
-                {selectedGroup.teams.length} ทีม
+                {copy.teamsCount}
               </p>
             </div>
           </div>
@@ -89,7 +96,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                     ? "border-cyan-300 bg-cyan-400 text-black shadow-[0_0_18px_rgba(34,211,238,0.35)]"
                     : "border-gray-700 bg-black/25 text-gray-400 hover:border-cyan-500/60 hover:text-white"
                 )}
-                aria-label={`Group ${group.id}`}
+                aria-label={`${copy.groupLabel} ${group.id}`}
               >
                 {group.id}
               </button>
@@ -102,7 +109,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
             <thead>
               <tr className="border-b border-gray-800 text-[10px] uppercase tracking-wider text-gray-500">
                 <th className="px-3 py-3 font-semibold md:px-4">#</th>
-                <th className="px-3 py-3 font-semibold md:px-4">Team</th>
+                <th className="px-3 py-3 font-semibold md:px-4">{copy.team}</th>
                 <th className="px-2 py-3 text-center font-semibold">{copy.played}</th>
                 <th className="px-2 py-3 text-center font-semibold">{copy.wins}</th>
                 <th className="px-2 py-3 text-center font-semibold">{copy.draws}</th>
@@ -122,7 +129,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                   </td>
                   <td className="px-3 py-3 md:px-4">
                     <div className="flex items-center gap-3">
-                      <TeamFlag team={team} />
+                      <TeamFlag team={team} flagAlt={copy.flagAlt} />
                       <div className="min-w-0">
                         <p className="flex min-w-0 items-center gap-2 truncate text-sm font-semibold text-white">
                           <span className="truncate">{team.name}</span>
@@ -161,7 +168,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               {copy.nextFixtures}
             </p>
             <h3 className="mt-1 text-lg font-bold text-white">
-              {selectedGroup.name}
+              {copy.groupLabel} {selectedGroup.id}
             </h3>
           </div>
           <CalendarDays className="text-amber-300" size={22} />
@@ -174,15 +181,17 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               className="rounded-lg border border-gray-800 bg-white/[0.03] p-3"
             >
               <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-gray-500">
-                <span>Match {index + 1}</span>
+                <span>
+                  {copy.match} {index + 1}
+                </span>
                 <ChevronRight size={13} />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <FixtureTeam team={fixture.home} />
+                <FixtureTeam team={fixture.home} flagAlt={copy.flagAlt} />
                 <span className="font-mono text-[10px] font-bold text-gray-500">
-                  VS
+                  {copy.vs}
                 </span>
-                <FixtureTeam team={fixture.away} align="right" />
+                <FixtureTeam team={fixture.away} flagAlt={copy.flagAlt} align="right" />
               </div>
             </div>
           ))}
@@ -206,7 +215,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                 </span>
                 <span className="font-mono text-xs font-bold text-white">
                   <span className="inline-flex items-center gap-2">
-                    <TeamFlag team={item.team} size="sm" />
+                    <TeamFlag team={item.team} flagAlt={copy.flagAlt} size="sm" />
                     {item.team.code}
                   </span>
                 </span>
@@ -230,7 +239,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               </h2>
             </div>
             <Badge variant="gold" size="md">
-              {selectedGroup.name}
+              {copy.groupLabel} {selectedGroup.id}
             </Badge>
           </div>
         </div>
@@ -254,11 +263,11 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               </div>
 
               <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)] items-center gap-2">
-                <ScheduleTeam team={fixture.home} />
+                <ScheduleTeam team={fixture.home} flagAlt={copy.flagAlt} />
                 <span className="text-center font-mono text-xs font-black text-gray-500">
-                  VS
+                  {copy.vs}
                 </span>
-                <ScheduleTeam team={fixture.away} align="right" />
+                <ScheduleTeam team={fixture.away} flagAlt={copy.flagAlt} align="right" />
               </div>
 
               <p className="text-sm text-gray-400 md:text-right">
@@ -283,7 +292,15 @@ function hydrateMatch(match: WorldCupMatch, teams: WorldCupTeam[]) {
   return { ...match, home, away };
 }
 
-function TeamFlag({ team, size = "md" }: { team: WorldCupTeam; size?: "sm" | "md" }) {
+function TeamFlag({
+  team,
+  flagAlt,
+  size = "md",
+}: {
+  team: WorldCupTeam;
+  flagAlt: string;
+  size?: "sm" | "md";
+}) {
   return (
     <span
       className={cn(
@@ -293,7 +310,7 @@ function TeamFlag({ team, size = "md" }: { team: WorldCupTeam; size?: "sm" | "md
     >
       <Image
         src={`https://flagcdn.com/w40/${team.flagCode}.png`}
-        alt={`${team.name} flag`}
+        alt={`${team.name} ${flagAlt}`}
         fill
         sizes={size === "sm" ? "20px" : "32px"}
         className="object-cover"
@@ -304,9 +321,11 @@ function TeamFlag({ team, size = "md" }: { team: WorldCupTeam; size?: "sm" | "md
 
 function FixtureTeam({
   team,
+  flagAlt,
   align = "left",
 }: {
   team: WorldCupTeam;
+  flagAlt: string;
   align?: "left" | "right";
 }) {
   return (
@@ -316,20 +335,22 @@ function FixtureTeam({
         align === "right" && "justify-end text-right"
       )}
     >
-      {align === "left" && <TeamFlag team={team} size="sm" />}
+      {align === "left" && <TeamFlag team={team} flagAlt={flagAlt} size="sm" />}
       <span className="truncate text-xs font-semibold text-white">
         {team.name}
       </span>
-      {align === "right" && <TeamFlag team={team} size="sm" />}
+      {align === "right" && <TeamFlag team={team} flagAlt={flagAlt} size="sm" />}
     </div>
   );
 }
 
 function ScheduleTeam({
   team,
+  flagAlt,
   align = "left",
 }: {
   team: WorldCupTeam;
+  flagAlt: string;
   align?: "left" | "right";
 }) {
   return (
@@ -339,20 +360,20 @@ function ScheduleTeam({
         align === "right" && "justify-end text-right"
       )}
     >
-      {align === "left" && <TeamFlag team={team} />}
+      {align === "left" && <TeamFlag team={team} flagAlt={flagAlt} />}
       <div className="min-w-0">
         <p className="truncate text-sm font-bold text-white">{team.name}</p>
         <p className="font-mono text-[10px] font-black text-cyan-300">
           {team.code}
         </p>
       </div>
-      {align === "right" && <TeamFlag team={team} />}
+      {align === "right" && <TeamFlag team={team} flagAlt={flagAlt} />}
     </div>
   );
 }
 
 function formatMatchDate(kickoffUtc: string, locale: string) {
-  return new Intl.DateTimeFormat(locale === "th" ? "th-TH" : "en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: "Asia/Bangkok",
     day: "numeric",
     month: "short",
@@ -361,10 +382,23 @@ function formatMatchDate(kickoffUtc: string, locale: string) {
 }
 
 function formatMatchTime(kickoffUtc: string, locale: string) {
-  return new Intl.DateTimeFormat(locale === "th" ? "th-TH" : "en-US", {
+  return new Intl.DateTimeFormat(getIntlLocale(locale), {
     timeZone: "Asia/Bangkok",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   }).format(new Date(kickoffUtc));
+}
+
+function getIntlLocale(locale: string) {
+  const localeMap: Record<string, string> = {
+    th: "th-TH",
+    en: "en-US",
+    lo: "lo-LA",
+    my: "my-MM",
+    km: "km-KH",
+    zh: "zh-CN",
+  };
+
+  return localeMap[locale] ?? "en-US";
 }

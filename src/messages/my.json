@@ -60,7 +60,8 @@
     "wallet": "ပိုက်ဆံအိတ်",
     "settings": "ဆက်တင်များ",
     "admin": "စီမံခန့်ခွဲသူ",
-    "rankShort": "Rank"
+    "rankShort": "Rank",
+    "affiliate": "သူငယ်ချင်းဖိတ်"
   },
   "auth": {
     "login": "ဝင်မည်",
@@ -158,7 +159,9 @@
     "forgotPasswordSubtitle": "စာရင်းသွင်းရာတွင် အသုံးပြုခဲ့သော အီးမေးလ်ကို ထည့်ပါ။ စကားဝှက်ပြန်သတ်မှတ်ရန် လင့်ပို့ပါမည်။",
     "resetLinkSent": "တောင်းဆိုချက် ပို့ပြီးပါပြီ။ ဤအီးမေးလ်တွင် အကောင့်ရှိပါက ပြန်သတ်မှတ်လင့်ကို လက်ခံရရှိပါမည်။",
     "sendResetLink": "စကားဝှက်ပြန်သတ်မှတ်လင့် ပို့မည်",
-    "rememberedPassword": "စကားဝှက်ကို မှတ်မိပြီလား?"
+    "rememberedPassword": "စကားဝှက်ကို မှတ်မိပြီလား?",
+    "referralCode": "ရည်ညွှန်းကုဒ်",
+    "referralCodeHint": "သူငယ်ချင်းမှ ဖိတ်ထားပါက ကုဒ်ကို ဤနေရာတွင် ထည့်ထားပြီး အကောင့်နှစ်ခုလုံးသည် သတ်မှတ်ချက်ပြည့်ပြီးနောက် ဆုရနိုင်သည်။"
   },
   "wallet": {
     "title": "ပိုက်ဆံအိတ်နှင့် အမှတ်များ",
@@ -576,13 +579,13 @@
     "disconnected": "Disconnected"
   },
   "legal": {
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy",
-    "rewardRules": "Reward Rules",
-    "legalNotice": "Legal Notice",
-    "faq": "FAQ",
-    "contact": "Contact Us",
-    "about": "About ScoreMatrix"
+    "terms": "အသုံးပြုမှုစည်းမျဉ်းများ",
+    "privacy": "ကိုယ်ရေးအချက်အလက်မူဝါဒ",
+    "rewardRules": "ဆုစည်းမျဉ်းများ",
+    "legalNotice": "ဥပဒေအသိပေးချက်",
+    "faq": "မေးလေ့ရှိသောမေးခွန်းများ",
+    "contact": "ဆက်သွယ်ရန်",
+    "about": "အကြောင်း"
   },
   "footer": {
     "platform": "ပလက်ဖောင်း",
@@ -649,18 +652,18 @@
     }
   },
   "worldFootball": {
-    "eyebrow": "World football 2026",
-    "hostLine": "Canada - Mexico - USA",
-    "title": "The global football year is on the horizon",
-    "description": "Follow the season with a tournament mood: host nations, city pulses, live fixtures and league paths flowing into one match center.",
-    "hosts": "Host",
-    "cityPulse": "City pulse",
+    "eyebrow": "ကမ္ဘာ့ဖလား 2026",
+    "hostLine": "ကနေဒါ - မက္ကဆီကို - အမေရိကန်",
+    "title": "တစ်ရာသီလုံးအတွက် ကမ္ဘာ့ဘောလုံးအငွေ့အသက်ထည့်ပါ",
+    "description": "ပြိုင်ပွဲကြီးအငွေ့အသက်ဖြင့် ရာသီကိုလိုက်ပါ: အိမ်ရှင်နိုင်ငံများ၊ ပြိုင်ပွဲမြို့များ၊ တိုက်ရိုက်ပွဲများနှင့် လိဂ်လမ်းကြောင်းများကို တစ်နေရာတည်းတွင် စုစည်းထားသည်။",
+    "hosts": "အိမ်ရှင်",
+    "cityPulse": "ပြိုင်ပွဲမြို့များ",
     "ctaMatches": "Explore matches",
     "ctaLeagues": "Browse leagues",
     "stats": {
-      "teams": "Teams",
-      "cities": "Host cities",
-      "countries": "Host countries"
+      "teams": "အသင်းများ",
+      "cities": "အိမ်ရှင်မြို့များ",
+      "countries": "အိမ်ရှင်နိုင်ငံများ"
     },
     "countdownLabel": "ပွဲစတင်ရန် နောက်ပြန်ရေတွက်ခြင်း",
     "kickoffLine": "ဖွင့်ပွဲ: 11 Jun 2026, Mexico City",
@@ -670,6 +673,12 @@
       "hours": "နာရီ",
       "minutes": "မိနစ်",
       "seconds": "စက္ကန့်"
+    },
+    "ctaGroups": "ကမ္ဘာ့ဖလား အုပ်စုဇယားကြည့်ရန်",
+    "hostCountries": {
+      "canada": "ကနေဒါ",
+      "mexico": "မက္ကဆီကို",
+      "usa": "အမေရိကန်"
     }
   },
   "predictionForm": {
@@ -741,6 +750,93 @@
       "title": "Confirm prediction",
       "youPredict": "You are predicting",
       "lockNotice": "This prediction will lock at kickoff and cannot be changed."
+    }
+  },
+  "worldCup2026": {
+    "title": "ကမ္ဘာ့ဖလား 2026 အုပ်စုဇယား",
+    "description": "အုပ်စု A-L ကိုရွေးပြီး အသင်းများ၊ အမှတ်ဇယားနှင့် တွေ့ဆုံမည့်ပွဲများကို အားကစားရလဒ်ပုံစံဖြင့် လျင်မြန်စွာကြည့်ပါ။",
+    "eyebrow": "FIFA World Cup 2026",
+    "backHome": "ပင်မစာမျက်နှာသို့",
+    "allGroups": "အုပ်စု A-L",
+    "groupLabel": "အုပ်စု",
+    "standings": "အမှတ်ဇယား",
+    "team": "အသင်း",
+    "teamsCount": "{count} သင်း",
+    "matches": "ပွဲများ",
+    "match": "ပွဲ",
+    "vs": "VS",
+    "flagAlt": "အလံ",
+    "played": "ကစား",
+    "wins": "နိုင်",
+    "draws": "သရေ",
+    "losses": "ရှုံး",
+    "goalDifference": "ဂိုးကွာ",
+    "points": "မှတ်",
+    "fifaRank": "FIFA အဆင့်",
+    "nextFixtures": "အုပ်စု ပွဲစဉ်များ",
+    "groupStageSchedule": "အုပ်စုအဆင့် ပွဲစဉ်ဇယား",
+    "matchday": "ပွဲနေ့",
+    "timeZone": "ထိုင်းစံတော်ချိန်ဖြင့် ပြသထားသည်",
+    "winner": "လက်ရှိ အဆင့် 1",
+    "runnerUp": "လက်ရှိ အဆင့် 2",
+    "third": "လက်ရှိ အဆင့် 3",
+    "sourceNote": "ပြိုင်ပွဲမစမီ အသင်းအားလုံး 0 မှတ်ဖြင့် စတင်သည်။ ဤဇယားကို အုပ်စုမဲခွဲအစဉ်အတိုင်း စကင်ဖတ်ရလွယ်အောင် ပြထားသည်။",
+    "statTeams": "48 သင်း",
+    "statGroups": "12 အုပ်စု",
+    "statKickoff": "11 Jun 2026",
+    "spotlights": {
+      "A": "အဖွင့်လမ်းကြောင်း: မက္ကဆီကိုစီးတီး၊ ဂွာဒလာဟာရာ၊ အတ္တလန်တာ",
+      "B": "ကနေဒါက အိမ်ကွင်းတွင် စတင်ပြီး ဥရောပစမ်းသပ်မှုကို ရင်ဆိုင်မည်",
+      "C": "ဘရာဇီးနှင့် မော်ရိုကိုက စိတ်ဝင်စားစရာအကောင်းဆုံးအုပ်စုတစ်ခုကို ဦးဆောင်ထားသည်",
+      "D": "အမေရိကန်သည် ပါရာဂွေး၊ ဩစတြေးလျနှင့် တူရကီတို့နှင့်အတူ ရှိသည်",
+      "E": "ဂျာမနီသည် အီကွေဒေါ၊ Cote d’Ivoire နှင့် Curacao တို့ကို တွေ့မည်",
+      "F": "နယ်သာလန်၊ ဂျပန်၊ ဆွီဒင်နှင့် တူနီးရှားတို့က မတူညီသောစတိုင်များကို ယူဆောင်လာသည်",
+      "G": "ဘယ်လ်ဂျီယံ၊ အီဂျစ်နှင့် အီရန်တို့က နယူးဇီလန်ကို ရင်ဆိုင်ရန် ပြင်ဆင်နေသည်",
+      "H": "စပိန်နှင့် ဥရုဂွေးသည် ဆော်ဒီအာရေဗျနှင့် Cape Verde တို့နှင့်အတူ ရှိသည်",
+      "I": "ပြင်သစ်၊ ဆီနီဂေါ၊ နော်ဝေ နှင့် အီရတ်တို့ကြောင့် ဤအုပ်စုသည် အလွန်ကြပ်တည်းသည်",
+      "J": "အာဂျင်တီးနားသည် အယ်လ်ဂျီးရီးယား၊ ဩစတြီးယားနှင့် ဂျော်ဒန်တို့နှင့် ချန်ပီယံကာကွယ်ရေးလမ်းကြောင်းကို စတင်မည်",
+      "K": "ပေါ်တူဂီသည် ကိုလံဘီယာ၊ ဥဇဘက်ကစ္စတန်နှင့် DR Congo တို့ကို တွေ့မည်",
+      "L": "အင်္ဂလန်၊ ခရိုအေးရှား၊ ဂါနာနှင့် ပနားမားတို့က အုပ်စုမြေပုံကို ပိတ်သိမ်းသည်"
+    }
+  },
+  "affiliate": {
+    "eyebrow": "သူငယ်ချင်းဖိတ်ရန်",
+    "title": "Affiliate ဆုလာဘ်",
+    "description": "သင့် ScoreMatrix ဖိတ်ကြားလင့်ခ်ကို မျှဝေပါ။ သူငယ်ချင်းများ စာရင်းသွင်းပြီး သတ်မှတ်ချက်ပြည့်ပါက points နှင့် premium credits ရမည်။",
+    "yourCode": "သင့် referral code",
+    "copyLink": "ဖိတ်ကြားလင့်ခ် ကူးရန်",
+    "copied": "ကူးပြီးပြီ",
+    "clicks": "လင့်ခ်နှိပ်မှု",
+    "signups": "စာရင်းသွင်းမှု",
+    "qualified": "သတ်မှတ်ချက်ပြည့်",
+    "conversion": "ပြောင်းလဲနှုန်း",
+    "referralsTitle": "Referral လှုပ်ရှားမှု",
+    "referralsSubtitle": "သင့်ဖိတ်ကြားလင့်ခ်မှ ဝင်လာသူများကို ကြည့်ရှုပါ။",
+    "pending": "{count} ခု စောင့်ဆိုင်း",
+    "pointsShort": "pts",
+    "rewardsTitle": "ဆုအဆင့်များ",
+    "earned": "{points} points နှင့် {credits} credits ရရှိပြီး",
+    "nextMilestone": "နောက်အဆင့်ဖွင့်ရန် သတ်မှတ်ချက်ပြည့်သူ {count} ဦး လိုအပ်",
+    "tier": "သတ်မှတ်ချက်ပြည့် သူငယ်ချင်း {count} ဦး",
+    "tierReward": "+{points} pts / +{credits} credits",
+    "status": {
+      "registered": "စာရင်းသွင်းပြီး",
+      "qualified": "သတ်မှတ်ချက်ပြည့်",
+      "rewarded": "ဆုရပြီး"
+    },
+    "steps": {
+      "1": {
+        "title": "လင့်ခ်မျှဝေပါ",
+        "text": "ဖိတ်ကြားလင့်ခ်ကို သူငယ်ချင်းများထံ ပို့ပါ သို့မဟုတ် ဘောလုံးအသိုင်းအဝိုင်းတွင် တင်ပါ။"
+      },
+      "2": {
+        "title": "သူငယ်ချင်း စာရင်းသွင်း",
+        "text": "Referral code ကို စာရင်းသွင်းဖောင်တွင် အလိုအလျောက် ထည့်ပေးမည်။"
+      },
+      "3": {
+        "title": "ဆုရယူပါ",
+        "text": "ဖိတ်ထားသောအကောင့် သတ်မှတ်ချက်ပြည့်ပြီးနောက် ဆုများဖွင့်ပါမည်။"
+      }
     }
   }
 }

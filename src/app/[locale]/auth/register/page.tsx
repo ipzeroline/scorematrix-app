@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -45,6 +45,15 @@ const languageOptions = LOCALES.map((l) => ({
   label: `${l.native} (${l.label})`,
 }));
 
+function getInitialReferralCode() {
+  const ref = new URLSearchParams(window.location.search).get("ref");
+  return ref ? sanitizeReferralCode(ref) : "";
+}
+
+function sanitizeReferralCode(value: string) {
+  return value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 24);
+}
+
 export default function RegisterPage() {
   const t = useTranslations("auth");
   const { locale } = useParams<{ locale: string }>();
@@ -78,6 +87,7 @@ export default function RegisterPage() {
     favoriteTeam: "",
     playerType: "",
     language: locale as string,
+    referralCode: "",
     password: "",
     confirmPassword: "",
     acceptTerms: false,
@@ -88,6 +98,17 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const referralCode = getInitialReferralCode();
+      if (referralCode) {
+        setForm((prev) => ({ ...prev, referralCode }));
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const markTouched = (field: string) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -319,6 +340,22 @@ export default function RegisterPage() {
             onChange={(v) => update("language", v)}
             className="w-full"
           />
+        </div>
+
+        <div className="rounded-xl border border-amber-400/20 bg-amber-400/5 p-3">
+          <Input
+            label={`${t("referralCode")} (${t("optional")})`}
+            placeholder="CYBERFAN99"
+            value={form.referralCode}
+            onChange={(e) =>
+              update("referralCode", sanitizeReferralCode(e.target.value))
+            }
+            maxLength={24}
+            autoComplete="off"
+          />
+          <p className="mt-2 text-xs leading-5 text-gray-500">
+            {t("referralCodeHint")}
+          </p>
         </div>
 
         <div className="rounded-xl border border-cyan-500/15 bg-cyan-500/5 p-3 text-xs leading-5 text-gray-400">

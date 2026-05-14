@@ -13,6 +13,7 @@ import {
   Users,
   Newspaper,
   Zap,
+  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -26,6 +27,7 @@ const SIDEBAR_LINKS = [
   { href: "/leaderboard", label: "leaderboard", icon: Trophy },
   { href: "/missions", label: "missions", icon: Zap },
   { href: "/rewards", label: "rewards", icon: Gift },
+  { href: "/affiliate", label: "affiliate", icon: Share2 },
   { href: "/leagues", label: "leagues", icon: Users },
   { href: "/news", label: "news", icon: Newspaper },
 ];

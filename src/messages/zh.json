@@ -60,7 +60,8 @@
     "wallet": "钱包",
     "settings": "设置",
     "admin": "管理",
-    "rankShort": "排名"
+    "rankShort": "排名",
+    "affiliate": "邀请好友"
   },
   "auth": {
     "login": "登录",
@@ -158,7 +159,9 @@
     "forgotPasswordSubtitle": "输入注册账号使用的邮箱，我们会发送密码重置链接。",
     "resetLinkSent": "请求已发送。如果该邮箱存在账号，你将收到重置链接。",
     "sendResetLink": "发送重置链接",
-    "rememberedPassword": "想起密码了？"
+    "rememberedPassword": "想起密码了？",
+    "referralCode": "推荐码",
+    "referralCodeHint": "如果好友邀请了你，推荐码会显示在这里。满足资格后，双方都可以获得奖励。"
   },
   "wallet": {
     "title": "钱包与积分",
@@ -580,9 +583,9 @@
     "privacy": "隐私政策",
     "rewardRules": "奖励规则",
     "legalNotice": "法律声明",
-    "faq": "FAQ",
-    "contact": "联系我们",
-    "about": "关于 ScoreMatrix"
+    "faq": "常见问题",
+    "contact": "联系",
+    "about": "关于"
   },
   "footer": {
     "platform": "平台",
@@ -670,6 +673,12 @@
       "hours": "小时",
       "minutes": "分钟",
       "seconds": "秒"
+    },
+    "ctaGroups": "查看世界杯分组",
+    "hostCountries": {
+      "canada": "加拿大",
+      "mexico": "墨西哥",
+      "usa": "美国"
     }
   },
   "predictionForm": {
@@ -741,6 +750,93 @@
       "title": "确认预测",
       "youPredict": "你的预测",
       "lockNotice": "预测将在开赛时锁定，之后无法修改。"
+    }
+  },
+  "worldCup2026": {
+    "title": "2026 世界杯分组",
+    "description": "选择 A-L 组，快速查看球队、积分榜和对阵卡片。",
+    "eyebrow": "FIFA World Cup 2026",
+    "backHome": "返回首页",
+    "allGroups": "A-L 组",
+    "groupLabel": "小组",
+    "standings": "积分榜",
+    "team": "球队",
+    "teamsCount": "{count} 支球队",
+    "matches": "比赛",
+    "match": "比赛",
+    "vs": "VS",
+    "flagAlt": "国旗",
+    "played": "赛",
+    "wins": "胜",
+    "draws": "平",
+    "losses": "负",
+    "goalDifference": "净胜球",
+    "points": "积分",
+    "fifaRank": "FIFA 排名",
+    "nextFixtures": "小组赛程",
+    "groupStageSchedule": "小组赛赛程",
+    "matchday": "第",
+    "timeZone": "时间按泰国时间显示",
+    "winner": "当前第 1",
+    "runnerUp": "当前第 2",
+    "third": "当前第 3",
+    "sourceNote": "开赛前所有球队均为 0 分。此表按小组抽签顺序排列，便于快速浏览。",
+    "statTeams": "48 支球队",
+    "statGroups": "12 个小组",
+    "statKickoff": "2026年6月11日",
+    "spotlights": {
+      "A": "揭幕路线：墨西哥城、瓜达拉哈拉、亚特兰大",
+      "B": "加拿大主场启程，迎来欧洲球队考验",
+      "C": "巴西与摩洛哥领衔最值得关注的小组之一",
+      "D": "美国与巴拉圭、澳大利亚、土耳其同组",
+      "E": "德国将面对厄瓜多尔、科特迪瓦和库拉索",
+      "F": "荷兰、日本、瑞典和突尼斯带来四种不同风格",
+      "G": "比利时、埃及和伊朗将与新西兰争夺主动权",
+      "H": "西班牙和乌拉圭与沙特阿拉伯、佛得角同组",
+      "I": "法国、塞内加尔、挪威和伊拉克让本组竞争十分激烈",
+      "J": "阿根廷与阿尔及利亚、奥地利和约旦开启卫冕之路",
+      "K": "葡萄牙将面对哥伦比亚、乌兹别克斯坦和刚果民主共和国",
+      "L": "英格兰、克罗地亚、加纳和巴拿马收尾小组赛版图"
+    }
+  },
+  "affiliate": {
+    "eyebrow": "邀请好友",
+    "title": "Affiliate 奖励",
+    "description": "分享你的 ScoreMatrix 邀请链接。好友注册并满足条件后，你将获得积分和高级积分。",
+    "yourCode": "你的推荐码",
+    "copyLink": "复制邀请链接",
+    "copied": "已复制",
+    "clicks": "链接点击",
+    "signups": "注册数",
+    "qualified": "已达标",
+    "conversion": "转化率",
+    "referralsTitle": "邀请动态",
+    "referralsSubtitle": "查看通过你的邀请链接加入的好友。",
+    "pending": "{count} 个待处理",
+    "pointsShort": "积分",
+    "rewardsTitle": "奖励里程碑",
+    "earned": "已获得 {points} 积分和 {credits} 高级积分",
+    "nextMilestone": "还需 {count} 个达标注册解锁下一档",
+    "tier": "{count} 位达标好友",
+    "tierReward": "+{points} 积分 / +{credits} 高级积分",
+    "status": {
+      "registered": "已注册",
+      "qualified": "已达标",
+      "rewarded": "已奖励"
+    },
+    "steps": {
+      "1": {
+        "title": "分享链接",
+        "text": "把邀请链接发给好友，或发布到你的足球社区。"
+      },
+      "2": {
+        "title": "好友注册",
+        "text": "推荐码会自动带入注册表单。"
+      },
+      "3": {
+        "title": "获得奖励",
+        "text": "被邀请账户满足资格规则后，奖励会解锁。"
+      }
     }
   }
 }

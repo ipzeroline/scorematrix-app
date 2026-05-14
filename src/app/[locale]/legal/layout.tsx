@@ -1,20 +1,26 @@
 import { Logo } from "@/components/layout/Logo";
+import { getTranslations } from "next-intl/server";
 
 const LEGAL_LINKS = [
-  { href: "/legal/terms", label: "Terms of Service" },
-  { href: "/legal/privacy", label: "Privacy Policy" },
-  { href: "/legal/reward-rules", label: "Reward Rules" },
-  { href: "/legal/legal-notice", label: "Legal Notice" },
-  { href: "/legal/faq", label: "FAQ" },
-  { href: "/legal/contact", label: "Contact" },
-  { href: "/legal/about", label: "About" },
+  { href: "/legal/terms", label: "terms" },
+  { href: "/legal/privacy", label: "privacy" },
+  { href: "/legal/reward-rules", label: "rewardRules" },
+  { href: "/legal/legal-notice", label: "legalNotice" },
+  { href: "/legal/faq", label: "faq" },
+  { href: "/legal/contact", label: "contact" },
+  { href: "/legal/about", label: "about" },
 ];
 
-export default function LegalLayout({
+export default async function LegalLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "legal" });
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="sticky top-0 z-40 glass border-b border-gray-800/50">
@@ -28,10 +34,10 @@ export default function LegalLayout({
             {LEGAL_LINKS.map((link) => (
               <a
                 key={link.href}
-                href={`/en${link.href}`}
+                href={`/${locale}${link.href}`}
                 className="block px-3 py-1.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
               >
-                {link.label}
+                {t(link.label)}
               </a>
             ))}
           </nav>

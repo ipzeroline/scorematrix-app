@@ -60,7 +60,8 @@
     "wallet": "Wallet",
     "settings": "Settings",
     "admin": "Admin",
-    "rankShort": "Rank"
+    "rankShort": "Rank",
+    "affiliate": "Affiliate"
   },
   "auth": {
     "login": "Log In",
@@ -158,7 +159,9 @@
     "forgotPasswordSubtitle": "Enter the email used for your account. We will send a password reset link.",
     "resetLinkSent": "Request sent. If this email has an account, you will receive a reset link.",
     "sendResetLink": "Send reset link",
-    "rememberedPassword": "Remembered your password?"
+    "rememberedPassword": "Remembered your password?",
+    "referralCode": "Referral code",
+    "referralCodeHint": "If a friend invited you, their code will be applied here so both accounts can receive rewards after qualification."
   },
   "wallet": {
     "title": "Wallet & Points",
@@ -581,8 +584,8 @@
     "rewardRules": "Reward Rules",
     "legalNotice": "Legal Notice",
     "faq": "FAQ",
-    "contact": "Contact Us",
-    "about": "About ScoreMatrix"
+    "contact": "Contact",
+    "about": "About"
   },
   "footer": {
     "platform": "Platform",
@@ -670,6 +673,12 @@
       "hours": "Hours",
       "minutes": "Minutes",
       "seconds": "Seconds"
+    },
+    "ctaGroups": "World Cup groups",
+    "hostCountries": {
+      "canada": "Canada",
+      "mexico": "Mexico",
+      "usa": "USA"
     }
   },
   "predictionForm": {
@@ -741,6 +750,93 @@
       "title": "Confirm prediction",
       "youPredict": "You are predicting",
       "lockNotice": "This prediction will lock at kickoff and cannot be changed."
+    }
+  },
+  "worldCup2026": {
+    "title": "World Cup 2026 Groups",
+    "description": "Pick Group A-L to scan teams, standings and matchup cards in a quick sports-results layout.",
+    "eyebrow": "FIFA World Cup 2026",
+    "backHome": "Back home",
+    "allGroups": "Groups A-L",
+    "groupLabel": "Group",
+    "standings": "Standings",
+    "team": "Team",
+    "teamsCount": "{count} teams",
+    "matches": "Matches",
+    "match": "Match",
+    "vs": "VS",
+    "flagAlt": "flag",
+    "played": "P",
+    "wins": "W",
+    "draws": "D",
+    "losses": "L",
+    "goalDifference": "GD",
+    "points": "Pts",
+    "fifaRank": "FIFA rank",
+    "nextFixtures": "Group fixtures",
+    "groupStageSchedule": "Group stage fixtures",
+    "matchday": "Matchday",
+    "timeZone": "Times shown in Thailand time",
+    "winner": "Current 1st",
+    "runnerUp": "Current 2nd",
+    "third": "Current 3rd",
+    "sourceNote": "Before kickoff, every team starts on 0 points. The table is ordered by group draw position for quick scanning.",
+    "statTeams": "48 teams",
+    "statGroups": "12 groups",
+    "statKickoff": "11 Jun 2026",
+    "spotlights": {
+      "A": "Opening path: Mexico City, Guadalajara, Atlanta",
+      "B": "Canada starts at home with a tight European test",
+      "C": "Brazil and Morocco headline one of the most watchable groups",
+      "D": "The United States route runs through Paraguay, Australia and Turkiye",
+      "E": "Germany meets Ecuador, Cote d’Ivoire and Curacao",
+      "F": "Netherlands, Japan, Sweden and Tunisia bring four distinct styles",
+      "G": "Belgium, Egypt and Iran chase control against New Zealand",
+      "H": "Spain and Uruguay share a group with Saudi Arabia and Cape Verde",
+      "I": "France, Senegal, Norway and Iraq make the heavy traffic group",
+      "J": "Argentina starts the defense against Algeria, Austria and Jordan",
+      "K": "Portugal faces Colombia, Uzbekistan and DR Congo",
+      "L": "England, Croatia, Ghana and Panama close the group map"
+    }
+  },
+  "affiliate": {
+    "eyebrow": "Invite friends",
+    "title": "Affiliate rewards",
+    "description": "Share your ScoreMatrix invite link. When friends sign up and qualify, you earn points and premium credits.",
+    "yourCode": "Your referral code",
+    "copyLink": "Copy invite link",
+    "copied": "Copied",
+    "clicks": "Link clicks",
+    "signups": "Signups",
+    "qualified": "Qualified",
+    "conversion": "Conversion",
+    "referralsTitle": "Referral activity",
+    "referralsSubtitle": "Track friends who joined through your invite link.",
+    "pending": "{count} pending",
+    "pointsShort": "pts",
+    "rewardsTitle": "Reward milestones",
+    "earned": "{points} points and {credits} credits earned",
+    "nextMilestone": "{count} more qualified signups to unlock the next milestone",
+    "tier": "{count} qualified friends",
+    "tierReward": "+{points} pts / +{credits} credits",
+    "status": {
+      "registered": "Registered",
+      "qualified": "Qualified",
+      "rewarded": "Rewarded"
+    },
+    "steps": {
+      "1": {
+        "title": "Share your link",
+        "text": "Send the invite link to friends or post it in your football community."
+      },
+      "2": {
+        "title": "Friend signs up",
+        "text": "The referral code is attached to the registration form automatically."
+      },
+      "3": {
+        "title": "Earn rewards",
+        "text": "Rewards unlock after the invited account meets the qualification rules."
+      }
     }
   }
 }
