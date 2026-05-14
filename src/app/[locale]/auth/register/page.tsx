@@ -44,7 +44,7 @@ const languageOptions = LOCALES.map((l) => ({
   value: l.code,
   label: `${l.native} (${l.label})`,
 }));
-9vo
+
 export default function RegisterPage() {
   const t = useTranslations("auth");
   const { locale } = useParams<{ locale: string }>();
