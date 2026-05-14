@@ -180,8 +180,19 @@ body {
   100% { transform: translateX(130%); opacity: 0; }
 }
 @keyframes cyberLiveCardPulse {
-  0%, 100% { box-shadow: 0 0 14px rgba(34, 211, 238, 0.08); }
-  50% { box-shadow: 0 0 24px rgba(16, 185, 129, 0.12); }
+  0%, 100% {
+    border-color: rgba(74, 222, 128, 0.45);
+    box-shadow: 0 0 18px rgba(34, 211, 238, 0.12), inset 0 0 22px rgba(16, 185, 129, 0.05);
+  }
+  50% {
+    border-color: rgba(34, 211, 238, 0.52);
+    box-shadow: 0 0 34px rgba(16, 185, 129, 0.22), inset 0 0 28px rgba(34, 211, 238, 0.08);
+  }
+}
+@keyframes cyberLiveCardScan {
+  0% { transform: translateX(-120%) skewX(-14deg); opacity: 0; }
+  34% { opacity: 0.38; }
+  100% { transform: translateX(125%) skewX(-14deg); opacity: 0; }
 }
 @keyframes todayMatchesHeadingGlow {
   0%, 100% { box-shadow: 0 0 18px rgba(34, 211, 238, 0.09), inset 0 0 16px rgba(16, 185, 129, 0.04); }
@@ -329,7 +340,16 @@ body {
   background-size: 100% 100%, 100% 8px;
   animation: cyberLiveHeaderScan 2.9s ease-in-out infinite;
 }
-.cyber-live-card { animation: cyberLiveCardPulse 4s ease-in-out infinite; }
+.cyber-live-card {
+  animation: cyberLiveCardPulse 3.4s ease-in-out infinite;
+  background-image:
+    linear-gradient(135deg, rgba(16,185,129,0.16), transparent 46%),
+    radial-gradient(circle at 50% 0%, rgba(34,211,238,0.14), transparent 52%);
+}
+.cyber-live-card-scan {
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.1) 46%, rgba(34,211,238,0.16) 52%, transparent 60%);
+  animation: cyberLiveCardScan 3.2s ease-in-out infinite;
+}
 .today-matches-heading { animation: todayMatchesHeadingGlow 3.8s ease-in-out infinite; }
 .today-matches-heading-scan {
   background:

@@ -167,38 +167,44 @@ export function LiveMatchHighlights({
                 href={`/${locale}/livescore/${match.id}`}
                 className="flex-shrink-0"
               >
-                <Card neon="cyan" hover className="cyber-live-card w-64">
-                  {/* League badge */}
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wider">
-                      {match.league}
-                    </span>
-                    <StatusBadge status={match.status} />
-                  </div>
+                <Card neon="green" hover className="cyber-live-card relative w-64 overflow-hidden border-green-400/45 bg-[#07140f]">
+                  <div className="cyber-live-card-scan absolute inset-0" />
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-300 via-cyan-300 to-green-300" />
+                  <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-green-400/15 blur-2xl" />
 
-                  {/* Teams and score */}
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                      <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
-                      <span className="text-sm text-gray-300 text-center truncate w-full">
-                        {match.homeTeam}
+                  <div className="relative">
+                    {/* League badge */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] text-green-200/80 uppercase tracking-wider">
+                        {match.league}
                       </span>
+                      <StatusBadge status={match.status} />
                     </div>
 
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span className="text-2xl font-bold font-mono text-white">
-                        {match.homeScore} - {match.awayScore}
-                      </span>
-                      <span className="text-xs text-green-400 font-mono">
-                        {match.minute}&apos;
-                      </span>
-                    </div>
+                    {/* Teams and score */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
+                        <span className="text-sm text-white text-center truncate w-full">
+                          {match.homeTeam}
+                        </span>
+                      </div>
 
-                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                      <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
-                      <span className="text-sm text-gray-300 text-center truncate w-full">
-                        {match.awayTeam}
-                      </span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-2xl font-bold font-mono text-white text-glow-cyan">
+                          {match.homeScore} - {match.awayScore}
+                        </span>
+                        <span className="rounded-full border border-green-300/40 bg-green-400/15 px-2 py-0.5 text-xs font-bold text-green-200 font-mono">
+                          {match.minute}&apos;
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                        <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
+                        <span className="text-sm text-white text-center truncate w-full">
+                          {match.awayTeam}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Card>
