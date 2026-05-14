@@ -31,6 +31,11 @@ const nextConfig: NextConfig = {
         hostname: "media.api-sports.io",
         pathname: "/football/venues/**",
       },
+      {
+        protocol: "https",
+        hostname: "flagcdn.com",
+        pathname: "/w40/**",
+      },
     ],
   },
 };

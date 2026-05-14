@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, Globe2, MapPinned, Trophy } from "lucide-react";
+import { CalendarDays, Globe2, MapPinned, Rows3, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -30,6 +30,8 @@ const worldCupKickoff = new Date("2026-06-11T13:00:00-06:00").getTime();
 export function WorldFootballFeature() {
   const locale = useLocale();
   const t = useTranslations("worldFootball");
+  const worldCupGroupsLabel =
+    locale === "th" ? "ดูตารางกลุ่มบอลโลก" : "World Cup groups";
   const [now, setNow] = useState(() => Date.now());
   const countdownParts = useMemo(
     () => getCountdownParts(worldCupKickoff - now),
@@ -119,6 +121,12 @@ export function WorldFootballFeature() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2 md:mt-5">
+            <Link href={`/${locale}/world-cup-2026`}>
+              <Button size="sm" variant="gold" neon>
+                <Rows3 size={14} />
+                {worldCupGroupsLabel}
+              </Button>
+            </Link>
             <Link href={`/${locale}/matches`}>
               <Button size="sm" neon>
                 <CalendarDays size={14} />
