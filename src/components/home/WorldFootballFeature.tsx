@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, Globe2, MapPinned, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -23,9 +25,21 @@ const statItems = [
   { key: "countries", value: "3", icon: Globe2, tone: "text-green-300" },
 ];
 
+const worldCupKickoff = new Date("2026-06-11T13:00:00-06:00").getTime();
+
 export function WorldFootballFeature() {
   const locale = useLocale();
   const t = useTranslations("worldFootball");
+  const [now, setNow] = useState(() => Date.now());
+  const countdownParts = useMemo(
+    () => getCountdownParts(worldCupKickoff - now),
+    [now]
+  );
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
     <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b0f16] md:rounded-2xl">
@@ -47,6 +61,42 @@ export function WorldFootballFeature() {
           <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400 md:mt-3 md:text-base">
             {t("description")}
           </p>
+
+          <div className="world-cup-countdown relative mt-4 overflow-hidden rounded-xl border border-amber-400/30 bg-[#100d08] p-3 shadow-[0_0_34px_rgba(245,158,11,0.12)] md:mt-5 md:p-4">
+            <div className="world-cup-countdown-scan absolute inset-0" />
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+            <div className="relative flex flex-col gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-300">
+                    {t("countdownLabel")}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-400">
+                    {t("kickoffLine")}
+                  </p>
+                </div>
+                <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2.5 py-1 font-mono text-[10px] font-bold text-cyan-200">
+                  {t("openingMatch")}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2">
+                {countdownParts.map((part) => (
+                  <div
+                    key={part.key}
+                    className="world-cup-countdown-tile rounded-lg border border-white/10 bg-black/35 p-2 text-center"
+                  >
+                    <p className="font-mono text-2xl font-black leading-none text-white text-glow-cyan md:text-3xl">
+                      {part.value}
+                    </p>
+                    <p className="mt-1 text-[9px] uppercase tracking-wider text-gray-500">
+                      {t(`countdown.${part.key}`)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <div className="mt-4 grid grid-cols-3 gap-2 md:mt-5 md:gap-3">
             {statItems.map((item) => {
@@ -93,10 +143,12 @@ export function WorldFootballFeature() {
           <div className="world-cup-logo-aura absolute left-1/2 top-[43%] z-10 flex h-52 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/10 bg-black/20 p-1.5 shadow-[0_0_38px_rgba(245,158,11,0.22)] md:top-[47%] md:h-[22rem] md:w-64 md:rounded-3xl md:p-2 md:shadow-[0_0_55px_rgba(245,158,11,0.24)]">
             <div className="absolute -inset-1 rounded-2xl bg-[conic-gradient(from_140deg,rgba(239,68,68,0.16),rgba(34,211,238,0.2),rgba(16,185,129,0.18),rgba(245,158,11,0.16),rgba(239,68,68,0.16))] opacity-80 blur-sm world-cup-logo-ring md:rounded-3xl" />
             <div className="absolute inset-0 rounded-2xl bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.22),transparent)] world-cup-logo-shine md:rounded-3xl" />
-            <img
+            <Image
               src="/brand/fifa-world-cup-2026.png"
               alt="FIFA World Cup 2026"
-              className="relative z-10 h-full w-full rounded-xl object-cover world-cup-logo-pop md:rounded-2xl"
+              fill
+              sizes="(min-width: 768px) 256px, 144px"
+              className="z-10 rounded-xl object-cover world-cup-logo-pop md:rounded-2xl"
             />
           </div>
           <div className="absolute left-[13%] top-[27%] h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.9)] world-cup-spark md:left-[15%] md:top-[24%] md:h-2 md:w-2" />
@@ -143,4 +195,19 @@ export function WorldFootballFeature() {
       </div>
     </section>
   );
+}
+
+function getCountdownParts(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [
+    { key: "days", value: days.toString().padStart(2, "0") },
+    { key: "hours", value: hours.toString().padStart(2, "0") },
+    { key: "minutes", value: minutes.toString().padStart(2, "0") },
+    { key: "seconds", value: seconds.toString().padStart(2, "0") },
+  ];
 }

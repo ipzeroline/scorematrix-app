@@ -148,6 +148,25 @@ body {
   0%, 100% { opacity: 0.35; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.9); }
 }
+@keyframes worldCupCountdownGlow {
+  0%, 100% {
+    border-color: rgba(251, 191, 36, 0.3);
+    box-shadow: 0 0 26px rgba(245, 158, 11, 0.12), inset 0 0 18px rgba(34, 211, 238, 0.035);
+  }
+  50% {
+    border-color: rgba(34, 211, 238, 0.42);
+    box-shadow: 0 0 42px rgba(34, 211, 238, 0.16), inset 0 0 24px rgba(245, 158, 11, 0.06);
+  }
+}
+@keyframes worldCupCountdownScan {
+  0% { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  32% { opacity: 0.5; }
+  100% { transform: translateX(125%) skewX(-18deg); opacity: 0; }
+}
+@keyframes worldCupCountdownTile {
+  0%, 100% { transform: translateY(0); box-shadow: 0 0 12px rgba(245, 158, 11, 0.04); }
+  50% { transform: translateY(-2px); box-shadow: 0 0 18px rgba(34, 211, 238, 0.08); }
+}
 @keyframes predictScanline {
   0% { transform: translateX(-18%); opacity: 0.15; }
   50% { opacity: 0.8; }
@@ -324,6 +343,12 @@ body {
 .world-cup-spark { animation: worldCupSpark 2.6s ease-in-out infinite; }
 .world-cup-spark-delay { animation: worldCupSpark 3s ease-in-out infinite 0.45s; }
 .world-cup-spark-slow { animation: worldCupSpark 3.8s ease-in-out infinite 0.9s; }
+.world-cup-countdown { animation: worldCupCountdownGlow 3.2s ease-in-out infinite; }
+.world-cup-countdown-scan {
+  background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.09) 44%, rgba(245,158,11,0.18) 50%, rgba(34,211,238,0.12) 56%, transparent 64%);
+  animation: worldCupCountdownScan 3.1s ease-in-out infinite;
+}
+.world-cup-countdown-tile { animation: worldCupCountdownTile 3.4s ease-in-out infinite; }
 .predict-scanline { animation: predictScanline 3.6s ease-in-out infinite alternate; }
 .predict-vs-pulse { animation: predictVsPulse 2.8s ease-in-out infinite; }
 .predict-team-float { animation: predictTeamFloat 3.2s ease-in-out infinite; }

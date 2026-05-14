@@ -14,7 +14,11 @@ export default function LoginPage() {
   const t = useTranslations("auth");
   const { locale } = useParams<{ locale: string }>();
 
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({
+    identifier: "",
+    password: "",
+    rememberMe: false,
+  });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -22,16 +26,18 @@ export default function LoginPage() {
   const markTouched = (field: string) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
 
-  const update = (field: string, value: string) => {
+  const update = (field: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setServerError("");
   };
 
   const errors = useMemo(() => {
     const e: Record<string, string> = {};
-    if (touched.email || form.email) {
-      if (!form.email) e.email = t("emailRequired");
-      else if (!isValidEmail(form.email)) e.email = t("emailInvalid");
+    if (touched.identifier || form.identifier) {
+      if (!form.identifier) e.identifier = t("identifierRequired");
+      else if (form.identifier.includes("@") && !isValidEmail(form.identifier)) {
+        e.identifier = t("emailInvalid");
+      }
     }
     if (touched.password || form.password) {
       if (!form.password) e.password = t("passwordRequired");
@@ -43,9 +49,9 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({ email: true, password: true });
+    setTouched({ identifier: true, password: true });
 
-    if (hasErrors || !form.email || !form.password) return;
+    if (hasErrors || !form.identifier || !form.password) return;
 
     setLoading(true);
     setServerError("");
@@ -57,68 +63,144 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="animate-slide-up">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold font-display text-white">
-          {t("login")}
-        </h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Welcome back to ScoreMatrix
-        </p>
-      </div>
-
-      <form
-        onSubmit={handleSubmit}
-        noValidate
-        className="rounded-2xl border border-gray-800 bg-[#12121a] p-6 space-y-4"
-      >
-        <Input
-          label={t("email")}
-          type="email"
-          placeholder="cyberfan@example.com"
-          value={form.email}
-          onChange={(e) => update("email", e.target.value)}
-          onBlur={() => markTouched("email")}
-          error={errors.email}
-          autoComplete="email"
-        />
-
-        <div>
-          <Input
-            label={t("password")}
-            type="password"
-            placeholder="••••••••"
-            value={form.password}
-            onChange={(e) => update("password", e.target.value)}
-            onBlur={() => markTouched("password")}
-            error={errors.password}
-            autoComplete="current-password"
-          />
+    <div className="animate-slide-up grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <section>
+        <div className="mb-6 text-center lg:text-left">
+          <h1 className="font-display text-2xl font-bold text-white">
+            {t("login")}
+          </h1>
+          <p className="mt-1 text-sm text-gray-400">
+            {t("loginSubtitle")}
+          </p>
         </div>
 
-        {serverError && (
-          <p className="text-sm text-red-400 text-center">{serverError}</p>
-        )}
-
-        <Button
-          type="submit"
-          loading={loading}
-          className="w-full"
-          size="lg"
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="rounded-2xl border border-gray-800 bg-[#12121a] p-6 space-y-4"
         >
-          {t("login")}
-        </Button>
-      </form>
+          <Input
+            label={t("identifier")}
+            type="text"
+            placeholder={t("identifierPlaceholder")}
+            value={form.identifier}
+            onChange={(e) => update("identifier", e.target.value)}
+            onBlur={() => markTouched("identifier")}
+            error={errors.identifier}
+            autoComplete="username"
+          />
 
-      <p className="text-center text-sm text-gray-500 mt-4">
-        {t("noAccount")}{" "}
-        <Link
-          href={`/${locale}/auth/register`}
-          className="text-cyan-400 hover:underline"
-        >
-          {t("register")}
-        </Link>
-      </p>
+          <div>
+            <Input
+              label={t("password")}
+              type="password"
+              placeholder="••••••••"
+              value={form.password}
+              onChange={(e) => update("password", e.target.value)}
+              onBlur={() => markTouched("password")}
+              error={errors.password}
+              autoComplete="current-password"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-400">
+              <input
+                type="checkbox"
+                checked={form.rememberMe}
+                onChange={(e) => update("rememberMe", e.target.checked)}
+                className="h-4 w-4 rounded border-gray-700 bg-[#0a0a0f] text-cyan-500 focus:ring-cyan-500/20"
+              />
+              {t("rememberMe")}
+            </label>
+            <Link
+              href={`/${locale}/auth/forgot-password`}
+              className="text-sm text-cyan-400 hover:underline"
+            >
+              {t("forgotPassword")}
+            </Link>
+          </div>
+
+          <div className="rounded-xl border border-green-500/15 bg-green-500/5 p-3 text-xs leading-5 text-gray-400">
+            {t("loginSecurityNote")}
+          </div>
+
+          {serverError && (
+            <p className="text-sm text-red-400 text-center">{serverError}</p>
+          )}
+
+          <Button
+            type="submit"
+            loading={loading}
+            className="w-full"
+            size="lg"
+          >
+            {t("login")}
+          </Button>
+        </form>
+
+        <p className="text-center text-sm text-gray-500 mt-4">
+          {t("noAccount")}{" "}
+          <Link
+            href={`/${locale}/auth/register`}
+            className="text-cyan-400 hover:underline"
+          >
+            {t("register")}
+          </Link>
+        </p>
+      </section>
+
+      <aside className="rounded-2xl border border-gray-800 bg-[#0d1118] p-5 lg:mt-14">
+        <h2 className="font-display text-lg font-bold text-white">
+          {t("loginInfoTitle")}
+        </h2>
+        <div className="mt-4 space-y-4 text-sm">
+          <InfoBlock
+            title={t("loginFormTitle")}
+            items={[
+              t("loginFormIdentifier"),
+              t("loginFormPassword"),
+              t("loginFormRemember"),
+              t("loginFormRecovery"),
+            ]}
+          />
+          <InfoBlock
+            title={t("loginSecurityTitle")}
+            items={[
+              t("loginSecurityRateLimit"),
+              t("loginSecurityDevice"),
+              t("loginSecurity2fa"),
+              t("loginSecurityError"),
+            ]}
+          />
+          <InfoBlock
+            title={t("afterLoginTitle")}
+            items={[
+              t("afterLoginRedirect"),
+              t("afterLoginSession"),
+              t("afterLoginAudit"),
+            ]}
+          />
+        </div>
+      </aside>
     </div>
+  );
+}
+
+function InfoBlock({ title, items }: { title: string; items: string[] }) {
+  return (
+    <section>
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-cyan-300">
+        {title}
+      </h3>
+      <ul className="space-y-2 text-gray-400">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2">
+            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-green-400" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

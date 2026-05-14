@@ -7,6 +7,7 @@ interface DropdownProps {
   children: React.ReactNode;
   align?: "left" | "right";
   className?: string;
+  containerClassName?: string;
 }
 
 export function Dropdown({
@@ -14,6 +15,7 @@ export function Dropdown({
   children,
   align = "right",
   className,
+  containerClassName,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -29,7 +31,7 @@ export function Dropdown({
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn("relative", containerClassName)}>
       <div onClick={() => setOpen(!open)} className="cursor-pointer">
         {trigger}
       </div>
@@ -54,11 +56,13 @@ export function DropdownItem({
   onClick,
   danger,
   active,
+  className,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   danger?: boolean;
   active?: boolean;
+  className?: string;
 }) {
   return (
     <button
@@ -67,6 +71,7 @@ export function DropdownItem({
         "w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer",
         active && "bg-cyan-500/10 text-cyan-400",
         danger ? "text-red-400 hover:bg-red-500/10" : "text-gray-300 hover:bg-white/5",
+        className
       )}
     >
       {children}

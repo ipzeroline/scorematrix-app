@@ -1,19 +1,30 @@
 import { Card } from "@/components/ui/Card";
-import { PointsBadge } from "@/components/shared/PointsBadge";
+import { useTranslations } from "next-intl";
 
 export default function WalletPage() {
+  const t = useTranslations("wallet");
+  const earningHistory = [
+    { desc: t("earningExactScore"), pts: 10, date: t("today") },
+    { desc: t("earningDailyMission"), pts: 50, date: t("today") },
+    { desc: t("earningCorrectResult"), pts: 5, date: t("yesterday") },
+    { desc: t("earningStreakBonus"), pts: 10, date: t("yesterday") },
+    { desc: t("earningAchievement"), pts: 200, date: t("may8") },
+  ];
+  const redemptionHistory = [
+    { item: t("redemptionJersey"), cost: t("costPoints", { amount: 500 }), date: t("may5"), status: t("statusShipped") },
+    { item: t("redemptionTheme"), cost: t("costCredits", { amount: 50 }), date: t("may1"), status: t("statusDelivered") },
+  ];
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-xl font-bold font-display text-white">Wallet & Points</h1>
+      <h1 className="text-xl font-bold font-display text-white">{t("title")}</h1>
 
       {/* Legal Disclaimer - Prominent */}
       <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4">
         <p className="text-sm text-gray-300 font-medium leading-relaxed">
-          <strong className="text-red-400">IMPORTANT:</strong> Free Prediction
-          Points and Premium Credits have <strong>no cash value</strong>. They
-          cannot be withdrawn, transferred, or exchanged for real money.
-          ScoreMatrix is a skill-based prediction platform, not a gambling
-          service.
+          <strong className="text-red-400">{t("importantLabel")}</strong>{" "}
+          {t("legalPrefix")} <strong>{t("noCashValue")}</strong>.{" "}
+          {t("legalSuffix")}
         </p>
       </div>
 
@@ -24,16 +35,14 @@ export default function WalletPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🟢</span>
             <h3 className="text-sm font-semibold text-green-400">
-              Free Prediction Points
+              {t("freePointsTitle")}
             </h3>
           </div>
           <div className="text-3xl font-bold font-mono text-green-400 mb-3">
             2,840
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-            Earned through accurate predictions, completing missions, and
-            unlocking achievements. Redeem for merchandise and digital goods in
-            the Rewards catalog.
+            {t("freePointsDescription")}
           </p>
         </Card>
 
@@ -42,15 +51,14 @@ export default function WalletPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🟡</span>
             <h3 className="text-sm font-semibold text-amber-400">
-              Premium Credits
+              {t("premiumCreditsTitle")}
             </h3>
           </div>
           <div className="text-3xl font-bold font-mono text-amber-400 mb-3">
             150
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">
-            Optional purchase for exclusive cosmetic items, profile badges, and
-            digital collectibles. Not required for core platform features.
+            {t("premiumCreditsDescription")}
           </p>
         </Card>
       </div>
@@ -58,16 +66,10 @@ export default function WalletPage() {
       {/* Earning History */}
       <Card className="p-4">
         <h3 className="text-sm font-semibold text-white mb-3">
-          Free Points — Earning History
+          {t("earningHistoryTitle")}
         </h3>
         <div className="space-y-2">
-          {[
-            { desc: "Exact score — London United 2-1 Mersey City", pts: 10, date: "Today" },
-            { desc: "Daily mission: Predict 3 matches", pts: 50, date: "Today" },
-            { desc: "Correct result — Real Catalonia vs Atletico Madrid B", pts: 5, date: "Yesterday" },
-            { desc: "Streak bonus — 5 consecutive correct", pts: 10, date: "Yesterday" },
-            { desc: "Achievement: 100 Predictions", pts: 200, date: "May 8" },
-          ].map((e, i) => (
+          {earningHistory.map((e, i) => (
             <div
               key={i}
               className="flex items-center justify-between py-2 border-b border-gray-800/50 last:border-0"
@@ -87,13 +89,10 @@ export default function WalletPage() {
       {/* Spending History */}
       <Card className="p-4">
         <h3 className="text-sm font-semibold text-white mb-3">
-          Redemption History
+          {t("redemptionHistoryTitle")}
         </h3>
         <div className="space-y-2">
-          {[
-            { item: "ScoreMatrix Football Jersey", cost: "500 pts", date: "May 5", status: "Shipped" },
-            { item: "Cyan Neon Theme Pack", cost: "50 credits", date: "May 1", status: "Delivered" },
-          ].map((e, i) => (
+          {redemptionHistory.map((e, i) => (
             <div
               key={i}
               className="flex items-center justify-between py-2 border-b border-gray-800/50 last:border-0"
