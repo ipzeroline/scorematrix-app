@@ -8,6 +8,13 @@ import {
   type GetFixtureDetailsResult,
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { aiInsights } from "@/data/ai-insights";
+import { leagues } from "@/data/leagues";
+import { lineups as mockLineups } from "@/data/lineups";
+import { matches } from "@/data/matches";
+import { matchEvents } from "@/data/match-events";
+import { matchStats } from "@/data/match-stats";
+import { teams } from "@/data/teams";
 import { MatchStatus } from "@/types/common";
 import { AIInsightListClient, type AIInsightListItem } from "./AIInsightListClient";
 
@@ -19,15 +26,17 @@ export default async function AIInsightPage({ params }: Props) {
   const { locale } = await params;
   const fixtures = await loadApiFixtures();
   const fetchedAt = new Date().toISOString();
-  const insights = await Promise.all(
+  const apiInsights = await Promise.all(
     fixtures.map((fixture) => buildInsightItem(fixture, fetchedAt))
   );
+  const localInsights = buildLocalInsightItems();
+  const insights = sortByDataCompleteness([...apiInsights, ...localInsights]).slice(0, 24);
 
   return (
     <AIInsightListClient
       locale={locale}
       insights={insights}
-      source={fixtures.length > 0 ? "api" : "empty"}
+      source={fixtures.length > 0 ? "mixed" : localInsights.length > 0 ? "sample" : "empty"}
     />
   );
 }
@@ -37,13 +46,14 @@ async function loadApiFixtures() {
     const live = await getApiFootballFixtures({ live: true, limit: 24 });
     const fixtures = live.fixtures.filter(isAnalyzableFixture);
 
-    for (let offset = 0; fixtures.length < 24 && offset < 7; offset += 1) {
+    for (const offset of [0, -1, -2, -3, 1, 2, 3, 4, 5, 6, 7]) {
+      if (fixtures.length >= 36) break;
       const date = dateFromToday(offset);
       const byDate = await getApiFootballFixtures({ date, limit: 24 });
       fixtures.push(...byDate.fixtures.filter(isAnalyzableFixture));
     }
 
-    return dedupeFixtures(fixtures).slice(0, 24);
+    return dedupeFixtures(fixtures).slice(0, 36);
   } catch (error) {
     if (error instanceof ApiFootballError) return [];
     throw error;
@@ -51,7 +61,11 @@ async function loadApiFixtures() {
 }
 
 function isAnalyzableFixture(fixture: ApiFootballFixture) {
-  return fixture.status === MatchStatus.LIVE || fixture.status === MatchStatus.UPCOMING;
+  return (
+    fixture.status === MatchStatus.LIVE ||
+    fixture.status === MatchStatus.UPCOMING ||
+    fixture.status === MatchStatus.FINISHED
+  );
 }
 
 function dedupeFixtures(fixtures: ApiFootballFixture[]) {
@@ -85,6 +99,7 @@ async function buildInsightItem(fixture: ApiFootballFixture, fetchedAt: string):
 
   return {
     id: `api-insight-${detailFixture.apiFixtureId ?? detailFixture.id}`,
+    dataSource: "api",
     matchId: buildFixtureSeoSlug(detailFixture),
     status: detailFixture.status,
     league: {
@@ -133,6 +148,111 @@ async function buildInsightItem(fixture: ApiFootballFixture, fetchedAt: string):
     upsetAlert: probabilities ? Math.abs(probabilities.home - probabilities.away) <= 8 : false,
     generatedAt: fetchedAt,
   };
+}
+
+function buildLocalInsightItems(): AIInsightListItem[] {
+  return aiInsights
+    .map((insight): AIInsightListItem | null => {
+      const match = matches.find((item) => item.id === insight.matchId);
+      if (!match) return null;
+
+      const homeTeam = teams.find((team) => team.id === match.homeTeamId);
+      const awayTeam = teams.find((team) => team.id === match.awayTeamId);
+      const league = leagues.find((item) => item.id === match.leagueId);
+      if (!homeTeam || !awayTeam || !league) return null;
+
+      const lineup = mockLineups.find((item) => item.matchId === match.id);
+      const stats = matchStats.find((item) => item.matchId === match.id);
+      const events = matchEvents.filter((event) => event.matchId === match.id);
+      const playerCount = lineup
+        ? lineup.homeStarting.length +
+          lineup.awayStarting.length +
+          lineup.homeSubs.length +
+          lineup.awaySubs.length
+        : 0;
+
+      return {
+        id: `sample-${insight.id}`,
+        dataSource: "sample",
+        matchId: insight.matchId,
+        status: match.status,
+        league: {
+          id: league.id,
+          name: league.name,
+          logo: null,
+          round: match.round,
+        },
+        homeTeam: {
+          id: homeTeam.id,
+          name: homeTeam.name,
+          shortName: homeTeam.shortName,
+          logo: null,
+        },
+        awayTeam: {
+          id: awayTeam.id,
+          name: awayTeam.name,
+          shortName: awayTeam.shortName,
+          logo: null,
+        },
+        score: {
+          home: match.homeScore,
+          away: match.awayScore,
+        },
+        kickoffTime: match.kickoffTime,
+        confidenceScore: insight.confidenceScore,
+        heatMeter: insight.heatMeter,
+        homeWinProbability: insight.homeWinProbability,
+        drawProbability: insight.drawProbability,
+        awayWinProbability: insight.awayWinProbability,
+        formComparison: {
+          homeLastFive: insight.formComparison.homeLastFive,
+          awayLastFive: insight.formComparison.awayLastFive,
+        },
+        keyFactors: insight.keyFactors,
+        apiSummary: {
+          events: events.length,
+          statistics: stats ? Object.keys(stats).length - 1 : 0,
+          lineups: lineup ? 2 : 0,
+          playerStats: playerCount,
+          h2h: insight.headToHead.length,
+        },
+        upsetAlert: insight.upsetAlert,
+        generatedAt: insight.generatedAt,
+      };
+    })
+    .filter((item): item is AIInsightListItem => item !== null);
+}
+
+function sortByDataCompleteness(insights: AIInsightListItem[]) {
+  return [...insights].sort((a, b) => {
+    const scoreDiff = dataCompletenessScore(b) - dataCompletenessScore(a);
+    if (scoreDiff !== 0) return scoreDiff;
+
+    const confidenceDiff = (b.confidenceScore ?? 0) - (a.confidenceScore ?? 0);
+    if (confidenceDiff !== 0) return confidenceDiff;
+
+    return new Date(b.kickoffTime).getTime() - new Date(a.kickoffTime).getTime();
+  });
+}
+
+function dataCompletenessScore(insight: AIInsightListItem) {
+  const coverage =
+    Math.min(insight.apiSummary.events, 6) * 3 +
+    Math.min(insight.apiSummary.statistics, 16) * 2 +
+    Math.min(insight.apiSummary.lineups, 2) * 10 +
+    Math.min(insight.apiSummary.playerStats, 22) +
+    Math.min(insight.apiSummary.h2h, 5) * 4;
+  const modelSignals =
+    (typeof insight.confidenceScore === "number" ? 12 : 0) +
+    (typeof insight.heatMeter === "number" ? 8 : 0) +
+    (insight.homeWinProbability !== null &&
+    insight.drawProbability !== null &&
+    insight.awayWinProbability !== null
+      ? 15
+      : 0) +
+    (insight.keyFactors.length >= 3 ? 8 : 0);
+
+  return coverage + modelSignals;
 }
 
 async function loadFixtureDetails(fixture: ApiFootballFixture) {

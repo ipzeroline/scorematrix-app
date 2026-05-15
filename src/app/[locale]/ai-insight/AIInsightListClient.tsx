@@ -28,6 +28,7 @@ type MatchResult = "W" | "D" | "L";
 
 export type AIInsightListItem = {
   id: string;
+  dataSource: "api" | "sample";
   matchId: string;
   status: MatchStatus;
   league: {
@@ -101,7 +102,7 @@ export function AIInsightListClient({
 }: {
   locale: string;
   insights: AIInsightListItem[];
-  source: "api" | "empty";
+  source: "api" | "mixed" | "sample" | "empty";
 }) {
   const copy = getAIInsightPageCopy(locale);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
@@ -167,7 +168,7 @@ export function AIInsightListClient({
       tone: "text-red-300",
     },
     {
-      label: "API data",
+      label: "Data coverage",
       value: apiDataPoints.toLocaleString(localeMap[locale] ?? "th-TH"),
       icon: Users,
       tone: "text-purple-300",
@@ -201,7 +202,7 @@ export function AIInsightListClient({
             </div>
             <p className="text-xs leading-5 text-gray-500">
               {copy.disclaimer}
-              {source === "api" ? " Live API data." : ""}
+              {source === "api" || source === "mixed" ? " Live API data." : ""}
             </p>
           </div>
 
@@ -385,8 +386,11 @@ export function AIInsightListClient({
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <p className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300">
                           <BarChart3 size={13} className="text-purple-300" />
-                          API data
+                          Data coverage
                         </p>
+                        <Badge variant={insight.dataSource === "api" ? "green" : "gold"}>
+                          {insight.dataSource === "api" ? "API" : "Sample"}
+                        </Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <ApiDataCell label="Events" value={insight.apiSummary.events} />
@@ -417,12 +421,14 @@ export function AIInsightListClient({
                     </div>
                     <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
                       <p className="text-xs font-medium text-gray-300">
-                        Real API coverage
+                        Data readiness
                       </p>
                       <p className="mt-2 text-xs text-gray-500">
                         {insight.homeWinProbability === null
-                          ? "No fixture statistics yet. Waiting for API data."
-                          : "Probabilities are calculated only from API fixture statistics."}
+                          ? "No fixture statistics yet. Waiting for richer match data."
+                          : insight.dataSource === "api"
+                            ? "Probabilities are calculated from live fixture statistics where available."
+                            : "Sample match includes full events, stats, lineup, form, and H2H data."}
                       </p>
                     </div>
                   </div>

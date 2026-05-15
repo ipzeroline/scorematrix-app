@@ -9,6 +9,8 @@ import {
   Flame,
   Gauge,
   ListChecks,
+  ListPlus,
+  ShieldCheck,
   Shirt,
   Sparkles,
   TrendingUp,
@@ -39,6 +41,7 @@ import {
   getApiFootballH2H,
 } from "@/lib/api-football";
 import { extractApiFixtureId } from "@/lib/football-slugs";
+import { cn } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 import type { AIInsight } from "@/types/ai-insight";
 import type { Lineup, Match, MatchEvent, MatchStats } from "@/types/match";
@@ -586,13 +589,30 @@ export default async function AIInsightDetailPage({ params }: Props) {
           </Card>
         </div>
 
-        <Card className="p-4">
-          <h3 className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-white">
-            <Shirt size={15} className="text-amber-300" />
-            {details.lineupPreview}
-          </h3>
-          <LineupsPanel context={context} labels={details} />
-        </Card>
+        {context.kind === "api" ? (
+          <>
+            <LiveLineupsPanel
+              lineups={context.api.lineups}
+              locale={locale}
+              season={context.fixture.league.season ?? new Date().getFullYear()}
+              labels={getLineupLabels(locale, details)}
+            />
+            <LivePlayerStatsPanel
+              playerStats={context.api.playerStats}
+              locale={locale}
+              season={context.fixture.league.season ?? new Date().getFullYear()}
+              labels={getPlayerStatsLabels(locale, details)}
+            />
+          </>
+        ) : (
+          <Card className="p-4">
+            <h3 className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-white">
+              <Shirt size={15} className="text-amber-300" />
+              {details.lineupPreview}
+            </h3>
+            <CompactLineupsPanel context={context} labels={details} />
+          </Card>
+        )}
       </section>
     </div>
   );
@@ -1102,7 +1122,330 @@ function CompareStat({
   );
 }
 
-function LineupsPanel({
+function LiveLineupsPanel({
+  lineups,
+  locale,
+  season,
+  labels,
+}: {
+  lineups: ApiFootballLineup[];
+  locale: string;
+  season: number;
+  labels: {
+    empty: string;
+    coach: string;
+    unavailable: string;
+    startingXI: string;
+    substitutes: string;
+    formationPitch: string;
+    noGridData: string;
+  };
+}) {
+  return (
+    <section className="grid gap-4 lg:grid-cols-2">
+      {lineups.length === 0 ? (
+        <Card className="p-4 lg:col-span-2">
+          <EmptyText label={labels.empty} />
+        </Card>
+      ) : (
+        lineups.map((lineup, index) => (
+          <Card key={lineup.team.id} className="overflow-hidden p-0">
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3 border-b border-gray-800 px-3 py-3 sm:px-4",
+                index === 0 ? "bg-cyan-500/10" : "bg-magenta-500/10"
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <ApiTeamLogo
+                  name={lineup.team.name}
+                  logo={lineup.team.logo}
+                  size="sm"
+                  accent={index === 0 ? "cyan" : "magenta"}
+                />
+                <div className="min-w-0">
+                  <h2 className="truncate text-sm font-bold text-white">
+                    {lineup.team.name}
+                  </h2>
+                  <p className="truncate text-[10px] text-gray-500">
+                    {labels.coach}: {lineup.coach.name ?? labels.unavailable}
+                  </p>
+                </div>
+              </div>
+              <Badge variant={index === 0 ? "cyan" : "magenta"} size="md" className="shrink-0">
+                {lineup.formation ?? "N/A"}
+              </Badge>
+            </div>
+
+            <div className="space-y-4 p-3 sm:p-4">
+              <FormationPitch
+                lineup={lineup}
+                tone={index === 0 ? "cyan" : "magenta"}
+                title={labels.formationPitch}
+                emptyLabel={labels.noGridData}
+              />
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="min-w-0">
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <ListChecks size={14} className="shrink-0 text-cyan-300" aria-hidden="true" />
+                    <span className="min-w-0 truncate">{labels.startingXI}</span>
+                  </h3>
+                  <div className="grid gap-2">
+                    {lineup.startXI.map(({ player }) => (
+                      <PlayerRow
+                        key={`${player.id}-${player.number}`}
+                        player={player}
+                        locale={locale}
+                        season={season}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <ListPlus size={14} className="shrink-0 text-green-300" aria-hidden="true" />
+                    <span className="min-w-0 truncate">{labels.substitutes}</span>
+                  </h3>
+                  <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                    {lineup.substitutes.map(({ player }) => (
+                      <PlayerRow
+                        key={`${player.id}-${player.number}`}
+                        player={player}
+                        locale={locale}
+                        season={season}
+                        compact
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        ))
+      )}
+    </section>
+  );
+}
+
+function FormationPitch({
+  lineup,
+  tone,
+  title,
+  emptyLabel,
+}: {
+  lineup: ApiFootballLineup;
+  tone: "cyan" | "magenta";
+  title: string;
+  emptyLabel: string;
+}) {
+  const players = lineup.startXI
+    .map(({ player }) => ({
+      ...player,
+      gridPosition: parseGridPosition(player.grid),
+    }))
+    .filter((player) => player.gridPosition);
+
+  return (
+    <div>
+      <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+        <ShieldCheck size={14} className="shrink-0 text-emerald-300" aria-hidden="true" />
+        <span className="min-w-0 truncate">{title}</span>
+      </h3>
+      <div className="relative min-h-[300px] overflow-hidden rounded-xl border border-emerald-500/20 bg-[linear-gradient(90deg,rgba(16,185,129,0.08)_50%,rgba(16,185,129,0.14)_50%),linear-gradient(0deg,transparent_48%,rgba(255,255,255,0.12)_49%,rgba(255,255,255,0.12)_51%,transparent_52%)] bg-[length:40px_40px,100%_100%] sm:min-h-[360px]">
+        <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
+        <div className="absolute inset-x-10 top-4 h-12 rounded-b-xl border-x border-b border-white/10" />
+        <div className="absolute inset-x-10 bottom-4 h-12 rounded-t-xl border-x border-t border-white/10" />
+
+        {players.length === 0 ? (
+          <div className="absolute inset-4 flex items-center justify-center rounded-lg border border-dashed border-white/10 bg-black/20 px-4 text-center text-xs text-gray-500">
+            {emptyLabel}
+          </div>
+        ) : (
+          players.map((player) => {
+            const position = player.gridPosition!;
+            const top = clamp(8 + (position.row - 1) * 17, 8, 88);
+            const left = clamp(10 + (position.column - 1) * 20, 10, 90);
+
+            return (
+              <div
+                key={`${player.id}-${player.number}-${player.grid}`}
+                className="absolute w-16 -translate-x-1/2 -translate-y-1/2 text-center sm:w-24"
+                style={{ top: `${top}%`, left: `${left}%` }}
+                title={`${player.number ?? "-"} ${player.name}`}
+              >
+                <div
+                  className={cn(
+                    "mx-auto flex h-8 w-8 items-center justify-center rounded-full border font-mono text-[11px] font-bold shadow-lg sm:h-9 sm:w-9 sm:text-xs",
+                    tone === "cyan"
+                      ? "border-cyan-300/70 bg-cyan-500 text-black shadow-cyan-500/20"
+                      : "border-magenta-300/70 bg-magenta-500 text-black shadow-magenta-500/20"
+                  )}
+                >
+                  {player.number ?? "-"}
+                </div>
+                <p className="mt-1 truncate rounded bg-black/55 px-1 text-[9px] font-medium text-white sm:text-[10px]">
+                  {shortenPlayerName(player.name)}
+                </p>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PlayerRow({
+  player,
+  locale,
+  season,
+  compact = false,
+}: {
+  player: ApiFootballLineup["startXI"][number]["player"];
+  locale: string;
+  season: number;
+  compact?: boolean;
+}) {
+  const name = (
+    <span className={cn("truncate text-white", compact ? "text-xs" : "text-sm")}>
+      {player.name}
+    </span>
+  );
+
+  return (
+    <div className="grid grid-cols-[32px_minmax(0,1fr)_38px] items-center gap-2 rounded-md border border-gray-800 bg-[#0a0a0f] px-2 py-2 sm:grid-cols-[36px_minmax(0,1fr)_44px]">
+      <span className="font-mono text-xs font-bold text-white">
+        {player.number ?? "-"}
+      </span>
+      {player.id ? (
+        <Link
+          href={`/${locale}/football/players/${player.id}?season=${season}`}
+          className="min-w-0 transition-colors hover:text-cyan-300"
+        >
+          {name}
+        </Link>
+      ) : (
+        name
+      )}
+      <span className="text-right text-[10px] text-gray-500">
+        {player.pos ?? player.grid ?? "-"}
+      </span>
+    </div>
+  );
+}
+
+function LivePlayerStatsPanel({
+  playerStats,
+  locale,
+  season,
+  labels,
+}: {
+  playerStats: ApiFootballPlayerStats[];
+  locale: string;
+  season: number;
+  labels: {
+    empty: string;
+    titleSuffix: string;
+    player: string;
+    minutes: string;
+    rating: string;
+    goalsAssists: string;
+    shots: string;
+    pass: string;
+    cards: string;
+    captain: string;
+  };
+}) {
+  return (
+    <section className="grid gap-4 lg:grid-cols-2">
+      {playerStats.length === 0 ? (
+        <Card className="p-4 lg:col-span-2">
+          <EmptyText label={labels.empty} />
+        </Card>
+      ) : (
+        playerStats.map((teamStats, index) => (
+          <Card key={teamStats.team.id} className="min-w-0 p-3 sm:p-4">
+            <div className="mb-4 flex items-center gap-3">
+              <ApiTeamLogo
+                name={teamStats.team.name}
+                logo={teamStats.team.logo}
+                size="sm"
+                accent={index === 0 ? "cyan" : "magenta"}
+              />
+              <div className="flex min-w-0 items-center gap-2">
+                <Users size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+                <h2 className="truncate text-sm font-bold text-white">
+                  {teamStats.team.name} {labels.titleSuffix}
+                </h2>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto [scrollbar-width:thin]">
+              <table className="w-full min-w-[460px] text-sm sm:min-w-[520px]">
+                <thead>
+                  <tr className="border-b border-gray-800 text-[10px] uppercase tracking-wider text-gray-500">
+                    <th className="px-2 py-2 text-left">{labels.player}</th>
+                    <th className="px-2 py-2 text-center">{labels.minutes}</th>
+                    <th className="px-2 py-2 text-center">{labels.rating}</th>
+                    <th className="px-2 py-2 text-center">{labels.goalsAssists}</th>
+                    <th className="px-2 py-2 text-center">{labels.shots}</th>
+                    <th className="px-2 py-2 text-center">{labels.pass}</th>
+                    <th className="px-2 py-2 text-center">{labels.cards}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800/70">
+                  {teamStats.players.slice(0, 14).map(({ player, statistics }) => {
+                    const stat = statistics[0];
+                    return (
+                      <tr key={player.id}>
+                        <td className="px-2 py-2">
+                          <Link
+                            href={`/${locale}/football/players/${player.id}?season=${season}`}
+                            className="block min-w-0"
+                          >
+                            <p className="truncate text-xs font-semibold text-white transition-colors hover:text-cyan-300">
+                              {player.name}
+                            </p>
+                          </Link>
+                          <p className="text-[10px] text-gray-600">
+                            {stat?.games.position ?? "-"}
+                            {stat?.games.captain ? ` - ${labels.captain}` : ""}
+                          </p>
+                        </td>
+                        <td className="px-2 py-2 text-center font-mono text-xs text-gray-400">
+                          {stat?.games.minutes ?? "-"}
+                        </td>
+                        <td className="px-2 py-2 text-center font-mono text-xs text-cyan-300">
+                          {stat?.games.rating ?? "-"}
+                        </td>
+                        <td className="px-2 py-2 text-center font-mono text-xs text-gray-400">
+                          {stat ? `${stat.goals.total ?? 0}/${stat.goals.assists ?? 0}` : "-"}
+                        </td>
+                        <td className="px-2 py-2 text-center font-mono text-xs text-gray-400">
+                          {stat ? `${stat.shots.on ?? 0}/${stat.shots.total ?? 0}` : "-"}
+                        </td>
+                        <td className="px-2 py-2 text-center font-mono text-xs text-gray-400">
+                          {stat?.passes.accuracy ?? "-"}
+                        </td>
+                        <td className="px-2 py-2 text-center font-mono text-xs text-gray-400">
+                          {stat ? `${stat.cards.yellow ?? 0}/${stat.cards.red ?? 0}` : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        ))
+      )}
+    </section>
+  );
+}
+
+function CompactLineupsPanel({
   context,
   labels,
 }: {
@@ -1175,6 +1518,54 @@ function PlayerList({
       )}
     </div>
   );
+}
+
+function getLineupLabels(locale: string, details: DetailCopy) {
+  const isThai = locale === "th";
+  return {
+    empty: details.noData,
+    coach: isThai ? "โค้ช" : "Coach",
+    unavailable: details.noData,
+    startingXI: details.startingXi,
+    substitutes: details.substitutes,
+    formationPitch: isThai ? "แผนการเล่น" : "Formation pitch",
+    noGridData: details.noData,
+  };
+}
+
+function getPlayerStatsLabels(locale: string, details: DetailCopy) {
+  const isThai = locale === "th";
+  return {
+    empty: details.noData,
+    titleSuffix: isThai ? "สถิติผู้เล่น" : "player stats",
+    player: details.players,
+    minutes: isThai ? "นาที" : "Min",
+    rating: isThai ? "เรตติ้ง" : "Rat",
+    goalsAssists: isThai ? "ประตู/แอสซิสต์" : "G/A",
+    shots: details.shots,
+    pass: isThai ? "ผ่านบอล" : "Pass",
+    cards: details.cards,
+    captain: isThai ? "กัปตัน" : "Captain",
+  };
+}
+
+function parseGridPosition(grid: string | null) {
+  if (!grid) return null;
+
+  const [row, column] = grid.split(":").map((part) => Number.parseInt(part, 10));
+  if (!row || !column) return null;
+
+  return { row, column };
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function shortenPlayerName(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) return name;
+  return `${parts[0][0]}. ${parts.at(-1)}`;
 }
 
 function renderH2H(context: DetailContext, locale: string, empty: string) {

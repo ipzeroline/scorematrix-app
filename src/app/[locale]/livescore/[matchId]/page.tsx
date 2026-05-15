@@ -638,48 +638,48 @@ function LineupsPanel({
               </Badge>
             </div>
 
-            <div className="grid gap-4 p-3 sm:p-4 xl:grid-cols-[minmax(0,1fr)_250px]">
-              <div>
-                <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:grid-cols-1">
-                  <FormationPitch
-                    lineup={lineup}
-                    tone={index === 0 ? "cyan" : "magenta"}
-                    title={labels.formationPitch}
-                    emptyLabel={labels.noGridData}
-                  />
-                  <div>
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                      <ListChecks size={14} className="shrink-0 text-cyan-300" aria-hidden="true" />
-                      <span className="min-w-0 truncate">{labels.startingXI}</span>
-                    </h3>
-                    <div className="grid gap-2">
-                      {lineup.startXI.map(({ player }) => (
-                        <PlayerRow
-                          key={`${player.id}-${player.number}`}
-                          player={player}
-                          locale={locale}
-                          season={season}
-                        />
-                      ))}
-                    </div>
+            <div className="space-y-4 p-3 sm:p-4">
+              <FormationPitch
+                lineup={lineup}
+                tone={index === 0 ? "cyan" : "magenta"}
+                title={labels.formationPitch}
+                emptyLabel={labels.noGridData}
+              />
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="min-w-0">
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <ListChecks size={14} className="shrink-0 text-cyan-300" aria-hidden="true" />
+                    <span className="min-w-0 truncate">{labels.startingXI}</span>
+                  </h3>
+                  <div className="grid gap-2">
+                    {lineup.startXI.map(({ player }) => (
+                      <PlayerRow
+                        key={`${player.id}-${player.number}`}
+                        player={player}
+                        locale={locale}
+                        season={season}
+                      />
+                    ))}
                   </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                  <ListPlus size={14} className="shrink-0 text-green-300" aria-hidden="true" />
-                  <span className="min-w-0 truncate">{labels.substitutes}</span>
-                </h3>
-                <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1 sm:max-h-[360px]">
-                  {lineup.substitutes.map(({ player }) => (
-                    <PlayerRow
-                      key={`${player.id}-${player.number}`}
-                      player={player}
-                      locale={locale}
-                      season={season}
-                      compact
-                    />
-                  ))}
+
+                <div className="min-w-0">
+                  <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <ListPlus size={14} className="shrink-0 text-green-300" aria-hidden="true" />
+                    <span className="min-w-0 truncate">{labels.substitutes}</span>
+                  </h3>
+                  <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                    {lineup.substitutes.map(({ player }) => (
+                      <PlayerRow
+                        key={`${player.id}-${player.number}`}
+                        player={player}
+                        locale={locale}
+                        season={season}
+                        compact
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
