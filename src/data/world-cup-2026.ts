@@ -3,6 +3,13 @@ export type WorldCupTeam = {
   code: string;
   flagCode: string;
   rank: number;
+  logo?: string | null;
+  played?: number;
+  wins?: number;
+  draws?: number;
+  losses?: number;
+  goalDifference?: number;
+  points?: number;
 };
 
 export type WorldCupMatch = {
@@ -11,6 +18,10 @@ export type WorldCupMatch = {
   homeCode: string;
   awayCode: string;
   venue: string;
+  status?: string;
+  homeScore?: number | null;
+  awayScore?: number | null;
+  apiFixtureId?: number | null;
 };
 
 export type WorldCupGroup = {

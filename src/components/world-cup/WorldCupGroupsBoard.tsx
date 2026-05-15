@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { CalendarDays, ChevronRight, Shield, Trophy } from "lucide-react";
+import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 import type {
@@ -143,7 +144,13 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                       </div>
                     </div>
                   </td>
-                  {[0, 0, 0, 0, 0].map((value, valueIndex) => (
+                  {[
+                    team.played ?? 0,
+                    team.wins ?? 0,
+                    team.draws ?? 0,
+                    team.losses ?? 0,
+                    team.goalDifference ?? 0,
+                  ].map((value, valueIndex) => (
                     <td
                       key={`${team.code}-${valueIndex}`}
                       className="px-2 py-3 text-center font-mono text-sm text-gray-400"
@@ -152,7 +159,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                     </td>
                   ))}
                   <td className="px-3 py-3 text-center font-mono text-sm font-black text-white md:px-4">
-                    0
+                    {team.points ?? 0}
                   </td>
                 </tr>
               ))}
@@ -189,7 +196,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               <div className="flex items-center justify-between gap-2">
                 <FixtureTeam team={fixture.home} flagAlt={copy.flagAlt} />
                 <span className="font-mono text-[10px] font-bold text-gray-500">
-                  {copy.vs}
+                  {formatFixtureScore(fixture, copy.vs)}
                 </span>
                 <FixtureTeam team={fixture.away} flagAlt={copy.flagAlt} align="right" />
               </div>
@@ -265,7 +272,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)] items-center gap-2">
                 <ScheduleTeam team={fixture.home} flagAlt={copy.flagAlt} />
                 <span className="text-center font-mono text-xs font-black text-gray-500">
-                  {copy.vs}
+                  {formatFixtureScore(fixture, copy.vs)}
                 </span>
                 <ScheduleTeam team={fixture.away} flagAlt={copy.flagAlt} align="right" />
               </div>
@@ -301,6 +308,10 @@ function TeamFlag({
   flagAlt: string;
   size?: "sm" | "md";
 }) {
+  if (team.logo) {
+    return <ApiTeamLogo name={team.name} logo={team.logo} size={size === "sm" ? "sm" : "md"} />;
+  }
+
   return (
     <span
       className={cn(
@@ -317,6 +328,14 @@ function TeamFlag({
       />
     </span>
   );
+}
+
+function formatFixtureScore(fixture: WorldCupMatch & { home: WorldCupTeam; away: WorldCupTeam }, vsLabel: string) {
+  if (typeof fixture.homeScore === "number" && typeof fixture.awayScore === "number") {
+    return `${fixture.homeScore}-${fixture.awayScore}`;
+  }
+
+  return vsLabel;
 }
 
 function FixtureTeam({
