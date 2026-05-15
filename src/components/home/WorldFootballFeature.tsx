@@ -6,7 +6,6 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, Globe2, MapPinned, Rows3, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 
 const hostCities = [
   "Toronto",
@@ -124,21 +123,16 @@ export function WorldFootballFeature() {
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2 md:mt-5">
-            <Link href={`/${locale}/world-cup-2026`}>
-              <Button
-                size="md"
-                variant="gold"
-                neon
-                className="group relative overflow-hidden border border-amber-300/35 bg-amber-400 px-4 text-sm font-bold text-black shadow-[0_0_18px_rgba(245,158,11,0.22)] hover:bg-amber-300 hover:shadow-[0_0_24px_rgba(245,158,11,0.32)]"
-              >
-                <span className="absolute inset-y-0 left-0 w-10 -translate-x-12 bg-gradient-to-r from-transparent via-white/35 to-transparent transition-transform duration-700 group-hover:translate-x-32" />
+            <Link
+              href={`/${locale}/world-cup-2026`}
+              className="group inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400 transition-all duration-200 hover:border-amber-400/45 hover:bg-amber-500/15 hover:text-amber-300"
+            >
                 <Rows3 size={16} className="relative" />
                 <span className="relative">{t("ctaGroups")}</span>
                 <ArrowRight
-                  size={16}
+                  size={14}
                   className="relative transition-transform duration-300 group-hover:translate-x-1"
                 />
-              </Button>
             </Link>
           </div>
         </div>
@@ -156,6 +150,7 @@ export function WorldFootballFeature() {
               src="/brand/fifa-world-cup-2026.png"
               alt="FIFA World Cup 2026"
               fill
+              priority
               sizes="(min-width: 768px) 256px, 144px"
               className="z-10 rounded-xl object-cover world-cup-logo-pop md:rounded-2xl"
             />

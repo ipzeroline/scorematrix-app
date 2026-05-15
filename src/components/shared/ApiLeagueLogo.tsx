@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 interface ApiLeagueLogoProps {
@@ -19,7 +18,6 @@ const sizes = {
 export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
   const config = sizes[size];
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const useDirectProxy = logo?.startsWith("/api/football/") ?? false;
   const showImage = Boolean(logo && failedSrc !== logo);
 
   return (
@@ -27,14 +25,13 @@ export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
       className={`relative flex ${config.outer} shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white p-1`}
     >
       {showImage ? (
-        <Image
+        <img
           src={logo ?? ""}
           alt={`${name} logo`}
           width={config.image}
           height={config.image}
           className="object-contain"
           style={{ width: config.image, height: config.image }}
-          unoptimized={useDirectProxy}
           onError={() => setFailedSrc(logo ?? null)}
         />
       ) : (

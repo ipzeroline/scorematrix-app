@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
 interface TodayMatch {
   id: string;
@@ -246,7 +247,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
 
 function mapFixtureToTodayMatch(fixture: ApiFootballFixture): TodayMatch {
   return {
-    id: fixture.id,
+    id: buildFixtureSeoSlug(fixture),
     homeTeam: fixture.home.name,
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,

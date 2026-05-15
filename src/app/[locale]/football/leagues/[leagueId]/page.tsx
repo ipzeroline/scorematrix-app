@@ -12,6 +12,7 @@ import {
   getApiFootballLeagues,
   getApiFootballStandings,
 } from "@/lib/api-football";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import { MatchStatus } from "@/types/common";
 
 type Props = {
@@ -73,7 +74,7 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                 className="grid gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03] md:grid-cols-[92px_minmax(0,1fr)_120px_120px]"
               >
                 <Link
-                  href={`/${locale}/livescore/${match.id}`}
+                  href={`/${locale}/livescore/${buildFixtureSeoSlug(match)}`}
                   className="contents"
                 >
                   <span className="font-mono text-xs text-gray-500">
@@ -94,7 +95,7 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                 </Link>
                 <div className="flex justify-start md:justify-end">
                   {match.status === MatchStatus.UPCOMING ? (
-                    <Link href={`/${locale}/predict/${match.id}`}>
+                    <Link href={`/${locale}/predict/${buildFixtureSeoSlug(match)}`}>
                       <Button size="sm" variant="gold">
                         {t("prediction.predictScore")}
                       </Button>

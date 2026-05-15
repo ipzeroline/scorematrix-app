@@ -12,7 +12,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
-import { Brain, Gauge, Medal, ShieldCheck, Trophy, Users, Zap } from "lucide-react";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { Brain, ShieldCheck, Trophy, Users, Zap } from "lucide-react";
 
 interface PredictApiProps {
   fixtures: ApiFootballFixture[];
@@ -99,7 +100,7 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                       />
                     </div>
                   </div>
-                  <Link href={`/${locale}/predict/${match.id}`}>
+                  <Link href={`/${locale}/predict/${buildFixtureSeoSlug(match)}`}>
                     <Button size="sm" neon>
                       {t("prediction.predictScore")}
                     </Button>

@@ -9,6 +9,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
 const matchOfTheDay = {
   matchId: "motd-1",
@@ -201,7 +202,7 @@ function mapFixtureToAiMatch(fixture: ApiFootballFixture) {
   );
 
   return {
-    matchId: fixture.id,
+    matchId: buildFixtureSeoSlug(fixture),
     homeTeam: fixture.home.name,
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,

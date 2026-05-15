@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
 interface LiveMatch {
   id: string;
@@ -219,7 +220,7 @@ export function LiveMatchHighlights({
 
 function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
   return {
-    id: fixture.id,
+    id: buildFixtureSeoSlug(fixture),
     homeTeam: fixture.home.name,
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,

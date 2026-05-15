@@ -20,6 +20,7 @@ import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import { cn } from "@/lib/utils";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
 interface MatchesApiProps {
   fixtures: ApiFootballFixture[];
@@ -58,7 +59,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
         >
           <div className="relative flex max-w-2xl flex-col gap-4">
             <Badge variant="cyan" size="md" className="w-fit">
-              API-Football
+              Live API
             </Badge>
             <div>
               <h1 className="font-display text-2xl font-bold text-white md:text-4xl">
@@ -263,21 +264,24 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-800/70">
-                        {matches.map((match) => (
+                        {matches.map((match) => {
+                          const matchSlug = buildFixtureSeoSlug(match);
+
+                          return (
                           <tr
                             key={match.id}
                             className="transition-colors hover:bg-white/[0.035]"
                           >
                             <td className="px-4 py-3 text-center">
                               <Link
-                                href={`/${locale}/livescore/${match.id}`}
+                                href={`/${locale}/livescore/${matchSlug}`}
                                 className="font-mono text-xs text-gray-400"
                               >
                                 {formatMatchTime(match)}
                               </Link>
                             </td>
                             <td className="px-3 py-3">
-                              <Link href={`/${locale}/livescore/${match.id}`}>
+                              <Link href={`/${locale}/livescore/${matchSlug}`}>
                                 <TeamInline
                                   name={match.home.name}
                                   logo={match.home.logo}
@@ -287,7 +291,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                             </td>
                             <td className="px-3 py-3 text-center">
                               <Link
-                                href={`/${locale}/livescore/${match.id}`}
+                                href={`/${locale}/livescore/${matchSlug}`}
                                 className="inline-flex min-w-16 justify-center rounded-md border border-gray-800 bg-black/20 px-2 py-1 font-mono text-sm font-bold text-white"
                               >
                                 {match.score.home !== null
@@ -296,18 +300,18 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                               </Link>
                             </td>
                             <td className="px-3 py-3">
-                              <Link href={`/${locale}/livescore/${match.id}`}>
+                              <Link href={`/${locale}/livescore/${matchSlug}`}>
                                 <TeamInline name={match.away.name} logo={match.away.logo} />
                               </Link>
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Link href={`/${locale}/livescore/${match.id}`}>
+                              <Link href={`/${locale}/livescore/${matchSlug}`}>
                                 <StatusBadge status={match.status} />
                               </Link>
                             </td>
                             <td className="px-4 py-3 text-right">
                               {match.status === MatchStatus.UPCOMING ? (
-                                <Link href={`/${locale}/predict/${match.id}`}>
+                                <Link href={`/${locale}/predict/${matchSlug}`}>
                                   <Button size="sm" variant="gold">
                                     {t("prediction.predictScore")}
                                   </Button>
@@ -319,7 +323,8 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                               )}
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

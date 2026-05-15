@@ -24,7 +24,7 @@ export async function GET(request: Request) {
     const apiError =
       error instanceof ApiFootballError
         ? error
-        : new ApiFootballError("Unable to fetch API-Football fixtures", 500);
+        : new ApiFootballError("Unable to fetch football fixtures", 500);
     const fixtures = getMockApiFootballFixtures(limit);
 
     return Response.json(

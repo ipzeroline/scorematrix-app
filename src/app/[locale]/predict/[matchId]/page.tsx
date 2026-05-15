@@ -13,6 +13,7 @@ import {
   type ApiFootballPlayerStats,
   getApiFootballFixtureDetails,
 } from "@/lib/api-football";
+import { extractApiFixtureId } from "@/lib/football-slugs";
 
 type Props = {
   params: Promise<{ locale: string; matchId: string }>;
@@ -160,11 +161,7 @@ function buildPredictPlayers(
 }
 
 function parseApiFixtureId(matchId: string): number | null {
-  const id = matchId.startsWith("api-football-")
-    ? matchId.replace("api-football-", "")
-    : matchId;
-  const parsed = Number.parseInt(id, 10);
-  return Number.isNaN(parsed) ? null : parsed;
+  return extractApiFixtureId(matchId);
 }
 
 function formatFixtureTime(value: string) {

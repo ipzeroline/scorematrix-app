@@ -15,6 +15,7 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
 export interface FixturesPayload {
   source: "api-football" | "mock";
@@ -117,7 +118,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
             <Badge variant={payload.source === "api-football" ? "green" : "gold"}>
-              {payload.source === "api-football" ? "API-Football" : "Fallback"}
+              {payload.source === "api-football" ? "Live API" : "Fallback"}
             </Badge>
             <span>Synced {new Date(payload.fetchedAt).toLocaleTimeString()}</span>
             {payload.rateLimit.requestsRemaining && (
@@ -218,7 +219,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                   {leagueMatches.map((match) => (
                     <Link
                       key={match.id}
-                      href={`/${locale}/livescore/${match.id}`}
+                      href={`/${locale}/livescore/${buildFixtureSeoSlug(match)}`}
                       className="block"
                     >
                       <Card

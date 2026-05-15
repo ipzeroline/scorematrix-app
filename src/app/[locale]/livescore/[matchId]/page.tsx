@@ -28,6 +28,7 @@ import {
   getApiFootballFixtureDetails,
   getApiFootballH2H,
 } from "@/lib/api-football";
+import { buildFixtureSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
 import { MatchStatus } from "@/types/common";
 import { cn } from "@/lib/utils";
 
@@ -124,7 +125,7 @@ export default async function MatchDetailPage({ params }: Props) {
           </p>
           {fixture.status === MatchStatus.UPCOMING && (
             <div className="mt-4 flex justify-center">
-              <Link href={`/${locale}/predict/${fixture.id}`} className="w-full sm:w-auto">
+              <Link href={`/${locale}/predict/${buildFixtureSeoSlug(fixture)}`} className="w-full sm:w-auto">
                 <Button variant="gold" size="md" className="w-full sm:w-auto">
                   {t("prediction.predictScore")}
                 </Button>
@@ -550,7 +551,7 @@ function H2HPanel({
           {h2h.map((match) => (
             <Link
               key={match.id}
-              href={`/${locale}/livescore/${match.id}`}
+              href={`/${locale}/livescore/${buildFixtureSeoSlug(match)}`}
               className="grid gap-2 px-3 py-3 transition-colors hover:bg-white/[0.03] sm:grid-cols-[110px_minmax(0,1fr)_90px] sm:gap-3 sm:px-4"
             >
               <span className="font-mono text-xs text-gray-500">
@@ -914,11 +915,7 @@ function EmptyDetail({ label }: { label: string }) {
 }
 
 function parseApiFixtureId(matchId: string): number | null {
-  const id = matchId.startsWith("api-football-")
-    ? matchId.replace("api-football-", "")
-    : matchId;
-  const parsed = Number.parseInt(id, 10);
-  return Number.isNaN(parsed) ? null : parsed;
+  return extractApiFixtureId(matchId);
 }
 
 function countPlayers(playerStats: ApiFootballPlayerStats[]) {
