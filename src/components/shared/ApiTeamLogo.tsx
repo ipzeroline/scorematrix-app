@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 interface ApiTeamLogoProps {
   name: string;
@@ -28,19 +29,24 @@ export function ApiTeamLogo({
   accent = "gray",
 }: ApiTeamLogoProps) {
   const config = sizes[size];
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const useDirectProxy = logo?.startsWith("/api/football/") ?? false;
+  const showImage = Boolean(logo && failedSrc !== logo);
 
   return (
     <div
       className={`relative flex ${config.outer} items-center justify-center rounded-full border bg-white p-1 ${accents[accent]}`}
     >
-      {logo ? (
+      {showImage ? (
         <Image
-          src={logo}
+          src={logo ?? ""}
           alt={`${name} logo`}
           width={config.image}
           height={config.image}
           className="object-contain"
           style={{ width: config.image, height: config.image }}
+          unoptimized={useDirectProxy}
+          onError={() => setFailedSrc(logo ?? null)}
         />
       ) : (
         <span className="text-xs font-bold text-gray-700">

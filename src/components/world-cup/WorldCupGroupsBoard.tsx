@@ -309,7 +309,7 @@ function TeamFlag({
       )}
     >
       <Image
-        src={`https://flagcdn.com/w40/${team.flagCode}.png`}
+        src={`/api/football/flags/w40/${team.flagCode}.png`}
         alt={`${team.name} ${flagAlt}`}
         fill
         sizes={size === "sm" ? "20px" : "32px"}

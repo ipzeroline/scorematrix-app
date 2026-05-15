@@ -30,15 +30,20 @@ const worldCupKickoff = new Date("2026-06-11T13:00:00-06:00").getTime();
 export function WorldFootballFeature() {
   const locale = useLocale();
   const t = useTranslations("worldFootball");
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   const countdownParts = useMemo(
-    () => getCountdownParts(worldCupKickoff - now),
+    () => (now === null ? getPendingCountdownParts() : getCountdownParts(worldCupKickoff - now)),
     [now]
   );
 
   useEffect(() => {
+    const update = () => setNow(Date.now());
+    const initial = window.setTimeout(update, 0);
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
   }, []);
 
   return (
@@ -219,5 +224,14 @@ function getCountdownParts(ms: number) {
     { key: "hours", value: hours.toString().padStart(2, "0") },
     { key: "minutes", value: minutes.toString().padStart(2, "0") },
     { key: "seconds", value: seconds.toString().padStart(2, "0") },
+  ];
+}
+
+function getPendingCountdownParts() {
+  return [
+    { key: "days", value: "--" },
+    { key: "hours", value: "--" },
+    { key: "minutes", value: "--" },
+    { key: "seconds", value: "--" },
   ];
 }

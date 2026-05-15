@@ -39,7 +39,6 @@ export async function GET(request: Request) {
           requestsLimit: null,
         },
         warning: apiError.message,
-        details: apiError.details,
       },
       { status: 200 }
     );

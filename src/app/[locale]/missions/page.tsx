@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Award, CalendarClock, CheckCircle2, Flame, Star, Trophy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -33,6 +33,17 @@ export default function MissionsPage() {
   const copy = getMissionPageCopy(locale);
   const [tab, setTab] = useState<TabKey>("daily");
   const [claimed, setClaimed] = useState<Record<string, boolean>>({});
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    const update = () => setNow(Date.now());
+    const initial = window.setTimeout(update, 0);
+    const timer = window.setInterval(() => setNow(Date.now()), 60000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const daily = useMemo(
     () => dailyMissions.map((mission) => withCopy(mission, copy)),
@@ -103,6 +114,7 @@ export default function MissionsPage() {
           missions={daily}
           copy={copy}
           claimed={claimed}
+          now={now}
           onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
         />
       )}
@@ -113,6 +125,7 @@ export default function MissionsPage() {
           missions={weekly}
           copy={copy}
           claimed={claimed}
+          now={now}
           onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
         />
       )}
@@ -181,12 +194,14 @@ function MissionList({
   missions,
   copy,
   claimed,
+  now,
   onClaim,
 }: {
   intro: string;
   missions: Mission[];
   copy: ReturnType<typeof getMissionPageCopy>;
   claimed: Record<string, boolean>;
+  now: number | null;
   onClaim: (id: string) => void;
 }) {
   return (
@@ -199,6 +214,7 @@ function MissionList({
             mission={mission}
             copy={copy}
             claimed={Boolean(claimed[mission.id])}
+            now={now}
             onClaim={onClaim}
           />
         ))}
@@ -211,11 +227,13 @@ function MissionPanel({
   mission,
   copy,
   claimed,
+  now,
   onClaim,
 }: {
   mission: Mission;
   copy: ReturnType<typeof getMissionPageCopy>;
   claimed: boolean;
+  now: number | null;
   onClaim: (id: string) => void;
 }) {
   const progress = Math.min(mission.progress, mission.target);
@@ -261,7 +279,7 @@ function MissionPanel({
       <div className="mt-3 flex items-center justify-between border-t border-gray-800/70 pt-3">
         <span className="flex items-center gap-1 text-[10px] text-gray-500">
           <CalendarClock size={12} />
-          {copy.resetsIn.replace("{time}", getTimeUntilReset(mission.resetAt, copy))}
+          {copy.resetsIn.replace("{time}", getTimeUntilReset(mission.resetAt, copy, now))}
         </span>
         {complete && !claimed ? (
           <Button variant="gold" size="sm" onClick={() => onClaim(mission.id)}>
@@ -305,8 +323,13 @@ function withCopy(mission: Mission, copy: ReturnType<typeof getMissionPageCopy>)
     : mission;
 }
 
-function getTimeUntilReset(resetAt: string, copy: ReturnType<typeof getMissionPageCopy>) {
-  const diff = new Date(resetAt).getTime() - Date.now();
+function getTimeUntilReset(
+  resetAt: string,
+  copy: ReturnType<typeof getMissionPageCopy>,
+  now: number | null
+) {
+  if (now === null) return "--";
+  const diff = new Date(resetAt).getTime() - now;
   if (diff <= 0) return copy.resetting;
   const hours = Math.floor(diff / 3600000);
   const minutes = Math.floor((diff % 3600000) / 60000);

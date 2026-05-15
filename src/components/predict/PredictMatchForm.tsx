@@ -76,19 +76,24 @@ export function PredictMatchForm({
   const [confidence, setConfidence] = useState("safe");
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   const kickoffTimestamp = useMemo(
     () => new Date(match.kickoffTime).getTime(),
     [match.kickoffTime]
   );
-  const remainingMs = Math.max(0, kickoffTimestamp - now);
-  const countdown = formatCountdown(remainingMs);
-  const isLocked = remainingMs <= 0;
+  const remainingMs = now === null ? null : Math.max(0, kickoffTimestamp - now);
+  const countdown = remainingMs === null ? getPendingCountdown() : formatCountdown(remainingMs);
+  const isLocked = remainingMs !== null && remainingMs <= 0;
 
   useEffect(() => {
+    const update = () => setNow(Date.now());
+    const initial = window.setTimeout(update, 0);
     const interval = window.setInterval(() => setNow(Date.now()), 1000);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
   }, []);
 
   const completion = useMemo(() => {
@@ -669,6 +674,17 @@ function formatCountdown(ms: number) {
         ? `${days}d ${padded(hours)}h ${padded(minutes)}m`
         : `${padded(hours)}h ${padded(minutes)}m ${padded(seconds)}s`,
     parts,
+  };
+}
+
+function getPendingCountdown() {
+  return {
+    compact: "--",
+    parts: [
+      { label: "h", value: "--" },
+      { label: "m", value: "--" },
+      { label: "s", value: "--" },
+    ],
   };
 }
 
