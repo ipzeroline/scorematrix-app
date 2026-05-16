@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Brain } from "lucide-react";
+import { Brain, CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Button } from "@/components/ui/Button";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
-import { formatMatchTimeWithZone } from "@/lib/utils";
+import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 
 const matchOfTheDay = {
   matchId: "motd-1",
@@ -19,7 +20,9 @@ const matchOfTheDay = {
   awayTeam: "Mersey City",
   awayCrest: "",
   kickoffTime: "20:00",
+  kickoffDate: "",
   league: "Premier",
+  leagueLogo: null,
   leagueEmoji: "🇬🇧",
   confidenceScore: 87,
   homeWinProbability: 62,
@@ -41,13 +44,15 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
     awayTeam,
     awayCrest,
     kickoffTime,
+    kickoffDate,
     league,
+    leagueLogo,
     leagueEmoji,
     confidenceScore,
     homeWinProbability,
     drawProbability,
     awayWinProbability,
-  } = fixture ? mapFixtureToAiMatch(fixture) : matchOfTheDay;
+  } = fixture ? mapFixtureToAiMatch(fixture, locale) : matchOfTheDay;
   const keyFactors = [
     t("dashboard.aiFactors.homeForm"),
     t("dashboard.aiFactors.awayInjury"),
@@ -64,10 +69,13 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
       <div className="ai-match-grid absolute inset-0" />
       <div className="relative p-5 md:p-6">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Badge variant="cyan" size="sm">
-              {leagueEmoji} {league}
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <Badge variant="cyan" size="sm" className="min-w-0">
+              <span className="flex min-w-0 items-center gap-1.5">
+                <ApiLeagueLogo name={league} logo={leagueLogo} size="xs" />
+                <span className="truncate">{leagueEmoji} {league}</span>
+              </span>
             </Badge>
             <Badge variant="magenta" size="sm">
               <span className="flex items-center gap-1.5">
@@ -76,9 +84,18 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
               </span>
             </Badge>
           </div>
-          <span className="shrink-0 whitespace-nowrap rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 font-mono text-[10px] text-cyan-400 sm:px-2.5 sm:text-xs">
-            {kickoffTime}
-          </span>
+          <div className="shrink-0 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2">
+            <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-none">
+              <CalendarDays size={12} className="shrink-0 text-cyan-300" aria-hidden="true" />
+              <span className="min-w-0 truncate text-[10px] font-medium text-gray-300">
+                {kickoffDate}
+              </span>
+              <span className="hidden h-3 w-px bg-cyan-500/25 sm:block" />
+              <span className="whitespace-nowrap font-mono text-[11px] font-bold text-cyan-300">
+                {kickoffTime}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Teams & confidence */}
@@ -191,7 +208,7 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
   );
 }
 
-function mapFixtureToAiMatch(fixture: ApiFootballFixture) {
+function mapFixtureToAiMatch(fixture: ApiFootballFixture, locale: string) {
   const seed = fixture.id
     .split("")
     .reduce((total, char) => total + char.charCodeAt(0), 0);
@@ -208,8 +225,10 @@ function mapFixtureToAiMatch(fixture: ApiFootballFixture) {
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,
     awayCrest: fixture.away.logo ?? "",
-    kickoffTime: formatKickoff(fixture.kickoffTime),
+    kickoffDate: formatDate(fixture.kickoffTime, locale),
+    kickoffTime: formatKickoff(fixture.kickoffTime, locale),
     league: fixture.league.name,
+    leagueLogo: fixture.league.logo,
     leagueEmoji: "",
     confidenceScore: Math.min(92, homeWinProbability + 22),
     homeWinProbability,
@@ -218,6 +237,6 @@ function mapFixtureToAiMatch(fixture: ApiFootballFixture) {
   };
 }
 
-function formatKickoff(value: string): string {
-  return formatMatchTimeWithZone(value);
+function formatKickoff(value: string, locale: string): string {
+  return formatMatchTimeWithZone(value, locale);
 }
