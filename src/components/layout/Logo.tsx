@@ -31,7 +31,7 @@ export function Logo({ size = "md" }: LogoProps) {
       className="group flex shrink-0 items-center no-underline"
     >
       <span
-        className={`scorematrix-logo-shell relative flex ${config.shell} items-center justify-center overflow-hidden rounded-xl px-1 transition-transform duration-300 group-hover:-translate-y-0.5`}
+        className={`scorematrix-logo-shell relative flex ${config.shell} items-center justify-center overflow-hidden px-1 transition-transform duration-300 group-hover:-translate-y-0.5`}
       >
         <span className="scorematrix-logo-sheen absolute inset-0" />
         <Image

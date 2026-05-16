@@ -500,24 +500,15 @@ body {
     linear-gradient(135deg, rgba(236,72,153,0.11), rgba(34,211,238,0.045));
 }
 .scorematrix-logo-shell {
-  border: 1px solid rgba(34, 211, 238, 0.22);
-  background:
-    linear-gradient(135deg, rgba(34,211,238,0.16), rgba(8,13,28,0.72) 42%, rgba(217,70,239,0.12)),
-    linear-gradient(180deg, rgba(2,6,23,0.9), rgba(12,18,36,0.82));
-  animation: scorematrixLogoGlow 4.2s ease-in-out infinite;
+  filter: drop-shadow(0 0 12px rgba(132, 204, 22, 0.2)) drop-shadow(0 0 22px rgba(34, 211, 238, 0.12));
 }
 .scorematrix-logo-shell::after {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  border-radius: 0.65rem;
-  border: 1px solid rgba(255,255,255,0.055);
-  pointer-events: none;
+  display: none;
 }
 .scorematrix-logo-sheen {
-  width: 44%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), rgba(34,211,238,0.2), transparent);
-  opacity: 0.72;
+  width: 36%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), rgba(132,204,22,0.18), transparent);
+  opacity: 0.52;
   animation: scorematrixLogoSheen 4.8s ease-in-out infinite;
   pointer-events: none;
 }
