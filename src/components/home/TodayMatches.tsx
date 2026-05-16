@@ -10,6 +10,7 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 
 interface TodayMatch {
   id: string;
@@ -17,6 +18,7 @@ interface TodayMatch {
   homeCrest: string;
   awayTeam: string;
   awayCrest: string;
+  kickoffDate?: string;
   kickoffTime: string;
   league: string;
   leagueLogo: string | null;
@@ -129,8 +131,15 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   const locale = useLocale();
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState("All");
-  const apiMatches = fixtures.map(mapFixtureToTodayMatch);
-  const matches = apiMatches.length > 0 ? apiMatches : allMatches;
+  const apiMatches = fixtures.map((fixture) => mapFixtureToTodayMatch(fixture, locale));
+  const matches =
+    apiMatches.length > 0
+      ? apiMatches
+      : allMatches.map((match) => ({
+          ...match,
+          kickoffDate: formatDate(new Date(), locale),
+          kickoffTime: `${match.kickoffTime} ICT`,
+        }));
   const leagueTabs =
     apiMatches.length > 0
       ? buildLeagueTabs(apiMatches)
@@ -192,29 +201,36 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
         {filtered.map((match) => (
           <Link key={match.id} href={`/${locale}/livescore/${match.id}`}>
             <Card hover className="today-match-card flex h-full flex-col gap-3">
-              {/* League & time */}
-              <div className="flex items-center justify-between">
-                <Badge variant="default" size="sm">
-                  <span className="flex items-center gap-1.5">
+              {/* League & status */}
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="default" size="sm" className="min-w-0">
+                  <span className="flex min-w-0 items-center gap-1.5">
                     <ApiLeagueLogo
                       name={match.league}
                       logo={match.leagueLogo}
                       size="xs"
                     />
-                    <span>{match.leagueEmoji} {match.league}</span>
+                    <span className="truncate">{match.leagueEmoji} {match.league}</span>
                   </span>
                 </Badge>
-                <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
-                  {match.kickoffTime}
+                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-green-500/20 bg-green-500/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-green-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                  {t("status.upcoming")}
                 </span>
               </div>
 
-              {/* Match status */}
-              <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                <span className="text-[10px] text-gray-500 uppercase tracking-wider">
-                  {t("status.upcoming")}
-                </span>
+              {/* Date & time */}
+              <div className="rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center">
+                <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-none">
+                  <CalendarDays size={12} className="shrink-0 text-cyan-300" aria-hidden="true" />
+                  <span className="min-w-0 truncate text-[10px] font-medium text-gray-300">
+                    {match.kickoffDate}
+                  </span>
+                  <span className="hidden h-3 w-px bg-cyan-500/25 sm:block" />
+                  <span className="whitespace-nowrap font-mono text-[11px] font-bold text-cyan-300">
+                    {match.kickoffTime}
+                  </span>
+                </div>
               </div>
 
               {/* Teams */}
@@ -245,13 +261,14 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   );
 }
 
-function mapFixtureToTodayMatch(fixture: ApiFootballFixture): TodayMatch {
+function mapFixtureToTodayMatch(fixture: ApiFootballFixture, locale: string): TodayMatch {
   return {
     id: buildFixtureSeoSlug(fixture),
     homeTeam: fixture.home.name,
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,
     awayCrest: fixture.away.logo ?? "",
+    kickoffDate: formatDate(fixture.kickoffTime, locale),
     kickoffTime: formatKickoff(fixture.kickoffTime),
     league: fixture.league.name,
     leagueLogo: fixture.league.logo,
@@ -275,8 +292,5 @@ function buildLeagueTabs(matches: TodayMatch[]): LeagueTab[] {
 }
 
 function formatKickoff(value: string): string {
-  return new Date(value).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatMatchTimeWithZone(value);
 }

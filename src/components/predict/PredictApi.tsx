@@ -13,6 +13,7 @@ import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { formatMatchTimeWithZone } from "@/lib/utils";
 import { Brain, ShieldCheck, Trophy, Users, Zap } from "lucide-react";
 
 interface PredictApiProps {
@@ -85,11 +86,11 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                         logo={match.home.logo}
                         accent="cyan"
                       />
-                      <div className="text-center shrink-0">
+                      <div className="min-w-[76px] shrink-0 text-center">
                         <p className="text-lg font-bold font-mono text-white">
                           {t("common.vs")}
                         </p>
-                        <p className="text-[10px] text-gray-500">
+                        <p className="whitespace-nowrap text-[10px] text-gray-500">
                           {formatKickoff(match.kickoffTime)}
                         </p>
                       </div>
@@ -233,8 +234,5 @@ function TeamPick({
 }
 
 function formatKickoff(value: string) {
-  return new Date(value).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatMatchTimeWithZone(value);
 }

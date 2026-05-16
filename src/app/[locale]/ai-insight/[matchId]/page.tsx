@@ -30,6 +30,7 @@ import { matchEvents } from "@/data/match-events";
 import { matchStats } from "@/data/match-stats";
 import { matches } from "@/data/matches";
 import { teams } from "@/data/teams";
+import { formatMatchDateTimeWithZone } from "@/lib/utils";
 import {
   ApiFootballError,
   type ApiFootballEvent,
@@ -849,11 +850,7 @@ function statusLabel(status: MatchStatus, copy: ReturnType<typeof getAIInsightPa
 }
 
 function formatDateTime(value: string, locale: string) {
-  return new Intl.DateTimeFormat(localeMap[locale] ?? "th-TH", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Bangkok",
-  }).format(new Date(value));
+  return formatMatchDateTimeWithZone(value, localeMap[locale] ?? "th-TH");
 }
 
 function TeamBlock({

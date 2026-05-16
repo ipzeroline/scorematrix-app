@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Activity, RefreshCw, Search } from "lucide-react";
+import { Activity, CalendarDays, RefreshCw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -16,6 +16,13 @@ import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import {
+  THAILAND_TIME_ZONE_LABEL,
+  cn,
+  formatDate,
+  formatMatchTimeWithZone,
+  formatTime,
+} from "@/lib/utils";
 
 export interface FixturesPayload {
   source: "api-football" | "mock";
@@ -120,7 +127,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             <Badge variant={payload.source === "api-football" ? "green" : "gold"}>
               {payload.source === "api-football" ? "Live API" : "Fallback"}
             </Badge>
-            <span>Synced {new Date(payload.fetchedAt).toLocaleTimeString()}</span>
+            <span>Synced {formatTime(payload.fetchedAt)} {THAILAND_TIME_ZONE_LABEL}</span>
             {payload.rateLimit.requestsRemaining && (
               <span>{payload.rateLimit.requestsRemaining} requests left</span>
             )}
@@ -216,7 +223,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                   </span>
                 </div>
                 <div className="space-y-1">
-                  {leagueMatches.map((match) => (
+                  {leagueMatches.map((match, index) => (
                     <Link
                       key={match.id}
                       href={`/${locale}/livescore/${buildFixtureSeoSlug(match)}`}
@@ -224,7 +231,10 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                     >
                       <Card
                         hover
-                        className="grid grid-cols-[64px_minmax(0,1fr)_48px] items-center gap-2 p-3 sm:grid-cols-[84px_minmax(0,1fr)_56px] sm:gap-3"
+                        className={cn(
+                          "grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2 p-3 sm:grid-cols-[84px_minmax(0,1fr)_128px] sm:gap-3",
+                          index % 2 === 0 ? "bg-[#12121a]" : "bg-cyan-500/[0.035]"
+                        )}
                       >
                         <StatusBadge status={match.status} />
                         <div className="flex-1 min-w-0">
@@ -249,10 +259,24 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                           <p className="mt-1 truncate text-[10px] text-gray-600">
                             {match.venue || match.league.round}
                           </p>
+                          <div className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5 sm:hidden">
+                            <CalendarDays size={12} className="shrink-0 text-cyan-300" aria-hidden="true" />
+                            <span className="min-w-0 truncate text-[10px] font-medium text-gray-300">
+                              {formatFixtureDate(match, locale)}
+                            </span>
+                            <span className="whitespace-nowrap font-mono text-[11px] font-bold text-cyan-300">
+                              {formatFixtureTime(match, locale)}
+                            </span>
+                          </div>
                         </div>
-                        <span className="text-[10px] text-gray-500 shrink-0 w-12 text-right">
-                          {formatFixtureTime(match)}
-                        </span>
+                        <div className="hidden w-32 shrink-0 flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center sm:flex">
+                          <span className="max-w-full truncate text-[10px] font-medium leading-none text-gray-300">
+                            {formatFixtureDate(match, locale)}
+                          </span>
+                          <span className="mt-1 whitespace-nowrap font-mono text-[11px] font-bold leading-none text-cyan-300">
+                            {formatFixtureTime(match, locale)}
+                          </span>
+                        </div>
                       </Card>
                     </Link>
                   ))}
@@ -266,19 +290,12 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
   );
 }
 
-function formatFixtureTime(match: ApiFootballFixture): string {
-  if (match.elapsed != null && match.status === MatchStatus.LIVE) {
-    return `${match.elapsed}'`;
-  }
+function formatFixtureDate(match: ApiFootballFixture, locale: string): string {
+  return formatDate(match.kickoffTime, locale);
+}
 
-  if (match.status === MatchStatus.FINISHED) {
-    return match.statusShort || "FT";
-  }
-
-  return new Date(match.kickoffTime).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function formatFixtureTime(match: ApiFootballFixture, locale: string): string {
+  return formatMatchTimeWithZone(match.kickoffTime, locale);
 }
 
 function TeamInline({

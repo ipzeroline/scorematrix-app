@@ -30,7 +30,7 @@ import {
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
 import { MatchStatus } from "@/types/common";
-import { cn } from "@/lib/utils";
+import { cn, formatDate, formatMatchDateTimeWithZone } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ locale: string; matchId: string }>;
@@ -555,7 +555,7 @@ function H2HPanel({
               className="grid gap-2 px-3 py-3 transition-colors hover:bg-white/[0.03] sm:grid-cols-[110px_minmax(0,1fr)_90px] sm:gap-3 sm:px-4"
             >
               <span className="font-mono text-xs text-gray-500">
-                {new Date(match.kickoffTime).toLocaleDateString()}
+                {formatDate(match.kickoffTime)}
               </span>
               <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_58px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[1fr_76px_1fr]">
                 <span className="truncate text-right text-xs font-semibold text-white">
@@ -980,12 +980,7 @@ function shortenPlayerName(name: string) {
 }
 
 function formatFixtureTime(value: string) {
-  return new Date(value).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatMatchDateTimeWithZone(value);
 }
 
 function formatStatValue(value: string | number | null) {

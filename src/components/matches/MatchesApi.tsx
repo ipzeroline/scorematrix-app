@@ -18,7 +18,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
-import { cn } from "@/lib/utils";
+import { THAILAND_TIME_ZONE_LABEL, cn, formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
@@ -70,6 +70,9 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Badge variant="cyan" size="sm" className="w-fit">
+                {THAILAND_TIME_ZONE_LABEL}
+              </Badge>
               <Link href={`/${locale}/livescore`}>
                 <Button size="sm" neon>
                   <Activity size={14} />
@@ -255,7 +258,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                     <table className="w-full min-w-[760px] border-collapse text-sm">
                       <thead>
                         <tr className="border-b border-gray-800 bg-[#0a0a0f] text-left text-[10px] uppercase tracking-wider text-gray-500">
-                          <th className="w-[92px] px-4 py-3 text-center font-semibold">{t("football.table.time")}</th>
+                          <th className="w-[150px] px-4 py-3 text-center font-semibold">{t("football.table.time")}</th>
                           <th className="px-3 py-3 text-right font-semibold">{t("football.table.home")}</th>
                           <th className="w-[96px] px-3 py-3 text-center font-semibold">{t("football.table.score")}</th>
                           <th className="px-3 py-3 font-semibold">{t("football.table.away")}</th>
@@ -264,20 +267,29 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-800/70">
-                        {matches.map((match) => {
+                        {matches.map((match, index) => {
                           const matchSlug = buildFixtureSeoSlug(match);
+                          const rowTone =
+                            index % 2 === 0
+                              ? "bg-[#101018]"
+                              : "bg-cyan-500/[0.025]";
 
                           return (
                           <tr
                             key={match.id}
-                            className="transition-colors hover:bg-white/[0.035]"
+                            className={cn(rowTone, "transition-colors hover:bg-white/[0.045]")}
                           >
                             <td className="px-4 py-3 text-center">
                               <Link
                                 href={`/${locale}/livescore/${matchSlug}`}
-                                className="font-mono text-xs text-gray-400"
+                                className="mx-auto flex w-[124px] flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center transition-colors hover:border-cyan-400/40"
                               >
-                                {formatMatchTime(match)}
+                                <span className="max-w-full truncate text-[10px] font-medium leading-none text-gray-300">
+                                  {formatMatchDate(match, locale)}
+                                </span>
+                                <span className="mt-1 whitespace-nowrap font-mono text-[11px] font-bold leading-none text-cyan-300">
+                                  {formatMatchTime(match, locale)}
+                                </span>
                               </Link>
                             </td>
                             <td className="px-3 py-3">
@@ -486,17 +498,10 @@ function TeamInline({
   );
 }
 
-function formatMatchTime(match: ApiFootballFixture) {
-  if (match.status === MatchStatus.LIVE && match.elapsed != null) {
-    return `${match.elapsed}'`;
-  }
+function formatMatchDate(match: ApiFootballFixture, locale: string) {
+  return formatDate(match.kickoffTime, locale);
+}
 
-  if (match.status === MatchStatus.FINISHED) {
-    return match.statusShort || "FT";
-  }
-
-  return new Date(match.kickoffTime).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function formatMatchTime(match: ApiFootballFixture, locale: string) {
+  return formatMatchTimeWithZone(match.kickoffTime, locale);
 }

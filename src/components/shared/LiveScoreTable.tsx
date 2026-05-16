@@ -1,6 +1,6 @@
 "use client";
 
-import { cn, formatTime } from "@/lib/utils";
+import { cn, formatMatchTimeWithZone } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Match, Team, League, MatchStatus } from "@/types";
@@ -123,7 +123,7 @@ export function LiveScoreTable({
                       )}
                     >
                       {/* Time / Status */}
-                      <div className="w-14 shrink-0 text-center">
+                      <div className="w-16 shrink-0 text-center sm:w-20">
                         {isLive ? (
                           <div className="flex items-center justify-center gap-1">
                             <StatusBadge status={MatchStatus.LIVE} />
@@ -131,8 +131,8 @@ export function LiveScoreTable({
                         ) : hasScore ? (
                           <StatusBadge status={MatchStatus.FINISHED} />
                         ) : (
-                          <span className="text-xs font-mono text-gray-400">
-                            {formatTime(match.kickoffTime)}
+                          <span className="whitespace-nowrap text-[10px] font-mono text-gray-400 sm:text-xs">
+                            {formatMatchTimeWithZone(match.kickoffTime)}
                           </span>
                         )}
                       </div>

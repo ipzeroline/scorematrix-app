@@ -2,9 +2,14 @@ export function cn(...classes: (string | boolean | undefined | null)[]): string 
   return classes.filter(Boolean).join(" ");
 }
 
+export const THAILAND_TIME_ZONE = "Asia/Bangkok";
+export const THAILAND_TIME_ZONE_ABBR = "ICT";
+export const THAILAND_TIME_ZONE_LABEL = "Asia/Bangkok (ICT, UTC+7)";
+
 export function formatDate(date: string | Date, locale = "en-US"): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleDateString(locale, {
+    timeZone: THAILAND_TIME_ZONE,
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -14,9 +19,31 @@ export function formatDate(date: string | Date, locale = "en-US"): string {
 export function formatTime(date: string | Date, locale = "en-US"): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleTimeString(locale, {
+    timeZone: THAILAND_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
+}
+
+export function formatDateTime(date: string | Date, locale = "en-US"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  return d.toLocaleString(locale, {
+    timeZone: THAILAND_TIME_ZONE,
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+export function formatMatchTimeWithZone(date: string | Date, locale = "en-US"): string {
+  return `${formatTime(date, locale)} ${THAILAND_TIME_ZONE_ABBR}`;
+}
+
+export function formatMatchDateTimeWithZone(date: string | Date, locale = "en-US"): string {
+  return `${formatDateTime(date, locale)} ${THAILAND_TIME_ZONE_ABBR}`;
 }
 
 export function formatNumber(n: number): string {

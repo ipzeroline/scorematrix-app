@@ -5,7 +5,7 @@ import Image from "next/image";
 import { CalendarDays, ChevronRight, Shield, Trophy } from "lucide-react";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
-import { cn } from "@/lib/utils";
+import { THAILAND_TIME_ZONE, THAILAND_TIME_ZONE_ABBR, cn } from "@/lib/utils";
 import type {
   WorldCupGroup,
   WorldCupMatch,
@@ -393,7 +393,7 @@ function ScheduleTeam({
 
 function formatMatchDate(kickoffUtc: string, locale: string) {
   return new Intl.DateTimeFormat(getIntlLocale(locale), {
-    timeZone: "Asia/Bangkok",
+    timeZone: THAILAND_TIME_ZONE,
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -401,12 +401,13 @@ function formatMatchDate(kickoffUtc: string, locale: string) {
 }
 
 function formatMatchTime(kickoffUtc: string, locale: string) {
-  return new Intl.DateTimeFormat(getIntlLocale(locale), {
-    timeZone: "Asia/Bangkok",
+  const time = new Intl.DateTimeFormat(getIntlLocale(locale), {
+    timeZone: THAILAND_TIME_ZONE,
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
   }).format(new Date(kickoffUtc));
+  return `${time} ${THAILAND_TIME_ZONE_ABBR}`;
 }
 
 function getIntlLocale(locale: string) {

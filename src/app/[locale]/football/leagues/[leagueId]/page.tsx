@@ -13,6 +13,7 @@ import {
   getApiFootballStandings,
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { THAILAND_TIME_ZONE_LABEL, formatDate } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 
 type Props = {
@@ -58,6 +59,9 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
           <Badge variant="green" size="md">
             {t("football.teamCount", { count: standings?.standings[0]?.length ?? 0 })}
           </Badge>
+          <Badge variant="cyan" size="md">
+            {THAILAND_TIME_ZONE_LABEL}
+          </Badge>
         </div>
       </Card>
 
@@ -78,7 +82,7 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                   className="contents"
                 >
                   <span className="font-mono text-xs text-gray-500">
-                    {new Date(match.kickoffTime).toLocaleDateString()}
+                    {formatDate(match.kickoffTime)}
                   </span>
                   <div className="grid grid-cols-[1fr_76px_1fr] items-center gap-2">
                     <TeamName name={match.home.name} logo={match.home.logo} align="right" />

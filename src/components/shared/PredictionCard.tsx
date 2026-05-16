@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { cn, formatTime, countdown } from "@/lib/utils";
+import { cn, formatMatchTimeWithZone, countdown } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -126,9 +126,9 @@ export function PredictionCard({
           </span>
         </div>
 
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-xs text-gray-500 font-mono">
-            {formatTime(match.kickoffTime)}
+        <div className="flex min-w-[76px] shrink-0 flex-col items-center gap-1 text-center">
+          <span className="whitespace-nowrap text-[10px] font-mono text-gray-500 sm:text-xs">
+            {formatMatchTimeWithZone(match.kickoffTime)}
           </span>
           <span className="text-lg font-bold text-gray-600">vs</span>
           {!isLocked && !isFinished && !isLive && (

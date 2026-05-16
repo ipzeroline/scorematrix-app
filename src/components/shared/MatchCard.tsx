@@ -1,4 +1,4 @@
-import { cn, formatTime, countdown } from "@/lib/utils";
+import { cn, formatMatchTimeWithZone, countdown } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Match, Team, League, MatchStatus } from "@/types";
@@ -114,12 +114,12 @@ export function MatchCard({
       >
         <div className="flex items-center gap-3">
           {/* Time / Status */}
-          <div className="w-12 text-center shrink-0">
+          <div className="w-16 shrink-0 text-center sm:w-20">
             {isLive ? (
               <StatusBadge status={MatchStatus.LIVE} />
             ) : (
-              <span className="text-xs text-gray-500 font-mono">
-                {formatTime(match.kickoffTime)}
+              <span className="whitespace-nowrap text-[10px] font-mono text-gray-500 sm:text-xs">
+                {formatMatchTimeWithZone(match.kickoffTime)}
               </span>
             )}
           </div>
@@ -201,7 +201,7 @@ export function MatchCard({
         </div>
 
         {/* Center: Score / Time */}
-        <div className="flex flex-col items-center gap-1 shrink-0 px-2">
+        <div className="flex max-w-[96px] shrink-0 flex-col items-center gap-1 px-1 text-center sm:max-w-[120px] sm:px-2">
           {isLive || isFinished ? (
             <>
               <ScoreDisplay
@@ -221,8 +221,8 @@ export function MatchCard({
             </>
           ) : (
             <>
-              <span className="text-lg font-mono font-bold text-white">
-                {formatTime(match.kickoffTime)}
+              <span className="whitespace-nowrap text-sm font-mono font-bold text-white sm:text-base">
+                {formatMatchTimeWithZone(match.kickoffTime)}
               </span>
               <span className="text-[10px] text-gray-500">
                 {countdown(match.kickoffTime)}

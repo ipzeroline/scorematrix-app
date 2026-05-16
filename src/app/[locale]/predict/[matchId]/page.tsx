@@ -14,6 +14,7 @@ import {
   getApiFootballFixtureDetails,
 } from "@/lib/api-football";
 import { extractApiFixtureId } from "@/lib/football-slugs";
+import { formatMatchDateTimeWithZone } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ locale: string; matchId: string }>;
@@ -165,10 +166,5 @@ function parseApiFixtureId(matchId: string): number | null {
 }
 
 function formatFixtureTime(value: string) {
-  return new Date(value).toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatMatchDateTimeWithZone(value);
 }

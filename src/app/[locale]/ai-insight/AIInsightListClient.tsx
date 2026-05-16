@@ -22,6 +22,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import { MatchStatus } from "@/types/common";
+import { formatMatchDateTimeWithZone } from "@/lib/utils";
 
 type FilterKey = "all" | "live" | "upcoming" | "highConfidence" | "upset";
 type MatchResult = "W" | "D" | "L";
@@ -585,11 +586,7 @@ function formatMetric(value: number | null, suffix: string) {
 }
 
 function formatDateTime(value: string, locale: string) {
-  return new Intl.DateTimeFormat(localeMap[locale] ?? "th-TH", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Bangkok",
-  }).format(new Date(value));
+  return formatMatchDateTimeWithZone(value, localeMap[locale] ?? "th-TH");
 }
 
 function formTone(result: MatchResult) {

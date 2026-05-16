@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { formatMatchTimeWithZone } from "@/lib/utils";
 
 const matchOfTheDay = {
   matchId: "motd-1",
@@ -75,7 +76,7 @@ export function AIMatchOfTheDay({ fixture }: AIMatchOfTheDayProps) {
               </span>
             </Badge>
           </div>
-          <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
+          <span className="shrink-0 whitespace-nowrap rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 font-mono text-[10px] text-cyan-400 sm:px-2.5 sm:text-xs">
             {kickoffTime}
           </span>
         </div>
@@ -218,8 +219,5 @@ function mapFixtureToAiMatch(fixture: ApiFootballFixture) {
 }
 
 function formatKickoff(value: string): string {
-  return new Date(value).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatMatchTimeWithZone(value);
 }
