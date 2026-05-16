@@ -33,7 +33,7 @@ export function Logo({ size = "md" }: LogoProps) {
       <span
         className={`scorematrix-logo-shell relative flex ${config.shell} items-center justify-center overflow-hidden px-1 transition-transform duration-300 group-hover:-translate-y-0.5`}
       >
-        <span className="scorematrix-logo-sheen absolute inset-0" />
+        <span className="scorematrix-logo-sheen absolute inset-y-1 -left-1/3 z-20" />
         <Image
           src="/brand/scorematrix-logo.png"
           alt="ScoreMatrix"

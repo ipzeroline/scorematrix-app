@@ -506,11 +506,15 @@ body {
   display: none;
 }
 .scorematrix-logo-sheen {
-  width: 36%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), rgba(132,204,22,0.18), transparent);
-  opacity: 0.52;
-  animation: scorematrixLogoSheen 4.8s ease-in-out infinite;
+  width: 34%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 32%, rgba(255,255,255,0.28) 50%, rgba(132,204,22,0.16) 62%, transparent 100%);
+  filter: blur(5px);
+  mix-blend-mode: screen;
+  opacity: 0.7;
   pointer-events: none;
+  transform: skewX(-18deg);
+  animation: scorematrixLogoSheen 4.8s ease-in-out infinite;
 }
 .daily-checkin-panel {
   animation: dailyCheckinPanelGlow 3.6s ease-in-out infinite;
