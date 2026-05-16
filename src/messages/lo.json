@@ -903,11 +903,31 @@
   },
   "checkin": {
     "title": "ເຊັກອິນປະຈຳວັນ",
+    "subtitle": "ຮັບລາງວັນມື້ນີ້ກ່ອນຣີເຊັດ. ສະຕຣີກຕໍ່ເນື່ອງຈະເພີ່ມລາງວັນໂບນັດ.",
+    "priority": "ລາງວັນສຳຄັນປະຈຳວັນ",
     "checkedIn": "ເຊັກອິນແລ້ວ!",
     "claimReward": "ຮັບລາງວັນ",
     "claimed": "ຮັບລາງວັນແລ້ວ!",
     "shieldBonus": "ໄດ້ຮັບ Streak Shield!",
-    "tomorrow": "ກັບມາມື້ອື່ນ"
+    "shieldBonusMessage": "+1 Streak Shield",
+    "tomorrow": "ກັບມາມື້ອື່ນ",
+    "claimToast": "ມື້ທີ {day} · ສະຕຣີກ {streak} ມື້",
+    "streak": "ສະຕຣີກ",
+    "bonusIn": "ໂບນັດໃນ",
+    "next": "ຕໍ່ໄປ",
+    "daySeven": "ມື້ທີ 7",
+    "pointsShort": "ຄະແນນ",
+    "shieldShort": "Shield",
+    "streakSummary": "ສະຕຣີກ {streak} ມື້ກຳລັງເຮັດວຽກ",
+    "days": {
+      "mon": "ຈ",
+      "tue": "ອ",
+      "wed": "ພ",
+      "thu": "ພຫ",
+      "fri": "ສກ",
+      "sat": "ສ",
+      "sun": "ອາ"
+    }
   },
   "stats": {
     "title": "ສະຖິຕິຂອງທ່ານ",

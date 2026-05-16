@@ -904,11 +904,31 @@
   },
   "checkin": {
     "title": "Daily Check-in",
+    "subtitle": "Claim today before reset. Your streak powers bonus rewards.",
+    "priority": "Priority reward node",
     "checkedIn": "Checked in!",
     "claimReward": "Claim Reward",
     "claimed": "Reward claimed!",
     "shieldBonus": "Streak Shield earned!",
-    "tomorrow": "Come back tomorrow"
+    "shieldBonusMessage": "+1 Streak Shield",
+    "tomorrow": "Come back tomorrow",
+    "claimToast": "Day {day} · {streak} day streak",
+    "streak": "Streak",
+    "bonusIn": "Bonus in",
+    "next": "Next",
+    "daySeven": "Day 7",
+    "pointsShort": "pts",
+    "shieldShort": "Shield",
+    "streakSummary": "{streak} day streak active",
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
   },
   "stats": {
     "title": "Your Statistics",

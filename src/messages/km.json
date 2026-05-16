@@ -902,12 +902,32 @@
     }
   },
   "checkin": {
-    "title": "ពិនិត្យចូលប្រចាំថ្ងៃ",
-    "checkedIn": "បានពិនិត្យចូល!",
+    "title": "ចូលប្រចាំថ្ងៃ",
+    "subtitle": "ទទួលរង្វាន់ថ្ងៃនេះមុនពេលកំណត់ឡើងវិញ។ ស្ទ្រីករបស់អ្នកជួយបើករង្វាន់បូនុស។",
+    "priority": "រង្វាន់សំខាន់ប្រចាំថ្ងៃ",
+    "checkedIn": "បានចូលហើយ!",
     "claimReward": "ទទួលរង្វាន់",
     "claimed": "បានទទួលរង្វាន់!",
     "shieldBonus": "ទទួលបាន Streak Shield!",
-    "tomorrow": "ត្រឡប់មកថ្ងៃស្អែក"
+    "shieldBonusMessage": "+1 Streak Shield",
+    "tomorrow": "ត្រឡប់មកថ្ងៃស្អែក",
+    "claimToast": "ថ្ងៃទី {day} · ស្ទ្រីក {streak} ថ្ងៃ",
+    "streak": "ស្ទ្រីក",
+    "bonusIn": "បូនុសនៅ",
+    "next": "បន្ទាប់",
+    "daySeven": "ថ្ងៃទី 7",
+    "pointsShort": "ពិន្ទុ",
+    "shieldShort": "Shield",
+    "streakSummary": "ស្ទ្រីក {streak} ថ្ងៃកំពុងដំណើរការ",
+    "days": {
+      "mon": "ច",
+      "tue": "អ",
+      "wed": "ព",
+      "thu": "ព្រ",
+      "fri": "សុ",
+      "sat": "ស",
+      "sun": "អា"
+    }
   },
   "stats": {
     "title": "ស្ថិតិរបស់អ្នក",

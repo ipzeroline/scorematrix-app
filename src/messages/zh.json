@@ -903,11 +903,31 @@
   },
   "checkin": {
     "title": "每日签到",
+    "subtitle": "在重置前领取今日奖励。连续签到可提升奖励。",
+    "priority": "每日重点奖励",
     "checkedIn": "已签到！",
     "claimReward": "领取奖励",
     "claimed": "奖励已领取！",
-    "shieldBonus": "获得连续护盾！",
-    "tomorrow": "明天再来"
+    "shieldBonus": "获得 Streak Shield！",
+    "shieldBonusMessage": "+1 Streak Shield",
+    "tomorrow": "明天再来",
+    "claimToast": "第 {day} 天 · 连续 {streak} 天",
+    "streak": "连续",
+    "bonusIn": "奖励还差",
+    "next": "下一个",
+    "daySeven": "第 7 天",
+    "pointsShort": "积分",
+    "shieldShort": "护盾",
+    "streakSummary": "连续 {streak} 天生效中",
+    "days": {
+      "mon": "周一",
+      "tue": "周二",
+      "wed": "周三",
+      "thu": "周四",
+      "fri": "周五",
+      "sat": "周六",
+      "sun": "周日"
+    }
   },
   "stats": {
     "title": "您的统计",

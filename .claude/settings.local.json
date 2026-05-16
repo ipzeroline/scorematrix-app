@@ -39,7 +39,11 @@
       "Bash(mkdir -p /Users/zeroline/Documents/scorematrix-app/src/app/\\\\[locale\\\\]/credits)",
       "Bash(find /Users/zeroline/Documents/scorematrix-app/src/app/[locale] -path '*auth*' -name '*.tsx')",
       "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(list\\(d.keys\\(\\)\\), indent=2\\)\\)\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import reportlab; print\\('reportlab available'\\)\")",
+      "Bash(python3 -c \"import fpdf; print\\('fpdf available'\\)\")",
+      "Bash(pip3 install *)",
+      "Bash(python3 -m weasyprint /Users/zeroline/Documents/scorematrix-app/docs/SCOREMATRIX_SYSTEM_ARCHITECTURE.html /Users/zeroline/Documents/scorematrix-app/docs/SCOREMATRIX_SYSTEM_ARCHITECTURE.pdf)"
     ],
     "additionalDirectories": [
       "/Users/zeroline/Documents/scorematrix-app/src/app/[locale]"

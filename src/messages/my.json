@@ -902,12 +902,32 @@
     }
   },
   "checkin": {
-    "title": "နေ့စဉ်ဝင်ရောက်မှု",
-    "checkedIn": "ဝင်ရောက်ပြီး!",
-    "claimReward": "ဆုလက်ခံရယူမည်",
-    "claimed": "ဆုလက်ခံရယူပြီး!",
-    "shieldBonus": "Streak Shield ရရှိသည်!",
-    "tomorrow": "မနက်ဖြန်ပြန်လာပါ"
+    "title": "နေ့စဉ် Check-in",
+    "subtitle": "ရီဆက်မတိုင်မီ ယနေ့ဆုကို ရယူပါ။ စတရိခ်က ဘောနပ်စ်ဆုများကို အားဖြည့်ပေးသည်။",
+    "priority": "နေ့စဉ် အရေးကြီးဆု",
+    "checkedIn": "Check-in ပြီးပါပြီ!",
+    "claimReward": "ဆုရယူရန်",
+    "claimed": "ဆုရယူပြီးပါပြီ!",
+    "shieldBonus": "Streak Shield ရရှိခဲ့သည်!",
+    "shieldBonusMessage": "+1 Streak Shield",
+    "tomorrow": "မနက်ဖြန်ပြန်လာပါ",
+    "claimToast": "နေ့ {day} · {streak} ရက် စတရိခ်",
+    "streak": "စတရိခ်",
+    "bonusIn": "ဘောနပ်စ်ရန်",
+    "next": "နောက်တစ်ခု",
+    "daySeven": "နေ့ 7",
+    "pointsShort": "အမှတ်",
+    "shieldShort": "Shield",
+    "streakSummary": "{streak} ရက် စတရိခ် လက်ရှိရှိနေသည်",
+    "days": {
+      "mon": "တနင်္လာ",
+      "tue": "အင်္ဂါ",
+      "wed": "ဗုဒ္ဓ",
+      "thu": "ကြာသပတေး",
+      "fri": "သောကြာ",
+      "sat": "စနေ",
+      "sun": "တနင်္ဂနွေ"
+    }
   },
   "stats": {
     "title": "သင့်စာရင်းအင်း",

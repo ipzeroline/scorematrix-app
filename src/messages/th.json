@@ -904,11 +904,31 @@
   },
   "checkin": {
     "title": "เช็คอินรายวัน",
+    "subtitle": "รับรางวัลวันนี้ก่อนรีเซ็ต ยิ่งเช็คอินต่อเนื่อง ยิ่งปลดล็อกรางวัลโบนัส",
+    "priority": "รางวัลสำคัญประจำวัน",
     "checkedIn": "เช็คอินแล้ว!",
     "claimReward": "รับรางวัล",
     "claimed": "รับรางวัลแล้ว!",
     "shieldBonus": "ได้รับ Streak Shield!",
-    "tomorrow": "กลับมาพรุ่งนี้"
+    "shieldBonusMessage": "+1 Streak Shield",
+    "tomorrow": "กลับมาพรุ่งนี้",
+    "claimToast": "วันที่ {day} · สตรีค {streak} วัน",
+    "streak": "สตรีค",
+    "bonusIn": "โบนัสใน",
+    "next": "ถัดไป",
+    "daySeven": "วันที่ 7",
+    "pointsShort": "แต้ม",
+    "shieldShort": "Shield",
+    "streakSummary": "สตรีค {streak} วันกำลังทำงาน",
+    "days": {
+      "mon": "จ.",
+      "tue": "อ.",
+      "wed": "พ.",
+      "thu": "พฤ.",
+      "fri": "ศ.",
+      "sat": "ส.",
+      "sun": "อา."
+    }
   },
   "stats": {
     "title": "สถิติของคุณ",
