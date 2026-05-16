@@ -58,10 +58,14 @@
     "news": "ข่าวสาร",
     "profile": "โปรไฟล์",
     "wallet": "กระเป๋า",
+    "credits": "ซื้อเครดิต",
     "settings": "ตั้งค่า",
     "admin": "ผู้ดูแล",
     "rankShort": "อันดับ",
-    "affiliate": "ชวนเพื่อน"
+    "affiliate": "ชวนเพื่อน",
+    "events": "อีเวนต์",
+    "stats": "สถิติ",
+    "notifications": "แจ้งเตือน"
   },
   "auth": {
     "login": "เข้าสู่ระบบ",
@@ -175,6 +179,7 @@
     "premiumCreditsTitle": "พรีเมียมเครดิต",
     "premiumCreditsDesc": "ซื้อเพิ่มสำหรับของตกแต่งพิเศษ ไม่จำเป็นสำหรับฟีเจอร์หลัก",
     "premiumCreditsDescription": "ซื้อเพิ่มได้สำหรับไอเท็มตกแต่งพิเศษ ป้ายโปรไฟล์ และของสะสมดิจิทัล ไม่จำเป็นต่อฟีเจอร์หลักของแพลตฟอร์ม",
+    "buyCredits": "ซื้อเครดิต",
     "earningHistory": "ประวัติการได้รับ",
     "earningHistoryTitle": "ประวัติการรับแต้มฟรี",
     "spendingHistory": "ประวัติการใช้",
@@ -839,5 +844,92 @@
         "text": "รางวัลจะปลดล็อกหลังบัญชีที่ถูกชวนผ่านเงื่อนไขที่กำหนด"
       }
     }
+  },
+  "credits": {
+    "title": "ซื้อพรีเมียมเครดิต",
+    "subtitle": "เลือกแพ็คเกจเครดิตและปลดล็อคฟีเจอร์พิเศษ รางวัลเอ็กซ์คลูซีฟ และอื่นๆ",
+    "yourBalance": "เครดิตของคุณ",
+    "disclaimer": "พรีเมียมเครดิตไม่มีมูลค่าเป็นเงินสด ไม่สามารถถอนหรือแลกเปลี่ยนเป็นเงินจริงได้ ScoreMatrix เป็นแพลตฟอร์มทายผลที่ใช้ทักษะ ไม่ใช่บริการพนัน",
+    "free": "ฟรี",
+    "startPredicting": "เริ่มทายผล",
+    "perMonth": "/เดือน",
+    "mostPopular": "ยอดนิยม",
+    "bestValue": "คุ้มค่าที่สุด",
+    "bestDeal": "ข้อเสนอที่ดีที่สุด",
+    "selectPackage": "เลือกแพ็คเกจ",
+    "purchaseTitle": "ซื้อเครดิต",
+    "purchaseSubtitle": "เลือกวิธีการชำระเงิน",
+    "oneTime": "ซื้อครั้งเดียว ไม่มี subscription",
+    "bonusCredits": "โบนัส +{percent}%",
+    "totalCredits": "รวม {count} เครดิต",
+    "baht": "฿",
+    "features": {
+      "title": "ฟีเจอร์ในแพ็คเกจ",
+      "comparison": "เปรียบเทียบฟีเจอร์",
+      "aiInsightDaily": "AI วิเคราะห์ต่อวัน",
+      "deepPrediction": "ทายผลเชิงลึก (ผู้ยิงแรก, สกอร์ครึ่งแรก ฯลฯ)",
+      "confidenceBoost": "เพิ่มความมั่นใจ (สูงสุด x2.0)",
+      "proStats": "สถิติระดับโปร (xG, H2H, ฟอร์ม)",
+      "privateLeagues": "ลีกส่วนตัว",
+      "maxLeagueMembers": "สมาชิกสูงสุดต่อลีก",
+      "streakShield": "Streak Shield ฟรีต่อเดือน",
+      "predictionBoost": "Prediction Boost ฟรีต่อเดือน",
+      "prioritySupport": "บริการช่วยเหลือพิเศษ",
+      "unlimited": "ไม่จำกัด",
+      "included": "รวมแล้ว",
+      "notIncluded": "—"
+    },
+    "checkout": {
+      "title": "ชำระเงิน",
+      "package": "แพ็คเกจ",
+      "baseCredits": "เครดิตพื้นฐาน",
+      "bonus": "โบนัส ({percent}%)",
+      "total": "รวม",
+      "paymentMethod": "วิธีการชำระเงิน",
+      "promptpay": "พร้อมเพย์ QR",
+      "truemoney": "ทรูมันนี่ วอลเล็ท",
+      "rabbit": "Rabbit LINE Pay",
+      "creditCard": "บัตรเครดิต / เดบิต",
+      "confirmPurchase": "ยืนยันการซื้อ",
+      "cancelPurchase": "ยกเลิก",
+      "processing": "กำลังดำเนินการ...",
+      "successTitle": "ซื้อสำเร็จ!",
+      "successMessage": "เพิ่ม {credits} พรีเมียมเครดิตในกระเป๋าของคุณแล้ว",
+      "goToWallet": "ไปที่กระเป๋า",
+      "goPredict": "เริ่มทายผล",
+      "secureCheckout": "ชำระเงินอย่างปลอดภัย",
+      "encrypted": "เข้ารหัส 256-bit",
+      "noAutoRenew": "นี่คือการซื้อครั้งเดียว ไม่มีการต่ออายุอัตโนมัติ"
+    }
+  },
+  "checkin": {
+    "title": "เช็คอินรายวัน",
+    "checkedIn": "เช็คอินแล้ว!",
+    "claimReward": "รับรางวัล",
+    "claimed": "รับรางวัลแล้ว!",
+    "shieldBonus": "ได้รับ Streak Shield!",
+    "tomorrow": "กลับมาพรุ่งนี้"
+  },
+  "stats": {
+    "title": "สถิติของคุณ",
+    "subtitle": "ติดตามประสิทธิภาพการทายผล",
+    "overallAccuracy": "ความแม่นยำรวม",
+    "totalPredictions": "ทายผลทั้งหมด",
+    "bestStreak": "สถิติต่อเนื่อง",
+    "bestLeague": "ลีกที่ดีที่สุด",
+    "leagueBreakdown": "ความแม่นยำรายลีก",
+    "dailyForm": "ฟอร์ม 30 วัน",
+    "proStatsTeaser": "สถิติระดับโปร",
+    "unlockPro": "ปลดล็อค Pro"
+  },
+  "notifications": {
+    "title": "การแจ้งเตือน",
+    "empty": "ยังไม่มีการแจ้งเตือน",
+    "markAllRead": "อ่านทั้งหมด",
+    "clearAll": "ล้างทั้งหมด"
+  },
+  "events": {
+    "title": "อีเวนต์พิเศษ",
+    "subtitle": "แข่งขันในทัวร์นาเมนต์พิเศษเพื่อรับรางวัลพิเศษ"
   }
 }

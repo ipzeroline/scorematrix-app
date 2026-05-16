@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Sparkles } from "lucide-react";
 import { HeroBanner } from "@/components/home/HeroBanner";
+import { DailyCheckIn } from "@/components/shared/DailyCheckIn";
 import { WorldFootballFeature } from "@/components/home/WorldFootballFeature";
 import { LiveMatchHighlights } from "@/components/home/LiveMatchHighlights";
 import { TodayMatches } from "@/components/home/TodayMatches";
@@ -68,6 +69,11 @@ export default async function DashboardPage() {
       {/* Hero Banner */}
       <section>
         <HeroBanner />
+      </section>
+
+      {/* Daily Check-in */}
+      <section>
+        <DailyCheckIn />
       </section>
 
       <WorldFootballFeature />

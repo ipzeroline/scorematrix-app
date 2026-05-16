@@ -5,16 +5,19 @@ import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LOCALES } from "@/lib/constants";
-import { Moon, Bell, Globe, Eye } from "lucide-react";
+import { useUserStore } from "@/stores/user-store";
+import { useNotificationStore } from "@/stores/notification-store";
+import { Moon, Bell, Globe, Eye, Clock, Trophy } from "lucide-react";
 
 export default function SettingsPage() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations();
+  const preferences = useUserStore((s) => s.preferences);
+  const updatePreference = useUserStore((s) => s.updatePreference);
+  const addToast = useNotificationStore((s) => s.addToast);
   const [language, setLanguage] = useState(locale);
-  const [notifications, setNotifications] = useState(true);
-  const [publicProfile, setPublicProfile] = useState(true);
   const [saved, setSaved] = useState(false);
 
   const switchLanguage = (newLocale: string) => {
@@ -57,7 +60,7 @@ export default function SettingsPage() {
         </select>
       </Card>
 
-      {/* Notifications */}
+      {/* Push Notifications */}
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -72,14 +75,114 @@ export default function SettingsPage() {
             </div>
           </div>
           <button
-            onClick={() => setNotifications(!notifications)}
+            onClick={() => updatePreference('pushNotifications', !preferences.pushNotifications)}
             className={`w-10 h-6 rounded-full transition-colors cursor-pointer ${
-              notifications ? "bg-cyan-500" : "bg-gray-700"
+              preferences.pushNotifications ? "bg-cyan-500" : "bg-gray-700"
             }`}
           >
             <div
               className={`w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${
-                notifications ? "translate-x-4" : "translate-x-0"
+                preferences.pushNotifications ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      </Card>
+
+      {/* Match Reminder 1h */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Clock size={18} className="text-cyan-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-white">Match reminder (1 hour)</h3>
+              <p className="text-xs text-gray-500">Get notified 1 hour before kickoff</p>
+            </div>
+          </div>
+          <button
+            onClick={() => updatePreference('matchReminder1hr', !preferences.matchReminder1hr)}
+            className={`w-10 h-6 rounded-full transition-colors cursor-pointer ${
+              preferences.matchReminder1hr ? "bg-cyan-500" : "bg-gray-700"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${
+                preferences.matchReminder1hr ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      </Card>
+
+      {/* Match Reminder 30min */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Clock size={18} className="text-amber-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-white">Match reminder (30 min)</h3>
+              <p className="text-xs text-gray-500">Get notified 30 minutes before kickoff</p>
+            </div>
+          </div>
+          <button
+            onClick={() => updatePreference('matchReminder30min', !preferences.matchReminder30min)}
+            className={`w-10 h-6 rounded-full transition-colors cursor-pointer ${
+              preferences.matchReminder30min ? "bg-cyan-500" : "bg-gray-700"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${
+                preferences.matchReminder30min ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      </Card>
+
+      {/* Rank Change Alerts */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Trophy size={18} className="text-amber-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-white">Rank change alerts</h3>
+              <p className="text-xs text-gray-500">Get notified when your leaderboard rank changes</p>
+            </div>
+          </div>
+          <button
+            onClick={() => updatePreference('rankChangeAlert', !preferences.rankChangeAlert)}
+            className={`w-10 h-6 rounded-full transition-colors cursor-pointer ${
+              preferences.rankChangeAlert ? "bg-cyan-500" : "bg-gray-700"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${
+                preferences.rankChangeAlert ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+      </Card>
+
+      {/* Result Notifications */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Bell size={18} className="text-green-400" />
+            <div>
+              <h3 className="text-sm font-semibold text-white">Result notifications</h3>
+              <p className="text-xs text-gray-500">Get notified when your predicted matches end</p>
+            </div>
+          </div>
+          <button
+            onClick={() => updatePreference('resultNotification', !preferences.resultNotification)}
+            className={`w-10 h-6 rounded-full transition-colors cursor-pointer ${
+              preferences.resultNotification ? "bg-cyan-500" : "bg-gray-700"
+            }`}
+          >
+            <div
+              className={`w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${
+                preferences.resultNotification ? "translate-x-4" : "translate-x-0"
               }`}
             />
           </button>
@@ -101,14 +204,14 @@ export default function SettingsPage() {
             </div>
           </div>
           <button
-            onClick={() => setPublicProfile(!publicProfile)}
+            onClick={() => updatePreference('publicProfile', !preferences.publicProfile)}
             className={`w-10 h-6 rounded-full transition-colors cursor-pointer ${
-              publicProfile ? "bg-cyan-500" : "bg-gray-700"
+              preferences.publicProfile ? "bg-cyan-500" : "bg-gray-700"
             }`}
           >
             <div
               className={`w-4 h-4 rounded-full bg-white transition-transform mx-0.5 ${
-                publicProfile ? "translate-x-4" : "translate-x-0"
+                preferences.publicProfile ? "translate-x-4" : "translate-x-0"
               }`}
             />
           </button>

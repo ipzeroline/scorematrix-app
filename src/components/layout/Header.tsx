@@ -3,11 +3,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Bell, Check } from "lucide-react";
 import { Logo } from "./Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { UserMenu } from "./UserMenu";
 import { cn } from "@/lib/utils";
+import { useNotificationStore } from "@/stores/notification-store";
 
 const NAV_LINKS = [
   { href: "/livescore", label: "livescore" },
@@ -58,6 +59,8 @@ export function Header() {
           <LanguageSwitcher />
         </div>
 
+        <NotificationBell />
+
         <UserMenu isLoggedIn username="CyberFan99" freePoints={2840} premiumCredits={150} role="admin" />
 
         {/* Mobile hamburger */}
@@ -95,5 +98,91 @@ export function Header() {
         </nav>
       )}
     </header>
+  );
+}
+
+function NotificationBell() {
+  const { locale } = useParams<{ locale: string }>();
+  const [open, setOpen] = useState(false);
+  const notifications = useNotificationStore((s) => s.notifications);
+  const markRead = useNotificationStore((s) => s.markRead);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+  const recent = notifications.slice(0, 5);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+      >
+        <Bell size={18} />
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 w-80 bg-[#12121a] border border-gray-800 rounded-xl shadow-2xl z-50 overflow-hidden">
+            <div className="flex items-center justify-between p-3 border-b border-gray-800">
+              <h3 className="text-sm font-semibold text-white">
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-1.5 text-[10px] text-gray-500">({unreadCount} new)</span>
+                )}
+              </h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="text-[10px] text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
+                >
+                  <Check size={12} /> Mark all read
+                </button>
+              )}
+            </div>
+            {recent.length === 0 ? (
+              <div className="p-6 text-center text-xs text-gray-500">No notifications yet</div>
+            ) : (
+              <div className="max-h-[320px] overflow-y-auto">
+                {recent.map((n) => (
+                  <button
+                    key={n.id}
+                    onClick={() => {
+                      markRead(n.id);
+                      if (n.actionUrl) setOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2.5 border-b border-gray-800/50 hover:bg-white/[0.03] transition-colors",
+                      !n.read && "bg-cyan-500/5"
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      {!n.read && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5 shrink-0" />
+                      )}
+                      <div>
+                        <p className="text-xs font-medium text-white">{n.title}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5">{n.message}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            <Link
+              href={`/${locale}/notifications`}
+              onClick={() => setOpen(false)}
+              className="block text-center py-2.5 text-xs font-medium text-cyan-400 hover:text-cyan-300 border-t border-gray-800 hover:bg-white/[0.02] transition-colors"
+            >
+              View all notifications
+            </Link>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

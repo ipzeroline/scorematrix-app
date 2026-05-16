@@ -58,6 +58,7 @@
     "news": "သတင်း",
     "profile": "ပရိုဖိုင်",
     "wallet": "ပိုက်ဆံအိတ်",
+    "credits": "Buy Credits",
     "settings": "ဆက်တင်များ",
     "admin": "စီမံခန့်ခွဲသူ",
     "rankShort": "Rank",
@@ -839,5 +840,92 @@
         "text": "ဖိတ်ထားသောအကောင့် သတ်မှတ်ချက်ပြည့်ပြီးနောက် ဆုများဖွင့်ပါမည်။"
       }
     }
+  },
+  "credits": {
+    "title": "Get Premium Credits",
+    "subtitle": "Choose a credit package and unlock premium features, exclusive rewards, and more.",
+    "yourBalance": "Your Balance",
+    "disclaimer": "Premium Credits have no cash value and cannot be withdrawn or exchanged for real money. ScoreMatrix is a skill-based prediction platform, not a gambling service.",
+    "free": "Free",
+    "startPredicting": "Start Predicting",
+    "perMonth": "/mo",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "bestDeal": "Best Deal",
+    "selectPackage": "Select Package",
+    "purchaseTitle": "Purchase Credits",
+    "purchaseSubtitle": "Choose your payment method",
+    "oneTime": "One-time purchase. No subscription.",
+    "bonusCredits": "+{percent}% bonus",
+    "totalCredits": "{count} credits total",
+    "baht": "฿",
+    "features": {
+      "title": "Package Features",
+      "comparison": "Compare Features",
+      "aiInsightDaily": "AI insights per day",
+      "deepPrediction": "Deep prediction (first scorer, half-time, etc.)",
+      "confidenceBoost": "Confidence boost (up to x2.0)",
+      "proStats": "Pro statistics (xG, H2H, form)",
+      "privateLeagues": "Private leagues",
+      "maxLeagueMembers": "Max league members",
+      "streakShield": "Free Streak Shields per month",
+      "predictionBoost": "Free Prediction Boosts per month",
+      "prioritySupport": "Priority support",
+      "unlimited": "Unlimited",
+      "included": "Included",
+      "notIncluded": "—"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "package": "Package",
+      "baseCredits": "Base credits",
+      "bonus": "Bonus ({percent}%)",
+      "total": "Total",
+      "paymentMethod": "Payment Method",
+      "promptpay": "PromptPay QR",
+      "truemoney": "TrueMoney Wallet",
+      "rabbit": "Rabbit LINE Pay",
+      "creditCard": "Credit / Debit Card",
+      "confirmPurchase": "Confirm Purchase",
+      "cancelPurchase": "Cancel",
+      "processing": "Processing...",
+      "successTitle": "Purchase Successful!",
+      "successMessage": "{credits} Premium Credits have been added to your wallet.",
+      "goToWallet": "Go to Wallet",
+      "goPredict": "Start Predicting",
+      "secureCheckout": "Secure checkout",
+      "encrypted": "256-bit encrypted payment",
+      "noAutoRenew": "This is a one-time purchase. No automatic renewal."
+    }
+  },
+  "checkin": {
+    "title": "နေ့စဉ်ဝင်ရောက်မှု",
+    "checkedIn": "ဝင်ရောက်ပြီး!",
+    "claimReward": "ဆုလက်ခံရယူမည်",
+    "claimed": "ဆုလက်ခံရယူပြီး!",
+    "shieldBonus": "Streak Shield ရရှိသည်!",
+    "tomorrow": "မနက်ဖြန်ပြန်လာပါ"
+  },
+  "stats": {
+    "title": "သင့်စာရင်းအင်း",
+    "subtitle": "ခန့်မှန်းမှုစွမ်းဆောင်ရည်ခြေရာခံ",
+    "overallAccuracy": "စုစုပေါင်းတိကျမှု",
+    "totalPredictions": "စုစုပေါင်းခန့်မှန်းမှု",
+    "bestStreak": "အကောင်းဆုံးအစဉ်လိုက်",
+    "bestLeague": "အကောင်းဆုံးလိဂ်",
+    "leagueBreakdown": "လိဂ်အလိုက်တိကျမှု",
+    "dailyForm": "ရက် 30 စွမ်းဆောင်ရည်",
+    "proStatsTeaser": "Pro စာရင်းအင်း",
+    "unlockPro": "Pro သော့ဖွင့်မည်"
+  },
+  "notifications": {
+    "title": "အကြောင်းကြားချက်များ",
+    "empty": "အကြောင်းကြားချက်မရှိသေးပါ",
+    "markAllRead": "အားလုံးဖတ်ပြီးအဖြစ်သတ်မှတ်",
+    "clearAll": "အားလုံးရှင်းလင်းမည်"
+  },
+  "events": {
+    "title": "အထူးပွဲစဉ်များ",
+    "subtitle": "သီးသန့်ဆုများအတွက် အချိန်ကန့်သတ်ပြိုင်ပွဲများတွင် ယှဉ်ပြိုင်ပါ"
   }
 }

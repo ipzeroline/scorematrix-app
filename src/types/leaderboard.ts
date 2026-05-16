@@ -17,6 +17,18 @@ export interface Leaderboard {
   entries: LeaderboardEntry[];
 }
 
+export interface LeaderboardReward {
+  rankRange: [number, number];
+  reward: {
+    freePoints: number;
+    premiumCredits?: number;
+    badge?: string;
+    streakShield?: number;
+  };
+}
+
+export type LeaderboardTier = 'all' | 'bronze-silver' | 'gold-platinum' | 'diamond-master';
+
 export interface PrivateLeague {
   id: string;
   name: string;

@@ -58,10 +58,14 @@
     "news": "News",
     "profile": "Profile",
     "wallet": "Wallet",
+    "credits": "Buy Credits",
     "settings": "Settings",
     "admin": "Admin",
     "rankShort": "Rank",
-    "affiliate": "Affiliate"
+    "affiliate": "Affiliate",
+    "events": "Events",
+    "stats": "Statistics",
+    "notifications": "Notifications"
   },
   "auth": {
     "login": "Log In",
@@ -175,6 +179,7 @@
     "premiumCreditsTitle": "Premium Credits",
     "premiumCreditsDesc": "Optional purchase for exclusive cosmetic items. Not required for core features.",
     "premiumCreditsDescription": "Optional purchase for exclusive cosmetic items, profile badges, and digital collectibles. Not required for core platform features.",
+    "buyCredits": "Buy Credits",
     "earningHistory": "Earning History",
     "earningHistoryTitle": "Free Points - Earning History",
     "spendingHistory": "Spending History",
@@ -839,5 +844,92 @@
         "text": "Rewards unlock after the invited account meets the qualification rules."
       }
     }
+  },
+  "credits": {
+    "title": "Get Premium Credits",
+    "subtitle": "Choose a credit package and unlock premium features, exclusive rewards, and more.",
+    "yourBalance": "Your Balance",
+    "disclaimer": "Premium Credits have no cash value and cannot be withdrawn or exchanged for real money. ScoreMatrix is a skill-based prediction platform, not a gambling service.",
+    "free": "Free",
+    "startPredicting": "Start Predicting",
+    "perMonth": "/mo",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "bestDeal": "Best Deal",
+    "selectPackage": "Select Package",
+    "purchaseTitle": "Purchase Credits",
+    "purchaseSubtitle": "Choose your payment method",
+    "oneTime": "One-time purchase. No subscription.",
+    "bonusCredits": "+{percent}% bonus",
+    "totalCredits": "{count} credits total",
+    "baht": "฿",
+    "features": {
+      "title": "Package Features",
+      "comparison": "Compare Features",
+      "aiInsightDaily": "AI insights per day",
+      "deepPrediction": "Deep prediction (first scorer, half-time, etc.)",
+      "confidenceBoost": "Confidence boost (up to x2.0)",
+      "proStats": "Pro statistics (xG, H2H, form)",
+      "privateLeagues": "Private leagues",
+      "maxLeagueMembers": "Max league members",
+      "streakShield": "Free Streak Shields per month",
+      "predictionBoost": "Free Prediction Boosts per month",
+      "prioritySupport": "Priority support",
+      "unlimited": "Unlimited",
+      "included": "Included",
+      "notIncluded": "—"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "package": "Package",
+      "baseCredits": "Base credits",
+      "bonus": "Bonus ({percent}%)",
+      "total": "Total",
+      "paymentMethod": "Payment Method",
+      "promptpay": "PromptPay QR",
+      "truemoney": "TrueMoney Wallet",
+      "rabbit": "Rabbit LINE Pay",
+      "creditCard": "Credit / Debit Card",
+      "confirmPurchase": "Confirm Purchase",
+      "cancelPurchase": "Cancel",
+      "processing": "Processing...",
+      "successTitle": "Purchase Successful!",
+      "successMessage": "{credits} Premium Credits have been added to your wallet.",
+      "goToWallet": "Go to Wallet",
+      "goPredict": "Start Predicting",
+      "secureCheckout": "Secure checkout",
+      "encrypted": "256-bit encrypted payment",
+      "noAutoRenew": "This is a one-time purchase. No automatic renewal."
+    }
+  },
+  "checkin": {
+    "title": "Daily Check-in",
+    "checkedIn": "Checked in!",
+    "claimReward": "Claim Reward",
+    "claimed": "Reward claimed!",
+    "shieldBonus": "Streak Shield earned!",
+    "tomorrow": "Come back tomorrow"
+  },
+  "stats": {
+    "title": "Your Statistics",
+    "subtitle": "Track your prediction performance",
+    "overallAccuracy": "Overall Accuracy",
+    "totalPredictions": "Total Predictions",
+    "bestStreak": "Best Streak",
+    "bestLeague": "Best League",
+    "leagueBreakdown": "League Accuracy",
+    "dailyForm": "30-Day Form",
+    "proStatsTeaser": "Pro Statistics",
+    "unlockPro": "Unlock Pro"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all read",
+    "clearAll": "Clear all"
+  },
+  "events": {
+    "title": "Special Events",
+    "subtitle": "Compete in limited-time tournaments for exclusive rewards"
   }
 }

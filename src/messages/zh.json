@@ -58,6 +58,7 @@
     "news": "新闻",
     "profile": "资料",
     "wallet": "钱包",
+    "credits": "购买积分",
     "settings": "设置",
     "admin": "管理",
     "rankShort": "排名",
@@ -839,5 +840,92 @@
         "text": "被邀请账户满足资格规则后，奖励会解锁。"
       }
     }
+  },
+  "credits": {
+    "title": "购买高级积分",
+    "subtitle": "选择积分套餐，解锁高级功能、专属奖励等。",
+    "yourBalance": "您的余额",
+    "disclaimer": "高级积分没有现金价值，不能提现或兑换为真实货币。ScoreMatrix 是一个基于技能的预测平台，不是赌博服务。",
+    "free": "免费",
+    "startPredicting": "开始预测",
+    "perMonth": "/月",
+    "mostPopular": "最受欢迎",
+    "bestValue": "最超值",
+    "bestDeal": "最优惠",
+    "selectPackage": "选择套餐",
+    "purchaseTitle": "购买积分",
+    "purchaseSubtitle": "选择支付方式",
+    "oneTime": "一次性购买，无订阅",
+    "bonusCredits": "+{percent}% 奖励",
+    "totalCredits": "共 {count} 积分",
+    "baht": "฿",
+    "features": {
+      "title": "套餐功能",
+      "comparison": "功能对比",
+      "aiInsightDaily": "每日AI分析次数",
+      "deepPrediction": "深度预测（首球球员、半场比分等）",
+      "confidenceBoost": "信心加成（最高 x2.0）",
+      "proStats": "专业统计（xG、交锋记录、状态）",
+      "privateLeagues": "私人联赛",
+      "maxLeagueMembers": "每联赛最大成员数",
+      "streakShield": "每月免费连续护盾",
+      "predictionBoost": "每月免费预测加成",
+      "prioritySupport": "优先客服",
+      "unlimited": "无限制",
+      "included": "已包含",
+      "notIncluded": "—"
+    },
+    "checkout": {
+      "title": "结算",
+      "package": "套餐",
+      "baseCredits": "基础积分",
+      "bonus": "奖励 ({percent}%)",
+      "total": "总计",
+      "paymentMethod": "支付方式",
+      "promptpay": "PromptPay QR",
+      "truemoney": "TrueMoney 钱包",
+      "rabbit": "Rabbit LINE Pay",
+      "creditCard": "信用卡 / 借记卡",
+      "confirmPurchase": "确认购买",
+      "cancelPurchase": "取消",
+      "processing": "处理中...",
+      "successTitle": "购买成功！",
+      "successMessage": "{credits} 高级积分已添加到您的钱包。",
+      "goToWallet": "前往钱包",
+      "goPredict": "开始预测",
+      "secureCheckout": "安全结算",
+      "encrypted": "256位加密支付",
+      "noAutoRenew": "这是一次性购买，不会自动续费。"
+    }
+  },
+  "checkin": {
+    "title": "每日签到",
+    "checkedIn": "已签到！",
+    "claimReward": "领取奖励",
+    "claimed": "奖励已领取！",
+    "shieldBonus": "获得连续护盾！",
+    "tomorrow": "明天再来"
+  },
+  "stats": {
+    "title": "您的统计",
+    "subtitle": "追踪预测表现",
+    "overallAccuracy": "总体准确率",
+    "totalPredictions": "总预测数",
+    "bestStreak": "最佳连续",
+    "bestLeague": "最佳联赛",
+    "leagueBreakdown": "联赛准确率",
+    "dailyForm": "30天表现",
+    "proStatsTeaser": "专业统计",
+    "unlockPro": "解锁专业版"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "暂无通知",
+    "markAllRead": "全部已读",
+    "clearAll": "清空全部"
+  },
+  "events": {
+    "title": "特别活动",
+    "subtitle": "参加限时锦标赛赢取独家奖励"
   }
 }

@@ -34,6 +34,11 @@ export interface UserPreferences {
   locale: Locale;
   emailNotifications: boolean;
   publicProfile: boolean;
+  pushNotifications: boolean;
+  matchReminder30min: boolean;
+  matchReminder1hr: boolean;
+  resultNotification: boolean;
+  rankChangeAlert: boolean;
 }
 
 export interface Rank {

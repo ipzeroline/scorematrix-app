@@ -58,6 +58,7 @@
     "news": "ព័ត៌មាន",
     "profile": "ប្រវត្តិរូប",
     "wallet": "កាបូប",
+    "credits": "Buy Credits",
     "settings": "ការកំណត់",
     "admin": "អ្នកគ្រប់គ្រង",
     "rankShort": "Rank",
@@ -839,5 +840,92 @@
         "text": "រង្វាន់នឹងបើកបន្ទាប់ពីគណនីដែលបានអញ្ជើញបំពេញលក្ខខណ្ឌ។"
       }
     }
+  },
+  "credits": {
+    "title": "Get Premium Credits",
+    "subtitle": "Choose a credit package and unlock premium features, exclusive rewards, and more.",
+    "yourBalance": "Your Balance",
+    "disclaimer": "Premium Credits have no cash value and cannot be withdrawn or exchanged for real money. ScoreMatrix is a skill-based prediction platform, not a gambling service.",
+    "free": "Free",
+    "startPredicting": "Start Predicting",
+    "perMonth": "/mo",
+    "mostPopular": "Most Popular",
+    "bestValue": "Best Value",
+    "bestDeal": "Best Deal",
+    "selectPackage": "Select Package",
+    "purchaseTitle": "Purchase Credits",
+    "purchaseSubtitle": "Choose your payment method",
+    "oneTime": "One-time purchase. No subscription.",
+    "bonusCredits": "+{percent}% bonus",
+    "totalCredits": "{count} credits total",
+    "baht": "฿",
+    "features": {
+      "title": "Package Features",
+      "comparison": "Compare Features",
+      "aiInsightDaily": "AI insights per day",
+      "deepPrediction": "Deep prediction (first scorer, half-time, etc.)",
+      "confidenceBoost": "Confidence boost (up to x2.0)",
+      "proStats": "Pro statistics (xG, H2H, form)",
+      "privateLeagues": "Private leagues",
+      "maxLeagueMembers": "Max league members",
+      "streakShield": "Free Streak Shields per month",
+      "predictionBoost": "Free Prediction Boosts per month",
+      "prioritySupport": "Priority support",
+      "unlimited": "Unlimited",
+      "included": "Included",
+      "notIncluded": "—"
+    },
+    "checkout": {
+      "title": "Checkout",
+      "package": "Package",
+      "baseCredits": "Base credits",
+      "bonus": "Bonus ({percent}%)",
+      "total": "Total",
+      "paymentMethod": "Payment Method",
+      "promptpay": "PromptPay QR",
+      "truemoney": "TrueMoney Wallet",
+      "rabbit": "Rabbit LINE Pay",
+      "creditCard": "Credit / Debit Card",
+      "confirmPurchase": "Confirm Purchase",
+      "cancelPurchase": "Cancel",
+      "processing": "Processing...",
+      "successTitle": "Purchase Successful!",
+      "successMessage": "{credits} Premium Credits have been added to your wallet.",
+      "goToWallet": "Go to Wallet",
+      "goPredict": "Start Predicting",
+      "secureCheckout": "Secure checkout",
+      "encrypted": "256-bit encrypted payment",
+      "noAutoRenew": "This is a one-time purchase. No automatic renewal."
+    }
+  },
+  "checkin": {
+    "title": "ពិនិត្យចូលប្រចាំថ្ងៃ",
+    "checkedIn": "បានពិនិត្យចូល!",
+    "claimReward": "ទទួលរង្វាន់",
+    "claimed": "បានទទួលរង្វាន់!",
+    "shieldBonus": "ទទួលបាន Streak Shield!",
+    "tomorrow": "ត្រឡប់មកថ្ងៃស្អែក"
+  },
+  "stats": {
+    "title": "ស្ថិតិរបស់អ្នក",
+    "subtitle": "តាមដានប្រសិទ្ធភាពទស្សន៍ទាយ",
+    "overallAccuracy": "ភាពត្រឹមត្រូវសរុប",
+    "totalPredictions": "ការទស្សន៍ទាយសរុប",
+    "bestStreak": "កំណត់ត្រាបន្ត",
+    "bestLeague": "លីកល្អបំផុត",
+    "leagueBreakdown": "ភាពត្រឹមត្រូវតាមលីក",
+    "dailyForm": "ទម្រង់ 30 ថ្ងៃ",
+    "proStatsTeaser": "ស្ថិតិ Pro",
+    "unlockPro": "ដោះសោ Pro"
+  },
+  "notifications": {
+    "title": "ការជូនដំណឹង",
+    "empty": "មិនមានការជូនដំណឹង",
+    "markAllRead": "អានទាំងអស់",
+    "clearAll": "សម្អាតទាំងអស់"
+  },
+  "events": {
+    "title": "ព្រឹត្តិការណ៍ពិសេស",
+    "subtitle": "ប្រកួតក្នុងការប្រកួតមានកំណត់ដើម្បីទទួលរង្វាន់ពិសេស"
   }
 }

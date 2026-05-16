@@ -14,6 +14,10 @@ import {
   Newspaper,
   Zap,
   Share2,
+  Coins,
+  BarChart3,
+  Sparkles,
+  Bell,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -26,7 +30,10 @@ const SIDEBAR_LINKS = [
   { href: "/ai-insight", label: "aiInsight", icon: Brain },
   { href: "/leaderboard", label: "leaderboard", icon: Trophy },
   { href: "/missions", label: "missions", icon: Zap },
+  { href: "/events", label: "events", icon: Sparkles },
   { href: "/rewards", label: "rewards", icon: Gift },
+  { href: "/credits", label: "credits", icon: Coins },
+  { href: "/stats", label: "stats", icon: BarChart3 },
   { href: "/affiliate", label: "affiliate", icon: Share2 },
   { href: "/leagues", label: "leagues", icon: Users },
   { href: "/news", label: "news", icon: Newspaper },

@@ -58,6 +58,7 @@
     "news": "ຂ່າວ",
     "profile": "ໂປຣໄຟລ໌",
     "wallet": "ກະເປົາ",
+    "credits": "ຊື້ເຄຣດິດ",
     "settings": "ຕັ້ງຄ່າ",
     "admin": "ຜູ້ດູແລ",
     "rankShort": "ອັນດັບ",
@@ -839,5 +840,92 @@
         "text": "ລາງວັນຈະປົດລັອກຫຼັງບັນຊີທີ່ຖືກຊວນຜ່ານເງື່ອນໄຂ"
       }
     }
+  },
+  "credits": {
+    "title": "ຊື້ພຣີມຽມເຄຣດິດ",
+    "subtitle": "ເລືອກແພັກເກດເຄຣດິດ ແລະ ປົດລັອກຟີເຈີພິເສດ, ລາງວັນສະເພາະ ແລະ ອື່ນໆ",
+    "yourBalance": "ເຄຣດິດຂອງທ່ານ",
+    "disclaimer": "ພຣີມຽມເຄຣດິດບໍ່ມີມູນຄ່າເປັນເງິນສົດ ແລະ ບໍ່ສາມາດຖອນ ຫຼື ແລກປ່ຽນເປັນເງິນຈິງໄດ້. ScoreMatrix ເປັນແພລັດຟອມທາຍຜົນທີ່ໃຊ້ທັກສະ, ບໍ່ແມ່ນບໍລິການພະນັນ.",
+    "free": "ຟຣີ",
+    "startPredicting": "ເລີ່ມທາຍຜົນ",
+    "perMonth": "/ເດືອນ",
+    "mostPopular": "ນິຍົມທີ່ສຸດ",
+    "bestValue": "ຄຸ້ມຄ່າທີ່ສຸດ",
+    "bestDeal": "ຂໍ້ສະເໜີທີ່ດີທີ່ສຸດ",
+    "selectPackage": "ເລືອກແພັກເກດ",
+    "purchaseTitle": "ຊື້ເຄຣດິດ",
+    "purchaseSubtitle": "ເລືອກວິທີຊຳລະເງິນ",
+    "oneTime": "ຊື້ຄັ້ງດຽວ ບໍ່ມີ subscription",
+    "bonusCredits": "ໂບນັດ +{percent}%",
+    "totalCredits": "ລວມ {count} ເຄຣດິດ",
+    "baht": "฿",
+    "features": {
+      "title": "ຟີເຈີໃນແພັກເກດ",
+      "comparison": "ປຽບທຽບຟີເຈີ",
+      "aiInsightDaily": "AI ວິເຄາະຕໍ່ມື້",
+      "deepPrediction": "ທາຍຜົນເລິກ (ຜູ້ຍິງທຳອິດ, ສະກอร์ຄຶ່ງເວລາ ແລະອື່ນໆ)",
+      "confidenceBoost": "ເພີ່ມຄວາມໝັ້ນໃຈ (ສູງສຸດ x2.0)",
+      "proStats": "ສະຖິຕິລະດັບໂປຣ (xG, H2H, ຟອມ)",
+      "privateLeagues": "ລີກສ່ວນຕົວ",
+      "maxLeagueMembers": "ສະມາຊິກສູງສຸດຕໍ່ລີກ",
+      "streakShield": "Streak Shield ຟຣີຕໍ່ເດືອນ",
+      "predictionBoost": "Prediction Boost ຟຣີຕໍ່ເດືອນ",
+      "prioritySupport": "ບໍລິການຊ່ວຍເຫຼືອພິເສດ",
+      "unlimited": "ບໍ່ຈຳກັດ",
+      "included": "ລວມແລ້ວ",
+      "notIncluded": "—"
+    },
+    "checkout": {
+      "title": "ຊຳລະເງິນ",
+      "package": "ແພັກເກດ",
+      "baseCredits": "ເຄຣດິດພື້ນຖານ",
+      "bonus": "ໂບນັດ ({percent}%)",
+      "total": "ລວມ",
+      "paymentMethod": "ວິທີຊຳລະເງິນ",
+      "promptpay": "ພร້ອມເພຍ໌ QR",
+      "truemoney": "ທຣູມັນນີ້ ວໍລເລັທ",
+      "rabbit": "Rabbit LINE Pay",
+      "creditCard": "ບັດເຄຣດິດ / ເດບິດ",
+      "confirmPurchase": "ຢືນຢັນການຊື້",
+      "cancelPurchase": "ຍົກເລີກ",
+      "processing": "ກຳລັງດຳເນີນການ...",
+      "successTitle": "ຊື້ສຳເລັດ!",
+      "successMessage": "ເພີ່ມ {credits} ພຣີມຽມເຄຣດິດໃນກະເປົ໋າຂອງທ່ານແລ້ວ",
+      "goToWallet": "ໄປທີ່ກະເປົ໋າ",
+      "goPredict": "ເລີ່ມທາຍຜົນ",
+      "secureCheckout": "ຊຳລະເງິນຢ່າງປອດໄພ",
+      "encrypted": "ເຂົ້າລະຫັດ 256-bit",
+      "noAutoRenew": "ນີ້ແມ່ນການຊື້ຄັ້ງດຽວ ບໍ່ມີການຕໍ່ອາຍຸອັດຕະໂນມັດ"
+    }
+  },
+  "checkin": {
+    "title": "ເຊັກອິນປະຈຳວັນ",
+    "checkedIn": "ເຊັກອິນແລ້ວ!",
+    "claimReward": "ຮັບລາງວັນ",
+    "claimed": "ຮັບລາງວັນແລ້ວ!",
+    "shieldBonus": "ໄດ້ຮັບ Streak Shield!",
+    "tomorrow": "ກັບມາມື້ອື່ນ"
+  },
+  "stats": {
+    "title": "ສະຖິຕິຂອງທ່ານ",
+    "subtitle": "ຕິດຕາມປະສິດທິພາບການທາຍຜົນ",
+    "overallAccuracy": "ຄວາມແມ່ນຢຳລວມ",
+    "totalPredictions": "ທາຍຜົນທັງໝົດ",
+    "bestStreak": "ສະຖິຕິຕໍ່ເນື່ອງ",
+    "bestLeague": "ລີກທີ່ດີທີ່ສຸດ",
+    "leagueBreakdown": "ຄວາມແມ່ນຢຳຕາມລີກ",
+    "dailyForm": "ຟອມ 30 ມື້",
+    "proStatsTeaser": "ສະຖິຕິລະດັບໂປຣ",
+    "unlockPro": "ປົດລັອກ Pro"
+  },
+  "notifications": {
+    "title": "ການແຈ້ງເຕືອນ",
+    "empty": "ຍັງບໍ່ມີການແຈ້ງເຕືອນ",
+    "markAllRead": "ອ່ານທັງໝົດ",
+    "clearAll": "ລ້າງທັງໝົດ"
+  },
+  "events": {
+    "title": "ອີເວັນພິເສດ",
+    "subtitle": "ແຂ່ງຂັນໃນທົວນາເມັນພິເສດເພື່ອຮັບລາງວັນສະເພາະ"
   }
 }

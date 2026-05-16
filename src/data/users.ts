@@ -42,6 +42,11 @@ function generateUsers(): User[] {
         locale: (['en', 'th', 'zh', 'ja', 'ko', 'vi'] as const)[i % 6],
         emailNotifications: i % 3 === 0,
         publicProfile: i % 2 === 0,
+        pushNotifications: true,
+        matchReminder30min: true,
+        matchReminder1hr: i % 2 === 0,
+        resultNotification: true,
+        rankChangeAlert: i % 3 === 0,
       },
       createdAt: new Date(Date.now() - (365 - i) * 86400000).toISOString(),
     });

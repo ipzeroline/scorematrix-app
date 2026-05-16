@@ -1,7 +1,11 @@
+"use client";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { useTranslations } from "next-intl";
 
 export default function WalletPage() {
+  const { locale } = useParams<{ locale: string }>();
   const t = useTranslations("wallet");
   const earningHistory = [
     { desc: t("earningExactScore"), pts: 10, date: t("today") },
@@ -57,9 +61,15 @@ export default function WalletPage() {
           <div className="text-3xl font-bold font-mono text-amber-400 mb-3">
             150
           </div>
-          <p className="text-xs text-gray-500 leading-relaxed">
+          <p className="text-xs text-gray-500 leading-relaxed mb-3">
             {t("premiumCreditsDescription")}
           </p>
+          <Link
+            href={`/${locale}/credits`}
+            className="inline-block px-4 py-2 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+          >
+            {t("buyCredits")}
+          </Link>
         </Card>
       </div>
 
