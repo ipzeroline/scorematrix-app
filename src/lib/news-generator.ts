@@ -587,6 +587,48 @@ export async function searchArticles(query: string, locale: string): Promise<New
   });
 }
 
+export async function getLatestArticles(locale: string, limit = 6): Promise<NewsArticle[]> {
+  const safeLocale = normalizeLocale(locale);
+  const articles: NewsArticle[] = [];
+  const seen = new Set<string>();
+
+  try {
+    const { articles: todayArticles } = await getTodayArticles(safeLocale);
+    for (const article of todayArticles) {
+      if (!seen.has(article.id)) {
+        seen.add(article.id);
+        articles.push(article);
+      }
+    }
+  } catch { /* skip */ }
+
+  try {
+    const entries = await fs.readdir(NEWS_DATA_DIR, { withFileTypes: true });
+    const dateDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort().reverse();
+
+    for (const dateDir of dateDirs) {
+      if (articles.length >= limit) break;
+      const file = path.join(NEWS_DATA_DIR, dateDir, `${safeLocale}.json`);
+
+      try {
+        const raw = await fs.readFile(file, "utf-8");
+        const pastArticles = JSON.parse(raw) as NewsArticle[];
+        for (const article of pastArticles) {
+          if (!seen.has(article.id)) {
+            seen.add(article.id);
+            articles.push(article);
+            if (articles.length >= limit) break;
+          }
+        }
+      } catch { /* skip missing locale files */ }
+    }
+  } catch { /* no news directory yet */ }
+
+  return articles
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, limit);
+}
+
 export async function getAllNewsStaticParams(): Promise<Array<{ locale: string; slug: string }>> {
   const params: Array<{ locale: string; slug: string }> = [];
   const seen = new Set<string>();

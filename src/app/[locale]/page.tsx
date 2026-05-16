@@ -18,6 +18,7 @@ import {
   loadLiveFixtures,
   pickRandomFixture,
 } from "@/lib/football-page-data";
+import { getLatestArticles } from "@/lib/news-generator";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -53,11 +54,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ params }: Props) {
+  const { locale } = await params;
   const t = await getTranslations("dashboard");
-  const [homepageFixtures, liveFixtures] = await Promise.all([
+  const [homepageFixtures, liveFixtures, latestArticles] = await Promise.all([
     loadHomepageFixtures(),
     loadLiveFixtures(),
+    getLatestArticles(locale, 6),
   ]);
   const aiFixture =
     pickRandomFixture(homepageFixtures.filter((fixture) => fixture.status === MatchStatus.UPCOMING)) ??
@@ -123,7 +126,7 @@ export default async function DashboardPage() {
 
       {/* News Section */}
       <section>
-        <NewsSection />
+        <NewsSection articles={latestArticles} />
       </section>
 
       <section className="rounded-xl border border-gray-800 bg-[#0a0a0f] p-5 md:p-6">

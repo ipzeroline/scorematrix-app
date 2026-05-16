@@ -12,16 +12,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-
-interface NewsItem {
-  id: string;
-  titleKey: string;
-  summaryKey: string;
-  author: string;
-  category: "analysis" | "news" | "feature" | "tips";
-  readTime: number;
-  date: string;
-}
+import type { NewsArticle } from "@/types/news";
 
 const categoryMeta: Record<
   string,
@@ -37,63 +28,6 @@ const categoryMeta: Record<
   tips: { label: "Tips", variant: "gold", icon: Lightbulb },
 };
 
-const newsArticles: NewsItem[] = [
-  {
-    id: "nw-1",
-    titleKey: "aiChanging.title",
-    summaryKey: "aiChanging.summary",
-    author: "Alex Chen",
-    category: "analysis",
-    readTime: 5,
-    date: "2026-05-11",
-  },
-  {
-    id: "nw-2",
-    titleKey: "unbeatenRun.title",
-    summaryKey: "unbeatenRun.summary",
-    author: "Sarah Jones",
-    category: "news",
-    readTime: 3,
-    date: "2026-05-10",
-  },
-  {
-    id: "nw-3",
-    titleKey: "topPredictors.title",
-    summaryKey: "topPredictors.summary",
-    author: "Marcus Vega",
-    category: "feature",
-    readTime: 7,
-    date: "2026-05-09",
-  },
-  {
-    id: "nw-4",
-    titleKey: "tips.title",
-    summaryKey: "tips.summary",
-    author: "Priya Kapoor",
-    category: "tips",
-    readTime: 4,
-    date: "2026-05-08",
-  },
-  {
-    id: "nw-5",
-    titleKey: "transfer.title",
-    summaryKey: "transfer.summary",
-    author: "Tom Bradley",
-    category: "news",
-    readTime: 6,
-    date: "2026-05-07",
-  },
-  {
-    id: "nw-6",
-    titleKey: "xg.title",
-    summaryKey: "xg.summary",
-    author: "Alex Chen",
-    category: "analysis",
-    readTime: 8,
-    date: "2026-05-06",
-  },
-];
-
 function formatNewsDate(dateStr: string, t: ReturnType<typeof useTranslations>): string {
   const d = new Date(dateStr);
   const now = new Date();
@@ -104,9 +38,20 @@ function formatNewsDate(dateStr: string, t: ReturnType<typeof useTranslations>):
   return t("dashboard.daysAgo", { count: diffDays });
 }
 
-export function NewsSection() {
+function localizeField(article: NewsArticle, field: "title" | "summary", locale: string): string {
+  const value = article[field];
+  if (typeof value === "string") return value;
+  return value[locale] ?? value.en ?? "";
+}
+
+interface NewsSectionProps {
+  articles: NewsArticle[];
+}
+
+export function NewsSection({ articles }: NewsSectionProps) {
   const locale = useLocale();
   const t = useTranslations();
+  const latestArticles = articles.slice(0, 6);
 
   return (
     <div className="flex flex-col gap-4">
@@ -147,49 +92,56 @@ export function NewsSection() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {newsArticles.map((article) => {
+        {latestArticles.map((article) => {
           const meta = categoryMeta[article.category];
           const CategoryIcon = meta.icon;
+          const title = localizeField(article, "title", locale);
+          const summary = localizeField(article, "summary", locale);
           return (
-            <Card
+            <Link
               key={article.id}
-              hover
-              className="news-article-card relative flex flex-col gap-3 overflow-hidden"
+              href={`/${locale}/news/${article.slug}`}
+              className="block h-full"
             >
-              <div className="news-article-card-sheen absolute inset-0" />
-              {/* Category badge */}
-              <div className="relative flex items-center justify-between">
-                <Badge variant={meta.variant} size="sm">
-                  <span className="flex items-center gap-1.5">
-                    <CategoryIcon size={12} strokeWidth={2.4} aria-hidden="true" />
-                    <span>{t(`dashboard.newsCategories.${article.category}`)}</span>
+              <Card
+                hover
+                className="news-article-card relative flex h-full flex-col gap-3 overflow-hidden"
+              >
+                <div className="news-article-card-sheen absolute inset-0" />
+                {/* Category badge */}
+                <div className="relative flex items-center justify-between">
+                  <Badge variant={meta.variant} size="sm">
+                    <span className="flex items-center gap-1.5">
+                      <CategoryIcon size={12} strokeWidth={2.4} aria-hidden="true" />
+                      <span>{t(`dashboard.newsCategories.${article.category}`)}</span>
+                    </span>
+                  </Badge>
+                  <span className="text-[10px] text-gray-600">
+                    {formatNewsDate(article.publishedAt, t)}
                   </span>
-                </Badge>
-                <span className="text-[10px] text-gray-600">
-                  {formatNewsDate(article.date, t)}
-                </span>
-              </div>
+                </div>
 
-              {/* Title */}
-              <h3 className="relative text-base font-semibold text-white leading-snug line-clamp-2">
-                {t(`dashboard.newsItems.${article.titleKey}`)}
-              </h3>
+                {/* Title */}
+                <h3 className="relative text-base font-semibold text-white leading-snug line-clamp-2">
+                  {title}
+                </h3>
 
-              {/* Summary */}
-              <p className="relative text-xs text-gray-400 leading-relaxed line-clamp-2">
-                {t(`dashboard.newsItems.${article.summaryKey}`)}
-              </p>
+                {/* Summary */}
+                <p className="relative text-xs text-gray-400 leading-relaxed line-clamp-2">
+                  {summary}
+                </p>
 
-              {/* Meta row */}
-              <div className="relative flex items-center justify-between mt-auto pt-1 border-t border-gray-800/50">
-                <span className="text-[11px] text-gray-500">
-                  {article.author}
-                </span>
-                <span className="text-[11px] text-gray-600">
-                  {article.readTime} {t("news.minRead")}
-                </span>
-              </div>
-            </Card>
+                {/* Meta row */}
+                <div className="relative flex items-center justify-between mt-auto pt-1 border-t border-gray-800/50">
+                  <span className="text-[11px] text-gray-500">
+                    {article.author}
+                  </span>
+                  <span className="text-[11px] text-gray-600">
+                    {article.readTime} {t("news.minRead")}
+                  </span>
+                </div>
+              </Card>
+            </Link>
           );
         })}
       </div>
