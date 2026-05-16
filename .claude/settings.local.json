@@ -43,10 +43,13 @@
       "Bash(python3 -c \"import reportlab; print\\('reportlab available'\\)\")",
       "Bash(python3 -c \"import fpdf; print\\('fpdf available'\\)\")",
       "Bash(pip3 install *)",
-      "Bash(python3 -m weasyprint /Users/zeroline/Documents/scorematrix-app/docs/SCOREMATRIX_SYSTEM_ARCHITECTURE.html /Users/zeroline/Documents/scorematrix-app/docs/SCOREMATRIX_SYSTEM_ARCHITECTURE.pdf)"
+      "Bash(python3 -m weasyprint /Users/zeroline/Documents/scorematrix-app/docs/SCOREMATRIX_SYSTEM_ARCHITECTURE.html /Users/zeroline/Documents/scorematrix-app/docs/SCOREMATRIX_SYSTEM_ARCHITECTURE.pdf)",
+      "Bash(mkdir -p /Users/zeroline/Documents/scorematrix-app/src/app/api/news && mkdir -p /Users/zeroline/Documents/scorematrix-app/src/app/\\\\[locale\\\\]/news/\\\\[slug\\\\] && mkdir -p /Users/zeroline/Documents/scorematrix-app/src/components/news)",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
-      "/Users/zeroline/Documents/scorematrix-app/src/app/[locale]"
+      "/Users/zeroline/Documents/scorematrix-app/src/app/[locale]",
+      "/Users/zeroline/Documents/scorematrix-app/src/app/[locale]/news"
     ]
   }
 }

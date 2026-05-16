@@ -13,7 +13,10 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://scorematrix.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "ScoreMatrix — Predict. Compete. Win.",
   description:
     "The ultimate skill-based football prediction platform. Predict matches, earn points, claim rewards. No gambling — pure skill.",

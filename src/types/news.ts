@@ -1,8 +1,9 @@
 export interface NewsArticle {
   id: string;
-  title: string;
-  summary: string;
-  content: string;
+  slug: string;
+  title: string | Record<string, string>;
+  summary: string | Record<string, string>;
+  content: string | Record<string, string>;
   image: string;
   author: string;
   category: 'analysis' | 'news' | 'feature' | 'tips';

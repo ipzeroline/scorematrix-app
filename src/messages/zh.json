@@ -9,6 +9,11 @@
       "title": "比赛 | ScoreMatrix 足球赛程与即时赛事中心",
       "description": "在 ScoreMatrix 浏览全球联赛的直播、即将开始和已结束比赛，包括球队状态、比赛时间和预测入口。",
       "keywords": "足球比赛, 赛程, 即时比分, 即将开始比赛, 足球赛程, 比赛中心, ScoreMatrix matches"
+    },
+    "news": {
+      "title": "新闻与分析 | ScoreMatrix 足球新闻",
+      "description": "在 ScoreMatrix 阅读最新足球新闻、比赛报道、预测技巧和平台更新。每日文章覆盖全球联赛。",
+      "keywords": "足球新闻, 比赛报道, 预测技巧, 足球分析, ScoreMatrix 新闻, 足球文章"
     }
   },
   "common": {

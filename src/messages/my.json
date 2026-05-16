@@ -9,6 +9,11 @@
       "title": "Matches | ScoreMatrix Football Schedule and Live Match Center",
       "description": "Explore live, upcoming and finished football matches across global leagues with form trends, match status, kickoff times and prediction entry points on ScoreMatrix.",
       "keywords": "football matches, match schedule, live football matches, upcoming matches, football fixtures, soccer fixtures, match center, ScoreMatrix matches"
+    },
+    "news": {
+      "title": "News & Analysis | ScoreMatrix Football News",
+      "description": "Read the latest football news, match reports, prediction tips, and platform updates on ScoreMatrix.",
+      "keywords": "football news, match reports, prediction tips, football analysis, soccer news, ScoreMatrix news"
     }
   },
   "common": {

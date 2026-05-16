@@ -3,6 +3,7 @@ import type { NewsArticle } from '@/types/news';
 export const newsArticles: NewsArticle[] = [
   {
     id: 'news-001',
+    slug: "london-united-extend-unbeaten-run-to-8-matches",
     title: 'London United Extend Unbeaten Run to 8 Matches',
     summary: 'London United continued their impressive form with a dominant display, extending their unbeaten run in the Premier League Championship.',
     content: 'London United continued their remarkable run of form with a convincing victory at the United Stadium. The team has now gone 8 matches without defeat and sits comfortably at the top of the Premier League Championship table.\n\nManager Thomas Wright praised his squad\'s depth after the match: "The lads have been phenomenal. Every player knows their role, and the results speak for themselves." United\'s defense has been particularly impressive, conceding just 3 goals in their last 6 outings.\n\nWith the season entering its crucial phase, London United look well-positioned to challenge for the title. Their next test comes against Mersey City in what promises to be a thrilling encounter.',
@@ -15,6 +16,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-002',
+    slug: "scorematrix-major-update-ai-insights-2-0-launches",
     title: 'ScoreMatrix Major Update: AI Insights 2.0 Launches',
     summary: 'The latest ScoreMatrix update brings improved AI-powered prediction insights, new league coverage, and enhanced social features.',
     content: 'ScoreMatrix has released its most significant update of the year with AI Insights 2.0. The new system leverages advanced machine learning models trained on over 100,000 historical matches to provide even more accurate predictions.\n\nKey features of the update include improved confidence scoring, real-time injury impact assessment, and a new community sentiment tracker that aggregates fan predictions across the platform. "We\'ve seen a 15% improvement in prediction accuracy during beta testing," said CTO Sarah Chen.\n\nThe update also adds coverage for three new leagues: the V.League 1 Vietnam, Thai League 1, and CSL Super League, bringing the total to 12 supported leagues.',
@@ -27,6 +29,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-003',
+    slug: "der-klassiker-preview-dortmund-09-vs-fc-bayern-stadt",
     title: 'Der Klassiker Preview: Dortmund 09 vs FC Bayern Stadt',
     summary: 'A comprehensive tactical analysis of the upcoming Der Klassiker between Dortmund 09 and FC Bayern Stadt.',
     content: 'The biggest match in German football is upon us as Dortmund 09 host FC Bayern Stadt at Signal Iduna Park 09. This Der Klassiker carries extra weight with both teams separated by just 3 points at the top of the Bundesliga Deutschland.\n\nBayern Stadt enter the match in scintillating form, having scored 18 goals in their last 5 league matches. Their high-pressing system under coach Markus Schmidt has been devastating, with Jamal Musiala II pulling the strings in midfield. However, Dortmund\'s counter-attacking prowess, led by the pace of Karim Adeyemi II, could exploit the spaces Bayern leave behind.\n\nKey Battle: The midfield duel between Joshua Kimmich Jr and Marco Reus Jr (fitness permitting) will likely determine the outcome. Both players are the creative hubs for their respective teams.',
@@ -39,6 +42,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-004',
+    slug: "5-tips-for-better-football-predictions-this-weekend",
     title: '5 Tips for Better Football Predictions This Weekend',
     summary: 'Boost your prediction accuracy with these expert tips covering form analysis, injury monitoring, and more.',
     content: 'Want to climb the leaderboard this weekend? Here are 5 proven tips to improve your prediction accuracy.\n\n**1. Check the injury report first.** A team missing their top scorer or key defender can dramatically shift the balance. Use ScoreMatrix\'s AI Insights to see the quantified injury impact.\n\n**2. Look beyond the table.** League position doesn\'t tell the full story. A mid-table team on a 5-game winning streak might be a better bet than a top team in poor form.\n\n**3. Consider the motivation factor.** Teams fighting relegation often outperform in the final weeks of the season, while mid-table teams with nothing to play for can underperform.\n\n**4. Monitor travel and schedule.** Teams playing their third game in 7 days, especially with long-distance travel, historically underperform by about 15%.\n\n**5. Trust but verify AI insights.** ScoreMatrix\'s AI is powerful, but combining it with your own football knowledge yields the best results.',
@@ -51,6 +55,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-005',
+    slug: "meet-the-admin-behind-the-scenes-at-scorematrix",
     title: 'Meet the Admin: Behind the Scenes at ScoreMatrix',
     summary: 'An exclusive interview with the ScoreMatrix admin team about building the ultimate football prediction platform.',
     content: 'In this exclusive feature, we sit down with the ScoreMatrix admin team to discuss the platform\'s journey from a weekend project to one of the most popular football prediction apps in Asia.\n\n"What started as a simple idea - helping friends compete on match predictions - has grown into something much bigger," says lead admin and founder. The platform now serves over 100,000 active users across 12 leagues worldwide.\n\nThe team shared insights into their development process, including how they handle the massive data processing required for live match updates. "When you have 15 live matches with thousands of users checking scores simultaneously, the infrastructure needs to be robust."\n\nFuture plans include expanding to South American leagues and introducing a fantasy football mode in late 2025.',
@@ -63,6 +68,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-006',
+    slug: "real-catalonia",
     title: 'Real Catalonia\'s Title Charge: Can Anyone Stop Them?',
     summary: 'Real Catalonia are running away with La Liga Iberia. We analyze what makes them so dominant this season.',
     content: 'Real Catalonia have been nothing short of spectacular this season, building a commanding lead at the top of La Liga Iberia. With 18 wins from 22 matches, they are on pace to break the league\'s points record.\n\nThe key to their success has been a devastating front three of Robert Lewandowski Jr, Lamine Yamal II, and Ferran Torres II, who have combined for 45 league goals. The midfield trio of Pedri Gonzalez II, Gavi Fernandez II, and Frenkie de Jong II provides both creativity and control.\n\nDefensively, the partnership of Jules Kounde II and Ronald Araujo II has been nearly impenetrable at Camp Catalonia, where they have conceded just 4 goals all season. "This is the most complete Catalonia team I\'ve seen," said former player and pundit Carlos Puyol.',
@@ -75,6 +81,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-007',
+    slug: "breaking-major-injury-blow-for-mersey-city",
     title: 'Breaking: Major Injury Blow for Mersey City',
     summary: 'Mersey City will be without star midfielder Jordan Henderson II for up to 6 weeks due to a hamstring injury.',
     content: 'Mersey City have been dealt a significant blow with the news that Jordan Henderson II will miss up to 6 weeks with a Grade 2 hamstring tear. The injury occurred during training on Wednesday and was confirmed by scans on Thursday morning.\n\nHenderson has been instrumental in Mersey City\'s strong start to the season, contributing 5 goals and 8 assists from midfield. His absence leaves a significant gap in both creativity and leadership on the pitch.\n\nManager David Cooper faces a selection dilemma ahead of the crucial match against London United. "Jordan is irreplaceable in terms of what he brings, but we have a squad built for these situations. Someone else will have to step up."\n\nThis injury significantly impacts Mersey City\'s odds for the upcoming fixtures, with ScoreMatrix\'s AI adjusting their win probability downward by approximately 12%.',
@@ -87,6 +94,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-008',
+    slug: "how-scorematrix-ai-predicted-8-of-10-upsets-last-weekend",
     title: 'How ScoreMatrix AI Predicted 8 of 10 Upsets Last Weekend',
     summary: 'A deep dive into the AI algorithms that correctly flagged 8 out of 10 upset results across leagues last weekend.',
     content: 'ScoreMatrix\'s AI Insights system had a remarkable weekend, correctly identifying 8 of the 10 major upsets across the 12 covered leagues. The most notable calls included predicting Bilbao Norte\'s surprise win over Atletico Madrid B and East London Rovers\' away victory at North London FC.\n\nThe system uses a proprietary algorithm that weights over 50 different factors including recent form, head-to-head records, xG (expected goals) data, player availability, travel distance, and even weather conditions.\n\n"Our upset detection model specifically looks for discrepancies between public perception and underlying data signals," explains data scientist Dr. Wei Zhang. "When the betting markets heavily favor one side but our performance metrics suggest otherwise, that\'s when we flag an upset alert."\n\nThe model has been trained on 5 years of match data across 50 leagues and continues to improve with each round of fixtures.',
@@ -99,6 +107,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-009',
+    slug: "k-league-roundup-fc-seoul-united-set-the-pace",
     title: 'K League Roundup: FC Seoul United Set the Pace',
     summary: 'FC Seoul United lead the K League 1 after a dominant first half of the season. Full roundup of all the action.',
     content: 'FC Seoul United have established themselves as the team to beat in this season\'s K League 1, opening up a 5-point gap at the top after 17 matchdays. Their latest victory, a 2-0 win over Busan Warriors, showcased their defensive solidity and clinical finishing.\n\nManager Park Ji-sung has built a well-balanced squad that excels in possession while remaining dangerous on the counter-attack. Na Sang-ho II leads the scoring charts with 11 goals, while goalkeeper Kim Seung-gyu II has kept 8 clean sheets.\n\nThe chasing pack includes Ulsan Storm and Jeonbuk Tigers, both of whom have been inconsistent but remain within striking distance. The title race looks set to go down to the wire with 12 matches remaining.\n\nAt the other end of the table, Pohang Steelers B are in danger of relegation, sitting bottom with just 2 wins all season. Their defensive frailties have been exposed repeatedly, conceding a league-worst 34 goals.',
@@ -111,6 +120,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-010',
+    slug: "the-rise-of-asian-football-why-scorematrix-expanded-coverag",
     title: 'The Rise of Asian Football: Why ScoreMatrix Expanded Coverage',
     summary: 'ScoreMatrix\'s expansion into Asian leagues reflects the growing global interest in Asian football.',
     content: 'ScoreMatrix\'s recent expansion to cover 6 Asian leagues marks a significant shift in the platform\'s strategy. The decision reflects the explosive growth of football fandom across the continent, particularly in Japan, South Korea, Thailand, Vietnam, and China.\n\n"When we analyzed our user data, the demand for Asian league coverage was overwhelming," says product manager Rina Tanaka. "Over 40% of our users were manually requesting matches from Asian leagues. Building official coverage was the natural next step."\n\nThe J1 League and K League 1 have been particular areas of growth, driven by the increasing global profile of players moving from these leagues to Europe. The platform now offers full match data, AI insights, and predictions for all 6 Asian leagues.\n\nUser engagement metrics show that Asian league predictions have the highest accuracy rates on the platform, with users demonstrating deep knowledge of their domestic competitions.',
@@ -123,6 +133,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-011',
+    slug: "psg-b-maintain-perfect-home-record-with-5-0-rout",
     title: 'PSG B Maintain Perfect Home Record with 5-0 Rout',
     summary: 'Paris Saint-Germain B delivered a stunning 5-0 victory over LOSC Lille B to maintain their 100% home record.',
     content: 'Paris Saint-Germain B produced a footballing masterclass at Parc des Princes B, demolishing LOSC Lille B 5-0 in a performance that underlined their domestic dominance. The victory maintains their perfect home record of 10 wins from 10 matches.\n\nThe scoring was opened in just the 4th minute, setting the tone for a one-sided contest. By halftime, the score was already 4-0 as PSG B\'s attacking quartet ran riot. Lille B, missing key midfielder Nabil Bentaleb II through suspension, had no answer to the relentless pressure.\n\n"We played at our level today, and when we do that, we are very difficult to stop," said PSG B coach Laurent Blanc Jr. The result moves PSG B 12 points clear at the top of Ligue 1 Francaise, with the title looking increasingly like a formality.',
@@ -135,6 +146,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-012',
+    slug: "prediction-psychology-why-we-get-it-wrong-and-how-to-improv",
     title: 'Prediction Psychology: Why We Get It Wrong and How to Improve',
     summary: 'Understanding the cognitive biases that affect football predictions can help you make better decisions.',
     content: 'Even the most experienced football fans fall prey to cognitive biases when making predictions. Understanding these biases is the first step to becoming a better predictor.\n\n**Recency Bias**: We overvalue the most recent result. A team winning 5-0 last week does not guarantee a win this week, yet predictors consistently overweight the last match.\n\n**Home Team Bias**: Across all 12 leagues on ScoreMatrix, users overpredict home wins by approximately 8% compared to actual outcomes. Home advantage is real but often overstated.\n\n**Favorite Team Bias**: Users are 23% more likely to predict a win for the team they support, regardless of objective factors. Recognizing this bias is crucial.\n\n**The Draw Blind Spot**: The draw is the most under-predicted result. In the top 5 leagues, draws occur in approximately 25% of matches, yet users predict draws only 18% of the time.',
@@ -147,6 +159,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-013',
+    slug: "transfer-rumors-summer-window-heating-up",
     title: 'Transfer Rumors: Summer Window Heating Up',
     summary: 'The latest transfer rumors involving top ScoreMatrix-covered teams as the summer window approaches.',
     content: 'With the summer transfer window just months away, rumors are already swirling around some of the biggest names in the ScoreMatrix universe.\n\n**Rafael Leao II to Premier League?** The AC Milano Nord winger has been linked with a blockbuster move to London United, with reports suggesting a fee in excess of EUR 80 million. Leao has contributed 15 goals and 10 assists this season.\n\n**Kim Min-Jae II attracting Bundesliga interest.** Napoli Centro\'s commanding center-back is reportedly a top target for FC Bayern Stadt as they look to strengthen their backline.\n\n**Youth Movement at Ajax Amsterdam B.** Several European giants are circling Ajax\'s young talents, with midfielder Mohammed Kudus II and striker Brian Brobbey II both attracting attention from Ligue 1 and Premier League Championship clubs.',
@@ -159,6 +172,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-014',
+    slug: "tactical-breakdown-why-3-5-2-is-making-a-comeback",
     title: 'Tactical Breakdown: Why 3-5-2 is Making a Comeback',
     summary: 'The 3-5-2 formation is experiencing a renaissance across multiple leagues. Here is why it is working.',
     content: 'Football tactics are cyclical, and the 3-5-2 formation is currently enjoying a significant revival across ScoreMatrix-tracked leagues. At least 8 teams in our top 5 leagues have adopted variations of this system with impressive results.\n\nThe formation\'s strength lies in its flexibility. With three center-backs, teams can build play from the back with numerical superiority. The wing-backs provide width in attack while dropping to form a back five in defense. The midfield trio can dominate central areas against 4-4-2 and 4-2-3-1 setups.\n\nInter Milano B have been the most successful proponents, using the system to win 14 of their last 18 matches. Coach Simone Inzaghi Jr explains: "The 3-5-2 gives us control of the midfield while maintaining defensive solidity. Against teams that press high, we can go direct to two strikers."',
@@ -171,6 +185,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-015',
+    slug: "community-spotlight-top-predictor-shares-his-secrets",
     title: 'Community Spotlight: Top Predictor Shares His Secrets',
     summary: 'We interview the current seasonal leaderboard leader about his prediction strategy and philosophy.',
     content: 'Sitting at the top of the ScoreMatrix seasonal leaderboard with an impressive 78% accuracy rate, user "admin_master" has become something of a legend in the community. We caught up with him to learn his secrets.\n\n"I spend about 30 minutes each morning reviewing the day\'s fixtures," he explains. "The key is being systematic. I have a checklist: check injuries, look at head-to-head records, review recent form, and then consult the AI insights. But I always make the final call myself."\n\nHis most profitable strategy? "Fading the public. When more than 80% of users are predicting one outcome, history shows the underdog covers more often than you would think. I have made a lot of points betting against the consensus in those situations."\n\nFor beginners, his advice is simple: "Start by focusing on one league. Learn the teams, the styles, the managers. Specialization beats generalization in this game."',
@@ -183,6 +198,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-016',
+    slug: "serie-a-italia-title-race-wide-open-after-shock-results",
     title: 'Serie A Italia: Title Race Wide Open After Shock Results',
     summary: 'A weekend of surprises has left the Serie A Italia title race tighter than ever with four teams in contention.',
     content: 'The Serie A Italia title race has been blown wide open after a dramatic weekend of results. AC Milano Nord\'s shock defeat at Napoli Centro, combined with AS Roma Sud\'s emphatic 4-2 win over Napoli, has compressed the top of the table.\n\nJust 6 points now separate the top 4 teams with 15 matches remaining. AC Milano Nord still lead, but their advantage has been cut to a single point over Inter Milano B. Juventus Torino and AS Roma Sud are both within striking distance.\n\n"We always knew the title race would be tight," said AC Milano Nord manager Stefano Pioli Jr. "The league is too competitive for anyone to run away with it. We need to respond immediately."\n\nThe run-in promises to be fascinating, with two derbies and several six-pointers scheduled before the season concludes. ScoreMatrix\'s AI currently gives AC Milano Nord a 35% chance of retaining their title, with Inter at 30%, Juventus at 22%, and Roma at 13%.',
@@ -195,6 +211,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-017',
+    slug: "new-feature-custom-prediction-notes-now-available",
     title: 'New Feature: Custom Prediction Notes Now Available',
     summary: 'ScoreMatrix now lets you add private notes to your predictions to track your reasoning and improve over time.',
     content: 'ScoreMatrix has rolled out a highly requested feature: custom prediction notes. The new feature allows users to attach private notes to any prediction, documenting their reasoning, key factors considered, and confidence level.\n\n"Prediction Notes is about helping our users become better predictors over time," explains product lead David Kim. "By documenting why you made a particular prediction, you can review your decision-making process later and identify patterns in your success and failures."\n\nNotes are completely private by default, though users can optionally share them with their private league members. The feature also integrates with the existing AI Insights system, suggesting factors to consider based on the specific match.\n\nEarly feedback has been overwhelmingly positive, with over 15,000 notes created in the first 48 hours of the feature going live. A future update will add note analytics to help users understand their prediction patterns.',
@@ -207,6 +224,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-018',
+    slug: "v-league-growth-vietnamese-football-on-the-rise",
     title: 'V.League Growth: Vietnamese Football on the Rise',
     summary: 'The V.League 1 Vietnam is experiencing unprecedented growth in quality and viewership.',
     content: 'Vietnamese football is experiencing a golden era, with the V.League 1 attracting record crowds and producing talent that is increasingly drawing interest from abroad. Hanoi FC and Ho Chi Minh City FC have been the standard-bearers, investing heavily in youth development and foreign talent.\n\nThe national team\'s success in regional competitions has fueled domestic interest, with average attendance up 35% compared to last season. Foreign players like Rafaelson II (Hanoi FC) have brought international quality to the league, while homegrown stars like Nguyen Quang Hai II continue to shine.\n\nScoreMatrix\'s addition of V.League coverage has been met with tremendous enthusiasm from Vietnamese users, who now represent one of the fastest-growing segments on the platform. "The passion for football in Vietnam is incredible," says ScoreMatrix\'s Asia-Pacific head. "We\'re seeing engagement rates that rival our European leagues."',
@@ -219,6 +237,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-019',
+    slug: "matchday-24-preview-key-fixtures-across-all-leagues",
     title: 'Matchday 24 Preview: Key Fixtures Across All Leagues',
     summary: 'A comprehensive preview of the biggest matches coming up across all 12 ScoreMatrix leagues.',
     content: 'Matchday 24 promises to be one of the most exciting rounds of the season, with crucial fixtures across all 12 ScoreMatrix-covered leagues.\n\n**Premier League Championship**: London United host Mersey City in the standout fixture. United are unbeaten in 8, while Mersey City must cope without the injured Jordan Henderson II.\n\n**La Liga Iberia**: Real Catalonia travel to Bilbao Norte looking to extend their lead at the top. Catalonia have won the last three meetings between these sides by an aggregate score of 10-1.\n\n**Bundesliga Deutschland**: The Der Klassiker between Dortmund 09 and FC Bayern Stadt headlines the round. This fixture averages 3.5 goals per game over the last 5 meetings.\n\n**Serie A Italia**: The Derby d\'Italia sees Juventus Torino host Inter Milano B. A draw has occurred in 2 of the last 4 meetings.\n\n**Across Asia**: FC Seoul United can extend their K League lead, while Tokyo Samurai face a tricky away trip in the J1 League.',
@@ -231,6 +250,7 @@ export const newsArticles: NewsArticle[] = [
   },
   {
     id: 'news-020',
+    slug: "scorematrix-community-hits-100-000-active-users",
     title: 'ScoreMatrix Community Hits 100,000 Active Users',
     summary: 'The ScoreMatrix platform celebrates a major milestone as active users surpass 100,000 for the first time.',
     content: 'ScoreMatrix has reached a significant milestone, surpassing 100,000 active users for the first time in the platform\'s history. The achievement comes just 18 months after launch and reflects the growing global appetite for social football prediction experiences.\n\n"We built ScoreMatrix because we believed football fans deserved a better way to compete with friends on predictions," said the founder in a statement. "Reaching 100,000 active users validates that vision, but it\'s just the beginning."\n\nThe user base is notably diverse, with significant communities across Europe, Asia, and increasingly the Americas. The top 5 countries by user count are England, Japan, Thailand, South Korea, and Vietnam.\n\nTo celebrate the milestone, ScoreMatrix is launching a special "100K Challenge" event with bonus points, exclusive achievements, and a limited-edition avatar badge for all users who participate. The event runs for the next two weeks.',
