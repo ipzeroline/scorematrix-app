@@ -56,6 +56,10 @@ function RankBadge({ rank }: { rank: number }) {
   );
 }
 
+function leaderboardRowKey(entry: LeaderboardEntry) {
+  return `${entry.rank}-${entry.userId}`;
+}
+
 export default function LeaderboardPage() {
   const { locale } = useParams<{ locale: string }>();
   const copy = getLeaderboardPageCopy(locale);
@@ -235,7 +239,7 @@ export default function LeaderboardPage() {
             <div className="space-y-3">
               {topThree.map((entry) => (
                 <Card
-                  key={entry.userId}
+                  key={leaderboardRowKey(entry)}
                   neon={entry.rank === 1 ? "gold" : "cyan"}
                   className="p-4"
                 >
@@ -342,7 +346,7 @@ export default function LeaderboardPage() {
 
                         return (
                           <tr
-                            key={entry.userId}
+                            key={leaderboardRowKey(entry)}
                             className={`border-b border-gray-800/50 transition-colors last:border-0 ${
                               isCurrentUser
                                 ? "bg-cyan-500/5"

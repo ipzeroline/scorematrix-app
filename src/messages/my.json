@@ -62,7 +62,10 @@
     "settings": "ဆက်တင်များ",
     "admin": "စီမံခန့်ခွဲသူ",
     "rankShort": "Rank",
-    "affiliate": "သူငယ်ချင်းဖိတ်"
+    "affiliate": "သူငယ်ချင်းဖိတ်",
+    "events": "အစီအစဉ်များ",
+    "stats": "စာရင်းအင်း",
+    "notifications": "အသိပေးချက်များ"
   },
   "auth": {
     "login": "ဝင်မည်",
@@ -908,7 +911,7 @@
   },
   "stats": {
     "title": "သင့်စာရင်းအင်း",
-    "subtitle": "ခန့်မှန်းမှုစွမ်းဆောင်ရည်ခြေရာခံ",
+    "subtitle": "လိဂ်များနှင့် အချိန်ကာလအလိုက် သင့်ခန့်မှန်းမှုစွမ်းဆောင်ရည်ကို ခြေရာခံပါ",
     "overallAccuracy": "စုစုပေါင်းတိကျမှု",
     "totalPredictions": "စုစုပေါင်းခန့်မှန်းမှု",
     "bestStreak": "အကောင်းဆုံးအစဉ်လိုက်",
@@ -916,7 +919,24 @@
     "leagueBreakdown": "လိဂ်အလိုက်တိကျမှု",
     "dailyForm": "ရက် 30 စွမ်းဆောင်ရည်",
     "proStatsTeaser": "Pro စာရင်းအင်း",
-    "unlockPro": "Pro သော့ဖွင့်မည်"
+    "proStatsDescription": "Pro စာရင်းအင်းဖြင့် xG ခွဲခြမ်းစိတ်ဖြာမှု၊ ထိပ်တိုက်တွေ့ဆုံမှု အနက်ရှိုင်းလေ့လာချက်များနှင့် အဆင့်မြင့်ဖောင်မက်ထရစ်များကို ဖွင့်ပါ။",
+    "accuracyMetric": "တိကျမှု %",
+    "pointsMetric": "အမှတ်",
+    "unlockPro": "Pro သော့ဖွင့်မည်",
+    "leagues": {
+      "PL": "ပရီးမီးယားလိဂ်",
+      "PD": "လာ လီဂါ",
+      "BL1": "ဘွန်ဒက်စ်လီဂါ",
+      "SA": "စီးရီး အေ",
+      "FL1": "လီဂူး 1",
+      "DED": "အဲရဒီဗီစီ",
+      "J1": "J1 League",
+      "K1": "K League 1",
+      "T1": "Thai League 1",
+      "V1": "V.League 1",
+      "CSL": "Chinese Super League",
+      "PPL": "Primeira Liga"
+    }
   },
   "notifications": {
     "title": "အကြောင်းကြားချက်များ",
@@ -926,6 +946,117 @@
   },
   "events": {
     "title": "အထူးပွဲစဉ်များ",
-    "subtitle": "သီးသန့်ဆုများအတွက် အချိန်ကန့်သတ်ပြိုင်ပွဲများတွင် ယှဉ်ပြိုင်ပါ"
+    "subtitle": "သီးသန့်ဆုများအတွက် အချိန်ကန့်သတ်ပြိုင်ပွဲများတွင် ယှဉ်ပြိုင်ပါ",
+    "liveNow": "ယခု တိုက်ရိုက်",
+    "filters": {
+      "all": "အားလုံး",
+      "upcoming": "လာမည့်",
+      "active": "လက်ရှိ",
+      "ended": "ပြီးဆုံး"
+    },
+    "empty": "{filter} ပွဲစဉ် မရှိပါ",
+    "statuses": {
+      "upcoming": "လာမည့်",
+      "active": "လက်ရှိ",
+      "ended": "ပြီးဆုံး"
+    },
+    "tournamentTypes": {
+      "worldCup": "World Cup",
+      "ucl": "Champions League",
+      "afc": "AFC",
+      "custom": "အထူး"
+    },
+    "startsInDays": "{days} ရက်အတွင်း စတင်မည်",
+    "startingSoon": "မကြာမီ စတင်မည်",
+    "inProgress": "လုပ်ဆောင်နေသည်",
+    "ended": "ပြီးဆုံး",
+    "eventIsLive": "ပွဲစဉ် တိုက်ရိုက်ဖြစ်နေသည်",
+    "participantCount": "ပါဝင်သူ {count} ဦး",
+    "rewardTierCount": "ဆုအဆင့် {count} ခု",
+    "freeEntry": "အခမဲ့ ဝင်ရောက်ရန်",
+    "free": "အခမဲ့",
+    "creditsAmount": "{amount} ခရက်ဒစ်",
+    "pointsAmount": "{amount} အမှတ်",
+    "viewEvent": "ပွဲစဉ်ကြည့်ရန် ->",
+    "details": "အသေးစိတ် ->",
+    "rewardTiers": "ဆုအဆင့်များ",
+    "rules": "စည်းမျဉ်းများ",
+    "exclusiveBadges": "အထူး badge များ",
+    "youAreIn": "သင် ဝင်ပြီးပါပြီ!",
+    "enterEvent": "ပွဲစဉ်ဝင်ရန်",
+    "entryFee": "ဝင်ကြေး",
+    "yourBalance": "သင့်လက်ကျန်",
+    "joinFree": "အခမဲ့ ဝင်ရန်",
+    "insufficientCredits": "ခရက်ဒစ်မလုံလောက်ပါ",
+    "enterNow": "ယခု ဝင်ရန်",
+    "buyCreditsToEnter": "ဤပွဲစဉ်ဝင်ရန် ခရက်ဒစ်ဝယ်ပါ",
+    "confirmEntry": "ဝင်ရောက်မှု အတည်ပြုရန်",
+    "joinFreeQuestion": "ဤပွဲစဉ်ကို အခမဲ့ ဝင်မလား?",
+    "enterWithCreditsQuestion": "ဤပွဲစဉ်ကို {amount} ခရက်ဒစ်ဖြင့် ဝင်မလား?",
+    "cancel": "မလုပ်တော့ပါ",
+    "confirm": "အတည်ပြု",
+    "eventEntered": "ပွဲစဉ်ဝင်ပြီးပါပြီ!",
+    "registeredForEvent": "သင်သည် {event} အတွက် စာရင်းသွင်းပြီးပါပြီ",
+    "items": {
+      "wc2026-predictor": {
+        "name": "World Cup 2026 ခန့်မှန်းပြိုင်ပွဲ",
+        "description": "World Cup 2026 ပွဲတိုင်းကို ခန့်မှန်းပြီး သီးသန့်ဆုများအတွက် ယှဉ်ပြိုင်ပါ။",
+        "rules": [
+          "World Cup 2026 ပွဲတိုင်း၏ စကော်ကို ခန့်မှန်းပါ",
+          "စကော်အတိအကျနှင့် ရလဒ်မှန်အတွက် အမှတ်ပေးမည်",
+          "နောက်ကောက်အဆင့်ခန့်မှန်းမှုအတွက် ဘောနပ်စ်အမှတ်ရှိသည်",
+          "ပွဲစမတိုင်မီ ခန့်မှန်းရမည်"
+        ]
+      },
+      "ucl-2026-knockout": {
+        "name": "UCL 2026 နောက်ကောက် Challenge",
+        "description": "Champions League နောက်ကောက်အဆင့် ရောက်ရှိပါပြီ။ R16 မှ ဗိုလ်လုပွဲအထိ ခန့်မှန်းပါ။",
+        "rules": [
+          "UCL နောက်ကောက်ပွဲအားလုံး၏ စကော်ကို ခန့်မှန်းပါ",
+          "ကွာတားဖိုင်နယ်မှစ၍ အမှတ်နှစ်ဆ",
+          "ချန်ပီယံကို မှန်ကန်စွာ ခန့်မှန်းပါက ဘောနပ်စ်ရမည်"
+        ]
+      },
+      "afc-asian-cup-2027-qualifiers": {
+        "name": "AFC Asian Cup 2027 ခြေစစ်ပွဲ",
+        "description": "AFC Asian Cup ခြေစစ်ပွဲများကို ခန့်မှန်းပြီး သင့်ဒေသကို အားပေးပါ!",
+        "rules": [
+          "AFC ခြေစစ်ပွဲအားလုံး၏ စကော်ကို ခန့်မှန်းပါ",
+          "အရှေ့တောင်အာရှပွဲခန့်မှန်းမှုအတွက် ဒေသဆိုင်ရာဘောနပ်စ်",
+          "အသုံးပြုသူအားလုံး အခမဲ့ဝင်နိုင်သည်"
+        ]
+      },
+      "summer-leagues-2026": {
+        "name": "နွေရာသီလိဂ် Challenge",
+        "description": "ရာသီနားကာလတွင် MLS, J1, K League စသည်တို့ဖြင့် ဘောလုံးစိတ်ဓာတ်ကို ဆက်လက်ထိန်းသိမ်းပါ။",
+        "rules": [
+          "MLS, J1 League, K League 1 နှင့် Allsvenskan ပွဲများကို ခန့်မှန်းပါ",
+          "နွေရာသီတစ်လျှောက် အမှတ်စုဆောင်းမည်",
+          "လိဂ် 4 ခုလုံးတွင် ခန့်မှန်းသူများအတွက် အထူး badge များ"
+        ]
+      }
+    },
+    "badges": {
+      "wc2026-champion": {
+        "name": "World Cup Oracle",
+        "description": "World Cup 2026 ခန့်မှန်းပြိုင်ပွဲတွင် အနိုင်ရခဲ့သည်"
+      },
+      "wc2026-participant": {
+        "name": "World Cup 2026 Player",
+        "description": "World Cup 2026 ခန့်မှန်းမှုတွင် ပါဝင်ခဲ့သည်"
+      },
+      "ucl2026-champion": {
+        "name": "European Oracle",
+        "description": "UCL 2026 နောက်ကောက် challenge တွင် အနိုင်ရခဲ့သည်"
+      },
+      "afc2027-qualifier-champ": {
+        "name": "အာရှဘောလုံးကျွမ်းကျင်သူ",
+        "description": "AFC Asian Cup ခြေစစ်ပွဲခန့်မှန်းမှုတွင် အနိုင်ရခဲ့သည်"
+      },
+      "summer2026-champ": {
+        "name": "နွေရာသီဘောလုံးဘုရင်",
+        "description": "Summer Leagues 2026 challenge တွင် အနိုင်ရခဲ့သည်"
+      }
+    }
   }
 }

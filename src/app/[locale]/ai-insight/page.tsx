@@ -8,13 +8,6 @@ import {
   type GetFixtureDetailsResult,
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
-import { aiInsights } from "@/data/ai-insights";
-import { leagues } from "@/data/leagues";
-import { lineups as mockLineups } from "@/data/lineups";
-import { matches } from "@/data/matches";
-import { matchEvents } from "@/data/match-events";
-import { matchStats } from "@/data/match-stats";
-import { teams } from "@/data/teams";
 import { MatchStatus } from "@/types/common";
 import { AIInsightListClient, type AIInsightListItem } from "./AIInsightListClient";
 
@@ -29,14 +22,15 @@ export default async function AIInsightPage({ params }: Props) {
   const apiInsights = await Promise.all(
     fixtures.map((fixture) => buildInsightItem(fixture, fetchedAt))
   );
-  const localInsights = buildLocalInsightItems();
-  const insights = sortByDataCompleteness([...apiInsights, ...localInsights]).slice(0, 24);
+  const insights = sortByDataCompleteness(apiInsights)
+    .filter(isPlayableInsight)
+    .slice(0, 24);
 
   return (
     <AIInsightListClient
       locale={locale}
       insights={insights}
-      source={fixtures.length > 0 ? "mixed" : localInsights.length > 0 ? "sample" : "empty"}
+      source={fixtures.length > 0 ? "api" : "empty"}
     />
   );
 }
@@ -63,8 +57,14 @@ async function loadApiFixtures() {
 function isAnalyzableFixture(fixture: ApiFootballFixture) {
   return (
     fixture.status === MatchStatus.LIVE ||
-    fixture.status === MatchStatus.UPCOMING ||
-    fixture.status === MatchStatus.FINISHED
+    fixture.status === MatchStatus.UPCOMING
+  );
+}
+
+function isPlayableInsight(insight: AIInsightListItem) {
+  return (
+    insight.status === MatchStatus.LIVE ||
+    insight.status === MatchStatus.UPCOMING
   );
 }
 
@@ -148,79 +148,6 @@ async function buildInsightItem(fixture: ApiFootballFixture, fetchedAt: string):
     upsetAlert: probabilities ? Math.abs(probabilities.home - probabilities.away) <= 8 : false,
     generatedAt: fetchedAt,
   };
-}
-
-function buildLocalInsightItems(): AIInsightListItem[] {
-  return aiInsights
-    .map((insight): AIInsightListItem | null => {
-      const match = matches.find((item) => item.id === insight.matchId);
-      if (!match) return null;
-
-      const homeTeam = teams.find((team) => team.id === match.homeTeamId);
-      const awayTeam = teams.find((team) => team.id === match.awayTeamId);
-      const league = leagues.find((item) => item.id === match.leagueId);
-      if (!homeTeam || !awayTeam || !league) return null;
-
-      const lineup = mockLineups.find((item) => item.matchId === match.id);
-      const stats = matchStats.find((item) => item.matchId === match.id);
-      const events = matchEvents.filter((event) => event.matchId === match.id);
-      const playerCount = lineup
-        ? lineup.homeStarting.length +
-          lineup.awayStarting.length +
-          lineup.homeSubs.length +
-          lineup.awaySubs.length
-        : 0;
-
-      return {
-        id: `sample-${insight.id}`,
-        dataSource: "sample",
-        matchId: insight.matchId,
-        status: match.status,
-        league: {
-          id: league.id,
-          name: league.name,
-          logo: null,
-          round: match.round,
-        },
-        homeTeam: {
-          id: homeTeam.id,
-          name: homeTeam.name,
-          shortName: homeTeam.shortName,
-          logo: null,
-        },
-        awayTeam: {
-          id: awayTeam.id,
-          name: awayTeam.name,
-          shortName: awayTeam.shortName,
-          logo: null,
-        },
-        score: {
-          home: match.homeScore,
-          away: match.awayScore,
-        },
-        kickoffTime: match.kickoffTime,
-        confidenceScore: insight.confidenceScore,
-        heatMeter: insight.heatMeter,
-        homeWinProbability: insight.homeWinProbability,
-        drawProbability: insight.drawProbability,
-        awayWinProbability: insight.awayWinProbability,
-        formComparison: {
-          homeLastFive: insight.formComparison.homeLastFive,
-          awayLastFive: insight.formComparison.awayLastFive,
-        },
-        keyFactors: insight.keyFactors,
-        apiSummary: {
-          events: events.length,
-          statistics: stats ? Object.keys(stats).length - 1 : 0,
-          lineups: lineup ? 2 : 0,
-          playerStats: playerCount,
-          h2h: insight.headToHead.length,
-        },
-        upsetAlert: insight.upsetAlert,
-        generatedAt: insight.generatedAt,
-      };
-    })
-    .filter((item): item is AIInsightListItem => item !== null);
 }
 
 function sortByDataCompleteness(insights: AIInsightListItem[]) {

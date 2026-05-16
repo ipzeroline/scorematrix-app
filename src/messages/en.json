@@ -912,7 +912,7 @@
   },
   "stats": {
     "title": "Your Statistics",
-    "subtitle": "Track your prediction performance",
+    "subtitle": "Track your prediction performance across leagues and time.",
     "overallAccuracy": "Overall Accuracy",
     "totalPredictions": "Total Predictions",
     "bestStreak": "Best Streak",
@@ -920,7 +920,24 @@
     "leagueBreakdown": "League Accuracy",
     "dailyForm": "30-Day Form",
     "proStatsTeaser": "Pro Statistics",
-    "unlockPro": "Unlock Pro"
+    "proStatsDescription": "Unlock xG analysis, head-to-head deep dives, and advanced form metrics with Pro stats.",
+    "accuracyMetric": "Accuracy %",
+    "pointsMetric": "Points",
+    "unlockPro": "Unlock Pro",
+    "leagues": {
+      "PL": "Premier League",
+      "PD": "La Liga",
+      "BL1": "Bundesliga",
+      "SA": "Serie A",
+      "FL1": "Ligue 1",
+      "DED": "Eredivisie",
+      "J1": "J1 League",
+      "K1": "K League 1",
+      "T1": "Thai League 1",
+      "V1": "V.League 1",
+      "CSL": "Chinese Super League",
+      "PPL": "Primeira Liga"
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -930,6 +947,117 @@
   },
   "events": {
     "title": "Special Events",
-    "subtitle": "Compete in limited-time tournaments for exclusive rewards"
+    "subtitle": "Compete in limited-time tournaments for exclusive rewards",
+    "liveNow": "Live Now",
+    "filters": {
+      "all": "All",
+      "upcoming": "Upcoming",
+      "active": "Active",
+      "ended": "Ended"
+    },
+    "empty": "No {filter} events",
+    "statuses": {
+      "upcoming": "UPCOMING",
+      "active": "ACTIVE",
+      "ended": "ENDED"
+    },
+    "tournamentTypes": {
+      "worldCup": "World Cup",
+      "ucl": "Champions League",
+      "afc": "AFC",
+      "custom": "Special"
+    },
+    "startsInDays": "Starts in {days} days",
+    "startingSoon": "Starting soon",
+    "inProgress": "In progress",
+    "ended": "Ended",
+    "eventIsLive": "Event is live",
+    "participantCount": "{count} participants",
+    "rewardTierCount": "{count} reward tiers",
+    "freeEntry": "FREE ENTRY",
+    "free": "FREE",
+    "creditsAmount": "{amount} credits",
+    "pointsAmount": "{amount} pts",
+    "viewEvent": "View Event ->",
+    "details": "Details ->",
+    "rewardTiers": "Reward Tiers",
+    "rules": "Rules",
+    "exclusiveBadges": "Exclusive Badges",
+    "youAreIn": "You're in!",
+    "enterEvent": "Enter Event",
+    "entryFee": "Entry fee",
+    "yourBalance": "Your balance",
+    "joinFree": "Join Free",
+    "insufficientCredits": "Insufficient Credits",
+    "enterNow": "Enter Now",
+    "buyCreditsToEnter": "Buy credits to enter this event",
+    "confirmEntry": "Confirm Entry",
+    "joinFreeQuestion": "Join this event for free?",
+    "enterWithCreditsQuestion": "Enter this event for {amount} credits?",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "eventEntered": "Event entered!",
+    "registeredForEvent": "You're now registered for {event}",
+    "items": {
+      "wc2026-predictor": {
+        "name": "World Cup 2026 Predictor Tournament",
+        "description": "Predict every World Cup 2026 match. Compete for exclusive rewards and the ultimate bragging rights.",
+        "rules": [
+          "Predict the score for every World Cup 2026 match",
+          "Points awarded for exact scores and correct results",
+          "Bonus points for knockout stage predictions",
+          "Must predict before each match kickoff"
+        ]
+      },
+      "ucl-2026-knockout": {
+        "name": "UCL 2026 Knockout Challenge",
+        "description": "The Champions League knockout stage is here. Predict every round from R16 to the Final.",
+        "rules": [
+          "Predict scores for all UCL knockout matches",
+          "Double points for quarter-final onwards",
+          "Bonus for predicting the champion correctly"
+        ]
+      },
+      "afc-asian-cup-2027-qualifiers": {
+        "name": "AFC Asian Cup 2027 Qualifiers",
+        "description": "Predict the AFC Asian Cup qualification matches. Support your region!",
+        "rules": [
+          "Predict scores for all AFC qualification matches",
+          "Regional bonus for Southeast Asian match predictions",
+          "Free entry for all users"
+        ]
+      },
+      "summer-leagues-2026": {
+        "name": "Summer Leagues Challenge",
+        "description": "Keep the football spirit alive during the off-season. MLS, J1, K League, and more.",
+        "rules": [
+          "Predict matches across MLS, J1 League, K League 1, and Allsvenskan",
+          "Points accumulate throughout the summer",
+          "Special badges for predicting across all 4 leagues"
+        ]
+      }
+    },
+    "badges": {
+      "wc2026-champion": {
+        "name": "World Cup Oracle",
+        "description": "Won the 2026 World Cup predictor tournament"
+      },
+      "wc2026-participant": {
+        "name": "World Cup 2026 Player",
+        "description": "Participated in the 2026 World Cup predictor"
+      },
+      "ucl2026-champion": {
+        "name": "European Oracle",
+        "description": "Won the UCL 2026 knockout challenge"
+      },
+      "afc2027-qualifier-champ": {
+        "name": "Asian Football Expert",
+        "description": "Won the AFC Asian Cup qualifiers predictor"
+      },
+      "summer2026-champ": {
+        "name": "Summer Football King",
+        "description": "Won the Summer Leagues 2026 challenge"
+      }
+    }
   }
 }

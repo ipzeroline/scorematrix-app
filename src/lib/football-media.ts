@@ -1,19 +1,18 @@
 const API_SPORTS_MEDIA_HOST = "media.api-sports.io";
 const FLAG_CDN_HOST = "flagcdn.com";
-const API_SPORTS_MEDIA_BASE_URL = `https://${API_SPORTS_MEDIA_HOST}`;
 
 export function proxyFootballMediaUrl(src?: string | null): string | null {
   if (!src) return null;
 
   if (src.startsWith("/football/") || src.startsWith("/flags/")) {
-    return `${API_SPORTS_MEDIA_BASE_URL}${src}`;
+    return `/api/football/media${src}`;
   }
 
   try {
     const url = new URL(src);
 
     if (url.hostname === API_SPORTS_MEDIA_HOST) {
-      return src;
+      return `/api/football/media${url.pathname}`;
     }
 
     if (url.hostname === FLAG_CDN_HOST) {

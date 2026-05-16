@@ -62,7 +62,10 @@
     "settings": "设置",
     "admin": "管理",
     "rankShort": "排名",
-    "affiliate": "邀请好友"
+    "affiliate": "邀请好友",
+    "events": "活动",
+    "stats": "统计",
+    "notifications": "通知"
   },
   "auth": {
     "login": "登录",
@@ -908,7 +911,7 @@
   },
   "stats": {
     "title": "您的统计",
-    "subtitle": "追踪预测表现",
+    "subtitle": "按联赛和时间追踪您的预测表现",
     "overallAccuracy": "总体准确率",
     "totalPredictions": "总预测数",
     "bestStreak": "最佳连续",
@@ -916,7 +919,24 @@
     "leagueBreakdown": "联赛准确率",
     "dailyForm": "30天表现",
     "proStatsTeaser": "专业统计",
-    "unlockPro": "解锁专业版"
+    "proStatsDescription": "解锁 xG 分析、交锋深度洞察和高级状态指标。",
+    "accuracyMetric": "准确率 %",
+    "pointsMetric": "积分",
+    "unlockPro": "解锁专业版",
+    "leagues": {
+      "PL": "英超",
+      "PD": "西甲",
+      "BL1": "德甲",
+      "SA": "意甲",
+      "FL1": "法甲",
+      "DED": "荷甲",
+      "J1": "J1 联赛",
+      "K1": "K 联赛 1",
+      "T1": "泰超",
+      "V1": "越南 V.League 1",
+      "CSL": "中超",
+      "PPL": "葡超"
+    }
   },
   "notifications": {
     "title": "通知",
@@ -926,6 +946,117 @@
   },
   "events": {
     "title": "特别活动",
-    "subtitle": "参加限时锦标赛赢取独家奖励"
+    "subtitle": "参加限时锦标赛赢取独家奖励",
+    "liveNow": "正在进行",
+    "filters": {
+      "all": "全部",
+      "upcoming": "即将开始",
+      "active": "进行中",
+      "ended": "已结束"
+    },
+    "empty": "没有{filter}活动",
+    "statuses": {
+      "upcoming": "即将开始",
+      "active": "进行中",
+      "ended": "已结束"
+    },
+    "tournamentTypes": {
+      "worldCup": "世界杯",
+      "ucl": "欧冠",
+      "afc": "AFC",
+      "custom": "特别"
+    },
+    "startsInDays": "{days} 天后开始",
+    "startingSoon": "即将开始",
+    "inProgress": "进行中",
+    "ended": "已结束",
+    "eventIsLive": "活动正在进行",
+    "participantCount": "{count} 名参与者",
+    "rewardTierCount": "{count} 个奖励档位",
+    "freeEntry": "免费参加",
+    "free": "免费",
+    "creditsAmount": "{amount} 点数",
+    "pointsAmount": "{amount} 积分",
+    "viewEvent": "查看活动 ->",
+    "details": "详情 ->",
+    "rewardTiers": "奖励档位",
+    "rules": "规则",
+    "exclusiveBadges": "专属徽章",
+    "youAreIn": "您已参加！",
+    "enterEvent": "参加活动",
+    "entryFee": "报名费",
+    "yourBalance": "您的余额",
+    "joinFree": "免费参加",
+    "insufficientCredits": "点数不足",
+    "enterNow": "立即参加",
+    "buyCreditsToEnter": "购买点数以参加此活动",
+    "confirmEntry": "确认参加",
+    "joinFreeQuestion": "免费参加此活动？",
+    "enterWithCreditsQuestion": "使用 {amount} 点数参加此活动？",
+    "cancel": "取消",
+    "confirm": "确认",
+    "eventEntered": "已参加活动！",
+    "registeredForEvent": "您已报名 {event}",
+    "items": {
+      "wc2026-predictor": {
+        "name": "2026 世界杯预测锦标赛",
+        "description": "预测 2026 世界杯每一场比赛，争夺专属奖励和最高荣誉。",
+        "rules": [
+          "预测 2026 世界杯每场比赛的比分",
+          "比分完全正确和赛果正确均可获得积分",
+          "淘汰赛预测可获得额外积分",
+          "必须在每场比赛开球前完成预测"
+        ]
+      },
+      "ucl-2026-knockout": {
+        "name": "2026 欧冠淘汰赛挑战",
+        "description": "欧冠淘汰赛阶段已经到来，从 16 强到决赛逐轮预测。",
+        "rules": [
+          "预测所有欧冠淘汰赛比分",
+          "四分之一决赛起积分翻倍",
+          "正确预测冠军可获得奖励积分"
+        ]
+      },
+      "afc-asian-cup-2027-qualifiers": {
+        "name": "2027 亚洲杯预选赛",
+        "description": "预测亚洲杯预选赛，为你的地区助威！",
+        "rules": [
+          "预测所有 AFC 预选赛比分",
+          "预测东南亚比赛可获得地区奖励",
+          "所有用户免费参加"
+        ]
+      },
+      "summer-leagues-2026": {
+        "name": "夏季联赛挑战",
+        "description": "在休赛期继续保持足球热情，覆盖 MLS、J1、K League 等赛事。",
+        "rules": [
+          "预测 MLS、J1 League、K League 1 和 Allsvenskan 比赛",
+          "整个夏季持续累计积分",
+          "完成 4 个联赛预测可获得特别徽章"
+        ]
+      }
+    },
+    "badges": {
+      "wc2026-champion": {
+        "name": "世界杯预言家",
+        "description": "赢得 2026 世界杯预测锦标赛"
+      },
+      "wc2026-participant": {
+        "name": "2026 世界杯玩家",
+        "description": "参加了 2026 世界杯预测"
+      },
+      "ucl2026-champion": {
+        "name": "欧洲预言家",
+        "description": "赢得 2026 欧冠淘汰赛挑战"
+      },
+      "afc2027-qualifier-champ": {
+        "name": "亚洲足球专家",
+        "description": "赢得亚洲杯预选赛预测"
+      },
+      "summer2026-champ": {
+        "name": "夏季足球之王",
+        "description": "赢得 2026 夏季联赛挑战"
+      }
+    }
   }
 }

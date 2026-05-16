@@ -42,6 +42,7 @@ import {
   getApiFootballH2H,
 } from "@/lib/api-football";
 import { extractApiFixtureId } from "@/lib/football-slugs";
+import { proxyFootballMediaUrl } from "@/lib/football-media";
 import { cn } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 import type { AIInsight } from "@/types/ai-insight";
@@ -715,10 +716,11 @@ function buildLocalFixture(match: Match): LocalFixture | null {
 }
 
 function renderableLogo(logo: string | null | undefined, fallbackId?: string) {
+  const fallback = fallbackId ? (localLogoFallbacks[fallbackId] ?? null) : null;
   if (!logo || logo.startsWith("/images/")) {
-    return fallbackId ? (localLogoFallbacks[fallbackId] ?? null) : null;
+    return proxyFootballMediaUrl(fallback);
   }
-  return logo;
+  return proxyFootballMediaUrl(logo);
 }
 
 function buildApiInsight(

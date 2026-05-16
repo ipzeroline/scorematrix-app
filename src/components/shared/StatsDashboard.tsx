@@ -7,8 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { useUserStore } from '@/stores/user-store';
 import { useShallow } from 'zustand/react/shallow';
 import { LEAGUE_ACCURACY, DAILY_FORM_30_DAY } from '@/data/stats';
-import { cn } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { TrendingUp, Target, Star, Trophy, Lock } from 'lucide-react';
 
 export function StatsDashboard() {
@@ -30,9 +29,16 @@ export function StatsDashboard() {
     () => [...LEAGUE_ACCURACY].sort((a, b) => b.accuracy - a.accuracy),
     []
   );
+  const localizedLeagues = useMemo(
+    () =>
+      sortedLeagues.map((league) => ({
+        ...league,
+        leagueName: t(`leagues.${league.leagueId}`),
+      })),
+    [sortedLeagues, t]
+  );
 
-  const bestLeague = sortedLeagues[0];
-  const worstLeague = sortedLeagues[sortedLeagues.length - 1];
+  const bestLeague = localizedLeagues[0];
 
   const summaryCards = [
     { label: t('overallAccuracy'), value: `${stats.accuracy}%`, icon: Target, color: 'text-emerald-400' },
@@ -61,7 +67,7 @@ export function StatsDashboard() {
         <h3 className="text-sm font-semibold text-white mb-4">{t('leagueBreakdown')}</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={sortedLeagues} layout="vertical" margin={{ left: 100, right: 20, top: 5, bottom: 5 }}>
+            <BarChart data={localizedLeagues} layout="vertical" margin={{ left: 100, right: 20, top: 5, bottom: 5 }}>
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} />
               <YAxis type="category" dataKey="leagueName" tick={{ fontSize: 11, fill: '#9ca3af' }} width={100} />
               <Tooltip
@@ -69,8 +75,8 @@ export function StatsDashboard() {
                 formatter={(value) => [`${value}%`]}
               />
               <Bar dataKey="accuracy" radius={[0, 4, 4, 0]} barSize={16}>
-                {sortedLeagues.map((entry, i) => (
-                  <rect key={entry.leagueId} fill={entry.accuracy >= 70 ? '#10b981' : entry.accuracy >= 60 ? '#f59e0b' : '#ef4444'} />
+                {localizedLeagues.map((entry) => (
+                  <Cell key={entry.leagueId} fill={entry.accuracy >= 70 ? '#10b981' : entry.accuracy >= 60 ? '#f59e0b' : '#ef4444'} />
                 ))}
               </Bar>
             </BarChart>
@@ -97,8 +103,8 @@ export function StatsDashboard() {
               <Tooltip
                 contentStyle={{ background: '#1f1f2d', border: '1px solid #374151', borderRadius: '8px', fontSize: 12 }}
               />
-              <Line type="monotone" dataKey="accuracy" stroke="#06b6d4" strokeWidth={2} dot={false} name="Accuracy %" />
-              <Line type="monotone" dataKey="points" stroke="#f59e0b" strokeWidth={2} dot={false} name="Points" />
+              <Line type="monotone" dataKey="accuracy" stroke="#06b6d4" strokeWidth={2} dot={false} name={t('accuracyMetric')} />
+              <Line type="monotone" dataKey="points" stroke="#f59e0b" strokeWidth={2} dot={false} name={t('pointsMetric')} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -113,7 +119,7 @@ export function StatsDashboard() {
               <h3 className="text-sm font-semibold text-white">{t('proStatsTeaser')}</h3>
             </div>
             <p className="text-xs text-gray-500 max-w-md">
-              Unlock xG analysis, head-to-head deep dives, and advanced form metrics with Pro stats.
+              {t('proStatsDescription')}
             </p>
           </div>
           <Link

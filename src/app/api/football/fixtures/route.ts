@@ -1,6 +1,5 @@
 import {
   ApiFootballError,
-  getMockApiFootballFixtures,
   getApiFootballFixtures,
 } from "@/lib/api-football";
 
@@ -25,22 +24,21 @@ export async function GET(request: Request) {
       error instanceof ApiFootballError
         ? error
         : new ApiFootballError("Unable to fetch football fixtures", 500);
-    const fixtures = getMockApiFootballFixtures(limit);
 
     return Response.json(
       {
-        source: "mock",
+        source: "api-football",
         fetchedAt: new Date().toISOString(),
         query: Object.fromEntries(searchParams.entries()),
-        count: fixtures.length,
-        fixtures,
+        count: 0,
+        fixtures: [],
         rateLimit: {
           requestsRemaining: null,
           requestsLimit: null,
         },
-        warning: apiError.message,
+        error: apiError.message,
       },
-      { status: 200 }
+      { status: apiError.status }
     );
   }
 }
