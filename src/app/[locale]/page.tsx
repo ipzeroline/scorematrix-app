@@ -7,9 +7,6 @@ import { WorldFootballFeature } from "@/components/home/WorldFootballFeature";
 import { LiveMatchHighlights } from "@/components/home/LiveMatchHighlights";
 import { TodayMatches } from "@/components/home/TodayMatches";
 import { AIMatchOfTheDay } from "@/components/home/AIMatchOfTheDay";
-import { LeaderboardPreview } from "@/components/home/LeaderboardPreview";
-import { MissionsPreview } from "@/components/home/MissionsPreview";
-import { RewardsPreview } from "@/components/home/RewardsPreview";
 import { NewsSection } from "@/components/home/NewsSection";
 import { LOCALE_CODES } from "@/i18n";
 import { MatchStatus } from "@/types/common";
@@ -115,15 +112,6 @@ export default async function DashboardPage({ params }: Props) {
           </div>
         </div>
         <AIMatchOfTheDay fixture={aiFixture} />
-      </section>
-
-      {/* Bottom 3-column grid: Leaderboard, Missions, Rewards */}
-      <section>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <LeaderboardPreview />
-          <MissionsPreview />
-          <RewardsPreview />
-        </div>
       </section>
 
       {/* News Section */}
