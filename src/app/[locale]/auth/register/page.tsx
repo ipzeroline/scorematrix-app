@@ -59,17 +59,6 @@ export default function RegisterPage() {
   const { locale } = useParams<{ locale: string }>();
   const currentYear = new Date().getFullYear();
   const latestAllowedBirthYear = currentYear - 13;
-  const countryOptions = [
-    { value: "", label: t("selectCountry") },
-    { value: "TH", label: t("countryThailand") },
-    { value: "LA", label: t("countryLaos") },
-    { value: "KH", label: t("countryCambodia") },
-    { value: "MM", label: t("countryMyanmar") },
-    { value: "MY", label: t("countryMalaysia") },
-    { value: "SG", label: t("countrySingapore") },
-    { value: "VN", label: t("countryVietnam") },
-    { value: "OTHER", label: t("countryOther") },
-  ];
   const playerTypeOptions = [
     { value: "", label: t("selectPlayerType") },
     { value: "casual", label: t("playerTypeCasual") },
@@ -83,7 +72,6 @@ export default function RegisterPage() {
     displayName: "",
     phone: "",
     birthYear: "",
-    country: "",
     favoriteTeam: "",
     playerType: "",
     language: locale as string,
@@ -274,31 +262,18 @@ export default function RegisterPage() {
           />
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input
-            label={t("birthYear")}
-            type="number"
-            placeholder="1998"
-            value={form.birthYear}
-            onChange={(e) => update("birthYear", e.target.value)}
-            onBlur={() => markTouched("birthYear")}
-            error={errors.birthYear}
-            min={1900}
-            max={latestAllowedBirthYear}
-            inputMode="numeric"
-          />
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              {t("country")}
-            </label>
-            <Select
-              options={countryOptions}
-              value={form.country}
-              onChange={(v) => update("country", v)}
-              className="w-full"
-            />
-          </div>
-        </div>
+        <Input
+          label={t("birthYear")}
+          type="number"
+          placeholder="1998"
+          value={form.birthYear}
+          onChange={(e) => update("birthYear", e.target.value)}
+          onBlur={() => markTouched("birthYear")}
+          error={errors.birthYear}
+          min={1900}
+          max={latestAllowedBirthYear}
+          inputMode="numeric"
+        />
 
         {/* Favorite team + Language row */}
         <div className="grid gap-3 sm:grid-cols-2">

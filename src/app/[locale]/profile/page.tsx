@@ -9,7 +9,7 @@ import { PointsBadge } from "@/components/shared/PointsBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useUserStore } from "@/stores/user-store";
 import { useShallow } from "zustand/react/shallow";
-import { Target, Zap, Star, TrendingUp, BarChart3 } from "lucide-react";
+import { Target, Zap, Star, TrendingUp, BarChart3, Pencil } from "lucide-react";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
@@ -29,7 +29,6 @@ export default function ProfilePage() {
     }))
   );
 
-  const xpForLevel = user.level * 1000;
   const xpProgress = user.xp - (user.level - 1) * 1000;
   const xpTarget = 1000;
   const topPercent = user.level >= 15 ? 1 : user.level >= 12 ? 5 : user.level >= 8 ? 15 : 30;
@@ -60,9 +59,18 @@ export default function ProfilePage() {
             <Badge variant="cyan">{t("topPercent", { percent: topPercent })}</Badge>
           </div>
         </div>
-        <div className="flex gap-2">
-          <PointsBadge type="free" amount={user.freePoints} size="lg" showLabel />
-          <PointsBadge type="premium" amount={user.premiumCredits} size="lg" showLabel />
+        <div className="flex flex-col items-center gap-3 sm:items-end">
+          <div className="flex gap-2">
+            <PointsBadge type="free" amount={user.freePoints} size="lg" showLabel />
+            <PointsBadge type="premium" amount={user.premiumCredits} size="lg" showLabel />
+          </div>
+          <Link
+            href={`/${locale}/profile/edit`}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-cyan-500/50 hover:text-cyan-400"
+          >
+            <Pencil size={14} />
+            {t("editProfile")}
+          </Link>
         </div>
       </Card>
 

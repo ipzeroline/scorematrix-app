@@ -6,6 +6,12 @@ interface UserState {
   userId: string;
   username: string;
   displayName: string;
+  email: string;
+  phone: string;
+  birthYear: string;
+  favoriteTeam: string;
+  playerType: string;
+  language: string;
   freePoints: number;
   premiumCredits: number;
   xp: number;
@@ -51,6 +57,7 @@ interface UserActions {
   incrementReferral: () => void;
   addReferralEarnings: (amount: number) => void;
   setReferralCode: (code: string) => void;
+  updateProfile: (profile: Pick<UserState, 'displayName' | 'email' | 'phone' | 'birthYear' | 'favoriteTeam' | 'playerType' | 'language'>) => void;
 }
 
 const defaultPreferences: UserState['preferences'] = {
@@ -67,6 +74,12 @@ const initialState: UserState = {
   userId: 'user-001',
   username: 'CyberFan99',
   displayName: 'CyberFan99',
+  email: 'cyberfan@example.com',
+  phone: '+66 89 123 4567',
+  birthYear: '1998',
+  favoriteTeam: 'team-46',
+  playerType: 'competitive',
+  language: 'th',
   freePoints: 2840,
   premiumCredits: 150,
   xp: 12000,
@@ -107,6 +120,12 @@ export const useUserStore = create<UserState & UserActions>()(
           userId: '',
           username: '',
           displayName: '',
+          email: '',
+          phone: '',
+          birthYear: '',
+          favoriteTeam: '',
+          playerType: '',
+          language: '',
         }),
 
       addFreePoints: (amount) =>
@@ -191,6 +210,8 @@ export const useUserStore = create<UserState & UserActions>()(
         set((s) => ({ totalReferralEarnings: s.totalReferralEarnings + amount })),
 
       setReferralCode: (code) => set({ referralCode: code }),
+
+      updateProfile: (profile) => set(profile),
     }),
     { name: 'scorematrix-user' }
   )
