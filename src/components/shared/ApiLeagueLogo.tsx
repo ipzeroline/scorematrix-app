@@ -30,6 +30,8 @@ export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
           alt={`${name} logo`}
           width={config.image}
           height={config.image}
+          loading="lazy"
+          decoding="async"
           className="object-contain"
           style={{ width: config.image, height: config.image }}
           onError={() => setFailedSrc(logo ?? null)}
