@@ -285,6 +285,7 @@ export interface GetFixturesOptions {
   league?: string;
   season?: string;
   limit?: number;
+  revalidate?: number;
 }
 
 export interface GetFixturesResult {
@@ -434,7 +435,8 @@ export async function getApiFootballFixtures(
 
   const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
     "/fixtures",
-    query
+    query,
+    { revalidate: options.revalidate ?? (options.live ? 20 : 300) }
   );
   const mappedFixtures = payload.fixtures ?? [];
   const fixtures =
@@ -637,7 +639,8 @@ function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> 
 
 async function fetchSoccerBackend<T>(
   pathname: string,
-  query: Record<string, string>
+  query: Record<string, string>,
+  options: { revalidate?: number } = {}
 ): Promise<T> {
   const baseUrl = API_FOOTBALL_BASE_URL.endsWith("/")
     ? API_FOOTBALL_BASE_URL
@@ -651,7 +654,9 @@ async function fetchSoccerBackend<T>(
     headers: {
       Accept: "application/json",
     },
-    cache: "no-store",
+    ...(typeof options.revalidate === "number"
+      ? { next: { revalidate: options.revalidate } }
+      : { cache: "no-store" as const }),
   });
 
   const payload = (await response.json()) as T & {

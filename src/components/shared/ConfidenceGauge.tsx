@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface ConfidenceGaugeProps {
@@ -27,17 +26,9 @@ export function ConfidenceGauge({
   size = 120,
   className,
 }: ConfidenceGaugeProps) {
-  const [animatedValue, setAnimatedValue] = useState(0);
   const clamped = Math.min(100, Math.max(0, value));
   const color = getConfidenceColor(clamped);
   const label = getConfidenceLabel(clamped);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedValue(clamped);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, [clamped]);
 
   const strokeWidth = size * 0.08;
   const radius = (size - strokeWidth) / 2;
@@ -47,7 +38,7 @@ export function ConfidenceGauge({
   const dashOffset = -circumference * 0.125;
 
   const progressOffset =
-    dashOffset - (arcLength * (100 - animatedValue)) / 100;
+    dashOffset - (arcLength * (100 - clamped)) / 100;
 
   // Label color class
   const labelColors: Record<string, string> = {
@@ -100,9 +91,6 @@ export function ConfidenceGauge({
           strokeDasharray={dashArray}
           strokeDashoffset={progressOffset}
           strokeLinecap="round"
-          style={{
-            transition: "stroke-dashoffset 1s ease-out",
-          }}
         />
       </svg>
 
@@ -112,7 +100,7 @@ export function ConfidenceGauge({
           className="text-2xl font-display font-bold text-white transition-colors duration-500"
           style={{ color }}
         >
-          {Math.round(animatedValue)}%
+          {Math.round(clamped)}%
         </span>
         <span
           className={cn("text-[10px] font-medium uppercase tracking-wider", labelColors[label] ?? "text-gray-400")}

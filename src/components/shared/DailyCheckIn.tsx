@@ -24,8 +24,7 @@ export function DailyCheckIn() {
   });
 
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setIsMounted(true));
-    return () => cancelAnimationFrame(frame);
+    setIsMounted(true);
   }, []);
 
   const streakProgress = getStreakProgress();

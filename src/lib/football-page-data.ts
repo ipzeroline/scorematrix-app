@@ -6,11 +6,14 @@ import {
 } from "@/lib/api-football";
 import { MatchStatus } from "@/types/common";
 
-export async function loadFixturesForDate(limit?: number): Promise<ApiFootballFixture[]> {
+export async function loadFixturesForDate(
+  limit?: number,
+  revalidate = 300
+): Promise<ApiFootballFixture[]> {
   const date = new Date().toISOString().slice(0, 10);
 
   try {
-    const result = await getApiFootballFixtures({ date, limit });
+    const result = await getApiFootballFixtures({ date, limit, revalidate });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
@@ -18,9 +21,12 @@ export async function loadFixturesForDate(limit?: number): Promise<ApiFootballFi
   }
 }
 
-export async function loadLiveFixtures(limit = 24): Promise<ApiFootballFixture[]> {
+export async function loadLiveFixtures(
+  limit = 24,
+  revalidate = 120
+): Promise<ApiFootballFixture[]> {
   try {
-    const result = await getApiFootballFixtures({ live: true, limit });
+    const result = await getApiFootballFixtures({ live: true, limit, revalidate });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);

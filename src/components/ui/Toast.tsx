@@ -1,5 +1,4 @@
 'use client';
-import { useEffect, useState } from 'react';
 import { X, CheckCircle, XCircle, Info, AlertTriangle, Zap, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,26 +39,18 @@ const ICON_COLOR = {
 };
 
 export function Toast({ id, type, title, message, amount, onDismiss }: ToastProps) {
-  const [visible, setVisible] = useState(false);
-  const [leaving, setLeaving] = useState(false);
   const Icon = ICON[type];
 
-  useEffect(() => {
-    requestAnimationFrame(() => setVisible(true));
-  }, []);
-
   const handleDismiss = () => {
-    setLeaving(true);
-    setTimeout(() => onDismiss(id), 300);
+    onDismiss(id);
   };
 
   return (
     <div
       role="alert"
       className={cn(
-        'flex items-start gap-3 p-3 rounded-xl border backdrop-blur-sm shadow-lg min-w-[300px] max-w-[400px] transition-all duration-300',
-        BG[type],
-        visible && !leaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        'flex items-start gap-3 p-3 rounded-xl border min-w-[300px] max-w-[400px]',
+        BG[type]
       )}
     >
       <Icon size={18} className={cn('shrink-0 mt-0.5', ICON_COLOR[type])} />

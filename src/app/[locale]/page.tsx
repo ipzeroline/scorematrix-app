@@ -21,7 +21,11 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
+
+export function generateStaticParams() {
+  return LOCALE_CODES.map((locale) => ({ locale }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;

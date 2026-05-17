@@ -9,18 +9,7 @@ import { PointsBadge } from "@/components/shared/PointsBadge";
 import { Mission, MissionType } from "@/types";
 
 function getTimeUntilReset(resetAt: string): string {
-  const now = Date.now();
-  const reset = new Date(resetAt).getTime();
-  const diff = reset - now;
-
-  if (diff <= 0) return "Resetting...";
-
-  const hours = Math.floor(diff / 3600000);
-  const minutes = Math.floor((diff % 3600000) / 60000);
-
-  if (hours > 0) return `Resets in ${hours}h ${minutes}m`;
-  if (minutes > 0) return `Resets in ${minutes}m`;
-  return "Resetting soon";
+  return resetAt ? "Resets soon" : "";
 }
 
 const categoryColors: Record<string, "cyan" | "green" | "gold" | "purple" | "magenta"> = {

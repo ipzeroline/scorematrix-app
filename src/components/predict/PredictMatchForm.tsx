@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Brain,
@@ -76,25 +76,8 @@ export function PredictMatchForm({
   const [confidence, setConfidence] = useState("safe");
   const [showConfirm, setShowConfirm] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [now, setNow] = useState<number | null>(null);
-  const kickoffTimestamp = useMemo(
-    () => new Date(match.kickoffTime).getTime(),
-    [match.kickoffTime]
-  );
-  const remainingMs = now === null ? null : Math.max(0, kickoffTimestamp - now);
-  const countdown = remainingMs === null ? getPendingCountdown() : formatCountdown(remainingMs);
-  const isLocked = remainingMs !== null && remainingMs <= 0;
-
-  useEffect(() => {
-    const update = () => setNow(Date.now());
-    const initial = window.setTimeout(update, 0);
-    const interval = window.setInterval(() => setNow(Date.now()), 1000);
-
-    return () => {
-      window.clearTimeout(initial);
-      window.clearInterval(interval);
-    };
-  }, []);
+  const countdown = getPendingCountdown();
+  const isLocked = false;
 
   const completion = useMemo(() => {
     return [
@@ -646,35 +629,6 @@ function PlayerColumn({
       </div>
     </div>
   );
-}
-
-function formatCountdown(ms: number) {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
-  const days = Math.floor(totalSeconds / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  const padded = (value: number) => value.toString().padStart(2, "0");
-  const parts =
-    days > 0
-      ? [
-          { label: "d", value: padded(days) },
-          { label: "h", value: padded(hours) },
-          { label: "m", value: padded(minutes) },
-        ]
-      : [
-          { label: "h", value: padded(hours) },
-          { label: "m", value: padded(minutes) },
-          { label: "s", value: padded(seconds) },
-        ];
-
-  return {
-    compact:
-      days > 0
-        ? `${days}d ${padded(hours)}h ${padded(minutes)}m`
-        : `${padded(hours)}h ${padded(minutes)}m ${padded(seconds)}s`,
-    parts,
-  };
 }
 
 function getPendingCountdown() {

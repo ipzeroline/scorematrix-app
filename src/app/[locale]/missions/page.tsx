@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Award, CalendarClock, CheckCircle2, Flame, Star, Trophy, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -33,17 +33,7 @@ export default function MissionsPage() {
   const copy = getMissionPageCopy(locale);
   const [tab, setTab] = useState<TabKey>("daily");
   const [claimed, setClaimed] = useState<Record<string, boolean>>({});
-  const [now, setNow] = useState<number | null>(null);
-
-  useEffect(() => {
-    const update = () => setNow(Date.now());
-    const initial = window.setTimeout(update, 0);
-    const timer = window.setInterval(() => setNow(Date.now()), 60000);
-    return () => {
-      window.clearTimeout(initial);
-      window.clearInterval(timer);
-    };
-  }, []);
+  const now = null;
 
   const daily = useMemo(
     () => dailyMissions.map((mission) => withCopy(mission, copy)),

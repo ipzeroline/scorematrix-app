@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 
@@ -29,59 +29,54 @@ export function HeroBanner() {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const goTo = useCallback(
-    (index: number) => {
-      if (isTransitioning || index === current) return;
-      setIsTransitioning(true);
-      setCurrent(index);
-      setTimeout(() => setIsTransitioning(false), 400);
-    },
-    [current, isTransitioning]
-  );
+  const goTo = useCallback((index: number) => {
+    if (index === current) return;
+    setIsTransitioning(true);
+    setCurrent(index);
+    window.setTimeout(() => setIsTransitioning(false), 400);
+  }, [current]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      goTo((current + 1) % slides.length);
+    const timer = window.setInterval(() => {
+      const next = (current + 1) % slides.length;
+      setIsTransitioning(true);
+      setCurrent(next);
+      window.setTimeout(() => setIsTransitioning(false), 400);
     }, 5000);
-    return () => clearInterval(timer);
-  }, [current, goTo]);
+
+    return () => window.clearInterval(timer);
+  }, [current]);
 
   const slide = slides[current];
 
   return (
-    <div className="relative w-full h-48 sm:h-56 md:h-64 rounded-2xl overflow-hidden border border-gray-800 bg-[#0a0a0f]">
+    <div className="scorematrix-hero-slider relative w-full h-48 sm:h-56 md:h-64 rounded-2xl overflow-hidden border border-gray-800 bg-[#0a0a0f]">
       {/* Slide content */}
       <div
-        className={`absolute inset-0 bg-gradient-to-r ${slide.gradient} transition-opacity duration-500 ${
+        className={`hero-fade absolute inset-0 bg-gradient-to-r ${slide.gradient} ${
           isTransitioning ? "opacity-80" : "opacity-100"
         }`}
       />
 
       <div className="relative z-10 flex flex-col items-start justify-center h-full px-6 md:px-10">
         <h1
-          className={`font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 transition-all duration-400 ${
-            isTransitioning
-              ? "translate-y-2 opacity-0"
-              : "translate-y-0 opacity-100"
+          className={`hero-content font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 ${
+            isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           {t(`${slide.key}.headline`)}
         </h1>
         <p
-          className={`text-sm sm:text-base text-gray-400 max-w-lg mb-4 transition-all duration-400 delay-75 ${
-            isTransitioning
-              ? "translate-y-2 opacity-0"
-              : "translate-y-0 opacity-100"
+          className={`hero-content hero-content-delay text-sm sm:text-base text-gray-400 max-w-lg mb-4 ${
+            isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
         >
           {t(`${slide.key}.subtitle`)}
         </p>
         <div
-          className={`transition-all duration-400 delay-100 ${
-            isTransitioning
-              ? "translate-y-2 opacity-0"
-              : "translate-y-0 opacity-100"
+          className={`hero-content hero-content-delay-long ${
+            isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
         >
           <Button variant="primary" neon size="md">
@@ -96,7 +91,7 @@ export function HeroBanner() {
           <button
             key={i}
             onClick={() => goTo(i)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+            className={`hero-dot w-2 h-2 rounded-full ${
               i === current
                 ? "bg-cyan-400 w-6"
                 : "bg-gray-600 hover:bg-gray-400"

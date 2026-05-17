@@ -9,6 +9,10 @@ import { StoreInitializer } from "@/components/shared/StoreInitializer";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import { LOCALE_CODES, type LocaleCode } from "@/i18n";
 
+export function generateStaticParams() {
+  return LOCALE_CODES.map((locale) => ({ locale }));
+}
+
 function isLocale(value: string): value is LocaleCode {
   return LOCALE_CODES.includes(value as LocaleCode);
 }

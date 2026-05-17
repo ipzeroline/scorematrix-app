@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
@@ -97,7 +96,6 @@ export function LiveMatchHighlights({
 }: LiveMatchHighlightsProps) {
   const locale = useLocale();
   const t = useTranslations();
-  const scrollRef = useRef<HTMLDivElement>(null);
   const apiMatches = fixtures
     .filter((fixture) => fixture.status === MatchStatus.LIVE)
     .map(mapFixtureToLiveMatch);
@@ -106,22 +104,6 @@ export function LiveMatchHighlights({
     : apiMatches.length > 0
       ? apiMatches
       : liveMatches;
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || displayMatches.length <= 1) return;
-
-    const interval = window.setInterval(() => {
-      const isAtEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-
-      el.scrollTo({
-        left: isAtEnd ? 0 : el.scrollLeft + 292,
-        behavior: "smooth",
-      });
-    }, 3600);
-
-    return () => window.clearInterval(interval);
-  }, [displayMatches.length]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -158,7 +140,6 @@ export function LiveMatchHighlights({
       ) : (
         <div className="relative">
           <div
-            ref={scrollRef}
             className="flex gap-4 overflow-x-auto scrollbar-hide pb-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >

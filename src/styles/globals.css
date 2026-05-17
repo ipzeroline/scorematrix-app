@@ -582,3 +582,112 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (pointer: coarse), (max-width: 768px) {
+  .world-football-orbit,
+  .world-football-orbit-slow,
+  .world-football-globe,
+  .world-cup-logo-aura,
+  .world-cup-logo-pop,
+  .world-cup-logo-shine,
+  .world-cup-logo-ring,
+  .world-cup-spark,
+  .world-cup-spark-delay,
+  .world-cup-spark-slow,
+  .world-cup-countdown,
+  .world-cup-countdown-scan,
+  .world-cup-countdown-tile,
+  .cyber-live-header,
+  .cyber-live-header-scan,
+  .cyber-live-card,
+  .cyber-live-card-scan,
+  .today-matches-heading,
+  .today-matches-heading-scan,
+  .today-match-card,
+  .ai-section-heading-wave,
+  .ai-section-heading-node,
+  .ai-match-card,
+  .ai-match-orb,
+  .ai-match-grid,
+  .news-section-heading,
+  .news-section-heading-ticker,
+  .news-section-icon,
+  .news-article-card,
+  .news-article-card-sheen,
+  .daily-checkin-panel,
+  .daily-checkin-grid,
+  .daily-checkin-scan,
+  .daily-checkin-circuit,
+  .daily-checkin-spark,
+  .daily-checkin-today {
+    animation: none !important;
+  }
+}
+
+*,
+*::before,
+*::after {
+  animation: none !important;
+  scroll-behavior: auto !important;
+  transition: none !important;
+}
+
+* {
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.scorematrix-hero-slider .hero-fade {
+  transition: opacity 500ms ease !important;
+}
+
+.scorematrix-hero-slider .hero-content {
+  transition: opacity 400ms ease, transform 400ms ease !important;
+}
+
+.scorematrix-hero-slider .hero-content-delay {
+  transition-delay: 75ms !important;
+}
+
+.scorematrix-hero-slider .hero-content-delay-long {
+  transition-delay: 100ms !important;
+}
+
+.scorematrix-hero-slider .hero-dot {
+  transition: width 300ms ease, background-color 300ms ease !important;
+}
+
+@keyframes liveStatusDotBlink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  46%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.live-status-dot {
+  animation: liveStatusDotBlink 1.25s steps(1, end) infinite !important;
+}
+
+.inline-flex:has(.live-status-dot) {
+  background: rgba(244, 63, 94, 0.18) !important;
+  border-color: rgba(253, 164, 175, 0.58) !important;
+  color: rgb(255, 228, 230) !important;
+}

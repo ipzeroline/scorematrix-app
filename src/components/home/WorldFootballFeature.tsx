@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
@@ -29,21 +29,7 @@ const worldCupKickoff = new Date("2026-06-11T13:00:00-06:00").getTime();
 export function WorldFootballFeature() {
   const locale = useLocale();
   const t = useTranslations("worldFootball");
-  const [now, setNow] = useState<number | null>(null);
-  const countdownParts = useMemo(
-    () => (now === null ? getPendingCountdownParts() : getCountdownParts(worldCupKickoff - now)),
-    [now]
-  );
-
-  useEffect(() => {
-    const update = () => setNow(Date.now());
-    const initial = window.setTimeout(update, 0);
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => {
-      window.clearTimeout(initial);
-      window.clearInterval(timer);
-    };
-  }, []);
+  const countdownParts = useLeanCountdown(worldCupKickoff);
 
   return (
     <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b0f16] md:rounded-2xl">
@@ -90,7 +76,7 @@ export function WorldFootballFeature() {
                     key={part.key}
                     className="world-cup-countdown-tile rounded-lg border border-white/10 bg-black/35 p-2 text-center"
                   >
-                    <p className="font-mono text-2xl font-black leading-none text-white text-glow-cyan md:text-3xl">
+                    <p className="font-mono text-2xl font-black leading-none text-white text-glow-cyan md:text-3xl" suppressHydrationWarning>
                       {part.value}
                     </p>
                     <p className="mt-1 text-[9px] uppercase tracking-wider text-gray-500">
@@ -125,7 +111,7 @@ export function WorldFootballFeature() {
           <div className="mt-4 flex flex-wrap gap-2 md:mt-5">
             <Link
               href={`/${locale}/world-cup-2026`}
-              className="group inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-400 transition-all duration-200 hover:border-amber-400/45 hover:bg-amber-500/15 hover:text-amber-300"
+              className="group inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200 transition-all duration-200 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white"
             >
                 <Rows3 size={16} className="relative" />
                 <span className="relative">{t("ctaGroups")}</span>
@@ -207,6 +193,56 @@ export function WorldFootballFeature() {
   );
 }
 
+function getPendingCountdownParts() {
+  return [
+    { key: "days", value: "--" },
+    { key: "hours", value: "--" },
+    { key: "minutes", value: "--" },
+    { key: "seconds", value: "--" },
+  ];
+}
+
+function useLeanCountdown(targetTime: number) {
+  const [parts, setParts] = useState(getPendingCountdownParts);
+
+  useEffect(() => {
+    let timer: number | undefined;
+
+    const schedule = () => {
+      const remaining = Math.max(0, targetTime - Date.now());
+      setParts(getCountdownParts(remaining));
+
+      if (remaining <= 0) return;
+
+      const isHidden = document.visibilityState === "hidden";
+      const delay = isHidden
+        ? 60000
+        : remaining > 86400000
+          ? 60000
+          : remaining > 3600000
+            ? 10000
+            : 1000;
+
+      timer = window.setTimeout(schedule, delay);
+    };
+
+    const handleVisibilityChange = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      schedule();
+    };
+
+    schedule();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [targetTime]);
+
+  return parts;
+}
+
 function getCountdownParts(ms: number) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
   const days = Math.floor(totalSeconds / 86400);
@@ -219,14 +255,5 @@ function getCountdownParts(ms: number) {
     { key: "hours", value: hours.toString().padStart(2, "0") },
     { key: "minutes", value: minutes.toString().padStart(2, "0") },
     { key: "seconds", value: seconds.toString().padStart(2, "0") },
-  ];
-}
-
-function getPendingCountdownParts() {
-  return [
-    { key: "days", value: "--" },
-    { key: "hours", value: "--" },
-    { key: "minutes", value: "--" },
-    { key: "seconds", value: "--" },
   ];
 }

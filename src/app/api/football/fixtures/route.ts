@@ -3,7 +3,7 @@ import {
   getApiFootballFixtures,
 } from "@/lib/api-football";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 20;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,9 +16,14 @@ export async function GET(request: Request) {
       league: searchParams.get("league") ?? undefined,
       season: searchParams.get("season") ?? undefined,
       limit,
+      revalidate: searchParams.get("live") === "true" ? 10 : 20,
     });
 
-    return Response.json(result);
+    return Response.json(result, {
+      headers: {
+        "Cache-Control": "public, s-maxage=20, stale-while-revalidate=60",
+      },
+    });
   } catch (error) {
     const apiError =
       error instanceof ApiFootballError

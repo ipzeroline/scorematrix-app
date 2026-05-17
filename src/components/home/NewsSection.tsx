@@ -30,12 +30,8 @@ const categoryMeta: Record<
 
 function formatNewsDate(dateStr: string, t: ReturnType<typeof useTranslations>): string {
   const d = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffDays = Math.floor(diffMs / 86400000);
-  if (diffDays === 0) return t("common.today");
-  if (diffDays === 1) return t("common.yesterday");
-  return t("dashboard.daysAgo", { count: diffDays });
+  if (Number.isNaN(d.getTime())) return t("common.today");
+  return d.toISOString().slice(0, 10);
 }
 
 function localizeField(article: NewsArticle, field: "title" | "summary", locale: string): string {

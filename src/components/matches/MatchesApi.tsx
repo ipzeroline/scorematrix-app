@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import {
+  memo,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   Activity,
@@ -26,29 +32,124 @@ interface MatchesApiProps {
   fixtures: ApiFootballFixture[];
 }
 
+const INITIAL_MATCH_RENDER_LIMIT = 80;
+const MATCH_RENDER_STEP = 80;
+
+type LeagueGroup = {
+  key: string;
+  league: ApiFootballFixture["league"];
+  matches: ApiFootballFixture[];
+  liveCount: number;
+  upcomingCount: number;
+  finishedCount: number;
+};
+
+type MatchTableLabels = {
+  matches: string;
+  live: string;
+  upcoming: string;
+  fullTime: string;
+  time: string;
+  home: string;
+  score: string;
+  away: string;
+  status: string;
+  predict: string;
+  predictScore: string;
+  vs: string;
+};
+
 export function MatchesApi({ fixtures }: MatchesApiProps) {
   const locale = useLocale();
   const t = useTranslations();
   const [activeLeague, setActiveLeague] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-  const liveCount = fixtures.filter((match) => match.status === MatchStatus.LIVE).length;
-  const upcomingCount = fixtures.filter(
-    (match) => match.status === MatchStatus.UPCOMING
-  ).length;
-  const finishedCount = fixtures.filter(
-    (match) => match.status === MatchStatus.FINISHED
-  ).length;
-  const allLeagueGroups = groupFixturesByLeague(fixtures);
-  const searchedFixtures = filterFixtures(fixtures, searchQuery);
-  const leagueGroups = groupFixturesByLeague(searchedFixtures);
-  const activeLeagueGroups =
-    activeLeague === "All"
-      ? leagueGroups
-      : leagueGroups.filter(({ key }) => key === activeLeague);
-  const activeMatchCount = activeLeagueGroups.reduce(
-    (total, group) => total + group.matches.length,
-    0
+  const [leagueQuery, setLeagueQuery] = useState("");
+  const [visibleMatchLimit, setVisibleMatchLimit] = useState(
+    INITIAL_MATCH_RENDER_LIMIT
   );
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const deferredLeagueQuery = useDeferredValue(leagueQuery);
+  const matchStats = useMemo(() => getMatchStats(fixtures), [fixtures]);
+  const allLeagueGroups = useMemo(() => groupFixturesByLeague(fixtures), [fixtures]);
+  const searchedFixtures = useMemo(
+    () => filterFixtures(fixtures, deferredSearchQuery),
+    [fixtures, deferredSearchQuery]
+  );
+  const leagueGroups = useMemo(
+    () =>
+      filterLeagueGroups(
+        groupFixturesByLeague(searchedFixtures),
+        deferredLeagueQuery
+      ),
+    [searchedFixtures, deferredLeagueQuery]
+  );
+  const visibleLeagueGroups = useMemo(
+    () => filterLeagueGroups(allLeagueGroups, deferredLeagueQuery),
+    [allLeagueGroups, deferredLeagueQuery]
+  );
+  const leagueCounts = useMemo(
+    () => new Map(leagueGroups.map((group) => [group.key, group.matches.length])),
+    [leagueGroups]
+  );
+  const activeLeagueGroups = useMemo(
+    () =>
+      activeLeague === "All"
+        ? leagueGroups
+        : leagueGroups.filter(({ key }) => key === activeLeague),
+    [activeLeague, leagueGroups]
+  );
+  const activeMatchCount = useMemo(
+    () =>
+      activeLeagueGroups.reduce(
+        (total, group) => total + group.matches.length,
+        0
+      ),
+    [activeLeagueGroups]
+  );
+  const displayedLeagueGroups = useMemo(
+    () => sliceLeagueGroups(activeLeagueGroups, visibleMatchLimit),
+    [activeLeagueGroups, visibleMatchLimit]
+  );
+  const displayedMatchCount = useMemo(
+    () =>
+      displayedLeagueGroups.reduce(
+        (total, group) => total + group.matches.length,
+        0
+      ),
+    [displayedLeagueGroups]
+  );
+  const hasMoreMatches = displayedMatchCount < activeMatchCount;
+  const tableLabels = useMemo(
+    () => ({
+      matches: t("matches.metricMatches"),
+      live: t("livescore.live"),
+      upcoming: t("livescore.upcoming"),
+      fullTime: t("livescore.fullTime"),
+      time: t("football.table.time"),
+      home: t("football.table.home"),
+      score: t("football.table.score"),
+      away: t("football.table.away"),
+      status: t("football.table.status"),
+      predict: t("matchDetail.predict"),
+      predictScore: t("prediction.predictScore"),
+      vs: t("common.vs"),
+    }),
+    [t]
+  );
+
+  useEffect(() => {
+    if (
+      activeLeague !== "All" &&
+      !visibleLeagueGroups.some((group) => group.key === activeLeague)
+    ) {
+      setActiveLeague("All");
+    }
+  }, [activeLeague, visibleLeagueGroups]);
+
+  useEffect(() => {
+    setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
+  }, [activeLeague, deferredSearchQuery, deferredLeagueQuery]);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
@@ -95,15 +196,15 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
 
         <Card className="grid grid-cols-3 gap-3 p-4 lg:grid-cols-1">
           {[
-            { label: t("livescore.live"), value: liveCount, color: "text-green-400" },
+            { label: t("livescore.live"), value: matchStats.live, color: "text-green-400" },
             {
               label: t("livescore.upcoming"),
-              value: upcomingCount,
+              value: matchStats.upcoming,
               color: "text-cyan-400",
             },
             {
               label: t("livescore.finished"),
-              value: finishedCount,
+              value: matchStats.finished,
               color: "text-green-400",
             },
           ].map((item) => (
@@ -130,7 +231,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               {t("matches.boardTitle")}
             </h2>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
             <label className="relative block">
               <Search
                 size={14}
@@ -141,6 +242,18 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t("livescore.searchTeams")}
                 className="h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 sm:w-64"
+              />
+            </label>
+            <label className="relative block">
+              <Search
+                size={14}
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              />
+              <input
+                value={leagueQuery}
+                onChange={(event) => setLeagueQuery(event.target.value)}
+                placeholder="ค้นหาลีก"
+                className="h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 sm:w-52"
               />
             </label>
             <Badge variant="cyan" size="sm" className="w-fit">
@@ -167,9 +280,8 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               >
                 {t("rewards.all")}
               </button>
-              {allLeagueGroups.map(({ key, league }) => {
-                const filteredCount =
-                  leagueGroups.find((group) => group.key === key)?.matches.length ?? 0;
+              {visibleLeagueGroups.map(({ key, league }) => {
+                const filteredCount = leagueCounts.get(key) ?? 0;
 
                 return (
                   <button
@@ -206,143 +318,29 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                 </p>
               </div>
             ) : (
-              activeLeagueGroups.map(({ key, league, matches }) => {
-              const leagueLive = matches.filter(
-                (match) => match.status === MatchStatus.LIVE
-              ).length;
-              const leagueUpcoming = matches.filter(
-                (match) => match.status === MatchStatus.UPCOMING
-              ).length;
-              const leagueFinished = matches.filter(
-                (match) => match.status === MatchStatus.FINISHED
-              ).length;
-
-              return (
-                <section
-                  key={key}
-                  className="overflow-hidden rounded-lg border border-gray-800 bg-[#101018] shadow-[0_0_28px_rgba(34,211,238,0.04)]"
-                >
-                  <div className="relative overflow-hidden border-b border-gray-800 bg-gradient-to-r from-cyan-500/10 via-[#141421] to-magenta-500/10 px-4 py-3">
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <Link
-                        href={`/${locale}/football/leagues/${league.apiLeagueId ?? league.id}?season=${league.season ?? new Date().getFullYear()}`}
-                        className="flex min-w-0 items-center gap-3 transition-opacity hover:opacity-80"
-                      >
-                        <LeagueLogo name={league.name} logo={league.logo} />
-                        <div className="min-w-0">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <h3 className="truncate text-sm font-bold text-white">
-                              {league.name}
-                            </h3>
-                            {leagueLive > 0 && (
-                              <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-green-400 shadow-[0_0_12px_rgba(74,222,128,0.9)]" />
-                            )}
-                          </div>
-                          <p className="truncate text-[11px] text-gray-500">
-                            {league.country}
-                          </p>
-                        </div>
-                      </Link>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <LeagueMetric label={t("matches.metricMatches")} value={matches.length} tone="gray" />
-                        <LeagueMetric label={t("livescore.live")} value={leagueLive} tone="green" />
-                        <LeagueMetric label={t("livescore.upcoming")} value={leagueUpcoming} tone="cyan" />
-                        <LeagueMetric label={t("livescore.fullTime")} value={leagueFinished} tone="green" />
-                      </div>
-                    </div>
+              <>
+                {displayedLeagueGroups.map((group) => (
+                  <LeagueSection
+                    key={group.key}
+                    group={group}
+                    locale={locale}
+                    labels={tableLabels}
+                  />
+                ))}
+                {hasMoreMatches && (
+                  <div className="flex justify-center pt-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibleMatchLimit((limit) => limit + MATCH_RENDER_STEP)
+                      }
+                      className="rounded-lg border border-cyan-500/25 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-200 hover:border-cyan-300/50 hover:bg-cyan-500/15"
+                    >
+                      แสดงเพิ่ม {Math.min(MATCH_RENDER_STEP, activeMatchCount - displayedMatchCount)} รายการ
+                    </button>
                   </div>
-
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[760px] border-collapse text-sm">
-                      <thead>
-                        <tr className="border-b border-gray-800 bg-[#0a0a0f] text-left text-[10px] uppercase tracking-wider text-gray-500">
-                          <th className="w-[150px] px-4 py-3 text-center font-semibold">{t("football.table.time")}</th>
-                          <th className="px-3 py-3 text-right font-semibold">{t("football.table.home")}</th>
-                          <th className="w-[96px] px-3 py-3 text-center font-semibold">{t("football.table.score")}</th>
-                          <th className="px-3 py-3 font-semibold">{t("football.table.away")}</th>
-                          <th className="w-[120px] px-4 py-3 text-right font-semibold">{t("football.table.status")}</th>
-                          <th className="w-[120px] px-4 py-3 text-right font-semibold">{t("matchDetail.predict")}</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800/70">
-                        {matches.map((match, index) => {
-                          const matchSlug = buildFixtureSeoSlug(match);
-                          const rowTone =
-                            index % 2 === 0
-                              ? "bg-[#101018]"
-                              : "bg-cyan-500/[0.025]";
-
-                          return (
-                          <tr
-                            key={match.id}
-                            className={cn(rowTone, "transition-colors hover:bg-white/[0.045]")}
-                          >
-                            <td className="px-4 py-3 text-center">
-                              <Link
-                                href={`/${locale}/livescore/${matchSlug}`}
-                                className="mx-auto flex w-[124px] flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center transition-colors hover:border-cyan-400/40"
-                              >
-                                <span className="max-w-full truncate text-[10px] font-medium leading-none text-gray-300">
-                                  {formatMatchDate(match, locale)}
-                                </span>
-                                <span className="mt-1 whitespace-nowrap font-mono text-[11px] font-bold leading-none text-cyan-300">
-                                  {formatMatchTime(match, locale)}
-                                </span>
-                              </Link>
-                            </td>
-                            <td className="px-3 py-3">
-                              <Link href={`/${locale}/livescore/${matchSlug}`}>
-                                <TeamInline
-                                  name={match.home.name}
-                                  logo={match.home.logo}
-                                  align="right"
-                                />
-                              </Link>
-                            </td>
-                            <td className="px-3 py-3 text-center">
-                              <Link
-                                href={`/${locale}/livescore/${matchSlug}`}
-                                className="inline-flex min-w-16 justify-center rounded-md border border-gray-800 bg-black/20 px-2 py-1 font-mono text-sm font-bold text-white"
-                              >
-                                {match.score.home !== null
-                                  ? `${match.score.home} - ${match.score.away}`
-                                  : t("common.vs")}
-                              </Link>
-                            </td>
-                            <td className="px-3 py-3">
-                              <Link href={`/${locale}/livescore/${matchSlug}`}>
-                                <TeamInline name={match.away.name} logo={match.away.logo} />
-                              </Link>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <Link href={`/${locale}/livescore/${matchSlug}`}>
-                                <StatusBadge status={match.status} />
-                              </Link>
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              {match.status === MatchStatus.UPCOMING ? (
-                                <Link href={`/${locale}/predict/${matchSlug}`}>
-                                  <Button size="sm" variant="gold">
-                                    {t("prediction.predictScore")}
-                                  </Button>
-                                </Link>
-                              ) : (
-                                <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
-                                  -
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              );
-            })
+                )}
+              </>
             )}
           </div>
         )}
@@ -380,6 +378,24 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
   );
 }
 
+function getMatchStats(fixtures: ApiFootballFixture[]) {
+  let live = 0;
+  let upcoming = 0;
+  let finished = 0;
+
+  for (const fixture of fixtures) {
+    if (fixture.status === MatchStatus.LIVE) {
+      live += 1;
+    } else if (fixture.status === MatchStatus.UPCOMING) {
+      upcoming += 1;
+    } else if (fixture.status === MatchStatus.FINISHED) {
+      finished += 1;
+    }
+  }
+
+  return { live, upcoming, finished };
+}
+
 function filterFixtures(fixtures: ApiFootballFixture[], query: string) {
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -403,14 +419,7 @@ function filterFixtures(fixtures: ApiFootballFixture[], query: string) {
 }
 
 function groupFixturesByLeague(fixtures: ApiFootballFixture[]) {
-  const groups = new Map<
-    string,
-    {
-      key: string;
-      league: ApiFootballFixture["league"];
-      matches: ApiFootballFixture[];
-    }
-  >();
+  const groups = new Map<string, LeagueGroup>();
 
   for (const fixture of fixtures) {
     const key = `${fixture.league.apiLeagueId ?? fixture.league.id}-${fixture.league.season ?? "season"}`;
@@ -418,11 +427,21 @@ function groupFixturesByLeague(fixtures: ApiFootballFixture[]) {
 
     if (existing) {
       existing.matches.push(fixture);
+      if (fixture.status === MatchStatus.LIVE) {
+        existing.liveCount += 1;
+      } else if (fixture.status === MatchStatus.UPCOMING) {
+        existing.upcomingCount += 1;
+      } else if (fixture.status === MatchStatus.FINISHED) {
+        existing.finishedCount += 1;
+      }
     } else {
       groups.set(key, {
         key,
         league: fixture.league,
         matches: [fixture],
+        liveCount: fixture.status === MatchStatus.LIVE ? 1 : 0,
+        upcomingCount: fixture.status === MatchStatus.UPCOMING ? 1 : 0,
+        finishedCount: fixture.status === MatchStatus.FINISHED ? 1 : 0,
       });
     }
   }
@@ -430,9 +449,203 @@ function groupFixturesByLeague(fixtures: ApiFootballFixture[]) {
   return Array.from(groups.values());
 }
 
+function sliceLeagueGroups(groups: LeagueGroup[], limit: number) {
+  let remaining = limit;
+  const slicedGroups: LeagueGroup[] = [];
+
+  for (const group of groups) {
+    if (remaining <= 0) break;
+
+    const matches = group.matches.slice(0, remaining);
+    remaining -= matches.length;
+    const stats = getMatchStats(matches);
+    slicedGroups.push({
+      ...group,
+      matches,
+      liveCount: stats.live,
+      upcomingCount: stats.upcoming,
+      finishedCount: stats.finished,
+    });
+  }
+
+  return slicedGroups;
+}
+
+function filterLeagueGroups(
+  groups: LeagueGroup[],
+  query: string
+) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  if (!normalizedQuery) {
+    return groups;
+  }
+
+  return groups.filter(({ league }) =>
+    [
+      league.name,
+      league.country,
+      league.round,
+      String(league.season ?? ""),
+    ]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(normalizedQuery))
+  );
+}
+
+const LeagueSection = memo(function LeagueSection({
+  group,
+  locale,
+  labels,
+}: {
+  group: LeagueGroup;
+  locale: string;
+  labels: MatchTableLabels;
+}) {
+  const { league, matches } = group;
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-gray-800 bg-[#101018]">
+      <div className="border-b border-gray-800 bg-[#141421] px-4 py-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Link
+            href={`/${locale}/football/leagues/${league.apiLeagueId ?? league.id}?season=${league.season ?? 2026}`}
+            className="flex min-w-0 items-center gap-3 hover:opacity-85"
+          >
+            <LeagueLogo name={league.name} logo={league.logo} />
+            <div className="min-w-0">
+              <div className="flex min-w-0 items-center gap-2">
+                <h3 className="truncate text-sm font-bold text-white">
+                  {league.name}
+                </h3>
+                {group.liveCount > 0 && (
+                  <span className="inline-flex h-2 w-2 shrink-0 rounded-full bg-rose-300" />
+                )}
+              </div>
+              <p className="truncate text-[11px] text-gray-500">
+                {league.country}
+              </p>
+            </div>
+          </Link>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <LeagueMetric label={labels.matches} value={matches.length} tone="gray" />
+            <LeagueMetric label={labels.live} value={group.liveCount} tone="green" />
+            <LeagueMetric label={labels.upcoming} value={group.upcomingCount} tone="cyan" />
+            <LeagueMetric label={labels.fullTime} value={group.finishedCount} tone="green" />
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-gray-800 bg-[#0a0a0f] text-left text-[10px] uppercase tracking-wider text-gray-500">
+              <th className="w-[150px] px-4 py-3 text-center font-semibold">{labels.time}</th>
+              <th className="px-3 py-3 text-right font-semibold">{labels.home}</th>
+              <th className="w-[96px] px-3 py-3 text-center font-semibold">{labels.score}</th>
+              <th className="px-3 py-3 font-semibold">{labels.away}</th>
+              <th className="w-[120px] px-4 py-3 text-right font-semibold">{labels.status}</th>
+              <th className="w-[120px] px-4 py-3 text-right font-semibold">{labels.predict}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-800/70">
+            {matches.map((match, index) => (
+              <MatchRow
+                key={match.id}
+                match={match}
+                index={index}
+                locale={locale}
+                labels={labels}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+});
+
+const MatchRow = memo(function MatchRow({
+  match,
+  index,
+  locale,
+  labels,
+}: {
+  match: ApiFootballFixture;
+  index: number;
+  locale: string;
+  labels: MatchTableLabels;
+}) {
+  const matchSlug = useMemo(() => buildFixtureSeoSlug(match), [match]);
+  const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
+  const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
+  const rowTone = index % 2 === 0 ? "bg-[#101018]" : "bg-cyan-500/[0.025]";
+
+  return (
+    <tr className={cn(rowTone, "hover:bg-white/[0.045]")}>
+      <td className="px-4 py-3 text-center">
+        <Link
+          href={`/${locale}/livescore/${matchSlug}`}
+          className="mx-auto flex w-[124px] flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center hover:border-cyan-400/40"
+        >
+          <span className="max-w-full truncate text-[10px] font-medium leading-none text-gray-300">
+            {matchDate}
+          </span>
+          <span className="mt-1 whitespace-nowrap font-mono text-[11px] font-bold leading-none text-cyan-300">
+            {matchTime}
+          </span>
+        </Link>
+      </td>
+      <td className="px-3 py-3">
+        <Link href={`/${locale}/livescore/${matchSlug}`}>
+          <TeamInline
+            name={match.home.name}
+            logo={match.home.logo}
+            align="right"
+          />
+        </Link>
+      </td>
+      <td className="px-3 py-3 text-center">
+        <Link
+          href={`/${locale}/livescore/${matchSlug}`}
+          className="inline-flex min-w-16 justify-center rounded-md border border-gray-800 bg-black/20 px-2 py-1 font-mono text-sm font-bold text-white"
+        >
+          {match.score.home !== null
+            ? `${match.score.home} - ${match.score.away}`
+            : labels.vs}
+        </Link>
+      </td>
+      <td className="px-3 py-3">
+        <Link href={`/${locale}/livescore/${matchSlug}`}>
+          <TeamInline name={match.away.name} logo={match.away.logo} />
+        </Link>
+      </td>
+      <td className="px-4 py-3 text-right">
+        <Link href={`/${locale}/livescore/${matchSlug}`}>
+          <StatusBadge status={match.status} />
+        </Link>
+      </td>
+      <td className="px-4 py-3 text-right">
+        {match.status === MatchStatus.UPCOMING ? (
+          <Link href={`/${locale}/predict/${matchSlug}`}>
+            <Button size="sm" variant="gold">
+              {labels.predictScore}
+            </Button>
+          </Link>
+        ) : (
+          <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
+            -
+          </span>
+        )}
+      </td>
+    </tr>
+  );
+});
+
 function LeagueLogo({ name, logo }: { name: string; logo: string | null }) {
   return (
-    <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white p-1 shadow-[0_0_18px_rgba(34,211,238,0.08)]">
+    <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white p-1">
       {logo ? (
         <Image
           src={logo}
