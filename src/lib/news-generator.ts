@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import path from "path";
 
 const NEWS_DATA_DIR = path.join(process.cwd(), "src", "data", "news");
+export const NEWS_PAGE_SIZE = 9;
 
 const defaultLocales = LOCALE_CODES;
 
@@ -272,42 +273,43 @@ function previewArticle(fixtures: ApiFootballFixture[]): GeneratedArticle | null
 }
 
 function tipsArticle(): GeneratedArticle {
-  const titleEn = "3 Tips to Boost Your Prediction Accuracy Today";
-  const titleTh = "3 เคล็ดลับเพิ่มความแม่นยำในการทำนายวันนี้";
+  const date = todayStr();
+  const titleEn = `Prediction Checklist for ${date} Fixtures`;
+  const titleTh = `เช็กลิสต์ทำนายบอลประจำวันที่ ${date}`;
 
-  const summaryEn = "Boost your ScoreMatrix prediction accuracy with these actionable tips on form analysis, injury tracking, and motivation factors.";
-  const summaryTh = "เพิ่มความแม่นยำในการทำนาย ScoreMatrix ด้วยเคล็ดลับที่ใช้ได้จริงเกี่ยวกับการวิเคราะห์ฟอร์ม อาการบาดเจ็บ และปัจจัยแรงจูงใจ";
+  const summaryEn = "A fresh daily checklist for reading form, squad news, and motivation before locking in today's ScoreMatrix predictions.";
+  const summaryTh = "เช็กลิสต์ใหม่ประจำวันสำหรับอ่านฟอร์ม ข่าวทีม และแรงจูงใจก่อนล็อกคำทำนายใน ScoreMatrix";
 
   const contentEn = [
-    "Want to climb the ScoreMatrix leaderboard today? Here are three practical tips based on what top predictors consistently get right.",
-    "1. Form over reputation. A team's last 5 results tell you more than their name or league position. Teams on 4+ game winning streaks statistically outperform the market expectation by 12%.",
-    "2. Injuries matter — but not all equally. A missing first-choice goalkeeper or top scorer typically reduces a team's win probability by 8-15%. Role players matter less than public perception suggests.",
-    "3. Consider what's at stake. Teams fighting for titles or against relegation overperform mid-table sides by a measurable margin in the final 8 matchdays of a season.",
-    "Apply these principles before locking in your predictions and watch your accuracy climb.",
+    `Before making predictions for ${date}, start with the matches where team news, recent form, and motivation point in the same direction.`,
+    "1. Compare the last five matches, but separate strong wins from low-pressure results. A late-season win against a motivated opponent usually carries more signal than a comfortable result against a rotated side.",
+    "2. Check whether missing players affect the spine of the team: goalkeeper, center-back, central midfielder, and main scorer. Absences in those roles usually change match control more than wide rotation pieces.",
+    "3. Look for fixture pressure. Teams chasing titles, playoff spots, or safety often play with clearer urgency than sides already settled in mid-table.",
+    "Use the checklist alongside ScoreMatrix AI Insights, then lock the prediction that has the strongest agreement between data and football context.",
   ].join("\n\n");
 
   const contentTh = [
-    "อยากไต่อันดับในลีดเดอร์บอร์ด ScoreMatrix วันนี้? นี่คือเคล็ดลับสามข้อที่ผู้ทำนายอันดับต้นๆ ใช้เป็นประจำ",
-    "1. ฟอร์มสำคัญกว่าชื่อเสียง ดูผลงาน 5 นัดล่าสุดของทีมดีกว่าดูแค่ชื่อหรืออันดับ ทีมที่ชนะ 4+ นัดติดต่อกันมีแนวโน้มทำผลงานดีกว่าที่คาดการณ์ไว้ 12%",
-    "2. อาการบาดเจ็บมีผล—แต่ไม่เท่ากันทั้งหมด การขาดผู้รักษาประตูตัวจริงหรือดาวซัลโวของทีมลดความน่าจะเป็นในการชนะ 8-15% ผู้เล่นบทบาทรองมีผลน้อยกว่าที่คนทั่วไปคิด",
-    "3. พิจารณาเดิมพันของแต่ละทีม ทีมที่ลุ้นแชมป์หรือหนีตกชั้นทำผลงานเหนือชั้นกว่าทีมกลางตารางอย่างชัดเจนใน 8 นัดสุดท้ายของฤดูกาล",
-    "ใช้หลักการเหล่านี้ก่อนล็อกคำทำนายและดูความแม่นยำของคุณเพิ่มขึ้น",
+    `ก่อนทำนายประจำวันที่ ${date} ให้เริ่มจากคู่ที่ข่าวทีม ฟอร์มล่าสุด และแรงจูงใจส่งสัญญาณไปทางเดียวกัน`,
+    "1. เทียบผลงาน 5 นัดหลังสุด แต่แยกชัยชนะที่มีแรงกดดันจริงออกจากเกมที่คู่แข่งโรเตชันหรือไม่มีเป้าหมายชัดเจน",
+    "2. ดูตัวผู้เล่นที่ขาดในแกนกลางของทีม: ผู้รักษาประตู เซ็นเตอร์แบ็ก กองกลางตัวคุมเกม และดาวยิงหลัก ตำแหน่งเหล่านี้เปลี่ยนสมดุลเกมได้มากกว่าการโรเตชันริมเส้น",
+    "3. อ่านแรงกดดันของโปรแกรม ทีมที่ลุ้นแชมป์ ลุ้นเพลย์ออฟ หรือหนีตกชั้นมักมีความเข้มข้นมากกว่าทีมกลางตารางที่สถานการณ์นิ่งแล้ว",
+    "ใช้เช็กลิสต์นี้คู่กับ ScoreMatrix AI Insights แล้วล็อกคำทำนายที่ข้อมูลและบริบทฟุตบอลเห็นตรงกันมากที่สุด",
   ].join("\n\n");
 
   return {
     id: `news-${todayStr()}-3`,
-    slug: slugify(titleEn.slice(0, 60)),
+    slug: slugify(titleEn),
     title: localize(titleTh, titleEn, {
-      lo: "3 ເຄັດລັບເພີ່ມຄວາມແມ່ນຍຳໃນການທຳນາຍມື້ນີ້",
-      my: "ယနေ့ ခန့်မှန်းချက်တိကျမှု မြှင့်ရန် အချက် 3 ချက်",
-      km: "គន្លឹះ 3 ដើម្បីបង្កើនភាពត្រឹមត្រូវនៃការទស្សន៍ទាយថ្ងៃនេះ",
-      zh: "今日提升预测准确率的 3 个技巧",
+      lo: `ເຊັກລິສການທຳນາຍປະຈຳວັນ ${date}`,
+      my: `${date} ပွဲစဉ်များအတွက် ခန့်မှန်းချက် စစ်ဆေးစာရင်း`,
+      km: `បញ្ជីពិនិត្យទស្សន៍ទាយសម្រាប់ការប្រកួត ${date}`,
+      zh: `${date} 赛程预测清单`,
     }),
     summary: localize(summaryTh, summaryEn, {
-      lo: "ເພີ່ມຄວາມແມ່ນຍຳໃນ ScoreMatrix ດ້ວຍເຄັດລັບເລື່ອງຟອມ ອາການບາດເຈັບ ແລະແຮງຈູງໃຈ.",
-      my: "ဖောင်သုံးသပ်မှု၊ ဒဏ်ရာအခြေအနေနှင့် လှုံ့ဆော်မှုအချက်များဖြင့် ScoreMatrix ခန့်မှန်းချက်တိကျမှုကို မြှင့်တင်ပါ။",
-      km: "បង្កើនភាពត្រឹមត្រូវក្នុង ScoreMatrix ដោយផ្អែកលើទម្រង់ របួស និងកត្តាលើកទឹកចិត្ត។",
-      zh: "从状态、伤病和战意三个角度提升你在 ScoreMatrix 的预测准确率。",
+      lo: "ເຊັກລິສສົດໃໝ່ສຳລັບອ່ານຟອມ ຂ່າວທີມ ແລະແຮງຈູງໃຈກ່ອນລັອກຄຳທຳນາຍ.",
+      my: "ယနေ့ ScoreMatrix ခန့်မှန်းချက်မတင်မီ ဖောင်၊ အသင်းသတင်းနှင့် လှုံ့ဆော်မှုကို စစ်ရန် နေ့စဉ်စာရင်း။",
+      km: "បញ្ជីពិនិត្យថ្មីប្រចាំថ្ងៃសម្រាប់មើលទម្រង់ ព័ត៌មានក្រុម និងកម្លាំងចិត្ត មុនចាក់សោការទាយ។",
+      zh: "每日更新的预测清单，用于锁定今日 ScoreMatrix 预测前检查状态、阵容消息与战意。",
     }),
     content: localize(contentTh, contentEn, {
       lo: [
@@ -439,7 +441,7 @@ async function generateArticles(fixtures: ApiFootballFixture[]): Promise<Generat
   return articles.slice(0, 3);
 }
 
-function articleForLocale(a: GeneratedArticle, locale: string): NewsArticle {
+function articleForLocale(a: GeneratedArticle): NewsArticle {
   // Keep the full i18n records available on the object so we can render any locale
   return {
     id: a.id,
@@ -486,6 +488,15 @@ export interface NewsListResult {
   source: "json" | "generated" | "fallback";
 }
 
+export interface PaginatedNewsResult {
+  articles: NewsArticle[];
+  totalArticles: number;
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  source: NewsListResult["source"];
+}
+
 export async function getTodayArticles(locale: string): Promise<NewsListResult> {
   const today = todayStr();
   const safeLocale = normalizeLocale(locale);
@@ -509,7 +520,7 @@ export async function getTodayArticles(locale: string): Promise<NewsListResult> 
       await saveArticlesToJson(today, generated);
     }
 
-    const articles = generated.map(a => articleForLocale(a, safeLocale));
+    const articles = generated.map(a => articleForLocale(a));
     return { articles, generatedAt: today, source: "generated" };
   } catch {
     return { articles: [], generatedAt: today, source: "fallback" };
@@ -517,29 +528,28 @@ export async function getTodayArticles(locale: string): Promise<NewsListResult> 
 }
 
 export async function getArticleBySlug(slug: string, locale: string): Promise<NewsArticle | null> {
-  const today = todayStr();
   const safeLocale = normalizeLocale(locale);
 
-  const { articles } = await getTodayArticles(safeLocale);
-  const found = articles.find(a => a.slug === slug);
-  if (found) return found;
-
-  // Search past days
   try {
     const entries = await fs.readdir(NEWS_DATA_DIR, { withFileTypes: true });
     const dateDirs = entries.filter(e => e.isDirectory()).map(e => e.name).sort().reverse();
 
     for (const dateDir of dateDirs) {
-      if (dateDir === today) continue;
       const file = path.join(NEWS_DATA_DIR, dateDir, `${safeLocale}.json`);
       try {
         const raw = await fs.readFile(file, "utf-8");
-        const pastArticles = JSON.parse(raw) as NewsArticle[];
-        const match = pastArticles.find(a => a.slug === slug);
+        const articles = JSON.parse(raw) as NewsArticle[];
+        const match = articles.find(a => a.slug === slug);
         if (match) return match;
       } catch { /* skip */ }
     }
   } catch { /* no dir */ }
+
+  try {
+    const { articles } = await getTodayArticles(safeLocale);
+    const found = articles.find(a => a.slug === slug);
+    if (found) return found;
+  } catch { /* skip */ }
 
   return null;
 }
@@ -547,31 +557,7 @@ export async function getArticleBySlug(slug: string, locale: string): Promise<Ne
 export async function searchArticles(query: string, locale: string): Promise<NewsArticle[]> {
   const lower = query.toLowerCase();
   const safeLocale = normalizeLocale(locale);
-  const all: NewsArticle[] = [];
-  const seen = new Set<string>();
-
-  // Today's articles first
-  try {
-    const { articles } = await getTodayArticles(safeLocale);
-    for (const a of articles) {
-      if (!seen.has(a.id)) { seen.add(a.id); all.push(a); }
-    }
-  } catch { /* skip */ }
-
-  // Past days
-  try {
-    const entries = await fs.readdir(NEWS_DATA_DIR, { withFileTypes: true });
-    for (const entry of entries.filter(e => e.isDirectory()).map(e => e.name).sort().reverse()) {
-      const file = path.join(NEWS_DATA_DIR, entry, `${safeLocale}.json`);
-      try {
-        const raw = await fs.readFile(file, "utf-8");
-        const past = JSON.parse(raw) as NewsArticle[];
-        for (const a of past) {
-          if (!seen.has(a.id)) { seen.add(a.id); all.push(a); }
-        }
-      } catch { /* skip */ }
-    }
-  } catch { /* skip */ }
+  const all = await getAllArticles(safeLocale);
 
   return all.filter(a => {
     const title = typeof a.title === "string" ? a.title : (a.title[safeLocale] ?? a.title.en ?? "");
@@ -587,7 +573,7 @@ export async function searchArticles(query: string, locale: string): Promise<New
   });
 }
 
-export async function getLatestArticles(locale: string, limit = 6): Promise<NewsArticle[]> {
+export async function getAllArticles(locale: string): Promise<NewsArticle[]> {
   const safeLocale = normalizeLocale(locale);
   const articles: NewsArticle[] = [];
   const seen = new Set<string>();
@@ -607,7 +593,6 @@ export async function getLatestArticles(locale: string, limit = 6): Promise<News
     const dateDirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort().reverse();
 
     for (const dateDir of dateDirs) {
-      if (articles.length >= limit) break;
       const file = path.join(NEWS_DATA_DIR, dateDir, `${safeLocale}.json`);
 
       try {
@@ -617,16 +602,44 @@ export async function getLatestArticles(locale: string, limit = 6): Promise<News
           if (!seen.has(article.id)) {
             seen.add(article.id);
             articles.push(article);
-            if (articles.length >= limit) break;
           }
         }
       } catch { /* skip missing locale files */ }
     }
   } catch { /* no news directory yet */ }
 
-  return articles
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, limit);
+  return articles.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+}
+
+export async function getPaginatedArticles(
+  locale: string,
+  page = 1,
+  query = "",
+  pageSize = NEWS_PAGE_SIZE,
+): Promise<PaginatedNewsResult> {
+  const safePage = Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+  const source = (await getTodayArticles(locale)).source;
+  const articles = query.trim()
+    ? await searchArticles(query.trim(), locale)
+    : await getAllArticles(locale);
+  const totalArticles = articles.length;
+  const totalPages = Math.max(1, Math.ceil(totalArticles / pageSize));
+  const currentPage = Math.min(safePage, totalPages);
+  const start = (currentPage - 1) * pageSize;
+
+  return {
+    articles: articles.slice(start, start + pageSize),
+    totalArticles,
+    currentPage,
+    totalPages,
+    pageSize,
+    source,
+  };
+}
+
+export async function getLatestArticles(locale: string, limit = 6): Promise<NewsArticle[]> {
+  const articles = await getAllArticles(locale);
+  return articles.slice(0, limit);
 }
 
 export async function getAllNewsStaticParams(): Promise<Array<{ locale: string; slug: string }>> {

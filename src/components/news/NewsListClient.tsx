@@ -9,10 +9,11 @@ import {
   BarChart3,
   Lightbulb,
   Newspaper,
-  Sparkles,
   Trophy,
   X,
   FileText,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -164,9 +165,19 @@ interface Props {
   source: string;
   locale: string;
   initialSearch?: string;
+  currentPage?: number;
+  totalPages?: number;
+  totalArticles?: number;
 }
 
-export function NewsListClient({ articles, locale, initialSearch = "" }: Props) {
+export function NewsListClient({
+  articles,
+  locale,
+  initialSearch = "",
+  currentPage = 1,
+  totalPages = 1,
+  totalArticles,
+}: Props) {
   const copy = getCopy(locale);
   const [search, setSearch] = useState(initialSearch);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -189,6 +200,17 @@ export function NewsListClient({ articles, locale, initialSearch = "" }: Props) 
   }, [articles, search, categoryFilter, locale]);
 
   const categories = ["analysis", "news", "feature", "tips"];
+  const shownTotal = totalArticles ?? articles.length;
+  const pageHref = (page: number) => {
+    const params = new URLSearchParams();
+    if (initialSearch) params.set("q", initialSearch);
+    if (page > 1) params.set("page", String(page));
+    const suffix = params.toString();
+    return `/${locale}/news${suffix ? `?${suffix}` : ""}`;
+  };
+  const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1).filter((page) => {
+    return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+  });
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -338,8 +360,57 @@ export function NewsListClient({ articles, locale, initialSearch = "" }: Props) 
 
       {/* Results count */}
       <p className="text-center text-xs text-gray-600">
-        {filtered.length} {filtered.length === 1 ? copy.article : copy.articles}
+        {shownTotal} {shownTotal === 1 ? copy.article : copy.articles}
       </p>
+
+      {totalPages > 1 && (
+        <nav className="flex items-center justify-center gap-2" aria-label="News pages">
+          <Link
+            href={pageHref(Math.max(1, currentPage - 1))}
+            aria-disabled={currentPage === 1}
+            className={`grid h-9 w-9 place-items-center rounded-lg border border-white/10 transition-colors ${
+              currentPage === 1
+                ? "pointer-events-none text-gray-700"
+                : "text-gray-400 hover:border-cyan-500/40 hover:text-cyan-200"
+            }`}
+          >
+            <ChevronLeft size={16} />
+          </Link>
+
+          {pageNumbers.map((page, index) => {
+            const previous = pageNumbers[index - 1];
+            const showGap = previous !== undefined && page - previous > 1;
+
+            return (
+              <div key={page} className="flex items-center gap-2">
+                {showGap && <span className="text-xs text-gray-700">...</span>}
+                <Link
+                  href={pageHref(page)}
+                  className={`grid h-9 min-w-9 place-items-center rounded-lg px-3 text-xs font-semibold transition-colors ${
+                    page === currentPage
+                      ? "bg-cyan-500/15 text-cyan-200 ring-1 ring-cyan-500/30"
+                      : "text-gray-500 hover:bg-white/5 hover:text-gray-200"
+                  }`}
+                >
+                  {page}
+                </Link>
+              </div>
+            );
+          })}
+
+          <Link
+            href={pageHref(Math.min(totalPages, currentPage + 1))}
+            aria-disabled={currentPage === totalPages}
+            className={`grid h-9 w-9 place-items-center rounded-lg border border-white/10 transition-colors ${
+              currentPage === totalPages
+                ? "pointer-events-none text-gray-700"
+                : "text-gray-400 hover:border-cyan-500/40 hover:text-cyan-200"
+            }`}
+          >
+            <ChevronRight size={16} />
+          </Link>
+        </nav>
+      )}
     </div>
   );
 }
