@@ -236,6 +236,8 @@ export function Sidebar() {
         </Link>
       </div>
 
+      <div className="h-3 shrink-0" />
+
       <div className="mt-auto overflow-hidden rounded-xl border border-amber-300/30 bg-[radial-gradient(circle_at_top_left,rgba(74,222,128,0.18),transparent_34%),linear-gradient(135deg,rgba(245,158,11,0.2),rgba(34,197,94,0.12)_48%,rgba(10,10,15,0.96))] p-3 shadow-[0_0_22px_rgba(245,158,11,0.14)]">
         <div className="mb-2 flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white">
