@@ -227,6 +227,10 @@ body {
   34% { opacity: 0.38; }
   100% { transform: translateX(125%) skewX(-14deg); opacity: 0; }
 }
+@keyframes liveMatchMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 0.5rem)); }
+}
 @keyframes todayMatchesHeadingGlow {
   0%, 100% { box-shadow: 0 0 18px rgba(34, 211, 238, 0.09), inset 0 0 16px rgba(16, 185, 129, 0.04); }
   50% { box-shadow: 0 0 30px rgba(34, 211, 238, 0.17), inset 0 0 24px rgba(16, 185, 129, 0.08); }
@@ -420,6 +424,14 @@ body {
   background: linear-gradient(105deg, transparent 0%, rgba(255,255,255,0.1) 46%, rgba(34,211,238,0.16) 52%, transparent 60%);
   animation: cyberLiveCardScan 3.2s ease-in-out infinite;
 }
+.live-match-marquee {
+  animation: liveMatchMarquee 48s linear infinite;
+  will-change: transform;
+}
+.live-match-marquee:hover,
+.live-match-marquee:focus-within {
+  animation-play-state: paused;
+}
 .today-matches-heading { animation: todayMatchesHeadingGlow 3.8s ease-in-out infinite; }
 .today-matches-heading-scan {
   background:
@@ -612,6 +624,7 @@ body {
   .cyber-live-header-scan,
   .cyber-live-card,
   .cyber-live-card-scan,
+  .live-match-marquee,
   .today-matches-heading,
   .today-matches-heading-scan,
   .today-match-card,
@@ -669,6 +682,22 @@ body {
 
 .scorematrix-hero-slider .hero-dot {
   transition: width 300ms ease, background-color 300ms ease !important;
+}
+
+.live-match-marquee {
+  animation: liveMatchMarquee 48s linear infinite !important;
+}
+
+.live-match-marquee:hover,
+.live-match-marquee:focus-within {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-match-marquee {
+    animation: none !important;
+    transform: none !important;
+  }
 }
 
 @keyframes liveStatusDotBlink {

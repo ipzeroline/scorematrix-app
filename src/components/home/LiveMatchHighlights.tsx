@@ -104,6 +104,8 @@ export function LiveMatchHighlights({
     : apiMatches.length > 0
       ? apiMatches
       : liveMatches;
+  const shouldMarquee = displayMatches.length > 4;
+  const visibleMatches = shouldMarquee ? [...displayMatches, ...displayMatches] : displayMatches;
 
   return (
     <div className="flex flex-col gap-4">
@@ -138,16 +140,24 @@ export function LiveMatchHighlights({
           {t("livescore.noMatches")}
         </Card>
       ) : (
-        <div className="relative">
+        <div className="relative overflow-hidden">
+          {shouldMarquee && (
+            <>
+              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#050812] to-transparent" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#050812] to-transparent" />
+            </>
+          )}
           <div
-            className="flex gap-4 overflow-x-auto scrollbar-hide pb-1"
+            className={`${shouldMarquee ? "live-match-marquee w-max" : "overflow-x-auto scrollbar-hide"} flex gap-4 pb-1`}
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            {displayMatches.map((match) => (
+            {visibleMatches.map((match, index) => (
               <Link
-                key={match.id}
+                key={`${match.id}-${index}`}
                 href={`/${locale}/livescore/${match.id}`}
+                aria-hidden={shouldMarquee && index >= displayMatches.length}
                 className="flex-shrink-0"
+                tabIndex={shouldMarquee && index >= displayMatches.length ? -1 : undefined}
               >
                 <Card neon="green" hover className="cyber-live-card relative w-64 overflow-hidden border-green-400/45 bg-[#07140f]">
                   <div className="cyber-live-card-scan absolute inset-0" />
