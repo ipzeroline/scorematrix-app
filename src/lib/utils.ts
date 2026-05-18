@@ -3,8 +3,8 @@ export function cn(...classes: (string | boolean | undefined | null)[]): string 
 }
 
 export const THAILAND_TIME_ZONE = "Asia/Bangkok";
-export const THAILAND_TIME_ZONE_ABBR = "ICT";
-export const THAILAND_TIME_ZONE_LABEL = "Asia/Bangkok (ICT, UTC+7)";
+export const THAILAND_TIME_ZONE_ABBR = "UTC+7";
+export const THAILAND_TIME_ZONE_LABEL = "Asia/Bangkok (UTC+7)";
 
 export function formatDate(date: string | Date, locale = "en-US"): string {
   const d = typeof date === "string" ? new Date(date) : date;

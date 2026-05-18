@@ -138,7 +138,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       : allMatches.map((match) => ({
           ...match,
           kickoffDate: t("common.today"),
-          kickoffTime: `${match.kickoffTime} ICT`,
+          kickoffTime: `${match.kickoffTime} UTC+7`,
         }));
   const leagueTabs =
     apiMatches.length > 0

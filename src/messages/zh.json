@@ -791,7 +791,7 @@
     "nextFixtures": "小组赛程",
     "groupStageSchedule": "小组赛赛程",
     "matchday": "第",
-    "timeZone": "时间按泰国时间显示：Asia/Bangkok (ICT, UTC+7)",
+    "timeZone": "时间按泰国时间显示：Asia/Bangkok (UTC+7)",
     "winner": "当前第 1",
     "runnerUp": "当前第 2",
     "third": "当前第 3",
