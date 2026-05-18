@@ -1,0 +1,57 @@
+[
+  {
+    "id": "news-2026-05-18-2",
+    "slug": "matchday-preview-mersey-city-vs-west-midland-albion-east-l",
+    "title": "พรีวิวแมตช์เดย์: Mersey City vs West Midland Albion, East London Rovers vs London United, Atletic…",
+    "summary": "โปรแกรมแน่นในPremier League Championship นำโดย Mersey City vs West Midland Albion, East London Rovers vs London United, Atletico Madrid B vs Real Catalonia, Bilbao Norte vs Sevilla Sur นี่คือสิ่งที่น่าจับตามอง",
+    "content": "โปรแกรมการแข่งขันสุดมันกำลังรออยู่ในPremier League Championship หลายคู่ที่อาจส่งผลต่อตารางคะแนนอย่างมีนัยสำคัญ\n\nคู่สำคัญได้แก่ Mersey City vs West Midland Albion, East London Rovers vs London United, Atletico Madrid B vs Real Catalonia, Bilbao Norte vs Sevilla Sur แต่ละนัดมีความหมายในขณะที่ทุกทีมแย่งตำแหน่งกันในPremier League Championship\n\nตรวจสอบ AI Insights ของ ScoreMatrix สำหรับคำทำนายที่ขับเคลื่อนด้วยข้อมูล วิเคราะห์ฟอร์ม และสถิติ head-to-head ก่อนล็อกคำทำนายของคุณ",
+    "image": "/images/news/preview.jpg",
+    "author": "Marco Rossi",
+    "category": "analysis",
+    "publishedAt": "2026-05-18T09:11:50.448Z",
+    "tags": [
+      "Preview",
+      "Matchday",
+      "Premier League Championship",
+      "La Liga Iberia"
+    ],
+    "readTime": 5
+  },
+  {
+    "id": "news-2026-05-18-4",
+    "slug": "today-football-api-roundup-2026-05-18",
+    "title": "สรุปข้อมูลฟุตบอลจาก API ประจำวันนี้",
+    "summary": "ScoreMatrix ดึงรายการแข่งขัน 50 รายการจาก API วันนี้ ครอบคลุม Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia",
+    "content": "ระบบข่าวของ ScoreMatrix ใช้ข้อมูล API ประจำวันเพื่อจัดลำดับประเด็นฟุตบอลที่ควรติดตาม โดยวันนี้มีรายการแข่งขัน 50 รายการจาก Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia\n\nคู่ที่ถูกหยิบขึ้นมาเป็นแกนข้อมูลได้แก่ London United vs Mersey City, North London FC vs East London Rovers, Real Catalonia vs Sevilla Sur ซึ่งช่วยให้หน้า AI Insights และ Prediction มีบริบทสดใหม่สำหรับผู้ใช้\n\nข่าวประจำวันจะถูกบันทึกเป็น JSON แยกตามภาษา เพื่อให้หน้าเว็บโหลดเร็ว ค้นหาได้ และรองรับ SEO ของแต่ละ locale",
+    "image": "/brand/scorematrix-logo.png",
+    "author": "ScoreMatrix Data Desk",
+    "category": "feature",
+    "publishedAt": "2026-05-18T09:11:50.449Z",
+    "tags": [
+      "API",
+      "Fixtures",
+      "Premier League Championship",
+      "La Liga Iberia",
+      "Bundesliga Deutschland",
+      "Serie A Italia"
+    ],
+    "readTime": 3
+  },
+  {
+    "id": "news-2026-05-18-3",
+    "slug": "prediction-checklist-for-2026-05-18-fixtures",
+    "title": "เช็กลิสต์ทำนายบอลประจำวันที่ 2026-05-18",
+    "summary": "เช็กลิสต์ใหม่ประจำวันสำหรับอ่านฟอร์ม ข่าวทีม และแรงจูงใจก่อนล็อกคำทำนายใน ScoreMatrix",
+    "content": "ก่อนทำนายประจำวันที่ 2026-05-18 ให้เริ่มจากคู่ที่ข่าวทีม ฟอร์มล่าสุด และแรงจูงใจส่งสัญญาณไปทางเดียวกัน\n\n1. เทียบผลงาน 5 นัดหลังสุด แต่แยกชัยชนะที่มีแรงกดดันจริงออกจากเกมที่คู่แข่งโรเตชันหรือไม่มีเป้าหมายชัดเจน\n\n2. ดูตัวผู้เล่นที่ขาดในแกนกลางของทีม: ผู้รักษาประตู เซ็นเตอร์แบ็ก กองกลางตัวคุมเกม และดาวยิงหลัก ตำแหน่งเหล่านี้เปลี่ยนสมดุลเกมได้มากกว่าการโรเตชันริมเส้น\n\n3. อ่านแรงกดดันของโปรแกรม ทีมที่ลุ้นแชมป์ ลุ้นเพลย์ออฟ หรือหนีตกชั้นมักมีความเข้มข้นมากกว่าทีมกลางตารางที่สถานการณ์นิ่งแล้ว\n\nใช้เช็กลิสต์นี้คู่กับ ScoreMatrix AI Insights แล้วล็อกคำทำนายที่ข้อมูลและบริบทฟุตบอลเห็นตรงกันมากที่สุด",
+    "image": "/images/news/tips.jpg",
+    "author": "Alex Chen",
+    "category": "tips",
+    "publishedAt": "2026-05-18T09:11:50.449Z",
+    "tags": [
+      "Tips",
+      "Predictions",
+      "Strategy"
+    ],
+    "readTime": 5
+  }
+]
