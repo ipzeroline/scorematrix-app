@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
 
   const switchLocale = (newLocale: string) => {
     const newPath = pathname.replace(`/${locale}`, `/${newLocale}`);
-    router.push(newPath);
+    router.push(`${newPath}${window.location.search}`);
   };
 
   const currentLocale = LOCALES.find((l) => l.code === locale);

@@ -26,7 +26,7 @@ import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import { THAILAND_TIME_ZONE_LABEL, cn, formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 import type { ApiFootballFixture } from "@/lib/api-football";
-import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { buildFixtureSeoSlug, buildLeagueSeoSlug } from "@/lib/football-slugs";
 
 interface MatchesApiProps {
   fixtures: ApiFootballFixture[];
@@ -509,7 +509,7 @@ const LeagueSection = memo(function LeagueSection({
       <div className="border-b border-gray-800 bg-[#141421] px-4 py-3">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <Link
-            href={`/${locale}/football/leagues/${league.apiLeagueId ?? league.id}?season=${league.season ?? 2026}`}
+            href={`/${locale}/football/leagues/${buildLeagueSeoSlug(league)}?season=${league.season ?? 2026}`}
             className="flex min-w-0 items-center gap-3 hover:opacity-85"
           >
             <LeagueLogo name={league.name} logo={league.logo} />
@@ -628,11 +628,12 @@ const MatchRow = memo(function MatchRow({
       </td>
       <td className="px-4 py-3 text-right">
         {match.status === MatchStatus.UPCOMING ? (
-          <Link href={`/${locale}/predict/${matchSlug}`}>
-            <Button size="sm" variant="gold">
-              {labels.predictScore}
-            </Button>
-          </Link>
+          <a
+            href={`/${locale}/predict/${matchSlug}`}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400"
+          >
+            {labels.predictScore}
+          </a>
         ) : (
           <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
             -

@@ -28,7 +28,7 @@ import {
   getApiFootballFixtureDetails,
   getApiFootballH2H,
 } from "@/lib/api-football";
-import { buildFixtureSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
+import { buildFixtureSeoSlug, buildLeagueSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
 import { MatchStatus } from "@/types/common";
 import { cn, formatDate, formatMatchDateTimeWithZone } from "@/lib/utils";
 
@@ -67,7 +67,7 @@ export default async function MatchDetailPage({ params }: Props) {
       <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
         <Card neon="cyan" className="overflow-hidden p-3 text-center sm:p-6">
           <Link
-            href={`/${locale}/football/leagues/${fixture.league.apiLeagueId ?? fixture.league.id}?season=${season}`}
+            href={`/${locale}/football/leagues/${buildLeagueSeoSlug(fixture.league)}?season=${season}`}
             className="mx-auto mb-4 inline-flex max-w-full items-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-left transition-colors hover:border-cyan-400/40 sm:px-4"
           >
             <ApiLeagueLogo

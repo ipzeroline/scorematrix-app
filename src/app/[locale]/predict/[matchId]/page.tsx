@@ -13,6 +13,10 @@ import {
   type ApiFootballPlayerStats,
   getApiFootballFixtureDetails,
 } from "@/lib/api-football";
+import { leagues } from "@/data/leagues";
+import { matches } from "@/data/matches";
+import { players } from "@/data/players";
+import { teams } from "@/data/teams";
 import { extractApiFixtureId } from "@/lib/football-slugs";
 import { formatMatchDateTimeWithZone } from "@/lib/utils";
 
@@ -26,6 +30,12 @@ export default async function PredictMatchPage({ params }: Props) {
   const apiFixtureId = parseApiFixtureId(matchId);
 
   if (!apiFixtureId) {
+    const localMatch = buildLocalPredictMatch(matchId);
+
+    if (localMatch) {
+      return <PredictMatchForm locale={locale} match={localMatch} />;
+    }
+
     return (
       <PredictErrorShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
         <h1 className="text-lg font-bold text-white">
@@ -167,4 +177,54 @@ function parseApiFixtureId(matchId: string): number | null {
 
 function formatFixtureTime(value: string) {
   return formatMatchDateTimeWithZone(value);
+}
+
+function buildLocalPredictMatch(matchId: string): PredictMatch | null {
+  const fixture = matches.find((match) => match.id === matchId);
+
+  if (!fixture) {
+    return null;
+  }
+
+  const league = leagues.find((item) => item.id === fixture.leagueId);
+  const home = teams.find((team) => team.id === fixture.homeTeamId);
+  const away = teams.find((team) => team.id === fixture.awayTeamId);
+
+  if (!home || !away) {
+    return null;
+  }
+
+  return {
+    home: {
+      name: home.name,
+      logo: home.crest,
+      players: buildLocalPredictPlayers(home.id),
+    },
+    away: {
+      name: away.name,
+      logo: away.crest,
+      players: buildLocalPredictPlayers(away.id),
+    },
+    league: league?.name ?? "Demo League",
+    leagueLogo: league?.logo ?? null,
+    round: fixture.round,
+    time: formatFixtureTime(fixture.kickoffTime),
+    kickoffTime: fixture.kickoffTime,
+    venue: fixture.venue,
+  };
+}
+
+function buildLocalPredictPlayers(teamId: string): PredictPlayer[] {
+  return players
+    .filter((player) => player.teamId === teamId)
+    .map((player) => ({
+      id: parseLocalPlayerId(player.playerId),
+      name: player.name,
+      number: player.number,
+    }));
+}
+
+function parseLocalPlayerId(playerId: string) {
+  const value = Number.parseInt(playerId.replace(/\D/g, ""), 10);
+  return Number.isNaN(value) ? null : value;
 }

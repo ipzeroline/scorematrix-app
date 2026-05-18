@@ -5,6 +5,7 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { getApiFootballLeagues } from "@/lib/api-football";
+import { buildLeagueSeoSlug } from "@/lib/football-slugs";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -37,7 +38,10 @@ export default async function FootballLeaguesPage({ params }: Props) {
           return (
             <Link
               key={`${item.league.id}-${currentSeason?.year ?? "season"}`}
-              href={`/${locale}/football/leagues/${item.league.id}?season=${currentSeason?.year ?? new Date().getFullYear()}`}
+              href={`/${locale}/football/leagues/${buildLeagueSeoSlug({
+                apiLeagueId: item.league.id,
+                name: item.league.name,
+              })}?season=${currentSeason?.year ?? new Date().getFullYear()}`}
             >
               <Card hover className="flex h-full items-center gap-3 p-4">
                 <ApiLeagueLogo name={item.league.name} logo={item.league.logo} />

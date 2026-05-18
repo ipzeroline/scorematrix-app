@@ -1,6 +1,11 @@
 import type { ApiFootballFixture } from "@/lib/api-football";
 
 type FixtureSlugInput = Pick<ApiFootballFixture, "id" | "apiFixtureId" | "home" | "away">;
+type LeagueSlugInput = {
+  id?: string | number | null;
+  apiLeagueId?: number | null;
+  name: string;
+};
 
 export function buildFixtureSeoSlug(fixture: FixtureSlugInput) {
   const fixtureId = fixture.apiFixtureId ?? extractApiFixtureId(fixture.id);
@@ -20,6 +25,32 @@ export function extractApiFixtureId(value: string) {
   if (seo) return Number.parseInt(seo[1], 10);
 
   return null;
+}
+
+export function buildLeagueSeoSlug(league: LeagueSlugInput) {
+  const leagueId = league.apiLeagueId ?? extractNumericId(league.id);
+  if (!leagueId) return String(league.id ?? slugify(league.name));
+
+  const name = slugify(league.name);
+  return name ? `${name}-${leagueId}` : String(leagueId);
+}
+
+export function extractFootballEntityId(value: string | number | null | undefined) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (!value) return null;
+
+  if (/^\d+$/.test(value)) return Number.parseInt(value, 10);
+
+  const seo = value.match(/-(\d+)$/);
+  if (seo) return Number.parseInt(seo[1], 10);
+
+  return null;
+}
+
+function extractNumericId(value: string | number | null | undefined) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (!value || !/^\d+$/.test(value)) return null;
+  return Number.parseInt(value, 10);
 }
 
 function slugify(value: string) {

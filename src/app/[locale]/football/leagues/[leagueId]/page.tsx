@@ -12,7 +12,7 @@ import {
   getApiFootballLeagues,
   getApiFootballStandings,
 } from "@/lib/api-football";
-import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { buildFixtureSeoSlug, extractFootballEntityId } from "@/lib/football-slugs";
 import { THAILAND_TIME_ZONE_LABEL, formatDate } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 
@@ -25,8 +25,24 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
   const { locale, leagueId } = await params;
   const t = await getTranslations({ locale });
   const { season: seasonParam } = await searchParams;
-  const league = Number.parseInt(leagueId, 10);
-  const season = Number.parseInt(seasonParam ?? String(new Date().getFullYear()), 10);
+  const league = extractFootballEntityId(leagueId);
+  const season = parseSeason(seasonParam);
+
+  if (!league) {
+    return (
+      <div className="mx-auto max-w-4xl pb-8">
+        <Card className="border-amber-500/20 bg-amber-500/5 p-6 text-center">
+          <h1 className="text-lg font-bold text-white">
+            {t("matchDetail.unavailableTitle")}
+          </h1>
+          <p className="mt-2 text-sm text-gray-500">
+            {t("matchDetail.noApiFixtureId")}
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   const [leagueInfo, standings, schedule] = await Promise.all([
     getApiFootballLeagues({ id: league }),
     getApiFootballStandings(league, season),
@@ -166,6 +182,11 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
       </section>
     </div>
   );
+}
+
+function parseSeason(value?: string) {
+  const parsed = Number.parseInt(value ?? String(new Date().getFullYear()), 10);
+  return Number.isNaN(parsed) ? new Date().getFullYear() : parsed;
 }
 
 function TeamName({
