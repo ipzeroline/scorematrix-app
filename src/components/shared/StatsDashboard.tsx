@@ -65,8 +65,8 @@ export function StatsDashboard() {
       {/* League accuracy chart */}
       <Card className="p-4">
         <h3 className="text-sm font-semibold text-white mb-4">{t('leagueBreakdown')}</h3>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="min-w-0 w-full">
+          <ResponsiveContainer width="100%" height={300} minWidth={0}>
             <BarChart data={localizedLeagues} layout="vertical" margin={{ left: 100, right: 20, top: 5, bottom: 5 }}>
               <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: '#6b7280' }} />
               <YAxis type="category" dataKey="leagueName" tick={{ fontSize: 11, fill: '#9ca3af' }} width={100} />
@@ -87,8 +87,8 @@ export function StatsDashboard() {
       {/* 30-day form chart */}
       <Card className="p-4">
         <h3 className="text-sm font-semibold text-white mb-4">{t('dailyForm')}</h3>
-        <div className="h-[250px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="min-w-0 w-full">
+          <ResponsiveContainer width="100%" height={250} minWidth={0}>
             <LineChart data={DAILY_FORM_30_DAY} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
               <XAxis

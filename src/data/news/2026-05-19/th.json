@@ -1,0 +1,39 @@
+[
+  {
+    "id": "news-2026-05-19-4",
+    "slug": "today-football-api-roundup-2026-05-19",
+    "title": "สรุปข้อมูลฟุตบอลจาก API ประจำวันนี้",
+    "summary": "ScoreMatrix ดึงรายการแข่งขัน 50 รายการจาก API วันนี้ ครอบคลุม Liga Pro, Brasileiro Women, Primera B, Liga Nacional",
+    "content": "ระบบข่าวของ ScoreMatrix ใช้ข้อมูล API ประจำวันเพื่อจัดลำดับประเด็นฟุตบอลที่ควรติดตาม โดยวันนี้มีรายการแข่งขัน 50 รายการจาก Liga Pro, Brasileiro Women, Primera B, Liga Nacional\n\nคู่ที่ถูกหยิบขึ้นมาเป็นแกนข้อมูลได้แก่ Guayaquil City FC vs Orense SC, Cruzeiro W vs Corinthians W, Palmeiras W vs Botafogo W ซึ่งช่วยให้หน้า AI Insights และ Prediction มีบริบทสดใหม่สำหรับผู้ใช้\n\nข่าวประจำวันจะถูกบันทึกเป็น JSON แยกตามภาษา เพื่อให้หน้าเว็บโหลดเร็ว ค้นหาได้ และรองรับ SEO ของแต่ละ locale",
+    "image": "/brand/scorematrix-logo.png",
+    "author": "ScoreMatrix Data Desk",
+    "category": "feature",
+    "publishedAt": "2026-05-19T02:54:28.344Z",
+    "tags": [
+      "API",
+      "Fixtures",
+      "Liga Pro",
+      "Brasileiro Women",
+      "Primera B",
+      "Liga Nacional"
+    ],
+    "readTime": 3
+  },
+  {
+    "id": "news-2026-05-19-3",
+    "slug": "prediction-checklist-for-2026-05-19-fixtures",
+    "title": "เช็กลิสต์ทำนายบอลประจำวันที่ 2026-05-19",
+    "summary": "เช็กลิสต์ใหม่ประจำวันสำหรับอ่านฟอร์ม ข่าวทีม และแรงจูงใจก่อนล็อกคำทำนายใน ScoreMatrix",
+    "content": "ก่อนทำนายประจำวันที่ 2026-05-19 ให้เริ่มจากคู่ที่ข่าวทีม ฟอร์มล่าสุด และแรงจูงใจส่งสัญญาณไปทางเดียวกัน\n\n1. เทียบผลงาน 5 นัดหลังสุด แต่แยกชัยชนะที่มีแรงกดดันจริงออกจากเกมที่คู่แข่งโรเตชันหรือไม่มีเป้าหมายชัดเจน\n\n2. ดูตัวผู้เล่นที่ขาดในแกนกลางของทีม: ผู้รักษาประตู เซ็นเตอร์แบ็ก กองกลางตัวคุมเกม และดาวยิงหลัก ตำแหน่งเหล่านี้เปลี่ยนสมดุลเกมได้มากกว่าการโรเตชันริมเส้น\n\n3. อ่านแรงกดดันของโปรแกรม ทีมที่ลุ้นแชมป์ ลุ้นเพลย์ออฟ หรือหนีตกชั้นมักมีความเข้มข้นมากกว่าทีมกลางตารางที่สถานการณ์นิ่งแล้ว\n\nใช้เช็กลิสต์นี้คู่กับ ScoreMatrix AI Insights แล้วล็อกคำทำนายที่ข้อมูลและบริบทฟุตบอลเห็นตรงกันมากที่สุด",
+    "image": "/images/news/tips.jpg",
+    "author": "Priya Sharma",
+    "category": "tips",
+    "publishedAt": "2026-05-19T02:54:28.344Z",
+    "tags": [
+      "Tips",
+      "Predictions",
+      "Strategy"
+    ],
+    "readTime": 5
+  }
+]
