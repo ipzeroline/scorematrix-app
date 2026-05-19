@@ -27,7 +27,7 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-gray-800/50 safe-area-bottom">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-gray-800 bg-[#0a0a0f] shadow-[0_-10px_30px_rgba(0,0,0,0.35)] safe-area-bottom">
       <div className="flex items-center justify-around h-14 px-2">
         {visibleLinks.map((link) => {
           const Icon = link.icon;

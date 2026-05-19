@@ -64,11 +64,11 @@ export function Header() {
     pathname.includes(`/${locale}${href}`);
 
   return (
-    <header className="sticky top-0 z-40 glass border-b border-gray-800/50">
-      <div className="max-w-[1440px] mx-auto px-4 h-14 flex items-center gap-4">
+    <header className="sticky top-0 z-40 border-b border-gray-800 bg-[#0a0a0f] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+      <div className="max-w-[1440px] mx-auto px-2 h-14 flex items-center gap-2 sm:px-4 sm:gap-4">
         {/* Mobile hamburger */}
         <button
-          className="lg:hidden p-2 text-gray-400 hover:text-white cursor-pointer"
+          className="lg:hidden p-1.5 text-gray-400 hover:text-white cursor-pointer sm:p-2"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}

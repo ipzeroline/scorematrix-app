@@ -9,6 +9,7 @@ import path from "path";
 
 const NEWS_DATA_DIR = path.join(process.cwd(), "src", "data", "news");
 export const NEWS_PAGE_SIZE = 9;
+const NEWS_GENERATION_ENABLED = process.env.NEWS_GENERATION_ENABLED === "true";
 
 const defaultLocales = LOCALE_CODES;
 
@@ -511,6 +512,10 @@ export async function getTodayArticles(locale: string): Promise<NewsListResult> 
     }
   } catch { /* not cached yet */ }
 
+  if (!NEWS_GENERATION_ENABLED) {
+    return { articles: [], generatedAt: today, source: "fallback" };
+  }
+
   // Generate from API
   try {
     const fixtures = await loadFixturesForDate(50).catch(() => getMockApiFootballFixtures(50));
@@ -672,6 +677,10 @@ export async function getAllNewsStaticParams(): Promise<Array<{ locale: string; 
 }
 
 export async function regenerateTodayNews(): Promise<{ success: boolean; count: number }> {
+  if (!NEWS_GENERATION_ENABLED) {
+    return { success: false, count: 0 };
+  }
+
   const today = todayStr();
   try {
     const fixtures = await loadFixturesForDate(50).catch(() => getMockApiFootballFixtures(50));
