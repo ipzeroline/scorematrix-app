@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -8,7 +8,9 @@ import { Logo } from "./Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { UserMenu } from "./UserMenu";
 import { cn } from "@/lib/utils";
+import { getMemberProfile } from "@/lib/auth-api";
 import { useNotificationStore } from "@/stores/notification-store";
+import { useUserStore } from "@/stores/user-store";
 
 const NAV_LINKS = [
   { href: "/livescore", label: "livescore" },
@@ -16,16 +18,47 @@ const NAV_LINKS = [
   { href: "/predict", label: "predict" },
   { href: "/ai-insight", label: "aiInsight" },
   { href: "/leaderboard", label: "leaderboard" },
-  { href: "/missions", label: "missions" },
-  { href: "/rewards", label: "rewards" },
+  { href: "/missions", label: "missions", authRequired: true },
+  { href: "/rewards", label: "rewards", authRequired: true },
   { href: "/news", label: "news" },
 ];
+
+const emptySubscribe = () => () => {};
 
 export function Header() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const username = useUserStore((s) => s.username);
+  const freePoints = useUserStore((s) => s.freePoints);
+  const premiumCredits = useUserStore((s) => s.premiumCredits);
+  const syncWallet = useUserStore((s) => s.syncWallet);
+  const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || isLoggedIn);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let active = true;
+
+    getMemberProfile({ locale })
+      .then((response) => {
+        if (!active || !response.data?.profile) return;
+        const profile = response.data.profile;
+        syncWallet({
+          freePoints: Number(profile.point_deposit ?? profile.balance_free ?? 0),
+          premiumCredits: Number(profile.credit ?? 0),
+        });
+      })
+      .catch(() => {
+        // Keep the last known wallet values in the navbar if profile sync fails.
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn, locale, syncWallet]);
 
   const isActive = (href: string) =>
     pathname.includes(`/${locale}${href}`);
@@ -33,11 +66,19 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 glass border-b border-gray-800/50">
       <div className="max-w-[1440px] mx-auto px-4 h-14 flex items-center gap-4">
+        {/* Mobile hamburger */}
+        <button
+          className="lg:hidden p-2 text-gray-400 hover:text-white cursor-pointer"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+
         <Logo />
 
         {/* Desktop nav */}
         <nav className="hidden lg:flex items-center gap-1 ml-4">
-          {NAV_LINKS.map((link) => (
+          {visibleNavLinks.map((link) => (
             <Link
               key={link.href}
               href={`/${locale}${link.href}`}
@@ -59,24 +100,22 @@ export function Header() {
           <LanguageSwitcher />
         </div>
 
-        <NotificationBell />
+        {isLoggedIn && <NotificationBell />}
 
-        <UserMenu isLoggedIn username="CyberFan99" freePoints={2840} premiumCredits={150} role="admin" />
+        <UserMenu
+          isLoggedIn={isLoggedIn}
+          username={username}
+          freePoints={freePoints}
+          premiumCredits={premiumCredits}
+        />
 
-        {/* Mobile hamburger */}
-        <button
-          className="lg:hidden p-2 text-gray-400 hover:text-white cursor-pointer"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
       </div>
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
         <nav className="lg:hidden border-t border-gray-800 bg-[#12121a] p-4 animate-slide-up">
           <div className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
+            {visibleNavLinks.map((link) => (
               <Link
                 key={link.href}
                 href={`/${locale}${link.href}`}
@@ -104,16 +143,16 @@ export function Header() {
 function NotificationBell() {
   const { locale } = useParams<{ locale: string }>();
   const [open, setOpen] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const notifications = useNotificationStore((s) => s.notifications);
   const markRead = useNotificationStore((s) => s.markRead);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
   const unreadCount = isMounted ? notifications.filter((n) => !n.read).length : 0;
   const recent = isMounted ? notifications.slice(0, 5) : [];
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   return (
     <div className="relative">

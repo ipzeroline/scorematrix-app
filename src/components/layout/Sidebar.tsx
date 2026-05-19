@@ -10,8 +10,8 @@ import {
   Calendar,
   CheckCircle2,
   ChevronRight,
-  Coins,
   Crown,
+  Coins,
   Gift,
   Home,
   Newspaper,
@@ -23,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/stores/user-store";
 
 const SIDEBAR_LINKS = [
   { href: "", label: "home", icon: Home },
@@ -30,14 +31,14 @@ const SIDEBAR_LINKS = [
   { href: "/matches", label: "matches", icon: Calendar },
   { href: "/predict", label: "predict", icon: Target },
   { href: "/ai-insight", label: "aiInsight", icon: Brain },
-  { href: "/leaderboard", label: "leaderboard", icon: Trophy },
-  { href: "/missions", label: "missions", icon: Zap },
-  { href: "/events", label: "events", icon: Sparkles },
-  { href: "/rewards", label: "rewards", icon: Gift },
+  { href: "/leaderboard", label: "leaderboard", icon: Trophy, authRequired: true },
+  { href: "/missions", label: "missions", icon: Zap, authRequired: true },
+  { href: "/events", label: "events", icon: Sparkles, authRequired: true },
+  { href: "/rewards", label: "rewards", icon: Gift, authRequired: true },
   { href: "/credits", label: "credits", icon: Coins },
-  { href: "/stats", label: "stats", icon: BarChart3 },
-  { href: "/affiliate", label: "affiliate", icon: Share2 },
-  { href: "/leagues", label: "leagues", icon: Users },
+  { href: "/stats", label: "stats", icon: BarChart3, authRequired: true },
+  { href: "/affiliate", label: "affiliate", icon: Share2, authRequired: true },
+  { href: "/leagues", label: "leagues", icon: Users, authRequired: true },
   { href: "/news", label: "news", icon: Newspaper },
 ];
 
@@ -72,6 +73,8 @@ export function Sidebar() {
   const t = useTranslations();
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const visibleLinks = SIDEBAR_LINKS.filter((link) => !link.authRequired || isLoggedIn);
 
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;
@@ -81,7 +84,7 @@ export function Sidebar() {
   return (
     <aside className="hidden lg:flex min-h-[calc(100vh-3.5rem)] w-56 shrink-0 flex-col border-r border-gray-800/50 bg-[#0a0a0f] p-3 sticky top-14">
       <nav className="flex flex-col gap-0.5">
-        {SIDEBAR_LINKS.map((link) => {
+        {visibleLinks.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
           return (
@@ -103,10 +106,11 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-3 space-y-2">
-        <Link
-          href={`/${locale}/leaderboard`}
-          className="group block rounded-xl border border-amber-300/20 bg-amber-300/8 p-2 transition-colors hover:border-amber-300/35 hover:bg-amber-300/12"
-        >
+        {isLoggedIn && (
+          <Link
+            href={`/${locale}/leaderboard`}
+            className="group block rounded-xl border border-amber-300/20 bg-amber-300/8 p-2 transition-colors hover:border-amber-300/35 hover:bg-amber-300/12"
+          >
           <div className="mb-1.5 flex items-center justify-between">
             <span className="flex items-center gap-2 text-xs font-semibold text-amber-100">
               <Trophy size={14} className="text-amber-300" aria-hidden="true" />
@@ -139,12 +143,14 @@ export function Sidebar() {
               </div>
             ))}
           </div>
-        </Link>
+          </Link>
+        )}
 
-        <Link
-          href={`/${locale}/missions`}
-          className="group block rounded-xl border border-purple-300/20 bg-purple-300/8 p-2 transition-colors hover:border-purple-300/35 hover:bg-purple-300/12"
-        >
+        {isLoggedIn && (
+          <Link
+            href={`/${locale}/missions`}
+            className="group block rounded-xl border border-purple-300/20 bg-purple-300/8 p-2 transition-colors hover:border-purple-300/35 hover:bg-purple-300/12"
+          >
           <div className="mb-1.5 flex items-center justify-between">
             <span className="flex items-center gap-2 text-xs font-semibold text-purple-100">
               <Zap size={14} className="text-purple-300" aria-hidden="true" />
@@ -191,12 +197,14 @@ export function Sidebar() {
               );
             })}
           </div>
-        </Link>
+          </Link>
+        )}
 
-        <Link
-          href={`/${locale}/rewards`}
-          className="group block rounded-xl border border-pink-300/20 bg-pink-300/8 p-2 transition-colors hover:border-pink-300/35 hover:bg-pink-300/12"
-        >
+        {isLoggedIn && (
+          <Link
+            href={`/${locale}/rewards`}
+            className="group block rounded-xl border border-pink-300/20 bg-pink-300/8 p-2 transition-colors hover:border-pink-300/35 hover:bg-pink-300/12"
+          >
           <div className="mb-1.5 flex items-center justify-between">
             <span className="flex items-center gap-2 text-xs font-semibold text-pink-100">
               <Gift size={14} className="text-pink-300" aria-hidden="true" />
@@ -233,7 +241,8 @@ export function Sidebar() {
               </div>
             ))}
           </div>
-        </Link>
+          </Link>
+        )}
       </div>
 
       <div className="h-3 shrink-0" />

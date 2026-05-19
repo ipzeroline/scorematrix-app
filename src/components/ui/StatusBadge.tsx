@@ -30,12 +30,15 @@ const statusConfig: Record<
 };
 
 interface StatusBadgeProps {
-  status: MatchStatus;
+  status: MatchStatus | string;
   className?: string;
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = statusConfig[status];
+  const config = statusConfig[status as MatchStatus] ?? {
+    label: String(status || "UNKNOWN").toUpperCase(),
+    className: "bg-gray-500/10 text-gray-400 border-gray-500/20",
+  };
 
   return (
     <span

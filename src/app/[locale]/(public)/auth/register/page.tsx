@@ -1,14 +1,17 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
-import { teams } from "@/data/teams";
-import { leagues } from "@/data/leagues";
+import { FavoriteTeamSelect } from "@/components/auth/FavoriteTeamSelect";
 import { LOCALES } from "@/i18n";
+import { ApiClientError } from "@/lib/api-client";
+import { registerApp } from "@/lib/auth-api";
+import { getSoccerTeamGroups, type SoccerTeamGroup } from "@/lib/soccer-api";
+import { useNotificationStore } from "@/stores/notification-store";
 
 type StrengthLevel = "weak" | "fair" | "strong";
 
@@ -27,23 +30,106 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const teamOptions = [
-  { value: "", label: "—" },
-  ...teams
-    .map((team) => {
-      const league = leagues.find((l) => l.id === team.leagueId);
-      return {
-        value: team.id,
-        label: `${league?.flagEmoji ?? ""} ${team.name} (${team.shortName})`,
-      };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label)),
-];
-
 const languageOptions = LOCALES.map((l) => ({
   value: l.code,
   label: `${l.native} (${l.label})`,
 }));
+
+const countryOptions = [
+  { value: "", label: "—" },
+  { value: "TH", label: "TH - Thailand" },
+  { value: "LA", label: "LA - Laos" },
+  { value: "KH", label: "KH - Cambodia" },
+  { value: "MM", label: "MM - Myanmar" },
+  { value: "MY", label: "MY - Malaysia" },
+  { value: "SG", label: "SG - Singapore" },
+  { value: "VN", label: "VN - Vietnam" },
+  { value: "OTHER", label: "OTHER" },
+];
+
+const demoProfiles = [
+  {
+    username: "matrixace",
+    displayName: "Matrix Ace",
+    phone: "0812345678",
+    birthYear: "1996",
+    country: "TH",
+    playerType: "analyst",
+    referralCode: "SM-DEMO1",
+    password: "Demo1234",
+    marketingConsent: true,
+  },
+  {
+    username: "neonstriker",
+    displayName: "Neon Striker",
+    phone: "0823456789",
+    birthYear: "1999",
+    country: "LA",
+    playerType: "competitive",
+    referralCode: "SM-DEMO2",
+    password: "Demo5678",
+    marketingConsent: false,
+  },
+  {
+    username: "cybergoal",
+    displayName: "Cyber Goal",
+    phone: "0834567890",
+    birthYear: "1994",
+    country: "KH",
+    playerType: "casual",
+    referralCode: "SM-DEMO3",
+    password: "Demo9012",
+    marketingConsent: true,
+  },
+] as const;
+
+const invalidDemoProfiles = [
+  {
+    username: "ab",
+    email: "not-an-email",
+    displayName: "A".repeat(101),
+    phone: "0".repeat(21),
+    birthYear: "1899",
+    country: "TH",
+    favoriteTeam: "",
+    playerType: "analyst",
+    referralCode: "SM-INVALID-1",
+    password: "short",
+    confirmPassword: "different",
+    acceptTerms: false,
+    marketingConsent: true,
+  },
+  {
+    username: "x".repeat(21),
+    email: `${"long".repeat(25)}@demo.test`,
+    displayName: "Invalid Long Display Name",
+    phone: "081234567890123456789",
+    birthYear: String(new Date().getFullYear() + 1),
+    country: "LA",
+    favoriteTeam: "",
+    playerType: "competitive",
+    referralCode: "REF-CODE-TOO-LONG-123456",
+    password: "TooLong12345",
+    confirmPassword: "TooLong12345",
+    acceptTerms: true,
+    marketingConsent: false,
+  },
+  {
+    username: "",
+    email: "",
+    displayName: "Missing Required Fields",
+    phone: "",
+    birthYear: "abcd",
+    country: "KH",
+    favoriteTeam: "",
+    playerType: "casual",
+    referralCode: "SM-INVALID-3",
+    password: "",
+    confirmPassword: "Demo1234",
+    acceptTerms: false,
+    marketingConsent: true,
+  },
+] as const;
 
 function sanitizeReferralCode(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 24);
@@ -51,11 +137,12 @@ function sanitizeReferralCode(value: string) {
 
 export default function RegisterPage() {
   const t = useTranslations("auth");
+  const tCommon = useTranslations("common");
   const { locale } = useParams<{ locale: string }>();
+  const addToast = useNotificationStore((s) => s.addToast);
   const searchParams = useSearchParams();
   const initialReferralCode = sanitizeReferralCode(searchParams.get("ref") ?? "");
   const currentYear = new Date().getFullYear();
-  const latestAllowedBirthYear = currentYear - 13;
   const playerTypeOptions = [
     { value: "", label: t("selectPlayerType") },
     { value: "casual", label: t("playerTypeCasual") },
@@ -69,6 +156,7 @@ export default function RegisterPage() {
     displayName: "",
     phone: "",
     birthYear: "",
+    country: "",
     favoriteTeam: "",
     playerType: "",
     language: locale as string,
@@ -81,14 +169,101 @@ export default function RegisterPage() {
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [teamGroups, setTeamGroups] = useState<SoccerTeamGroup[]>([]);
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    getSoccerTeamGroups({ locale })
+      .then((response) => {
+        if (!active) return;
+        setTeamGroups(response.teams);
+      })
+      .catch(() => {
+        if (!active) return;
+        setTeamGroups([]);
+      })
+      .finally(() => {
+        if (!active) return;
+        setTeamsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [locale]);
 
   const markTouched = (field: string) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
 
   const update = (field: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setServerError("");
+  };
+
+  const fillDemoData = () => {
+    const profile = demoProfiles[Math.floor(Math.random() * demoProfiles.length)];
+    const favoriteTeam = pickRandomTeamId(teamGroups);
+    const suffix = Math.random().toString(36).slice(2, 6);
+    const username = `${profile.username}${suffix}`.slice(0, 20);
+
+    setForm({
+      username,
+      email: `${username}@demo.scorematrix.test`,
+      displayName: profile.displayName,
+      phone: profile.phone,
+      birthYear: profile.birthYear,
+      country: profile.country,
+      favoriteTeam,
+      playerType: profile.playerType,
+      language: locale,
+      referralCode: profile.referralCode,
+      password: profile.password,
+      confirmPassword: profile.password,
+      acceptTerms: true,
+      marketingConsent: profile.marketingConsent,
+    });
+    setTouched({});
+    setServerError("");
+  };
+
+  const fillInvalidDemoData = () => {
+    const profile =
+      invalidDemoProfiles[Math.floor(Math.random() * invalidDemoProfiles.length)];
+
+    setForm({
+      username: profile.username,
+      email: profile.email,
+      displayName: profile.displayName,
+      phone: profile.phone,
+      birthYear: profile.birthYear,
+      country: profile.country,
+      favoriteTeam: profile.favoriteTeam,
+      playerType: profile.playerType,
+      language: locale,
+      referralCode: profile.referralCode,
+      password: profile.password,
+      confirmPassword: profile.confirmPassword,
+      acceptTerms: profile.acceptTerms,
+      marketingConsent: profile.marketingConsent,
+    });
+    setTouched({
+      username: true,
+      email: true,
+      displayName: true,
+      phone: true,
+      birthYear: true,
+      favoriteTeam: true,
+      playerType: true,
+      language: true,
+      referralCode: true,
+      password: true,
+      confirmPassword: true,
+      acceptTerms: true,
+    });
     setServerError("");
   };
 
@@ -102,21 +277,38 @@ export default function RegisterPage() {
     if (touched.email || form.email) {
       if (!form.email) e.email = t("emailRequired");
       else if (!isValidEmail(form.email)) e.email = t("emailInvalid");
+      else if (form.email.length > 100) e.email = t("emailMaxLength");
+    }
+    if (touched.displayName || form.displayName) {
+      if (form.displayName.length > 100) e.displayName = t("displayNameMaxLength");
     }
     if (touched.phone || form.phone) {
-      if (form.phone && !/^[0-9+\-\s()]{8,20}$/.test(form.phone)) {
-        e.phone = t("phoneInvalid");
+      if (form.phone.length > 20) {
+        e.phone = t("phoneMaxLength");
       }
     }
     if (touched.birthYear || form.birthYear) {
       const year = Number(form.birthYear);
-      if (!Number.isInteger(year) || year < 1900 || year > latestAllowedBirthYear) {
+      if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
         e.birthYear = t("birthYearInvalid");
       }
+    }
+    if (touched.favoriteTeam || form.favoriteTeam) {
+      if (form.favoriteTeam.length > 100) e.favoriteTeam = t("favoriteTeamMaxLength");
+    }
+    if (touched.playerType || form.playerType) {
+      if (form.playerType.length > 50) e.playerType = t("playerTypeMaxLength");
+    }
+    if (touched.language || form.language) {
+      if (form.language.length > 10) e.language = t("languageMaxLength");
+    }
+    if (touched.referralCode || form.referralCode) {
+      if (form.referralCode.length > 24) e.referralCode = t("referralCodeMaxLength");
     }
     if (touched.password || form.password) {
       if (!form.password) e.password = t("passwordRequired");
       else if (form.password.length < 8) e.password = t("passwordMinLength");
+      else if (form.password.length > 10) e.password = t("passwordMaxLength");
     }
     if (touched.confirmPassword || form.confirmPassword) {
       if (form.confirmPassword && form.password !== form.confirmPassword) {
@@ -127,24 +319,23 @@ export default function RegisterPage() {
       if (!form.acceptTerms) e.acceptTerms = t("termsRequired");
     }
     return e;
-  }, [form, latestAllowedBirthYear, touched, t]);
+  }, [form, currentYear, touched, t]);
 
   const hasErrors = Object.keys(errors).length > 0;
   const allRequiredFilled =
-    form.username && form.email && form.password && form.confirmPassword && form.acceptTerms;
+    form.username && form.email && form.password && form.acceptTerms;
 
   const passwordStrength = useMemo(
     () => getPasswordStrength(form.password),
     [form.password]
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({
       username: true,
       email: true,
       password: true,
-      confirmPassword: true,
       acceptTerms: true,
     });
 
@@ -153,11 +344,44 @@ export default function RegisterPage() {
     setLoading(true);
     setServerError("");
 
-    // TODO: replace with real API call
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await registerApp(
+        {
+          username: form.username.trim(),
+          email: form.email.trim(),
+          password: form.password,
+          confirmPassword: form.confirmPassword || undefined,
+          displayName: form.displayName.trim() || undefined,
+          phone: form.phone.trim() || undefined,
+          birthYear: form.birthYear ? Number(form.birthYear) : undefined,
+          country: form.country || undefined,
+          favoriteTeam: form.favoriteTeam || undefined,
+          playerType: form.playerType || undefined,
+          language: form.language,
+          referralCode: form.referralCode || undefined,
+          acceptTerms: form.acceptTerms,
+          acceptTeam: Boolean(form.favoriteTeam),
+          marketingConsent: form.marketingConsent,
+        },
+        { locale: form.language }
+      );
+      addToast({
+        type: "success",
+        title: t("registerSuccess"),
+        message: form.username.trim(),
+      });
       setSuccess(true);
-    }, 1500);
+    } catch (error) {
+      const message = getRegisterErrorMessage(error);
+      setServerError(message);
+      addToast({
+        type: "error",
+        title: t("registerFailed"),
+        message,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -204,6 +428,24 @@ export default function RegisterPage() {
           noValidate
           className="rounded-2xl border border-gray-800 bg-[#12121a] p-6 space-y-4"
         >
+        <div className="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            onClick={fillInvalidDemoData}
+            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-100 transition-colors hover:border-red-400/50 hover:bg-red-500/15"
+          >
+            {t("invalidDemoData")}
+          </button>
+          <button
+            type="button"
+            onClick={fillDemoData}
+            disabled={teamsLoading || teamGroups.length === 0}
+            className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:border-cyan-400/50 hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {t("demoData")}
+          </button>
+        </div>
+
         {/* Username */}
         <Input
           label={t("username")}
@@ -226,6 +468,7 @@ export default function RegisterPage() {
           onBlur={() => markTouched("email")}
           error={errors.email}
           autoComplete="email"
+          maxLength={100}
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -234,7 +477,10 @@ export default function RegisterPage() {
             placeholder="CyberFan"
             value={form.displayName}
             onChange={(e) => update("displayName", e.target.value)}
+            onBlur={() => markTouched("displayName")}
+            error={errors.displayName}
             autoComplete="name"
+            maxLength={100}
           />
           <Input
             label={`${t("phone")} (${t("optional")})`}
@@ -245,21 +491,35 @@ export default function RegisterPage() {
             onBlur={() => markTouched("phone")}
             error={errors.phone}
             autoComplete="tel"
+            maxLength={20}
           />
         </div>
 
-        <Input
-          label={t("birthYear")}
-          type="number"
-          placeholder="1998"
-          value={form.birthYear}
-          onChange={(e) => update("birthYear", e.target.value)}
-          onBlur={() => markTouched("birthYear")}
-          error={errors.birthYear}
-          min={1900}
-          max={latestAllowedBirthYear}
-          inputMode="numeric"
-        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input
+            label={t("birthYear")}
+            type="number"
+            placeholder="1998"
+            value={form.birthYear}
+            onChange={(e) => update("birthYear", e.target.value)}
+            onBlur={() => markTouched("birthYear")}
+            error={errors.birthYear}
+            min={1900}
+            max={currentYear}
+            inputMode="numeric"
+          />
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              {t("country")}
+            </label>
+            <Select
+              options={countryOptions}
+              value={form.country}
+              onChange={(v) => update("country", v)}
+              className="w-full"
+            />
+          </div>
+        </div>
 
         {/* Favorite team + Language row */}
         <div className="grid gap-3 sm:grid-cols-2">
@@ -267,15 +527,12 @@ export default function RegisterPage() {
             <label className="block text-sm font-medium text-gray-400 mb-1">
               {t("favoriteTeam")}
             </label>
-            <Select
-              options={teamOptions.map((opt) => ({
-                value: opt.value,
-                label: opt.label,
-              }))}
+            <FavoriteTeamSelect
+              groups={teamGroups}
               value={form.favoriteTeam}
               onChange={(v) => update("favoriteTeam", v)}
-              placeholder={t("selectTeam")}
-              className="w-full"
+              placeholder={teamsLoading ? tCommon("loading") : t("selectTeam")}
+              loading={teamsLoading}
             />
           </div>
           <div>
@@ -286,7 +543,7 @@ export default function RegisterPage() {
               options={playerTypeOptions}
               value={form.playerType}
               onChange={(v) => update("playerType", v)}
-              className="w-full"
+              className="h-[50px] w-full"
             />
           </div>
         </div>
@@ -348,6 +605,7 @@ export default function RegisterPage() {
             onBlur={() => markTouched("password")}
             error={errors.password}
             autoComplete="new-password"
+            maxLength={10}
           />
           {form.password && (
             <div className="mt-2 flex items-center gap-2">
@@ -399,6 +657,7 @@ export default function RegisterPage() {
           onBlur={() => markTouched("confirmPassword")}
           error={errors.confirmPassword}
           autoComplete="new-password"
+          maxLength={10}
         />
 
         {/* Terms checkbox */}
@@ -483,6 +742,35 @@ export default function RegisterPage() {
       </aside>
     </div>
   );
+}
+
+function getRegisterErrorMessage(error: unknown) {
+  if (error instanceof ApiClientError) {
+    const payload = error.payload;
+
+    if (
+      payload &&
+      typeof payload === "object" &&
+      "errors" in payload &&
+      payload.errors &&
+      typeof payload.errors === "object"
+    ) {
+      const firstFieldErrors = Object.values(payload.errors as Record<string, string[]>)[0];
+      if (firstFieldErrors?.[0]) return firstFieldErrors[0];
+    }
+
+    return error.message;
+  }
+
+  if (error instanceof Error) return error.message;
+  return "Unable to create account";
+}
+
+function pickRandomTeamId(groups: SoccerTeamGroup[]) {
+  const teams = groups.flatMap((group) => group.teams);
+  if (teams.length === 0) return "";
+  const team = teams[Math.floor(Math.random() * teams.length)];
+  return String(team.id);
 }
 
 function InfoBlock({ title, items }: { title: string; items: string[] }) {

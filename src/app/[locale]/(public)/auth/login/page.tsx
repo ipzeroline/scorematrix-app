@@ -1,10 +1,14 @@
 "use client";
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ApiClientError } from "@/lib/api-client";
+import { login } from "@/lib/auth-api";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useUserStore } from "@/stores/user-store";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -13,6 +17,10 @@ function isValidEmail(email: string) {
 export default function LoginPage() {
   const t = useTranslations("auth");
   const { locale } = useParams<{ locale: string }>();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const setLoggedInUser = useUserStore((s) => s.login);
+  const addToast = useNotificationStore((s) => s.addToast);
 
   const [form, setForm] = useState({
     identifier: "",
@@ -46,8 +54,9 @@ export default function LoginPage() {
   }, [form, touched, t]);
 
   const hasErrors = Object.keys(errors).length > 0;
+  const nextPath = normalizeNextPath(searchParams.get("next"), locale);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ identifier: true, password: true });
 
@@ -56,10 +65,46 @@ export default function LoginPage() {
     setLoading(true);
     setServerError("");
 
-    // TODO: replace with real API call
-    setTimeout(() => {
+    try {
+      const response = await login(
+        {
+          identifier: form.identifier.trim(),
+          password: form.password,
+          rememberMe: form.rememberMe,
+        },
+        {
+          locale,
+          remember: form.rememberMe,
+        }
+      );
+      const loginData = response.data;
+      if (!loginData) {
+        throw new Error("Login response did not include member data");
+      }
+
+      setLoggedInUser({
+        id: String(loginData.member.code),
+        username: loginData.member.user_name,
+        displayName: loginData.member.name || loginData.member.user_name,
+      });
+      addToast({
+        type: "success",
+        title: t("loginSuccess"),
+        message: loginData.member.name || loginData.member.user_name,
+      });
+      router.push(nextPath);
+      router.refresh();
+    } catch (error) {
+      const message = getLoginErrorMessage(error);
+      setServerError(message);
+      addToast({
+        type: "error",
+        title: t("loginFailed"),
+        message,
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -185,6 +230,23 @@ export default function LoginPage() {
       </aside>
     </div>
   );
+}
+
+function getLoginErrorMessage(error: unknown) {
+  if (error instanceof ApiClientError) {
+    return error.message;
+  }
+
+  if (error instanceof Error) return error.message;
+  return "Unable to log in";
+}
+
+function normalizeNextPath(nextPath: string | null, locale: string) {
+  if (!nextPath) return `/${locale}`;
+  if (nextPath === `/${locale}` || nextPath.startsWith(`/${locale}/`)) {
+    return nextPath;
+  }
+  return `/${locale}`;
 }
 
 function InfoBlock({ title, items }: { title: string; items: string[] }) {

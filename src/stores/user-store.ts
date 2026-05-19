@@ -9,9 +9,11 @@ interface UserState {
   email: string;
   phone: string;
   birthYear: string;
+  country: string;
   favoriteTeam: string;
   playerType: string;
   language: string;
+  marketingConsent: boolean;
   freePoints: number;
   premiumCredits: number;
   xp: number;
@@ -57,7 +59,8 @@ interface UserActions {
   incrementReferral: () => void;
   addReferralEarnings: (amount: number) => void;
   setReferralCode: (code: string) => void;
-  updateProfile: (profile: Pick<UserState, 'displayName' | 'email' | 'phone' | 'birthYear' | 'favoriteTeam' | 'playerType' | 'language'>) => void;
+  syncWallet: (wallet: { freePoints: number; premiumCredits: number }) => void;
+  updateProfile: (profile: Partial<Pick<UserState, 'displayName' | 'email' | 'phone' | 'birthYear' | 'country' | 'favoriteTeam' | 'playerType' | 'language' | 'marketingConsent'>>) => void;
 }
 
 const defaultPreferences: UserState['preferences'] = {
@@ -70,16 +73,18 @@ const defaultPreferences: UserState['preferences'] = {
 };
 
 const initialState: UserState = {
-  isLoggedIn: true,
-  userId: 'user-001',
-  username: 'CyberFan99',
-  displayName: 'CyberFan99',
-  email: 'cyberfan@example.com',
-  phone: '+66 89 123 4567',
-  birthYear: '1998',
-  favoriteTeam: 'team-46',
-  playerType: 'competitive',
+  isLoggedIn: false,
+  userId: '',
+  username: '',
+  displayName: '',
+  email: '',
+  phone: '',
+  birthYear: '',
+  country: '',
+  favoriteTeam: '',
+  playerType: '',
   language: 'th',
+  marketingConsent: false,
   freePoints: 2840,
   premiumCredits: 150,
   xp: 12000,
@@ -123,9 +128,11 @@ export const useUserStore = create<UserState & UserActions>()(
           email: '',
           phone: '',
           birthYear: '',
+          country: '',
           favoriteTeam: '',
           playerType: '',
           language: '',
+          marketingConsent: false,
         }),
 
       addFreePoints: (amount) =>
@@ -210,6 +217,8 @@ export const useUserStore = create<UserState & UserActions>()(
         set((s) => ({ totalReferralEarnings: s.totalReferralEarnings + amount })),
 
       setReferralCode: (code) => set({ referralCode: code }),
+
+      syncWallet: (wallet) => set(wallet),
 
       updateProfile: (profile) => set(profile),
     }),

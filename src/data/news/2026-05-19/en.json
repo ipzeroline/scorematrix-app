@@ -1,0 +1,39 @@
+[
+  {
+    "id": "news-2026-05-19-4",
+    "slug": "today-football-api-roundup-2026-05-19",
+    "title": "Today Football API Roundup",
+    "summary": "ScoreMatrix pulled 50 fixtures from today's API feed across Premier League, Ligue 1, Veikkausliiga, Professional League.",
+    "content": "ScoreMatrix news uses the daily API feed to prioritize the football stories worth tracking. Today's feed includes 50 fixtures across Premier League, Ligue 1, Veikkausliiga, Professional League.\n\nFeatured data points include Thimphu City vs Drukpa, Shirak vs FC Urartu, JSK vs Céleste, giving AI Insights and Predictions fresh context for users.\n\nThe daily articles are saved as locale-specific JSON so the news pages stay fast, searchable, and ready for SEO in every supported language.",
+    "image": "/brand/scorematrix-logo.png",
+    "author": "ScoreMatrix Data Desk",
+    "category": "feature",
+    "publishedAt": "2026-05-18T17:12:04.925Z",
+    "tags": [
+      "API",
+      "Fixtures",
+      "Premier League",
+      "Ligue 1",
+      "Veikkausliiga",
+      "Professional League"
+    ],
+    "readTime": 3
+  },
+  {
+    "id": "news-2026-05-19-3",
+    "slug": "prediction-checklist-for-2026-05-19-fixtures",
+    "title": "Prediction Checklist for 2026-05-19 Fixtures",
+    "summary": "A fresh daily checklist for reading form, squad news, and motivation before locking in today's ScoreMatrix predictions.",
+    "content": "Before making predictions for 2026-05-19, start with the matches where team news, recent form, and motivation point in the same direction.\n\n1. Compare the last five matches, but separate strong wins from low-pressure results. A late-season win against a motivated opponent usually carries more signal than a comfortable result against a rotated side.\n\n2. Check whether missing players affect the spine of the team: goalkeeper, center-back, central midfielder, and main scorer. Absences in those roles usually change match control more than wide rotation pieces.\n\n3. Look for fixture pressure. Teams chasing titles, playoff spots, or safety often play with clearer urgency than sides already settled in mid-table.\n\nUse the checklist alongside ScoreMatrix AI Insights, then lock the prediction that has the strongest agreement between data and football context.",
+    "image": "/images/news/tips.jpg",
+    "author": "Priya Sharma",
+    "category": "tips",
+    "publishedAt": "2026-05-18T17:12:04.925Z",
+    "tags": [
+      "Tips",
+      "Predictions",
+      "Strategy"
+    ],
+    "readTime": 5
+  }
+]

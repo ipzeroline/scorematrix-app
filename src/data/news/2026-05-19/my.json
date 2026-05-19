@@ -1,0 +1,39 @@
+[
+  {
+    "id": "news-2026-05-19-4",
+    "slug": "today-football-api-roundup-2026-05-19",
+    "title": "ယနေ့ Football API အချက်အလက် စုစည်းချက်",
+    "summary": "ScoreMatrix သည် ယနေ့ API feed မှ Premier League, Ligue 1, Veikkausliiga, Professional League အတွင်း ပွဲစဉ် 50 ခုကို ဆွဲယူထားသည်။",
+    "content": "ScoreMatrix သတင်းစနစ်သည် နေ့စဉ် API feed ကို အသုံးပြုပြီး စောင့်ကြည့်သင့်သည့် ဘောလုံးအကြောင်းအရာများကို ဦးစားပေးစီစဉ်သည်။ ယနေ့ feed တွင် Premier League, Ligue 1, Veikkausliiga, Professional League မှ ပွဲစဉ် 50 ခု ပါဝင်သည်။\n\nအဓိကဒေတာအချက်များမှာ Thimphu City vs Drukpa, Shirak vs FC Urartu, JSK vs Céleste ဖြစ်ပြီး AI Insights နှင့် Predictions အတွက် လတ်ဆတ်သော ပတ်ဝန်းကျင်အချက်အလက် ပေးသည်။\n\nနေ့စဉ်ဆောင်းပါးများကို ဘာသာစကားအလိုက် JSON အဖြစ် သိမ်းထားသောကြောင့် သတင်းစာမျက်နှာများ မြန်ဆန်၊ ရှာဖွေနိုင်ပြီး locale တစ်ခုချင်းစီအတွက် SEO အဆင်သင့်ဖြစ်သည်။",
+    "image": "/brand/scorematrix-logo.png",
+    "author": "ScoreMatrix Data Desk",
+    "category": "feature",
+    "publishedAt": "2026-05-18T17:12:04.925Z",
+    "tags": [
+      "API",
+      "Fixtures",
+      "Premier League",
+      "Ligue 1",
+      "Veikkausliiga",
+      "Professional League"
+    ],
+    "readTime": 3
+  },
+  {
+    "id": "news-2026-05-19-3",
+    "slug": "prediction-checklist-for-2026-05-19-fixtures",
+    "title": "2026-05-19 ပွဲစဉ်များအတွက် ခန့်မှန်းချက် စစ်ဆေးစာရင်း",
+    "summary": "ယနေ့ ScoreMatrix ခန့်မှန်းချက်မတင်မီ ဖောင်၊ အသင်းသတင်းနှင့် လှုံ့ဆော်မှုကို စစ်ရန် နေ့စဉ်စာရင်း။",
+    "content": "ယနေ့ ScoreMatrix လိဒ်ဒါဘုတ်တွင် တက်ချင်ပါသလား။ ထိပ်တန်းခန့်မှန်းသူများ အသုံးပြုလေ့ရှိသော လက်တွေ့ကျသည့် အချက် 3 ချက်ရှိသည်။\n\n1. နာမည်ထက် ဖောင်ကို ဦးစားပေးပါ။ နောက်ဆုံး 5 ပွဲရလဒ်သည် အသင်းအမည် သို့မဟုတ် အဆင့်ထက် ပိုပြောနိုင်သည်။\n\n2. ဒဏ်ရာများ အရေးကြီးသော်လည်း အားလုံးတူညီမဟုတ်ပါ။ ပထမရွေးချယ်မှု ဂိုးသမား သို့မဟုတ် ဂိုးသွင်းအဓိကကစားသမား မပါဝင်မှုသည် အနိုင်ရနိုင်ခြေကို များစွာပြောင်းလဲနိုင်သည်။\n\n3. ဘာအတွက်ကစားနေသည်ကို တွက်ပါ။ ချန်ပီယံဆု သို့မဟုတ် တန်းဆင်းမတိုင်အောင် ရုန်းကန်နေသောအသင်းများသည် ရာသီအဆုံးပိုင်းတွင် ပိုမိုအားထုတ်လေ့ရှိသည်။\n\nခန့်မှန်းချက်မတင်မီ ဤအခြေခံများကို အသုံးပြုပါက တိကျမှုကို တဖြည်းဖြည်း မြှင့်တင်နိုင်မည်။",
+    "image": "/images/news/tips.jpg",
+    "author": "Priya Sharma",
+    "category": "tips",
+    "publishedAt": "2026-05-18T17:12:04.925Z",
+    "tags": [
+      "Tips",
+      "Predictions",
+      "Strategy"
+    ],
+    "readTime": 5
+  }
+]

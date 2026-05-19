@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LOCALES } from "@/lib/constants";
 import { useUserStore } from "@/stores/user-store";
-import { useNotificationStore } from "@/stores/notification-store";
 import { Moon, Bell, Globe, Eye, Clock, Trophy } from "lucide-react";
 
 export default function SettingsPage() {
@@ -16,7 +15,6 @@ export default function SettingsPage() {
   const t = useTranslations();
   const preferences = useUserStore((s) => s.preferences);
   const updatePreference = useUserStore((s) => s.updatePreference);
-  const addToast = useNotificationStore((s) => s.addToast);
   const [language, setLanguage] = useState(locale);
   const [saved, setSaved] = useState(false);
 

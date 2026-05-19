@@ -4,19 +4,22 @@ import { usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Home, Activity, Target, Trophy, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/stores/user-store";
 
 const BOTTOM_LINKS = [
   { href: "", label: "home", icon: Home },
   { href: "/livescore", label: "livescoreShort", icon: Activity },
   { href: "/predict", label: "predict", icon: Target },
   { href: "/leaderboard", label: "rankShort", icon: Trophy },
-  { href: "/rewards", label: "rewards", icon: Gift },
+  { href: "/rewards", label: "rewards", icon: Gift, authRequired: true },
 ];
 
 export function MobileBottomNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const visibleLinks = BOTTOM_LINKS.filter((link) => !link.authRequired || isLoggedIn);
 
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;
@@ -26,7 +29,7 @@ export function MobileBottomNav() {
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass border-t border-gray-800/50 safe-area-bottom">
       <div className="flex items-center justify-around h-14 px-2">
-        {BOTTOM_LINKS.map((link) => {
+        {visibleLinks.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
           return (

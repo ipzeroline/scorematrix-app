@@ -1,0 +1,39 @@
+[
+  {
+    "id": "news-2026-05-19-4",
+    "slug": "today-football-api-roundup-2026-05-19",
+    "title": "ສະຫຼຸບຂໍ້ມູນບານເຕະຈາກ API ປະຈຳມື້ນີ້",
+    "summary": "ScoreMatrix ດຶງລາຍການແຂ່ງຂັນ 50 ລາຍການຈາກ API ມື້ນີ້ ຄອບຄຸມ Premier League, Ligue 1, Veikkausliiga, Professional League.",
+    "content": "ລະບົບຂ່າວຂອງ ScoreMatrix ໃຊ້ຂໍ້ມູນ API ປະຈຳວັນເພື່ອຈັດລຳດັບປະເດັນບານເຕະທີ່ຄວນຕິດຕາມ. ມື້ນີ້ມີ 50 ລາຍການຈາກ Premier League, Ligue 1, Veikkausliiga, Professional League.\n\nຂໍ້ມູນເດັ່ນລວມເຖິງ Thimphu City vs Drukpa, Shirak vs FC Urartu, JSK vs Céleste ເພື່ອໃຫ້ AI Insights ແລະ Predictions ມີບໍລິບົດສົດໃໝ່.\n\nຂ່າວປະຈຳວັນຖືກບັນທຶກເປັນ JSON ແຍກຕາມພາສາ ເພື່ອໃຫ້ໂຫຼດໄວ ຄົ້ນຫາໄດ້ ແລະຮອງຮັບ SEO.",
+    "image": "/brand/scorematrix-logo.png",
+    "author": "ScoreMatrix Data Desk",
+    "category": "feature",
+    "publishedAt": "2026-05-18T17:12:04.925Z",
+    "tags": [
+      "API",
+      "Fixtures",
+      "Premier League",
+      "Ligue 1",
+      "Veikkausliiga",
+      "Professional League"
+    ],
+    "readTime": 3
+  },
+  {
+    "id": "news-2026-05-19-3",
+    "slug": "prediction-checklist-for-2026-05-19-fixtures",
+    "title": "ເຊັກລິສການທຳນາຍປະຈຳວັນ 2026-05-19",
+    "summary": "ເຊັກລິສສົດໃໝ່ສຳລັບອ່ານຟອມ ຂ່າວທີມ ແລະແຮງຈູງໃຈກ່ອນລັອກຄຳທຳນາຍ.",
+    "content": "ຢາກໄຕ່ອັນດັບໃນ ScoreMatrix ມື້ນີ້ບໍ? ນີ້ແມ່ນ 3 ເຄັດລັບທີ່ຜູ້ທຳນາຍອັນດັບຕົ້ນໃຊ້ຢູ່ເປັນປະຈຳ.\n\n1. ຟອມສຳຄັນກວ່າຊື່ສຽງ. ຜົນ 5 ນັດຫຼ້າສຸດບອກເລື່ອງໄດ້ຫຼາຍກວ່າຊື່ທີມຫຼືອັນດັບ.\n\n2. ອາການບາດເຈັບມີຜົນ ແຕ່ບໍ່ເທົ່າກັນທຸກຕຳແໜ່ງ. ການຂາດຜູ້ຮັກສາປະຕູຕົວຈິງຫຼືດາວຍິງສາມາດປ່ຽນໂອກາດຊະນະໄດ້ຫຼາຍ.\n\n3. ເບິ່ງແຮງຈູງໃຈ. ທີມລຸ້ນແຊ້ມຫຼືໜີຕົກຊັ້ນມັກເຮັດໄດ້ດີກວ່າທີມກາງຕາຕະລາງໃນຊ່ວງທ້າຍລະດູການ.\n\nນຳຫຼັກການເຫຼົ່ານີ້ໄປໃຊ້ກ່ອນລັອກຄຳທຳນາຍ ແລ້ວຄວາມແມ່ນຍຳຈະຄ່ອຍໆດີຂຶ້ນ.",
+    "image": "/images/news/tips.jpg",
+    "author": "Priya Sharma",
+    "category": "tips",
+    "publishedAt": "2026-05-18T17:12:04.925Z",
+    "tags": [
+      "Tips",
+      "Predictions",
+      "Strategy"
+    ],
+    "readTime": 5
+  }
+]

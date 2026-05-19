@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
   User,
@@ -12,6 +13,9 @@ import {
 import { Avatar } from "@/components/ui/Avatar";
 import { PointsBadge } from "@/components/shared/PointsBadge";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
+import { logout as logoutApi } from "@/lib/auth-api";
+import { useNotificationStore } from "@/stores/notification-store";
+import { useUserStore } from "@/stores/user-store";
 
 interface UserMenuProps {
   isLoggedIn?: boolean;
@@ -32,21 +36,44 @@ export function UserMenu({
 }: UserMenuProps) {
   const locale = useLocale();
   const t = useTranslations();
+  const router = useRouter();
+  const logoutUser = useUserStore((s) => s.logout);
+  const addToast = useNotificationStore((s) => s.addToast);
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi({ locale });
+      addToast({
+        type: "success",
+        title: t("auth.logoutSuccess"),
+      });
+    } catch (error) {
+      addToast({
+        type: "warning",
+        title: t("auth.logoutSuccess"),
+        message: error instanceof Error ? error.message : undefined,
+      });
+    } finally {
+      logoutUser();
+      router.push(`/${locale}`);
+      router.refresh();
+    }
+  };
 
   if (!isLoggedIn) {
     return (
       <div className="flex items-center gap-2">
         <Link
-          href={`/${locale}/auth/login`}
-          className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          {t("auth.login")}
-        </Link>
-        <Link
           href={`/${locale}/auth/register`}
           className="px-3 py-1.5 text-sm rounded-lg bg-cyan-500 text-black font-medium hover:bg-cyan-400 transition-colors"
         >
           {t("auth.register")}
+        </Link>
+        <Link
+          href={`/${locale}/auth/login`}
+          className="px-3 py-1.5 text-sm text-gray-400 hover:text-white transition-colors"
+        >
+          {t("auth.login")}
         </Link>
       </div>
     );
@@ -115,7 +142,7 @@ export function UserMenu({
         </Link>
       )}
       <div className="border-t border-gray-800 mt-1 pt-1">
-        <DropdownItem danger>
+        <DropdownItem danger onClick={handleLogout}>
           <span className="flex items-center gap-2">
             <LogOut size={14} /> {t("auth.logout")}
           </span>
