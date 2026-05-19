@@ -54,6 +54,19 @@ export default async function MatchDetailPage({ params }: Props) {
     );
   }
 
+  let matchDetails:
+    | {
+        fixture: ApiFootballFixture;
+        events: Awaited<ReturnType<typeof getApiFootballFixtureDetails>>["events"];
+        lineups: ApiFootballLineup[];
+        statistics: ApiFootballTeamStatistics[];
+        playerStats: ApiFootballPlayerStats[];
+        h2h: ApiFootballFixture[];
+        season: number;
+      }
+    | undefined;
+  let loadErrorMessage: string | undefined;
+
   try {
     const details = await getApiFootballFixtureDetails(apiFixtureId);
     const { fixture, events, lineups, statistics, playerStats } = details;
@@ -63,138 +76,144 @@ export default async function MatchDetailPage({ params }: Props) {
         : [];
     const season = fixture.league.season ?? new Date().getFullYear();
 
-    return (
-      <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
-        <Card neon="cyan" className="overflow-hidden p-3 text-center sm:p-6">
-          <Link
-            href={`/${locale}/football/leagues/${buildLeagueSeoSlug(fixture.league)}?season=${season}`}
-            className="mx-auto mb-4 inline-flex max-w-full items-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-left transition-colors hover:border-cyan-400/40 sm:px-4"
-          >
-            <ApiLeagueLogo
-              name={fixture.league.name}
-              logo={fixture.league.logo}
-              size="md"
-            />
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-bold text-white">
-                {fixture.league.name}
-              </span>
-              <span className="block truncate text-[10px] text-gray-500">
-                {fixture.league.round}
-              </span>
-            </span>
-          </Link>
-          <div className="grid grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_160px_minmax(0,1fr)] sm:gap-3">
-            <TeamHeader
-              name={fixture.home.name}
-              logo={fixture.home.logo}
-              href={
-                fixture.home.apiTeamId
-                  ? `/${locale}/football/teams/${fixture.home.apiTeamId}?league=${fixture.league.apiLeagueId ?? ""}&season=${season}`
-                  : undefined
-              }
-              accent="cyan"
-              align="right"
-            />
-            <div className="text-center">
-              <div className="mb-2 flex justify-center">
-                <StatusBadge status={fixture.status} />
-              </div>
-              <div className="font-mono text-2xl font-bold text-white sm:text-4xl">
-                {fixture.score.home !== null
-                  ? `${fixture.score.home} - ${fixture.score.away}`
-                  : t("common.vs")}
-              </div>
-              <p className="mt-2 break-words font-mono text-[10px] text-gray-500 sm:text-xs">
-                {formatFixtureTime(fixture.kickoffTime)}
-              </p>
-            </div>
-            <TeamHeader
-              name={fixture.away.name}
-              logo={fixture.away.logo}
-              href={
-                fixture.away.apiTeamId
-                  ? `/${locale}/football/teams/${fixture.away.apiTeamId}?league=${fixture.league.apiLeagueId ?? ""}&season=${season}`
-                  : undefined
-              }
-              accent="magenta"
-            />
-          </div>
-          <p className="mt-4 text-xs text-gray-500">
-            {fixture.venue || t("matchDetail.venueUnavailable")}
-          </p>
-          {fixture.status === MatchStatus.UPCOMING && (
-            <div className="mt-4 flex justify-center">
-              <Link href={`/${locale}/predict/${buildFixtureSeoSlug(fixture)}`} className="w-full sm:w-auto">
-                <Button variant="gold" size="md" className="w-full sm:w-auto">
-                  {t("prediction.predictScore")}
-                </Button>
-              </Link>
-            </div>
-          )}
-        </Card>
-
-        <section className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-          <InfoTile icon={ClipboardList} label={t("matchDetail.events")} value={events.length} />
-          <InfoTile icon={BarChart3} label={t("matchDetail.statsGroups")} value={statistics.length} />
-          <InfoTile icon={Shirt} label={t("matchDetail.lineups")} value={lineups.length} />
-          <InfoTile icon={Users} label={t("matchDetail.playerStats")} value={countPlayers(playerStats)} />
-        </section>
-
-        <StatsAnalysisPanel
-          statistics={statistics}
-          labels={{
-            title: t("matchDetail.analysisGraph"),
-            subtitle: t("matchDetail.analysisGraphHint"),
-            empty: t("matchDetail.noTeamStatistics"),
-            balanced: t("matchDetail.balancedStat"),
-          }}
-        />
-
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <EventsPanel events={events} title={t("matchDetail.matchEvents")} emptyLabel={t("matchDetail.noEventData")} />
-          <TeamStatsPanel statistics={statistics} title={t("matchDetail.teamStatistics")} emptyLabel={t("matchDetail.noTeamStatistics")} />
-        </section>
-
-        <H2HPanel h2h={h2h} locale={locale} title={t("matchDetail.h2h")} emptyLabel={t("matchDetail.noH2hData")} vsLabel={t("common.vs")} />
-        <LineupsPanel lineups={lineups} locale={locale} season={season} labels={{
-          empty: t("matchDetail.noLineupData"),
-          coach: t("matchDetail.coach"),
-          unavailable: t("matchDetail.unavailable"),
-          startingXI: t("matchDetail.startingXI"),
-          substitutes: t("matchDetail.substitutes"),
-          formationPitch: t("matchDetail.formationPitch"),
-          noGridData: t("matchDetail.noGridData"),
-        }} />
-        <PlayerStatsPanel playerStats={playerStats} locale={locale} season={season} labels={{
-          empty: t("matchDetail.noPlayerStatistics"),
-          titleSuffix: t("matchDetail.playerStatsTitleSuffix"),
-          player: t("football.table.player"),
-          minutes: t("football.table.minutesShort"),
-          rating: t("football.table.ratingShort"),
-          goalsAssists: t("football.table.goalsAssistsShort"),
-          shots: t("matchDetail.shots"),
-          pass: t("matchDetail.passes"),
-          cards: t("football.table.cards"),
-          captain: t("matchDetail.captain"),
-        }} />
-      </MatchDetailShell>
-    );
+    matchDetails = { fixture, events, lineups, statistics, playerStats, h2h, season };
   } catch (error) {
-    const message =
+    loadErrorMessage =
       error instanceof ApiFootballError
         ? error.message
         : t("matchDetail.loadError");
+  }
 
+  if (!matchDetails) {
     return (
       <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
         <Card className="border-amber-500/20 bg-amber-500/5 p-6 text-center">
           <h1 className="text-lg font-bold text-white">{t("matchDetail.unavailableTitle")}</h1>
-          <p className="mt-2 text-sm text-amber-300">{message}</p>
+          <p className="mt-2 text-sm text-amber-300">{loadErrorMessage}</p>
         </Card>
       </MatchDetailShell>
     );
   }
+
+  const { fixture, events, lineups, statistics, playerStats, h2h, season } = matchDetails;
+
+  return (
+    <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
+      <Card neon="cyan" className="overflow-hidden p-3 text-center sm:p-6">
+        <Link
+          href={`/${locale}/football/leagues/${buildLeagueSeoSlug(fixture.league)}?season=${season}`}
+          className="mx-auto mb-4 inline-flex max-w-full items-center gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2 text-left transition-colors hover:border-cyan-400/40 sm:px-4"
+        >
+          <ApiLeagueLogo
+            name={fixture.league.name}
+            logo={fixture.league.logo}
+            size="md"
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-bold text-white">
+              {fixture.league.name}
+            </span>
+            <span className="block truncate text-[10px] text-gray-500">
+              {fixture.league.round}
+            </span>
+          </span>
+        </Link>
+        <div className="grid grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_160px_minmax(0,1fr)] sm:gap-3">
+          <TeamHeader
+            name={fixture.home.name}
+            logo={fixture.home.logo}
+            href={
+              fixture.home.apiTeamId
+                ? `/${locale}/football/teams/${fixture.home.apiTeamId}?league=${fixture.league.apiLeagueId ?? ""}&season=${season}`
+                : undefined
+            }
+            accent="cyan"
+            align="right"
+          />
+          <div className="text-center">
+            <div className="mb-2 flex justify-center">
+              <StatusBadge status={fixture.status} />
+            </div>
+            <div className="font-mono text-2xl font-bold text-white sm:text-4xl">
+              {fixture.score.home !== null
+                ? `${fixture.score.home} - ${fixture.score.away}`
+                : t("common.vs")}
+            </div>
+            <p className="mt-2 break-words font-mono text-[10px] text-gray-500 sm:text-xs">
+              {formatFixtureTime(fixture.kickoffTime)}
+            </p>
+          </div>
+          <TeamHeader
+            name={fixture.away.name}
+            logo={fixture.away.logo}
+            href={
+              fixture.away.apiTeamId
+                ? `/${locale}/football/teams/${fixture.away.apiTeamId}?league=${fixture.league.apiLeagueId ?? ""}&season=${season}`
+                : undefined
+            }
+            accent="magenta"
+          />
+        </div>
+        <p className="mt-4 text-xs text-gray-500">
+          {fixture.venue || t("matchDetail.venueUnavailable")}
+        </p>
+        {fixture.status === MatchStatus.UPCOMING && (
+          <div className="mt-4 flex justify-center">
+            <Link href={`/${locale}/predict/${buildFixtureSeoSlug(fixture)}`} className="w-full sm:w-auto">
+              <Button variant="gold" size="md" className="w-full sm:w-auto">
+                {t("prediction.predictScore")}
+              </Button>
+            </Link>
+          </div>
+        )}
+      </Card>
+
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        <InfoTile icon={ClipboardList} label={t("matchDetail.events")} value={events.length} />
+        <InfoTile icon={BarChart3} label={t("matchDetail.statsGroups")} value={statistics.length} />
+        <InfoTile icon={Shirt} label={t("matchDetail.lineups")} value={lineups.length} />
+        <InfoTile icon={Users} label={t("matchDetail.playerStats")} value={countPlayers(playerStats)} />
+      </section>
+
+      <StatsAnalysisPanel
+        statistics={statistics}
+        labels={{
+          title: t("matchDetail.analysisGraph"),
+          subtitle: t("matchDetail.analysisGraphHint"),
+          empty: t("matchDetail.noTeamStatistics"),
+          balanced: t("matchDetail.balancedStat"),
+        }}
+      />
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <EventsPanel events={events} title={t("matchDetail.matchEvents")} emptyLabel={t("matchDetail.noEventData")} />
+        <TeamStatsPanel statistics={statistics} title={t("matchDetail.teamStatistics")} emptyLabel={t("matchDetail.noTeamStatistics")} />
+      </section>
+
+      <H2HPanel h2h={h2h} locale={locale} title={t("matchDetail.h2h")} emptyLabel={t("matchDetail.noH2hData")} vsLabel={t("common.vs")} />
+      <LineupsPanel lineups={lineups} locale={locale} season={season} labels={{
+        empty: t("matchDetail.noLineupData"),
+        coach: t("matchDetail.coach"),
+        unavailable: t("matchDetail.unavailable"),
+        startingXI: t("matchDetail.startingXI"),
+        substitutes: t("matchDetail.substitutes"),
+        formationPitch: t("matchDetail.formationPitch"),
+        noGridData: t("matchDetail.noGridData"),
+      }} />
+      <PlayerStatsPanel playerStats={playerStats} locale={locale} season={season} labels={{
+        empty: t("matchDetail.noPlayerStatistics"),
+        titleSuffix: t("matchDetail.playerStatsTitleSuffix"),
+        player: t("football.table.player"),
+        minutes: t("football.table.minutesShort"),
+        rating: t("football.table.ratingShort"),
+        goalsAssists: t("football.table.goalsAssistsShort"),
+        shots: t("matchDetail.shots"),
+        pass: t("matchDetail.passes"),
+        cards: t("football.table.cards"),
+        captain: t("matchDetail.captain"),
+      }} />
+    </MatchDetailShell>
+  );
 }
 
 function MatchDetailShell({
@@ -306,7 +325,7 @@ function EventsPanel({
               >
                 <span className="font-mono text-xs text-cyan-300">
                   {event.time.elapsed}
-                  {event.time.extra ? `+${event.time.extra}` : ""}'
+                  {event.time.extra ? `+${event.time.extra}` : ""}&apos;
                 </span>
                 <span
                   className={`flex h-6 w-5 items-center justify-center rounded-sm border text-[11px] font-bold ${style.iconClass}`}

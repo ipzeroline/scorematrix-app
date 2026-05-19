@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { ShieldAlert, AlertTriangle, CheckCircle } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 const ALERTS = [
   {

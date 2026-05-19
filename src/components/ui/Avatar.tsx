@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { User } from "lucide-react";
 
@@ -15,6 +16,13 @@ const sizeClasses = {
   xl: "w-16 h-16 text-xl",
 };
 
+const imageSizes = {
+  sm: 28,
+  md: 36,
+  lg: 48,
+  xl: 64,
+};
+
 export function Avatar({
   src,
   fallback,
@@ -23,9 +31,12 @@ export function Avatar({
 }: AvatarProps) {
   if (src) {
     return (
-      <img
+      <Image
         src={src}
         alt={fallback || ""}
+        width={imageSizes[size]}
+        height={imageSizes[size]}
+        unoptimized
         className={cn(
           "rounded-full object-cover border border-gray-700",
           sizeClasses[size],

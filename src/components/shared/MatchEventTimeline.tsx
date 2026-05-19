@@ -30,8 +30,6 @@ const sortedEvents = (events: MatchEvent[]): MatchEvent[] =>
 
 export function MatchEventTimeline({
   events,
-  homeTeam,
-  awayTeam,
   className,
 }: MatchEventTimelineProps) {
   if (events.length === 0) {

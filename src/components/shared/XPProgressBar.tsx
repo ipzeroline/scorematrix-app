@@ -31,10 +31,6 @@ export function XPProgressBar({
   const { min, max, currentLevelXP } = xpRangeForLevel(level);
   const progressInLevel = currentXP - min;
   const xpNeeded = max - currentXP;
-  const percentage = Math.min(
-    100,
-    Math.max(0, (progressInLevel / currentLevelXP) * 100)
-  );
 
   // Level badge colors by range
   const levelBadgeColor = (lvl: number): string => {

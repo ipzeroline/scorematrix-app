@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Avatar } from "@/components/ui/Avatar";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { PointsBadge } from "@/components/shared/PointsBadge";
 import { LeaderboardEntry } from "@/types";
 
 interface LeaderboardTableProps {
@@ -47,7 +46,6 @@ function RankCell({ rank }: { rank: number }) {
 export function LeaderboardTable({
   entries,
   highlightUserId,
-  showPeriod,
   className,
 }: LeaderboardTableProps) {
   if (entries.length === 0) {

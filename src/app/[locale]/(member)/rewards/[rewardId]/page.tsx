@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { RewardCategory } from "@/types/common";
 
 export default function RewardDetailPage() {
-  const { rewardId, locale } = useParams<{ rewardId: string; locale: string }>();
+  const { rewardId } = useParams<{ rewardId: string; locale: string }>();
   const [showConfirm, setShowConfirm] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
 

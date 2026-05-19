@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { POINTS } from "@/lib/constants";
 
 export default function AdminScoresPage() {
-  const [scores, setScores] = useState(POINTS);
+  const [scores] = useState(POINTS);
 
   return (
     <div className="space-y-6">

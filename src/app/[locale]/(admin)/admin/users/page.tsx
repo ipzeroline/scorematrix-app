@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Avatar } from "@/components/ui/Avatar";
-import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Search } from "lucide-react";
 

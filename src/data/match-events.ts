@@ -8,8 +8,6 @@ import type { MatchEvent } from '@/types/match';
 // team-21: 180-186, team-22: 187-193, team-23: 194-200
 
 // Helper to get player name by ID (simplified - using ID as reference)
-const P = (id: string) => id; // player name = player ID for consistency
-
 let eventCounter = 0;
 function ev(matchId: string, type: MatchEvent['type'], minute: number, playerId: string, team: 'home' | 'away', detail: string | null = null, minuteExtra: number | null = null): MatchEvent {
   eventCounter++;

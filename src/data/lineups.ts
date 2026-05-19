@@ -27,21 +27,6 @@ const teamPlayerStart: Record<string, number> = {
   'team-56': 420, 'team-57': 427, 'team-58': 434, 'team-59': 441, 'team-60': 448,
 };
 
-const teamPlayerCount: Record<string, number> = {
-  'team-01': 11, 'team-02': 11, 'team-03': 9, 'team-04': 11, 'team-05': 11,
-  'team-06': 11, 'team-07': 11, 'team-08': 11, 'team-09': 11, 'team-10': 11,
-  'team-11': 8, 'team-12': 7, 'team-13': 7, 'team-14': 7, 'team-15': 7,
-  'team-16': 7, 'team-17': 7, 'team-18': 7, 'team-19': 7, 'team-20': 7,
-  'team-21': 7, 'team-22': 7, 'team-23': 7, 'team-24': 7, 'team-25': 6,
-  'team-26': 7, 'team-27': 7, 'team-28': 7, 'team-29': 6, 'team-30': 6,
-  'team-31': 7, 'team-32': 7, 'team-33': 7, 'team-34': 6, 'team-35': 6,
-  'team-36': 7, 'team-37': 7, 'team-38': 7, 'team-39': 7, 'team-40': 7,
-  'team-41': 7, 'team-42': 7, 'team-43': 7, 'team-44': 7, 'team-45': 7,
-  'team-46': 7, 'team-47': 7, 'team-48': 7, 'team-49': 7, 'team-50': 7,
-  'team-51': 7, 'team-52': 7, 'team-53': 7, 'team-54': 7, 'team-55': 7,
-  'team-56': 7, 'team-57': 7, 'team-58': 7, 'team-59': 7, 'team-60': 7,
-};
-
 function pid(teamId: string, offset: number): string {
   const base = teamPlayerStart[teamId] || 1;
   return `player-${String(base + offset).padStart(3, '0')}`;

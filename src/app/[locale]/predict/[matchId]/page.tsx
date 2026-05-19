@@ -48,26 +48,31 @@ export default async function PredictMatchPage({ params }: Props) {
     );
   }
 
+  let apiMatch: PredictMatch | undefined;
+  let loadErrorMessage: string | undefined;
+
   try {
     const details = await getApiFootballFixtureDetails(apiFixtureId);
-    const match = buildPredictMatch(details);
-
-    return <PredictMatchForm locale={locale} match={match} />;
+    apiMatch = buildPredictMatch(details);
   } catch (error) {
-    const message =
+    loadErrorMessage =
       error instanceof ApiFootballError
         ? error.message
         : t("matchDetail.loadError");
-
-    return (
-      <PredictErrorShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
-        <h1 className="text-lg font-bold text-white">
-          {t("matchDetail.unavailableTitle")}
-        </h1>
-        <p className="mt-2 text-sm text-amber-300">{message}</p>
-      </PredictErrorShell>
-    );
   }
+
+  if (apiMatch) {
+    return <PredictMatchForm locale={locale} match={apiMatch} />;
+  }
+
+  return (
+    <PredictErrorShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
+      <h1 className="text-lg font-bold text-white">
+        {t("matchDetail.unavailableTitle")}
+      </h1>
+      <p className="mt-2 text-sm text-amber-300">{loadErrorMessage}</p>
+    </PredictErrorShell>
+  );
 }
 
 function PredictErrorShell({

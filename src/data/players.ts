@@ -1,6 +1,3 @@
-import type { PlayerLineup } from '@/types/match';
-
-// Using PlayerLineup as the base type since it has the fields we need for player data
 interface Player {
   playerId: string;
   name: string;

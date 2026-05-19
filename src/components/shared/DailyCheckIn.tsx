@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/Card';
 import { useCheckinStore } from '@/stores/checkin-store';
@@ -10,6 +10,7 @@ import { Check, Gift, Shield, Sparkles } from 'lucide-react';
 import { DAILY_CHECKIN_REWARDS } from '@/data/checkin-rewards';
 
 const dayLabelKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+const emptySubscribe = () => () => {};
 
 export function DailyCheckIn() {
   const t = useTranslations('checkin');
@@ -17,15 +18,15 @@ export function DailyCheckIn() {
   const addFreePoints = useUserStore((s) => s.addFreePoints);
   const addStreakShield = useUserStore((s) => s.addStreakShield);
   const addToast = useNotificationStore((s) => s.addToast);
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [todayIndex] = useState(() => {
     const day = new Date().getDay();
     return day === 0 ? 6 : day - 1;
   });
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const streakProgress = getStreakProgress();
   const nextReward = getNextReward();

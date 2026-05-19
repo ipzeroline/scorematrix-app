@@ -5,7 +5,6 @@ import { cn, formatMatchTimeWithZone, countdown } from "@/lib/utils";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StreakIndicator } from "@/components/shared/StreakIndicator";
 import { Match, Team, Prediction, MatchStatus, MatchResult } from "@/types";
 

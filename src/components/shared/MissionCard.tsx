@@ -30,7 +30,6 @@ export function MissionCard({ mission, onClaim, className }: MissionCardProps) {
   const isCompleted = mission.completed;
   const isClaimed = mission.claimed;
   const progress = Math.min(mission.progress, mission.target);
-  const percentage = mission.target > 0 ? (progress / mission.target) * 100 : 0;
   const progressColor = categoryColors[mission.category] ?? "cyan";
 
   return (

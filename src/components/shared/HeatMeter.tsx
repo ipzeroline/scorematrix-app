@@ -38,14 +38,6 @@ export function HeatMeter({
     lg: "h-4",
   };
 
-  const barSegments = [
-    { from: 0, to: 20, color: "from-blue-500 to-cyan-500", label: "Cold" },
-    { from: 20, to: 40, color: "from-cyan-500 to-green-500", label: "Cool" },
-    { from: 40, to: 60, color: "from-green-500 to-yellow-500", label: "Warm" },
-    { from: 60, to: 80, color: "from-yellow-500 to-orange-500", label: "Hot" },
-    { from: 80, to: 100, color: "from-orange-500 to-red-500", label: "Fire" },
-  ];
-
   return (
     <div className={cn("space-y-1.5", className)}>
       {/* Bar */}

@@ -1,16 +1,18 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useNotificationStore } from '@/stores/notification-store';
 import { Toast } from './Toast';
 
+const emptySubscribe = () => () => {};
+
 export function ToastContainer() {
-  const [isMounted, setIsMounted] = useState(false);
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const toasts = useNotificationStore((s) => s.toastQueue);
   const removeToast = useNotificationStore((s) => s.removeToast);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   if (!isMounted || toasts.length === 0) return null;
 

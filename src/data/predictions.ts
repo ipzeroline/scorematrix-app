@@ -12,13 +12,6 @@ function generatePredictions(): Prediction[] {
     return MatchResult.DRAW;
   }
 
-  function pointsFor(actualHome: number, actualAway: number, predHome: number, predAway: number, status: PredictionStatus): number {
-    if (status === PredictionStatus.PENDING || status === PredictionStatus.PARTIAL) return 0;
-    if (predHome === actualHome && predAway === actualAway) return 40; // exact score
-    if (resultFromScores(predHome, predAway) === resultFromScores(actualHome, actualAway)) return 20; // correct result
-    return 0;
-  }
-
   // Finished matches data for reference (match-066 to match-105)
   const finishedMatches = [
     { id: 'match-066', home: 3, away: 1 }, { id: 'match-067', home: 0, away: 2 }, { id: 'match-068', home: 2, away: 2 },

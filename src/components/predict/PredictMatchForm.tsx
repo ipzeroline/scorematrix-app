@@ -1,18 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Brain,
   CheckCircle2,
   Gauge,
   Medal,
-  ShieldCheck,
   Sparkles,
   Target,
   Timer,
-  Trophy,
-  Users,
   Zap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -78,34 +75,6 @@ export function PredictMatchForm({
   const [submitted, setSubmitted] = useState(false);
   const countdown = getPendingCountdown();
   const isLocked = false;
-
-  const completion = useMemo(() => {
-    return [
-      result,
-      winner,
-      homeScore !== null && awayScore !== null,
-      firstScorer,
-      goalLine,
-      firstGoalTeam,
-      halfHomeScore !== null && halfAwayScore !== null,
-      extraTime,
-      penalties,
-      confidence,
-    ].filter(Boolean).length;
-  }, [
-    result,
-    winner,
-    homeScore,
-    awayScore,
-    firstScorer,
-    goalLine,
-    firstGoalTeam,
-    halfHomeScore,
-    halfAwayScore,
-    extraTime,
-    penalties,
-    confidence,
-  ]);
 
   const canSubmit =
     !isLocked && result !== "" && homeScore !== null && awayScore !== null;

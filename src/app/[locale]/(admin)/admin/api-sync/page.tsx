@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Wifi, WifiOff, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
+import { WifiOff, AlertTriangle, CheckCircle, RefreshCw } from "lucide-react";
 
 export default function AdminApiSyncPage() {
   return (

@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   memo,
   useDeferredValue,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -92,12 +91,17 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
     () => new Map(leagueGroups.map((group) => [group.key, group.matches.length])),
     [leagueGroups]
   );
+  const effectiveActiveLeague =
+    activeLeague === "All" ||
+    visibleLeagueGroups.some((group) => group.key === activeLeague)
+      ? activeLeague
+      : "All";
   const activeLeagueGroups = useMemo(
     () =>
-      activeLeague === "All"
+      effectiveActiveLeague === "All"
         ? leagueGroups
-        : leagueGroups.filter(({ key }) => key === activeLeague),
-    [activeLeague, leagueGroups]
+        : leagueGroups.filter(({ key }) => key === effectiveActiveLeague),
+    [effectiveActiveLeague, leagueGroups]
   );
   const activeMatchCount = useMemo(
     () =>
@@ -137,19 +141,6 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
     }),
     [t]
   );
-
-  useEffect(() => {
-    if (
-      activeLeague !== "All" &&
-      !visibleLeagueGroups.some((group) => group.key === activeLeague)
-    ) {
-      setActiveLeague("All");
-    }
-  }, [activeLeague, visibleLeagueGroups]);
-
-  useEffect(() => {
-    setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
-  }, [activeLeague, deferredSearchQuery, deferredLeagueQuery]);
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
@@ -239,7 +230,10 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               />
               <input
                 value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                  setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
+                }}
                 placeholder={t("livescore.searchTeams")}
                 className="h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 sm:w-64"
               />
@@ -251,7 +245,10 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               />
               <input
                 value={leagueQuery}
-                onChange={(event) => setLeagueQuery(event.target.value)}
+                onChange={(event) => {
+                  setLeagueQuery(event.target.value);
+                  setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
+                }}
                 placeholder="ค้นหาลีก"
                 className="h-9 w-full rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-3 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50 sm:w-52"
               />
@@ -270,10 +267,13 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
           <div className="space-y-4 bg-[#08080d] p-3 sm:p-4">
             <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <button
-                onClick={() => setActiveLeague("All")}
+                onClick={() => {
+                  setActiveLeague("All");
+                  setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
+                }}
                 className={cn(
                   "flex shrink-0 items-center rounded-lg border px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200",
-                  activeLeague === "All"
+                  effectiveActiveLeague === "All"
                     ? "border-cyan-500/30 bg-cyan-500/20 text-cyan-400"
                     : "border-gray-800 bg-[#12121a] text-gray-400 hover:border-gray-600"
                 )}
@@ -286,10 +286,13 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                 return (
                   <button
                     key={key}
-                    onClick={() => setActiveLeague(key)}
+                    onClick={() => {
+                      setActiveLeague(key);
+                      setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
+                    }}
                     className={cn(
                       "flex shrink-0 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200",
-                      activeLeague === key
+                      effectiveActiveLeague === key
                         ? "border-cyan-500/30 bg-cyan-500/20 text-cyan-400"
                         : "border-gray-800 bg-[#12121a] text-gray-400 hover:border-gray-600"
                     )}
