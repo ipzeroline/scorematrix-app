@@ -1,5 +1,8 @@
 import { Logo } from "@/components/layout/Logo";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function AuthLayout({
   children,
 }: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
@@ -13,6 +13,7 @@ type FavoriteTeamSelectProps = {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
+  searchPlaceholder?: string;
   loading?: boolean;
   className?: string;
 };
@@ -27,11 +28,14 @@ export function FavoriteTeamSelect({
   value,
   onChange,
   placeholder,
+  searchPlaceholder = "Search teams...",
   loading = false,
   className,
 }: FavoriteTeamSelectProps) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const selected = useMemo(() => findSelectedTeam(groups, value), [groups, value]);
+  const filteredGroups = useMemo(() => filterTeamGroups(groups, query), [groups, query]);
 
   return (
     <div className={cn("relative", className)}>
@@ -74,13 +78,32 @@ export function FavoriteTeamSelect({
             type="button"
             aria-label="Close team selector"
             className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setOpen(false)}
+            onClick={() => {
+              setOpen(false);
+              setQuery("");
+            }}
           />
-          <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-y-auto rounded-xl border border-gray-800 bg-[#0d1118] shadow-2xl">
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-80 overflow-hidden rounded-xl border border-gray-800 bg-[#0d1118] shadow-2xl">
+            <div className="sticky top-0 z-20 border-b border-gray-800 bg-[#0d1118] p-2">
+              <div className="flex items-center gap-2 rounded-lg border border-gray-700 bg-[#080b10] px-2">
+                <Search size={14} className="shrink-0 text-gray-500" aria-hidden="true" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="min-w-0 flex-1 bg-transparent py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none"
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+            <div className="max-h-64 overflow-y-auto">
             {groups.length === 0 ? (
               <div className="px-3 py-4 text-sm text-gray-500">{placeholder}</div>
+            ) : filteredGroups.length === 0 ? (
+              <div className="px-3 py-4 text-sm text-gray-500">{searchPlaceholder}</div>
             ) : (
-              groups.map((group) => (
+              filteredGroups.map((group) => (
                 <section key={group.league.id} className="border-b border-gray-800/70 last:border-b-0">
                   <div className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-800/70 bg-[#101722] px-3 py-2">
                     <ApiLeagueLogo
@@ -110,6 +133,7 @@ export function FavoriteTeamSelect({
                           onClick={() => {
                             onChange(teamValue);
                             setOpen(false);
+                            setQuery("");
                           }}
                           className={cn(
                             "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-colors",
@@ -134,6 +158,7 @@ export function FavoriteTeamSelect({
                 </section>
               ))
             )}
+            </div>
           </div>
         </>
       )}
@@ -152,4 +177,22 @@ function findSelectedTeam(groups: SoccerTeamGroup[], value: string): TeamOption 
   }
 
   return undefined;
+}
+
+function filterTeamGroups(groups: SoccerTeamGroup[], query: string): SoccerTeamGroup[] {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return groups;
+
+  return groups
+    .map((group) => {
+      const leagueMatches = [group.league.name, group.league.country]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(normalizedQuery));
+      const teams = leagueMatches
+        ? group.teams
+        : group.teams.filter((team) => team.name.toLowerCase().includes(normalizedQuery));
+
+      return { ...group, teams };
+    })
+    .filter((group) => group.teams.length > 0);
 }

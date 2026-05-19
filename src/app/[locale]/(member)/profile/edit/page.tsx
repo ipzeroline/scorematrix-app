@@ -346,6 +346,7 @@ export default function EditProfilePage() {
                 value={form.favoriteTeam}
                 onChange={(v) => update("favoriteTeam", v)}
                 placeholder={teamsLoading ? commonT("loading") : authT("selectTeam")}
+                searchPlaceholder={authT("searchTeams")}
                 loading={teamsLoading || profileLoading}
               />
             </div>

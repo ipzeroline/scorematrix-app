@@ -47,90 +47,6 @@ const countryOptions = [
   { value: "OTHER", label: "OTHER" },
 ];
 
-const demoProfiles = [
-  {
-    username: "matrixace",
-    displayName: "Matrix Ace",
-    phone: "0812345678",
-    birthYear: "1996",
-    country: "TH",
-    playerType: "analyst",
-    referralCode: "SM-DEMO1",
-    password: "Demo1234",
-    marketingConsent: true,
-  },
-  {
-    username: "neonstriker",
-    displayName: "Neon Striker",
-    phone: "0823456789",
-    birthYear: "1999",
-    country: "LA",
-    playerType: "competitive",
-    referralCode: "SM-DEMO2",
-    password: "Demo5678",
-    marketingConsent: false,
-  },
-  {
-    username: "cybergoal",
-    displayName: "Cyber Goal",
-    phone: "0834567890",
-    birthYear: "1994",
-    country: "KH",
-    playerType: "casual",
-    referralCode: "SM-DEMO3",
-    password: "Demo9012",
-    marketingConsent: true,
-  },
-] as const;
-
-const invalidDemoProfiles = [
-  {
-    username: "ab",
-    email: "not-an-email",
-    displayName: "A".repeat(101),
-    phone: "0".repeat(21),
-    birthYear: "1899",
-    country: "TH",
-    favoriteTeam: "",
-    playerType: "analyst",
-    referralCode: "SM-INVALID-1",
-    password: "short",
-    confirmPassword: "different",
-    acceptTerms: false,
-    marketingConsent: true,
-  },
-  {
-    username: "x".repeat(21),
-    email: `${"long".repeat(25)}@demo.test`,
-    displayName: "Invalid Long Display Name",
-    phone: "081234567890123456789",
-    birthYear: String(new Date().getFullYear() + 1),
-    country: "LA",
-    favoriteTeam: "",
-    playerType: "competitive",
-    referralCode: "REF-CODE-TOO-LONG-123456",
-    password: "TooLong12345",
-    confirmPassword: "TooLong12345",
-    acceptTerms: true,
-    marketingConsent: false,
-  },
-  {
-    username: "",
-    email: "",
-    displayName: "Missing Required Fields",
-    phone: "",
-    birthYear: "abcd",
-    country: "KH",
-    favoriteTeam: "",
-    playerType: "casual",
-    referralCode: "SM-INVALID-3",
-    password: "",
-    confirmPassword: "Demo1234",
-    acceptTerms: false,
-    marketingConsent: true,
-  },
-] as const;
-
 function sanitizeReferralCode(value: string) {
   return value.toUpperCase().replace(/[^A-Z0-9_-]/g, "").slice(0, 24);
 }
@@ -201,69 +117,6 @@ export default function RegisterPage() {
 
   const update = (field: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    setServerError("");
-  };
-
-  const fillDemoData = () => {
-    const profile = demoProfiles[Math.floor(Math.random() * demoProfiles.length)];
-    const favoriteTeam = pickRandomTeamId(teamGroups);
-    const suffix = Math.random().toString(36).slice(2, 6);
-    const username = `${profile.username}${suffix}`.slice(0, 20);
-
-    setForm({
-      username,
-      email: `${username}@demo.scorematrix.test`,
-      displayName: profile.displayName,
-      phone: profile.phone,
-      birthYear: profile.birthYear,
-      country: profile.country,
-      favoriteTeam,
-      playerType: profile.playerType,
-      language: locale,
-      referralCode: profile.referralCode,
-      password: profile.password,
-      confirmPassword: profile.password,
-      acceptTerms: true,
-      marketingConsent: profile.marketingConsent,
-    });
-    setTouched({});
-    setServerError("");
-  };
-
-  const fillInvalidDemoData = () => {
-    const profile =
-      invalidDemoProfiles[Math.floor(Math.random() * invalidDemoProfiles.length)];
-
-    setForm({
-      username: profile.username,
-      email: profile.email,
-      displayName: profile.displayName,
-      phone: profile.phone,
-      birthYear: profile.birthYear,
-      country: profile.country,
-      favoriteTeam: profile.favoriteTeam,
-      playerType: profile.playerType,
-      language: locale,
-      referralCode: profile.referralCode,
-      password: profile.password,
-      confirmPassword: profile.confirmPassword,
-      acceptTerms: profile.acceptTerms,
-      marketingConsent: profile.marketingConsent,
-    });
-    setTouched({
-      username: true,
-      email: true,
-      displayName: true,
-      phone: true,
-      birthYear: true,
-      favoriteTeam: true,
-      playerType: true,
-      language: true,
-      referralCode: true,
-      password: true,
-      confirmPassword: true,
-      acceptTerms: true,
-    });
     setServerError("");
   };
 
@@ -428,24 +281,6 @@ export default function RegisterPage() {
           noValidate
           className="rounded-2xl border border-gray-800 bg-[#12121a] p-6 space-y-4"
         >
-        <div className="flex flex-wrap justify-end gap-2">
-          <button
-            type="button"
-            onClick={fillInvalidDemoData}
-            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-100 transition-colors hover:border-red-400/50 hover:bg-red-500/15"
-          >
-            {t("invalidDemoData")}
-          </button>
-          <button
-            type="button"
-            onClick={fillDemoData}
-            disabled={teamsLoading || teamGroups.length === 0}
-            className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:border-cyan-400/50 hover:bg-cyan-500/15 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {t("demoData")}
-          </button>
-        </div>
-
         {/* Username */}
         <Input
           label={t("username")}
@@ -532,6 +367,7 @@ export default function RegisterPage() {
               value={form.favoriteTeam}
               onChange={(v) => update("favoriteTeam", v)}
               placeholder={teamsLoading ? tCommon("loading") : t("selectTeam")}
+              searchPlaceholder={t("searchTeams")}
               loading={teamsLoading}
             />
           </div>
@@ -764,13 +600,6 @@ function getRegisterErrorMessage(error: unknown) {
 
   if (error instanceof Error) return error.message;
   return "Unable to create account";
-}
-
-function pickRandomTeamId(groups: SoccerTeamGroup[]) {
-  const teams = groups.flatMap((group) => group.teams);
-  if (teams.length === 0) return "";
-  const team = teams[Math.floor(Math.random() * teams.length)];
-  return String(team.id);
 }
 
 function InfoBlock({ title, items }: { title: string; items: string[] }) {
