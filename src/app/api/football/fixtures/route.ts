@@ -3,7 +3,7 @@ import {
   getApiFootballFixtures,
 } from "@/lib/api-football";
 
-export const revalidate = 20;
+export const revalidate = 10;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,12 +16,12 @@ export async function GET(request: Request) {
       league: searchParams.get("league") ?? undefined,
       season: searchParams.get("season") ?? undefined,
       limit,
-      revalidate: searchParams.get("live") === "true" ? 10 : 20,
+      revalidate: searchParams.get("live") === "true" ? 5 : 10,
     });
 
     return Response.json(result, {
       headers: {
-        "Cache-Control": "public, s-maxage=20, stale-while-revalidate=60",
+        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
       },
     });
   } catch (error) {

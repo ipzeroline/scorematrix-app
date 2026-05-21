@@ -8,7 +8,7 @@ import { MatchStatus } from "@/types/common";
 
 export async function loadFixturesForDate(
   limit?: number,
-  revalidate = 300
+  revalidate = 60
 ): Promise<ApiFootballFixture[]> {
   const date = new Date().toISOString().slice(0, 10);
 
@@ -23,7 +23,7 @@ export async function loadFixturesForDate(
 
 export async function loadLiveFixtures(
   limit = 24,
-  revalidate = 120
+  revalidate = 15
 ): Promise<ApiFootballFixture[]> {
   try {
     const result = await getApiFootballFixtures({ live: true, limit, revalidate });

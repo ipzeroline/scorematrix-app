@@ -99,8 +99,8 @@ Static data:
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
 - `src/lib/football-page-data.ts`
-  - `loadFixturesForDate(limit?, revalidate = 300)`
-  - `loadLiveFixtures(limit = 24, revalidate = 120)`
+  - `loadFixturesForDate(limit?, revalidate = 60)`
+  - `loadLiveFixtures(limit = 24, revalidate = 15)`
   - `pickRandomFixture`, `sortFixtures`
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes
 - `src/lib/football-slugs.ts`: builds/extracts SEO slugs for fixtures/leagues/entities

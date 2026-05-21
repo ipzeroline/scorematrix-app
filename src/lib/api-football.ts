@@ -436,7 +436,7 @@ export async function getApiFootballFixtures(
   const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
     "/fixtures",
     query,
-    { revalidate: options.revalidate ?? (options.live ? 20 : 300) }
+    { revalidate: options.revalidate ?? (options.live ? 15 : 60) }
   );
   const mappedFixtures = payload.fixtures ?? [];
   const fixtures =

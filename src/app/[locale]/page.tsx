@@ -21,7 +21,7 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export const revalidate = 300;
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return LOCALE_CODES.map((locale) => ({ locale }));
