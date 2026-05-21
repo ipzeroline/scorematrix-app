@@ -627,6 +627,27 @@
     "postponed": "POSTPONED",
     "cancelled": "CANCELLED"
   },
+  "statusShort": {
+    "NS": "Not started",
+    "TBD": "Time to be defined",
+    "1H": "First half",
+    "HT": "Half time",
+    "2H": "Second half",
+    "ET": "Extra time",
+    "BT": "Break before penalties",
+    "P": "Penalties",
+    "SUSP": "Suspended",
+    "INT": "Interrupted",
+    "LIVE": "Live",
+    "FT": "Full time",
+    "AET": "After extra time",
+    "PEN": "After penalties",
+    "AWD": "Awarded",
+    "WO": "Walkover",
+    "PST": "Postponed",
+    "CANC": "Cancelled",
+    "ABD": "Abandoned"
+  },
   "football": {
     "leaguesTitle": "Football leagues",
     "leaguesDescription": "League widget: all active Football API competitions.",

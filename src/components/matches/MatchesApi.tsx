@@ -22,10 +22,17 @@ import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
+import { useUserStore } from "@/stores/user-store";
 import { MatchStatus } from "@/types/common";
 import { THAILAND_TIME_ZONE_LABEL, cn, formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug, buildLeagueSeoSlug } from "@/lib/football-slugs";
+import {
+  buildFootballStatusLabels,
+  getFixtureStatusGroup,
+  getFixtureStatusLabel,
+  type FootballStatusLabels,
+} from "@/lib/football-status";
 
 interface MatchesApiProps {
   fixtures: ApiFootballFixture[];
@@ -41,6 +48,8 @@ type LeagueGroup = {
   liveCount: number;
   upcomingCount: number;
   finishedCount: number;
+  postponedCount: number;
+  cancelledCount: number;
 };
 
 type MatchTableLabels = {
@@ -48,6 +57,8 @@ type MatchTableLabels = {
   live: string;
   upcoming: string;
   fullTime: string;
+  postponed: string;
+  cancelled: string;
   time: string;
   home: string;
   score: string;
@@ -56,11 +67,13 @@ type MatchTableLabels = {
   predict: string;
   predictScore: string;
   vs: string;
+  statusLabels: FootballStatusLabels;
 };
 
 export function MatchesApi({ fixtures }: MatchesApiProps) {
   const locale = useLocale();
   const t = useTranslations();
+  const isLoggedIn = useUserStore((state) => state.isLoggedIn);
   const [activeLeague, setActiveLeague] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [leagueQuery, setLeagueQuery] = useState("");
@@ -130,6 +143,8 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
       live: t("livescore.live"),
       upcoming: t("livescore.upcoming"),
       fullTime: t("livescore.fullTime"),
+      postponed: t("status.postponed"),
+      cancelled: t("status.cancelled"),
       time: t("football.table.time"),
       home: t("football.table.home"),
       score: t("football.table.score"),
@@ -138,6 +153,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
       predict: t("matchDetail.predict"),
       predictScore: t("prediction.predictScore"),
       vs: t("common.vs"),
+      statusLabels: buildFootballStatusLabels(t),
     }),
     [t]
   );
@@ -185,7 +201,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
           </div>
         </Card>
 
-        <Card className="grid grid-cols-3 gap-3 p-4 lg:grid-cols-1">
+        <Card className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-5 lg:grid-cols-1">
           {[
             { label: t("livescore.live"), value: matchStats.live, color: "text-green-400" },
             {
@@ -197,6 +213,16 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               label: t("livescore.finished"),
               value: matchStats.finished,
               color: "text-green-400",
+            },
+            {
+              label: t("status.postponed"),
+              value: matchStats.postponed,
+              color: "text-amber-400",
+            },
+            {
+              label: t("status.cancelled"),
+              value: matchStats.cancelled,
+              color: "text-red-400",
             },
           ].map((item) => (
             <div
@@ -328,6 +354,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                     group={group}
                     locale={locale}
                     labels={tableLabels}
+                    isLoggedIn={isLoggedIn}
                   />
                 ))}
                 {hasMoreMatches && (
@@ -385,18 +412,26 @@ function getMatchStats(fixtures: ApiFootballFixture[]) {
   let live = 0;
   let upcoming = 0;
   let finished = 0;
+  let postponed = 0;
+  let cancelled = 0;
 
   for (const fixture of fixtures) {
-    if (fixture.status === MatchStatus.LIVE) {
+    const statusGroup = getFixtureStatusGroup(fixture);
+
+    if (statusGroup === MatchStatus.LIVE) {
       live += 1;
-    } else if (fixture.status === MatchStatus.UPCOMING) {
+    } else if (statusGroup === MatchStatus.UPCOMING) {
       upcoming += 1;
-    } else if (fixture.status === MatchStatus.FINISHED) {
+    } else if (statusGroup === MatchStatus.FINISHED) {
       finished += 1;
+    } else if (statusGroup === MatchStatus.POSTPONED) {
+      postponed += 1;
+    } else if (statusGroup === MatchStatus.CANCELLED) {
+      cancelled += 1;
     }
   }
 
-  return { live, upcoming, finished };
+  return { live, upcoming, finished, postponed, cancelled };
 }
 
 function filterFixtures(fixtures: ApiFootballFixture[], query: string) {
@@ -427,24 +462,31 @@ function groupFixturesByLeague(fixtures: ApiFootballFixture[]) {
   for (const fixture of fixtures) {
     const key = `${fixture.league.apiLeagueId ?? fixture.league.id}-${fixture.league.season ?? "season"}`;
     const existing = groups.get(key);
+    const statusGroup = getFixtureStatusGroup(fixture);
 
     if (existing) {
       existing.matches.push(fixture);
-      if (fixture.status === MatchStatus.LIVE) {
+      if (statusGroup === MatchStatus.LIVE) {
         existing.liveCount += 1;
-      } else if (fixture.status === MatchStatus.UPCOMING) {
+      } else if (statusGroup === MatchStatus.UPCOMING) {
         existing.upcomingCount += 1;
-      } else if (fixture.status === MatchStatus.FINISHED) {
+      } else if (statusGroup === MatchStatus.FINISHED) {
         existing.finishedCount += 1;
+      } else if (statusGroup === MatchStatus.POSTPONED) {
+        existing.postponedCount += 1;
+      } else if (statusGroup === MatchStatus.CANCELLED) {
+        existing.cancelledCount += 1;
       }
     } else {
       groups.set(key, {
         key,
         league: fixture.league,
         matches: [fixture],
-        liveCount: fixture.status === MatchStatus.LIVE ? 1 : 0,
-        upcomingCount: fixture.status === MatchStatus.UPCOMING ? 1 : 0,
-        finishedCount: fixture.status === MatchStatus.FINISHED ? 1 : 0,
+        liveCount: statusGroup === MatchStatus.LIVE ? 1 : 0,
+        upcomingCount: statusGroup === MatchStatus.UPCOMING ? 1 : 0,
+        finishedCount: statusGroup === MatchStatus.FINISHED ? 1 : 0,
+        postponedCount: statusGroup === MatchStatus.POSTPONED ? 1 : 0,
+        cancelledCount: statusGroup === MatchStatus.CANCELLED ? 1 : 0,
       });
     }
   }
@@ -468,6 +510,8 @@ function sliceLeagueGroups(groups: LeagueGroup[], limit: number) {
       liveCount: stats.live,
       upcomingCount: stats.upcoming,
       finishedCount: stats.finished,
+      postponedCount: stats.postponed,
+      cancelledCount: stats.cancelled,
     });
   }
 
@@ -500,10 +544,12 @@ const LeagueSection = memo(function LeagueSection({
   group,
   locale,
   labels,
+  isLoggedIn,
 }: {
   group: LeagueGroup;
   locale: string;
   labels: MatchTableLabels;
+  isLoggedIn: boolean;
 }) {
   const { league, matches } = group;
 
@@ -536,6 +582,8 @@ const LeagueSection = memo(function LeagueSection({
             <LeagueMetric label={labels.live} value={group.liveCount} tone="green" />
             <LeagueMetric label={labels.upcoming} value={group.upcomingCount} tone="cyan" />
             <LeagueMetric label={labels.fullTime} value={group.finishedCount} tone="green" />
+            <LeagueMetric label={labels.postponed} value={group.postponedCount} tone="amber" />
+            <LeagueMetric label={labels.cancelled} value={group.cancelledCount} tone="red" />
           </div>
         </div>
       </div>
@@ -548,7 +596,7 @@ const LeagueSection = memo(function LeagueSection({
               <th className="px-3 py-3 text-right font-semibold">{labels.home}</th>
               <th className="w-[96px] px-3 py-3 text-center font-semibold">{labels.score}</th>
               <th className="px-3 py-3 font-semibold">{labels.away}</th>
-              <th className="w-[120px] px-4 py-3 text-right font-semibold">{labels.status}</th>
+              <th className="w-[180px] px-4 py-3 text-right font-semibold">{labels.status}</th>
               <th className="w-[120px] px-4 py-3 text-right font-semibold">{labels.predict}</th>
             </tr>
           </thead>
@@ -560,6 +608,7 @@ const LeagueSection = memo(function LeagueSection({
                 index={index}
                 locale={locale}
                 labels={labels}
+                isLoggedIn={isLoggedIn}
               />
             ))}
           </tbody>
@@ -574,15 +623,22 @@ const MatchRow = memo(function MatchRow({
   index,
   locale,
   labels,
+  isLoggedIn,
 }: {
   match: ApiFootballFixture;
   index: number;
   locale: string;
   labels: MatchTableLabels;
+  isLoggedIn: boolean;
 }) {
   const matchSlug = useMemo(() => buildFixtureSeoSlug(match), [match]);
   const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
   const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
+  const statusGroup = useMemo(() => getFixtureStatusGroup(match), [match]);
+  const statusLabel = useMemo(
+    () => getFixtureStatusLabel(match, labels.statusLabels),
+    [match, labels.statusLabels]
+  );
   const rowTone = index % 2 === 0 ? "bg-[#101018]" : "bg-cyan-500/[0.025]";
 
   return (
@@ -626,11 +682,11 @@ const MatchRow = memo(function MatchRow({
       </td>
       <td className="px-4 py-3 text-right">
         <Link href={`/${locale}/livescore/${matchSlug}`}>
-          <StatusBadge status={match.status} />
+          <StatusBadge status={match.status} label={statusLabel} />
         </Link>
       </td>
       <td className="px-4 py-3 text-right">
-        {match.status === MatchStatus.UPCOMING ? (
+        {isLoggedIn && statusGroup === MatchStatus.UPCOMING ? (
           <a
             href={`/${locale}/predict/${matchSlug}`}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400"
@@ -674,20 +730,21 @@ function LeagueMetric({
 }: {
   label: string;
   value: number;
-  tone: "gray" | "red" | "cyan" | "green";
+  tone: "gray" | "red" | "cyan" | "green" | "amber";
 }) {
   return (
     <div
       className={cn(
-        "rounded-md border bg-black/20 px-2.5 py-1 text-[10px]",
+        "inline-flex items-center gap-1 rounded-md border bg-black/20 px-2.5 py-1 text-[10px]",
         tone === "gray" && "border-gray-700 text-gray-400",
         tone === "red" && "border-red-500/30 text-red-300",
         tone === "cyan" && "border-cyan-500/30 text-cyan-300",
-        tone === "green" && "border-green-500/30 text-green-300"
+        tone === "green" && "border-green-500/30 text-green-300",
+        tone === "amber" && "border-amber-500/30 text-amber-300"
       )}
     >
       <span className="font-mono font-bold">{value}</span>
-      <span className="ml-1 text-gray-500">{label}</span>
+      <span className="text-gray-500">{label}</span>
     </div>
   );
 }

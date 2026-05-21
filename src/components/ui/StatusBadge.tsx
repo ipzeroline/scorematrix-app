@@ -31,10 +31,11 @@ const statusConfig: Record<
 
 interface StatusBadgeProps {
   status: MatchStatus | string;
+  label?: string;
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
+export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   const config = statusConfig[status as MatchStatus] ?? {
     label: String(status || "UNKNOWN").toUpperCase(),
     className: "bg-gray-500/10 text-gray-400 border-gray-500/20",
@@ -43,7 +44,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold",
+        "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-bold",
         config.className,
         className
       )}
@@ -51,7 +52,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       {config.pulse && (
         <span className="live-status-dot w-1.5 h-1.5 rounded-full bg-rose-300" />
       )}
-      {config.label}
+      {label ?? config.label}
     </span>
   );
 }

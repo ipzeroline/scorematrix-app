@@ -6,11 +6,18 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import {
+  buildFootballStatusLabels,
+  getFixtureStatusGroup,
+  getFixtureStatusLabel,
+} from "@/lib/football-status";
 import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
+import { MatchStatus } from "@/types/common";
 
 interface TodayMatch {
   id: string;
@@ -23,6 +30,13 @@ interface TodayMatch {
   league: string;
   leagueLogo: string | null;
   leagueEmoji: string;
+  status: MatchStatus | string;
+  statusShort?: string | null;
+  statusLabel?: string;
+  score: {
+    home: number | null;
+    away: number | null;
+  };
 }
 
 interface LeagueTab {
@@ -41,6 +55,9 @@ const allMatches: TodayMatch[] = [
     league: "Premier",
     leagueLogo: null,
     leagueEmoji: "🇬🇧",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-2",
@@ -52,6 +69,9 @@ const allMatches: TodayMatch[] = [
     league: "La Liga",
     leagueLogo: null,
     leagueEmoji: "🇪🇸",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-3",
@@ -63,6 +83,9 @@ const allMatches: TodayMatch[] = [
     league: "Bundesliga",
     leagueLogo: null,
     leagueEmoji: "🇩🇪",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-4",
@@ -74,6 +97,9 @@ const allMatches: TodayMatch[] = [
     league: "Serie A",
     leagueLogo: null,
     leagueEmoji: "🇮🇹",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-5",
@@ -85,6 +111,9 @@ const allMatches: TodayMatch[] = [
     league: "Ligue 1",
     leagueLogo: null,
     leagueEmoji: "🇫🇷",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-6",
@@ -96,6 +125,9 @@ const allMatches: TodayMatch[] = [
     league: "Premier",
     leagueLogo: null,
     leagueEmoji: "🇬🇧",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-7",
@@ -107,6 +139,9 @@ const allMatches: TodayMatch[] = [
     league: "La Liga",
     leagueLogo: null,
     leagueEmoji: "🇪🇸",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
   {
     id: "tm-8",
@@ -118,6 +153,9 @@ const allMatches: TodayMatch[] = [
     league: "Bundesliga",
     leagueLogo: null,
     leagueEmoji: "🇩🇪",
+    status: MatchStatus.UPCOMING,
+    statusShort: "NS",
+    score: { home: null, away: null },
   },
 ];
 
@@ -131,7 +169,13 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   const locale = useLocale();
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState("All");
-  const apiMatches = fixtures.map((fixture) => mapFixtureToTodayMatch(fixture, locale));
+  const statusLabels = buildFootballStatusLabels(t);
+  const apiMatches = fixtures.map((fixture) => ({
+    ...mapFixtureToTodayMatch(fixture, locale),
+    status: getFixtureStatusGroup(fixture),
+    statusShort: fixture.statusShort,
+    statusLabel: getFixtureStatusLabel(fixture, statusLabels),
+  }));
   const matches =
     apiMatches.length > 0
       ? apiMatches
@@ -139,6 +183,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
           ...match,
           kickoffDate: t("common.today"),
           kickoffTime: `${match.kickoffTime} UTC+7`,
+          statusLabel: getFixtureStatusLabel(match, statusLabels),
         }));
   const leagueTabs =
     apiMatches.length > 0
@@ -213,10 +258,11 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                     <span className="truncate">{match.leagueEmoji} {match.league}</span>
                   </span>
                 </Badge>
-                <span className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-green-500/20 bg-green-500/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-green-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                  {t("status.upcoming")}
-                </span>
+                <StatusBadge
+                  status={match.status}
+                  label={match.statusLabel}
+                  className="shrink-0"
+                />
               </div>
 
               {/* Date & time */}
@@ -242,8 +288,8 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                   </span>
                 </div>
 
-                <span className="text-sm font-bold text-gray-600 font-mono">
-                  {t("common.vs")}
+                <span className="min-w-12 rounded-md border border-gray-800 bg-black/20 px-2 py-1 text-center font-mono text-sm font-bold text-white">
+                  {formatScore(match, t("common.vs"))}
                 </span>
 
                 <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
@@ -273,6 +319,9 @@ function mapFixtureToTodayMatch(fixture: ApiFootballFixture, locale: string): To
     league: fixture.league.name,
     leagueLogo: fixture.league.logo,
     leagueEmoji: "",
+    status: fixture.status,
+    statusShort: fixture.statusShort,
+    score: fixture.score,
   };
 }
 
@@ -293,4 +342,12 @@ function buildLeagueTabs(matches: TodayMatch[]): LeagueTab[] {
 
 function formatKickoff(value: string): string {
   return formatMatchTimeWithZone(value);
+}
+
+function formatScore(match: TodayMatch, fallback: string) {
+  if (match.score.home === null || match.score.away === null) {
+    return fallback;
+  }
+
+  return `${match.score.home} - ${match.score.away}`;
 }

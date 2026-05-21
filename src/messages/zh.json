@@ -627,6 +627,27 @@
     "postponed": "延期",
     "cancelled": "取消"
   },
+  "statusShort": {
+    "NS": "尚未开始",
+    "TBD": "时间待定",
+    "1H": "上半场",
+    "HT": "中场休息",
+    "2H": "下半场",
+    "ET": "加时赛",
+    "BT": "点球前休息",
+    "P": "点球大战",
+    "SUSP": "暂停",
+    "INT": "中断",
+    "LIVE": "进行中",
+    "FT": "全场结束",
+    "AET": "加时后结束",
+    "PEN": "点球后结束",
+    "AWD": "判定胜",
+    "WO": "弃权胜",
+    "PST": "延期",
+    "CANC": "取消",
+    "ABD": "比赛中止"
+  },
   "football": {
     "leaguesTitle": "足球联赛",
     "leaguesDescription": "联赛组件：所有启用的 Football API 赛事。",
