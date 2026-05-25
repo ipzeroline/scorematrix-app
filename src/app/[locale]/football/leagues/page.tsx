@@ -14,7 +14,7 @@ type Props = {
 export default async function FootballLeaguesPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale });
-  const leagues = await getApiFootballLeagues({ current: true });
+  const leagues = await getApiFootballLeagues();
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 pb-8">

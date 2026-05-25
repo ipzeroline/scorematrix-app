@@ -1,54 +1,80 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { PointsBadge } from "@/components/shared/PointsBadge";
+import { Badge } from "@/components/ui/Badge";
+import {
+  DEFAULT_REWARDS_RESPONSE,
+  getRewards,
+  mapApiReward,
+  type RewardViewItem,
+} from "@/lib/rewards-api";
 import { RewardCategory } from "@/types/common";
-
-const REWARDS = [
-  {
-    id: "r1", name: "ScoreMatrix Football Jersey", desc: "Official team jersey with ScoreMatrix branding", category: RewardCategory.MERCHANDISE,
-    pointsCost: 500, creditCost: 0, isFreeOnly: true, isPremiumOnly: false, stock: 25, image: "👕",
-  },
-  {
-    id: "r2", name: "Steam Gift Card $10", desc: "Digital Steam wallet code", category: RewardCategory.VOUCHER,
-    pointsCost: 1000, creditCost: 0, isFreeOnly: true, isPremiumOnly: false, stock: 50, image: "🎮",
-  },
-  {
-    id: "r3", name: "Golden Profile Badge", desc: "Exclusive gold-animated profile badge", category: RewardCategory.COSMETIC,
-    pointsCost: 0, creditCost: 100, isFreeOnly: false, isPremiumOnly: true, stock: 999, image: "✨",
-  },
-  {
-    id: "r4", name: "ScoreMatrix Scarf", desc: "Limited edition winter scarf", category: RewardCategory.MERCHANDISE,
-    pointsCost: 300, creditCost: 0, isFreeOnly: true, isPremiumOnly: false, stock: 15, image: "🧣",
-  },
-  {
-    id: "r5", name: "Wallpaper Pack: Cyberpunk", desc: "HD cyberpunk-themed wallpapers", category: RewardCategory.DIGITAL,
-    pointsCost: 50, creditCost: 0, isFreeOnly: true, isPremiumOnly: false, stock: 999, image: "🖼️",
-  },
-  {
-    id: "r6", name: "Neon Username Effect", desc: "Animated neon text effect for your username", category: RewardCategory.COSMETIC,
-    pointsCost: 0, creditCost: 75, isFreeOnly: false, isPremiumOnly: true, stock: 999, image: "💫",
-  },
-  {
-    id: "r7", name: "ScoreMatrix Mug", desc: "Ceramic mug with heat-reactive design", category: RewardCategory.MERCHANDISE,
-    pointsCost: 200, creditCost: 0, isFreeOnly: true, isPremiumOnly: false, stock: 40, image: "☕",
-  },
-  {
-    id: "r8", name: "Google Play Gift Card $5", desc: "Digital Google Play code", category: RewardCategory.VOUCHER,
-    pointsCost: 500, creditCost: 0, isFreeOnly: true, isPremiumOnly: false, stock: 30, image: "📱",
-  },
-];
 
 export default function RewardsPage() {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
   const [tab, setTab] = useState("all");
+  const [rewards, setRewards] = useState<RewardViewItem[]>(() =>
+    DEFAULT_REWARDS_RESPONSE.data.map(mapApiReward)
+  );
 
-  const filtered = tab === "all" ? REWARDS : REWARDS.filter((r) => r.category === tab);
+  useEffect(() => {
+    let isActive = true;
+
+    getRewards({ locale })
+      .then((response) => {
+        if (isActive) {
+          setRewards(response.data.map(mapApiReward).filter((reward) => reward.isActive));
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setRewards(DEFAULT_REWARDS_RESPONSE.data.map(mapApiReward));
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [locale]);
+
+  const filtered = useMemo(
+    () => (tab === "all" ? rewards : rewards.filter((r) => r.category === tab)),
+    [rewards, tab]
+  );
+
+  const tabs = [
+    { key: "all", label: t("rewards.all"), count: rewards.length },
+    {
+      key: RewardCategory.MERCHANDISE,
+      label: t("rewards.merchandise"),
+      count: rewards.filter((reward) => reward.category === RewardCategory.MERCHANDISE)
+        .length,
+    },
+    {
+      key: RewardCategory.DIGITAL,
+      label: t("rewards.digital"),
+      count: rewards.filter((reward) => reward.category === RewardCategory.DIGITAL)
+        .length,
+    },
+    {
+      key: RewardCategory.COSMETIC,
+      label: t("rewards.cosmetic"),
+      count: rewards.filter((reward) => reward.category === RewardCategory.COSMETIC)
+        .length,
+    },
+    {
+      key: RewardCategory.VOUCHER,
+      label: t("rewards.voucher"),
+      count: rewards.filter((reward) => reward.category === RewardCategory.VOUCHER)
+        .length,
+    },
+  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -65,13 +91,7 @@ export default function RewardsPage() {
       </div>
 
       <Tabs
-        tabs={[
-          { key: "all", label: t("rewards.all"), count: REWARDS.length },
-          { key: RewardCategory.MERCHANDISE, label: t("rewards.merchandise") },
-          { key: RewardCategory.DIGITAL, label: t("rewards.digital") },
-          { key: RewardCategory.COSMETIC, label: t("rewards.cosmetic") },
-          { key: RewardCategory.VOUCHER, label: t("rewards.voucher") },
-        ]}
+        tabs={tabs}
         activeTab={tab}
         onChange={setTab}
       />
@@ -81,12 +101,35 @@ export default function RewardsPage() {
           <Link key={reward.id} href={`/${locale}/rewards/${reward.id}`}>
             <Card hover className="h-full flex flex-col p-4">
               <div className="text-center">
-                <div className="text-3xl mb-2">{reward.image}</div>
+                <div className="mb-2 flex h-12 items-center justify-center">
+                  {reward.imageUrl ? (
+                    <span
+                      role="img"
+                      aria-label={reward.name}
+                      className="h-12 w-12 rounded-lg bg-cover bg-center"
+                      style={{ backgroundImage: `url(${reward.imageUrl})` }}
+                    />
+                  ) : (
+                    <span className="text-3xl">{reward.image}</span>
+                  )}
+                </div>
+                <div className="mb-2 flex justify-center gap-1">
+                  {reward.isLimited && (
+                    <Badge variant="gold" size="sm">
+                      {t("rewards.limited")}
+                    </Badge>
+                  )}
+                  {!reward.canAfford && (
+                    <Badge variant="red" size="sm">
+                      {t("rewards.insufficientPoints")}
+                    </Badge>
+                  )}
+                </div>
                 <h4 className="text-xs font-semibold text-white mb-1 line-clamp-1">
                   {reward.name}
                 </h4>
                 <p className="text-[10px] text-gray-500 line-clamp-2 mb-3">
-                  {reward.desc}
+                  {reward.description}
                 </p>
               </div>
               <div className="mt-auto space-y-1.5">

@@ -15,6 +15,10 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import {
+  buildFootballStatusLabels,
+  getFixtureStatusLabel,
+} from "@/lib/football-status";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import {
   THAILAND_TIME_ZONE_LABEL,
@@ -43,20 +47,20 @@ interface LivescoreProps {
 
 export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const t = useTranslations();
+  const statusLabels = useMemo(() => buildFootballStatusLabels(t), [t]);
   const [activeTab, setActiveTab] = useState("all");
   const [league, setLeague] = useState("");
   const [search, setSearch] = useState("");
   const [payload, setPayload] = useState(initialPayload);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   async function loadFixtures() {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/football/fixtures?date=${today}&limit=50`);
+      const response = await fetch("/api/football/fixtures/today?limit=50");
       const data = (await response.json()) as FixturesPayload;
 
       if (!response.ok) {
@@ -226,7 +230,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                   {leagueMatches.map((match, index) => (
                     <Link
                       key={match.id}
-                      href={`/${locale}/livescore/${buildFixtureSeoSlug(match)}`}
+                      href={buildMatchDetailHref(match, locale)}
                       className="block"
                     >
                       <Card
@@ -236,7 +240,11 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                           index % 2 === 0 ? "bg-[#12121a]" : "bg-cyan-500/[0.035]"
                         )}
                       >
-                        <StatusBadge status={match.status} />
+                        <StatusBadge
+                          status={match.status}
+                          label={getFixtureStatusLabel(match, statusLabels)}
+                          className="justify-self-center text-center"
+                        />
                         <div className="flex-1 min-w-0">
                           <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] sm:gap-3">
                             <TeamInline
@@ -288,6 +296,12 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
       )}
     </div>
   );
+}
+
+function buildMatchDetailHref(match: ApiFootballFixture, locale: string): string {
+  return match.apiFixtureId
+    ? `/${locale}/livescore/match/${match.apiFixtureId}`
+    : `/${locale}/livescore/${buildFixtureSeoSlug(match)}`;
 }
 
 function formatFixtureDate(match: ApiFootballFixture, locale: string): string {

@@ -27,6 +27,18 @@ export type ApiRequestOptions = {
   signal?: AbortSignal;
   cache?: RequestCache;
   next?: NextFetchRequestConfig;
+  formData?: boolean;
+};
+
+type AuthRefreshData = {
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  tokens?: {
+    accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
+  };
 };
 
 export class ApiClientError extends Error {
@@ -43,13 +55,21 @@ export class ApiClientError extends Error {
   }
 }
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL ??
-  "https://api.scorematrix.live/api/v1";
+const API_BASE_URL = normalizeApiBaseUrl(requiredEnv(
+  process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL,
+  "NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL"
+));
 
 const AUTH_TOKEN_COOKIE_NAME = "scorematrix-auth-token";
+const REFRESH_TOKEN_COOKIE_NAME = "scorematrix-refresh-token";
 const LEGACY_AUTH_TOKEN_STORAGE_KEY = "scorematrix-auth-token";
 const REMEMBERED_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+
+export const AUTH_SESSION_EXPIRED_EVENT = "scorematrix:auth-session-expired";
+
+let refreshTokenRequest: Promise<string | null> | null = null;
+let authSessionExpiredDispatched = false;
 
 export function getApiBaseUrl() {
   return API_BASE_URL;
@@ -74,6 +94,11 @@ export function getStoredAuthToken() {
   return legacyToken;
 }
 
+export function getStoredRefreshToken() {
+  if (typeof window === "undefined") return null;
+  return readCookie(REFRESH_TOKEN_COOKIE_NAME);
+}
+
 export function setStoredAuthToken(token: string, remember = true) {
   if (typeof window === "undefined") return;
   const maxAge = remember ? REMEMBERED_TOKEN_MAX_AGE_SECONDS : undefined;
@@ -81,9 +106,23 @@ export function setStoredAuthToken(token: string, remember = true) {
   clearLegacyStoredAuthToken();
 }
 
+export function setStoredAuthTokens(
+  accessToken: string,
+  refreshToken?: string | null,
+  remember = true
+) {
+  authSessionExpiredDispatched = false;
+  setStoredAuthToken(accessToken, remember);
+  if (!refreshToken || typeof window === "undefined") return;
+
+  const maxAge = remember ? REFRESH_TOKEN_MAX_AGE_SECONDS : undefined;
+  writeCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, maxAge);
+}
+
 export function clearStoredAuthToken() {
   if (typeof window === "undefined") return;
   deleteCookie(AUTH_TOKEN_COOKIE_NAME);
+  deleteCookie(REFRESH_TOKEN_COOKIE_NAME);
   clearLegacyStoredAuthToken();
 }
 
@@ -117,24 +156,52 @@ export async function apiPostRaw<T, B = unknown>(
   return apiRawRequest<T>("POST", path, body, options);
 }
 
-export async function apiRequest<T, B = unknown>(
-  method: "GET" | "POST",
+export async function apiPostFormRaw<T>(
+  path: string,
+  body: FormData,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  return apiRawRequest<T>("POST", path, body, { ...options, formData: true });
+}
+
+export async function apiPatch<T, B = unknown>(
   path: string,
   body?: B,
   options: ApiRequestOptions = {}
 ): Promise<ApiSuccess<T>> {
-  const response = await fetch(buildApiUrl(path), {
-    method,
-    headers: buildApiHeaders(options, body !== undefined),
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal: options.signal,
-    cache: options.cache,
-    next: options.next,
-  });
+  return apiRequest<T>("PATCH", path, body, options);
+}
+
+export async function apiPatchRaw<T, B = unknown>(
+  path: string,
+  body?: B,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  return apiRawRequest<T>("PATCH", path, body, options);
+}
+
+export async function apiRequest<T, B = unknown>(
+  method: "GET" | "POST" | "PATCH",
+  path: string,
+  body?: B,
+  options: ApiRequestOptions = {}
+): Promise<ApiSuccess<T>> {
+  const response = await fetchApi(method, path, body, options);
 
   const payload = await parseApiResponse(response);
+  if (shouldRefreshAuth(path, response, options)) {
+    const token = await refreshAccessToken(options);
+    if (token) {
+      return apiRequest<T, B>(method, path, body, {
+        ...options,
+        token,
+        headers: withoutAuthorization(options.headers),
+      });
+    }
+  }
+
   if (!response.ok || !isApiSuccess<T>(payload)) {
-    const failure = isApiFailure(payload) ? payload : undefined;
+    const failure = toApiFailure(payload);
     throw new ApiClientError(
       failure?.message ?? response.statusText,
       response.status,
@@ -147,23 +214,27 @@ export async function apiRequest<T, B = unknown>(
 }
 
 export async function apiRawRequest<T, B = unknown>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "PATCH",
   path: string,
   body?: B,
   options: ApiRequestOptions = {}
 ): Promise<T> {
-  const response = await fetch(buildApiUrl(path), {
-    method,
-    headers: buildApiHeaders(options, body !== undefined),
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal: options.signal,
-    cache: options.cache,
-    next: options.next,
-  });
+  const response = await fetchApi(method, path, body, options);
 
   const payload = await parseApiResponse(response);
+  if (shouldRefreshAuth(path, response, options)) {
+    const token = await refreshAccessToken(options);
+    if (token) {
+      return apiRawRequest<T, B>(method, path, body, {
+        ...options,
+        token,
+        headers: withoutAuthorization(options.headers),
+      });
+    }
+  }
+
   if (!response.ok) {
-    const failure = isApiFailure(payload) ? payload : undefined;
+    const failure = toApiFailure(payload);
     throw new ApiClientError(
       failure?.message ?? response.statusText,
       response.status,
@@ -175,9 +246,43 @@ export async function apiRawRequest<T, B = unknown>(
   return payload as T;
 }
 
+async function fetchApi<B>(
+  method: "GET" | "POST" | "PATCH",
+  path: string,
+  body?: B,
+  options: ApiRequestOptions = {}
+) {
+  return fetch(buildApiUrl(path), {
+    method,
+    headers: buildApiHeaders(options, body !== undefined),
+    body:
+      body === undefined
+        ? undefined
+        : options.formData
+          ? (body as BodyInit)
+          : JSON.stringify(body),
+    signal: options.signal,
+    cache: options.cache,
+    next: options.next,
+  });
+}
+
 function buildApiUrl(path: string) {
   if (/^https?:\/\//i.test(path)) return path;
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+function normalizeApiBaseUrl(value: string) {
+  const baseUrl = value.replace(/\/$/, "");
+  return baseUrl.endsWith("/scorm") ? baseUrl : `${baseUrl}/scorm`;
+}
+
+function requiredEnv(value: string | undefined, name: string) {
+  if (!value) {
+    throw new Error(`${name} is required. Add it to .env.`);
+  }
+
+  return value;
 }
 
 function readCookie(name: string) {
@@ -222,7 +327,8 @@ function clearLegacyStoredAuthToken() {
 function buildApiHeaders(options: ApiRequestOptions, hasBody: boolean) {
   const headers = new Headers(options.headers);
   const locale = normalizeLocale(options.locale);
-  const token = options.token ?? getStoredAuthToken();
+  const token =
+    options.token === undefined ? getStoredAuthToken() : options.token;
 
   headers.set("Accept", "application/json");
   headers.set("Accept-Language", locale);
@@ -230,7 +336,7 @@ function buildApiHeaders(options: ApiRequestOptions, hasBody: boolean) {
   headers.set("X-Locale", locale);
   headers.set("X-App-Locale", locale);
 
-  if (hasBody && !headers.has("Content-Type")) {
+  if (hasBody && !options.formData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -239,6 +345,76 @@ function buildApiHeaders(options: ApiRequestOptions, hasBody: boolean) {
   }
 
   return headers;
+}
+
+function shouldRefreshAuth(
+  path: string,
+  response: Response,
+  options: ApiRequestOptions
+) {
+  return (
+    response.status === 401 &&
+    !options.token &&
+    !path.startsWith("/auth/login") &&
+    !path.startsWith("/auth/register") &&
+    !path.startsWith("/auth/refresh") &&
+    Boolean(getStoredRefreshToken())
+  );
+}
+
+async function refreshAccessToken(options: ApiRequestOptions) {
+  if (refreshTokenRequest) return refreshTokenRequest;
+
+  refreshTokenRequest = requestRefreshedAccessToken(options).finally(() => {
+    refreshTokenRequest = null;
+  });
+
+  return refreshTokenRequest;
+}
+
+async function requestRefreshedAccessToken(options: ApiRequestOptions) {
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) return null;
+
+  const response = await fetchApi(
+    "POST",
+    "/auth/refresh",
+    { refreshToken },
+    { locale: options.locale, token: null }
+  );
+  const payload = await parseApiResponse(response);
+
+  if (!response.ok || !isApiSuccess<AuthRefreshData>(payload)) {
+    expireAuthSession();
+    return null;
+  }
+
+  const accessToken = payload.data?.accessToken ?? payload.data?.tokens?.accessToken;
+  const nextRefreshToken =
+    payload.data?.refreshToken ?? payload.data?.tokens?.refreshToken ?? refreshToken;
+
+  if (!accessToken) {
+    expireAuthSession();
+    return null;
+  }
+
+  setStoredAuthTokens(accessToken, nextRefreshToken);
+  return accessToken;
+}
+
+function expireAuthSession() {
+  clearStoredAuthToken();
+
+  if (typeof window === "undefined" || authSessionExpiredDispatched) return;
+
+  authSessionExpiredDispatched = true;
+  window.dispatchEvent(new CustomEvent(AUTH_SESSION_EXPIRED_EVENT));
+}
+
+function withoutAuthorization(headers?: HeadersInit) {
+  const nextHeaders = new Headers(headers);
+  nextHeaders.delete("Authorization");
+  return nextHeaders;
 }
 
 async function parseApiResponse(response: Response) {
@@ -275,4 +451,26 @@ function isApiFailure(payload: unknown): payload is ApiFailure {
     "success" in payload &&
     (payload as { success: unknown }).success === false
   );
+}
+
+function toApiFailure(payload: unknown): ApiFailure | undefined {
+  if (isApiFailure(payload)) return payload;
+
+  if (typeof payload !== "object" || payload === null || !("error" in payload)) {
+    return undefined;
+  }
+
+  const error = (payload as { error?: unknown }).error;
+  if (typeof error !== "object" || error === null) return undefined;
+
+  const message = (error as { message?: unknown }).message;
+  return {
+    success: false,
+    code: stringValue((error as { code?: unknown }).code),
+    message: typeof message === "string" ? message : "API request failed",
+  };
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : undefined;
 }

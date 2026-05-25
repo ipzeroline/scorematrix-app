@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -22,21 +22,21 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Tabs } from "@/components/ui/Tabs";
 import {
-  dailyLeaderboard,
-  seasonalLeaderboard,
-  weeklyLeaderboard,
-} from "@/data/leaderboard";
+  DEFAULT_LEADERBOARD_RESPONSE,
+  getLeaderboard,
+  mapApiLeaderboardEntry,
+  type LeaderboardResponse,
+} from "@/lib/leaderboard-api";
 import { getLeaderboardPageCopy } from "@/data/leaderboard-page-content";
-import type { LeaderboardEntry } from "@/types/leaderboard";
+import { useUserStore } from "@/stores/user-store";
+import type { LeaderboardEntry, LeaderboardReward } from "@/types/leaderboard";
 
 type PeriodKey = "daily" | "weekly" | "seasonal";
-
-const CURRENT_USER_ID = "user-022";
-
-const periodEntries: Record<PeriodKey, LeaderboardEntry[]> = {
-  daily: dailyLeaderboard,
-  weekly: weeklyLeaderboard,
-  seasonal: seasonalLeaderboard,
+type LeaderboardViewData = {
+  period: LeaderboardResponse["period"];
+  entries: LeaderboardEntry[];
+  userEntry: LeaderboardEntry | null;
+  rewards: LeaderboardReward[];
 };
 
 function rankTone(rank: number) {
@@ -60,15 +60,54 @@ function leaderboardRowKey(entry: LeaderboardEntry) {
   return `${entry.rank}-${entry.userId}`;
 }
 
+function toLeaderboardViewData(response: LeaderboardResponse): LeaderboardViewData {
+  return {
+    period: response.period,
+    entries: response.entries.map(mapApiLeaderboardEntry),
+    userEntry: response.userEntry
+      ? mapApiLeaderboardEntry(response.userEntry)
+      : null,
+    rewards: response.rewards,
+  };
+}
+
+function formatRankRange(rankRange: [number, number]) {
+  const [start, end] = rankRange;
+  return start === end ? `#${start}` : `#${start}-${end}`;
+}
+
 export default function LeaderboardPage() {
   const { locale } = useParams<{ locale: string }>();
   const copy = getLeaderboardPageCopy(locale);
   const [period, setPeriod] = useState<PeriodKey>("weekly");
+  const userId = useUserStore((state) => state.userId);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardViewData>(() =>
+    toLeaderboardViewData(DEFAULT_LEADERBOARD_RESPONSE)
+  );
 
-  const entries = periodEntries[period];
+  useEffect(() => {
+    let isActive = true;
+
+    getLeaderboard({ locale })
+      .then((response) => {
+        if (isActive) setLeaderboard(toLeaderboardViewData(response));
+      })
+      .catch(() => {
+        if (isActive) {
+          setLeaderboard(toLeaderboardViewData(DEFAULT_LEADERBOARD_RESPONSE));
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [locale]);
+
+  const entries = leaderboard.entries;
   const topThree = entries.slice(0, 3);
   const currentUser =
-    entries.find((entry) => entry.userId === CURRENT_USER_ID) ?? entries[1];
+    leaderboard.userEntry ??
+    (userId ? entries.find((entry) => entry.userId === userId) : undefined);
   const nextRankEntry =
     currentUser && currentUser.rank > 1
       ? entries.find((entry) => entry.rank === currentUser.rank - 1)
@@ -94,12 +133,12 @@ export default function LeaderboardPage() {
   }, [entries]);
 
   const tabs = [
-    { key: "daily", label: copy.periods.daily, count: dailyLeaderboard.length },
-    { key: "weekly", label: copy.periods.weekly, count: weeklyLeaderboard.length },
+    { key: "daily", label: copy.periods.daily, count: entries.length },
+    { key: "weekly", label: copy.periods.weekly, count: entries.length },
     {
       key: "seasonal",
       label: copy.periods.seasonal,
-      count: seasonalLeaderboard.length,
+      count: entries.length,
     },
   ];
 
@@ -286,6 +325,29 @@ export default function LeaderboardPage() {
                   <p className="text-sm font-semibold text-white">
                     {copy.labels.rewardsHint}
                   </p>
+                  {leaderboard.rewards.length > 0 && (
+                    <div className="mt-3 grid gap-2">
+                      {leaderboard.rewards.slice(0, 4).map((reward) => (
+                        <div
+                          key={formatRankRange(reward.rankRange)}
+                          className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3 py-2"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-mono text-xs font-semibold text-amber-300">
+                              {formatRankRange(reward.rankRange)}
+                            </span>
+                            <span className="text-right text-xs text-gray-400">
+                              +{reward.reward.freePoints.toLocaleString()}{" "}
+                              {copy.labels.points}
+                              {reward.reward.premiumCredits
+                                ? ` / +${reward.reward.premiumCredits.toLocaleString()} ${copy.labels.credits}`
+                                : ""}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <Link
                     href={`/${locale}/missions`}
                     className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-cyan-300 hover:text-cyan-200"

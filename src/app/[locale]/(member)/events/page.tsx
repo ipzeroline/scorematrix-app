@@ -1,23 +1,51 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/Card';
 import { EventCard } from '@/components/shared/EventCard';
-import { specialEvents } from '@/data/events';
+import {
+  DEFAULT_EVENTS_RESPONSE,
+  getEvents,
+  mapApiEvent,
+} from '@/lib/events-api';
 import { cn } from '@/lib/utils';
 import { Calendar, Sparkles } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import type { SpecialEvent } from '@/types/event';
 
 type Filter = 'all' | 'upcoming' | 'active' | 'ended';
 
 export default function EventsPage() {
   const t = useTranslations('events');
+  const { locale } = useParams<{ locale: string }>();
   const [filter, setFilter] = useState<Filter>('all');
+  const [events, setEvents] = useState<SpecialEvent[]>(
+    DEFAULT_EVENTS_RESPONSE.data.map(mapApiEvent)
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    getEvents({ locale })
+      .then((response) => {
+        if (!active) return;
+        setEvents(response.data.map(mapApiEvent));
+      })
+      .catch(() => {
+        if (!active) return;
+        setEvents(DEFAULT_EVENTS_RESPONSE.data.map(mapApiEvent));
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [locale]);
 
   const filtered = filter === 'all'
-    ? specialEvents
-    : specialEvents.filter((e) => e.status === filter);
+    ? events
+    : events.filter((e) => e.status === filter);
 
-  const activeEvent = specialEvents.find((e) => e.status === 'active');
+  const activeEvent = events.find((e) => e.status === 'active');
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -33,8 +61,8 @@ export default function EventsPage() {
             <Sparkles size={14} className="text-green-400" />
             <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">{t('liveNow')}</span>
           </div>
-          <h2 className="text-base font-bold text-white mb-1">{t(`items.${activeEvent.id}.name`)}</h2>
-          <p className="text-xs text-gray-400">{t(`items.${activeEvent.id}.description`).slice(0, 120)}...</p>
+          <h2 className="text-base font-bold text-white mb-1">{activeEvent.name}</h2>
+          <p className="text-xs text-gray-400 whitespace-pre-line">{activeEvent.description.slice(0, 120)}...</p>
         </Card>
       )}
 

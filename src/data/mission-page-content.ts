@@ -20,7 +20,7 @@ export const achievementItems: AchievementItem[] = [
 const en = {
   title: "Missions",
   subtitle: "Complete skill-based tasks to earn points, XP, badges and reward progress.",
-  levelLine: "Level 12 • 2,840 XP",
+  levelLine: "Level {level} • {xp} XP",
   todayReset: "Daily reset",
   weekReset: "Weekly reset",
   totalRewards: "Available rewards",
@@ -29,6 +29,7 @@ const en = {
   days: "days",
   daily: "Daily",
   weekly: "Weekly",
+  special: "Special",
   achievements: "Achievements",
   ready: "Ready",
   claimed: "Claimed",
@@ -54,7 +55,10 @@ const en = {
   },
   dailyIntro: "Daily missions refresh at midnight Thailand time. Finish them before reset to claim rewards.",
   weeklyIntro: "Weekly missions reward consistency across multiple leagues, matches and community actions.",
+  specialIntro: "Special missions track longer-running goals, referrals, and milestone rewards.",
   achievementsIntro: "Achievements are long-term milestones that show your prediction identity.",
+  noMissions: "No missions are available right now.",
+  loadFailed: "Unable to load missions right now. Please try again later.",
   missions: {
     "mission-daily-01": { title: "Early Bird Predictor", desc: "Place 3 predictions before noon." },
     "mission-daily-02": { title: "Perfect Start", desc: "Get your first prediction of the day correct." },
@@ -95,7 +99,7 @@ const copies: Record<LocaleCode, MissionPageCopy> = {
     ...en,
     title: "ภารกิจ",
     subtitle: "ทำภารกิจที่ใช้ทักษะเพื่อรับแต้ม XP เหรียญตรา และความคืบหน้ารางวัล",
-    levelLine: "เลเวล 12 • 2,840 XP",
+    levelLine: "เลเวล {level} • {xp} XP",
     todayReset: "รีเซ็ตรายวัน",
     weekReset: "รีเซ็ตรายสัปดาห์",
     totalRewards: "รางวัลที่รับได้",
@@ -104,6 +108,7 @@ const copies: Record<LocaleCode, MissionPageCopy> = {
     days: "วัน",
     daily: "รายวัน",
     weekly: "รายสัปดาห์",
+    special: "พิเศษ",
     achievements: "ความสำเร็จ",
     ready: "พร้อมรับ",
     claimed: "รับแล้ว",
@@ -129,7 +134,10 @@ const copies: Record<LocaleCode, MissionPageCopy> = {
     },
     dailyIntro: "ภารกิจรายวันรีเซ็ตตอนเที่ยงคืนตามเวลาไทย ทำให้เสร็จก่อนรีเซ็ตเพื่อรับรางวัล",
     weeklyIntro: "ภารกิจรายสัปดาห์ให้รางวัลกับความสม่ำเสมอในหลายลีก หลายแมตช์ และกิจกรรมชุมชน",
+    specialIntro: "ภารกิจพิเศษติดตามเป้าหมายระยะยาว การชวนเพื่อน และรางวัล milestone",
     achievementsIntro: "ความสำเร็จคือเป้าหมายระยะยาวที่บอกตัวตนของคุณในฐานะนักทายผล",
+    noMissions: "ยังไม่มีภารกิจในตอนนี้",
+    loadFailed: "ไม่สามารถโหลดภารกิจได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง",
     missions: {
       "mission-daily-01": { title: "นักทายสายเช้า", desc: "ส่งคำทาย 3 คู่ก่อนเที่ยง" },
       "mission-daily-02": { title: "เริ่มวันอย่างแม่น", desc: "ทายคู่แรกของวันให้ถูก" },
@@ -170,6 +178,7 @@ const copies: Record<LocaleCode, MissionPageCopy> = {
     subtitle: "完成技巧任务，获得积分、XP、徽章和奖励进度。",
     daily: "每日",
     weekly: "每周",
+    special: "特别",
     achievements: "成就",
     ready: "可领取",
     claimed: "已领取",
@@ -182,6 +191,9 @@ const copies: Record<LocaleCode, MissionPageCopy> = {
     locked: "未解锁",
     unlocked: "已解锁",
     points: "积分",
+    specialIntro: "特别任务追踪长期目标、邀请好友和里程碑奖励。",
+    noMissions: "当前没有可用任务。",
+    loadFailed: "目前无法加载任务。请稍后再试。",
   },
 };
 
@@ -191,8 +203,12 @@ copies.lo = {
   subtitle: "ເຮັດພາລະກິດທີ່ໃຊ້ທັກສະເພື່ອຮັບຄະແນນ XP ແລະລາງວັນ",
   daily: "ລາຍວັນ",
   weekly: "ລາຍອາທິດ",
+  special: "ພິເສດ",
   achievements: "ຄວາມສຳເລັດ",
   points: "ຄະແນນ",
+  specialIntro: "ພາລະກິດພິເສດຕິດຕາມເປົ້າໝາຍລະຍະຍາວ ການຊວນໝູ່ ແລະລາງວັນ milestone",
+  noMissions: "ຕອນນີ້ຍັງບໍ່ມີພາລະກິດ",
+  loadFailed: "ບໍ່ສາມາດໂຫຼດພາລະກິດໄດ້ໃນຕອນນີ້ ກະລຸນາລອງໃໝ່ພາຍຫຼັງ",
 };
 
 copies.my = {
@@ -201,7 +217,11 @@ copies.my = {
   subtitle: "ကျွမ်းကျင်မှုအခြေပြုတာဝန်များပြီးမြောက်အောင်လုပ်ပြီး points, XP နှင့် badges ရယူပါ။",
   daily: "နေ့စဉ်",
   weekly: "အပတ်စဉ်",
+  special: "အထူး",
   achievements: "အောင်မြင်မှုများ",
+  specialIntro: "အထူးမစ်ရှင်များသည် ရေရှည်ရည်မှန်းချက်များ၊ referral များနှင့် milestone ဆုများကို ခြေရာခံသည်။",
+  noMissions: "လတ်တလော မစ်ရှင်မရှိသေးပါ။",
+  loadFailed: "မစ်ရှင်များကို ယခု မတင်နိုင်ပါ။ နောက်မှ ထပ်စမ်းပါ။",
 };
 
 copies.km = {
@@ -210,8 +230,12 @@ copies.km = {
   subtitle: "បំពេញភារកិច្ចផ្អែកលើជំនាញ ដើម្បីទទួលពិន្ទុ XP និងសមិទ្ធផល។",
   daily: "ប្រចាំថ្ងៃ",
   weekly: "ប្រចាំសប្តាហ៍",
+  special: "ពិសេស",
   achievements: "សមិទ្ធផល",
   points: "ពិន្ទុ",
+  specialIntro: "បេសកកម្មពិសេសតាមដានគោលដៅរយៈពេលវែង ការណែនាំមិត្ត និងរង្វាន់ milestone។",
+  noMissions: "មិនមានបេសកកម្មនៅពេលនេះទេ។",
+  loadFailed: "មិនអាចផ្ទុកបេសកកម្មបាននៅពេលនេះទេ។ សូមសាកល្បងម្តងទៀតពេលក្រោយ។",
 };
 
 export function getMissionPageCopy(locale: string) {

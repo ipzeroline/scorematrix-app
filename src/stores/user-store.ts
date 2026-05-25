@@ -59,7 +59,7 @@ interface UserActions {
   incrementReferral: () => void;
   addReferralEarnings: (amount: number) => void;
   setReferralCode: (code: string) => void;
-  syncWallet: (wallet: { freePoints: number; premiumCredits: number }) => void;
+  syncWallet: (wallet: Partial<Pick<UserState, 'freePoints' | 'premiumCredits' | 'xp' | 'level' | 'rank'>>) => void;
   updateProfile: (profile: Partial<Pick<UserState, 'displayName' | 'email' | 'phone' | 'birthYear' | 'country' | 'favoriteTeam' | 'playerType' | 'language' | 'marketingConsent'>>) => void;
 }
 

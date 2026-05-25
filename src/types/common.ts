@@ -37,6 +37,7 @@ export enum RedemptionStatus {
 export enum MissionType {
   DAILY = 'daily',
   WEEKLY = 'weekly',
+  SPECIAL = 'special',
 }
 
 export enum AchievementCategory {

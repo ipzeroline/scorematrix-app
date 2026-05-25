@@ -4,8 +4,11 @@ import { teams } from "@/data/teams";
 import { proxyFootballMediaValue } from "@/lib/football-media";
 import { MatchStatus } from "@/types/common";
 
-const API_FOOTBALL_BASE_URL =
-  process.env.API_FOOTBALL_BASE_URL ?? "https://api.scorematrix.live/api/v1/soccer";
+const API_FOOTBALL_BASE_URL = requiredEnv(
+  process.env.API_FOOTBALL_BASE_URL,
+  "API_FOOTBALL_BASE_URL"
+);
+const API_SPORTS_LEAGUE_LOGO_BASE_URL = "https://media.api-sports.io/football/leagues";
 
 export type ApiFootballSource = "api-football" | "mock";
 
@@ -53,6 +56,7 @@ interface SoccerBackendResponse<T> {
   count?: number;
   query?: Record<string, string>;
   status?: string;
+  data?: SoccerLiveFixture[];
   rateLimit?: GetFixturesResult["rateLimit"];
   fixtures?: ApiFootballFixture[];
   fixture?: ApiFootballFixture;
@@ -69,6 +73,39 @@ interface SoccerBackendResponse<T> {
   };
 }
 
+interface SoccerLiveResponse {
+  data?: SoccerLiveFixture[];
+}
+
+interface SoccerLiveFixture {
+  provider_id: number;
+  league_id: number;
+  season: number | null;
+  status: {
+    short: string;
+    long: string;
+    elapsed: number | null;
+  };
+  goals: {
+    home: number | null;
+    away: number | null;
+  };
+  teams: {
+    home: SoccerLiveTeam;
+    away: SoccerLiveTeam;
+  };
+  starts_at: string;
+  is_live: boolean;
+  is_terminal: boolean;
+  last_synced_at: string | null;
+}
+
+interface SoccerLiveTeam {
+  id: number;
+  name: string;
+  logo: string | null;
+}
+
 interface SoccerBackendLeagueEntry {
   id: string;
   apiLeagueId: number;
@@ -80,6 +117,23 @@ interface SoccerBackendLeagueEntry {
   countryFlag: string | null;
   seasons: ApiFootballLeagueEntry["seasons"];
   current?: boolean;
+}
+
+interface SoccerLeaguesResponse {
+  data?: SoccerApiLeagueEntry[];
+  leagues?: SoccerBackendLeagueEntry[];
+}
+
+interface SoccerApiLeagueEntry {
+  provider_id: number;
+  name: string;
+  country: string;
+  country_code: string | null;
+  country_flag: string | null;
+  type: string;
+  logo: string | null;
+  current_season: number | null;
+  sort_order: number | null;
 }
 
 interface SoccerBackendTeamProfile {
@@ -438,7 +492,9 @@ export async function getApiFootballFixtures(
     query,
     { revalidate: options.revalidate ?? (options.live ? 15 : 60) }
   );
-  const mappedFixtures = payload.fixtures ?? [];
+  const mappedFixtures = withLeagueLogoFallbacks(
+    payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
+  );
   const fixtures =
     typeof options.limit === "number"
       ? mappedFixtures.slice(0, options.limit)
@@ -451,6 +507,99 @@ export async function getApiFootballFixtures(
     count: fixtures.length,
     fixtures,
     rateLimit: payload.rateLimit ?? {
+      requestsRemaining: null,
+      requestsLimit: null,
+    },
+  };
+}
+
+export async function getApiFootballTodayFixtures(
+  options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
+): Promise<GetFixturesResult> {
+  const query: Record<string, string> = {};
+  if (typeof options.limit === "number") query.limit = String(options.limit);
+
+  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
+    "/fixtures/today",
+    query,
+    { revalidate: options.revalidate ?? 10 }
+  );
+  const mappedFixtures = withLeagueLogoFallbacks(
+    payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
+  );
+  const fixtures =
+    typeof options.limit === "number"
+      ? mappedFixtures.slice(0, options.limit)
+      : mappedFixtures;
+
+  return {
+    source: payload.source ?? "api-football",
+    fetchedAt:
+      payload.fetchedAt ?? payload.data?.[0]?.last_synced_at ?? new Date().toISOString(),
+    query,
+    count: fixtures.length,
+    fixtures,
+    rateLimit: payload.rateLimit ?? {
+      requestsRemaining: null,
+      requestsLimit: null,
+    },
+  };
+}
+
+export async function getApiFootballUpcomingFixtures(
+  options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
+): Promise<GetFixturesResult> {
+  const query: Record<string, string> = {};
+  if (typeof options.limit === "number") query.limit = String(options.limit);
+
+  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
+    "/fixtures/upcoming",
+    query,
+    { revalidate: options.revalidate ?? 60 }
+  );
+  const mappedFixtures = withLeagueLogoFallbacks(
+    payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
+  );
+  const fixtures =
+    typeof options.limit === "number"
+      ? mappedFixtures.slice(0, options.limit)
+      : mappedFixtures;
+
+  return {
+    source: payload.source ?? "api-football",
+    fetchedAt:
+      payload.fetchedAt ?? payload.data?.[0]?.last_synced_at ?? new Date().toISOString(),
+    query,
+    count: fixtures.length,
+    fixtures,
+    rateLimit: payload.rateLimit ?? {
+      requestsRemaining: null,
+      requestsLimit: null,
+    },
+  };
+}
+
+export async function getApiFootballLiveFixtures(
+  options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
+): Promise<GetFixturesResult> {
+  const payload = await fetchSoccerBackend<SoccerLiveResponse>(
+    "/live",
+    {},
+    { revalidate: options.revalidate ?? 15 }
+  );
+  const mappedFixtures = withLeagueLogoFallbacks((payload.data ?? []).map(mapLiveFixture));
+  const fixtures =
+    typeof options.limit === "number"
+      ? mappedFixtures.slice(0, options.limit)
+      : mappedFixtures;
+
+  return {
+    source: "api-football",
+    fetchedAt: payload.data?.[0]?.last_synced_at ?? new Date().toISOString(),
+    query: {},
+    count: fixtures.length,
+    fixtures,
+    rateLimit: {
       requestsRemaining: null,
       requestsLimit: null,
     },
@@ -491,12 +640,24 @@ export async function getApiFootballLeagues(options: {
   if (options.current) query.current = "true";
   if (options.search) query.search = options.search;
 
-  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
+  const payload = await fetchSoccerBackend<SoccerLeaguesResponse>(
     "/leagues",
     query
   );
 
-  return (payload.leagues ?? []).map(mapBackendLeague);
+  const leagues = payload.data
+    ? payload.data
+        .filter((item) => !options.id || item.provider_id === options.id)
+        .filter((item) =>
+          options.search
+            ? item.name.toLowerCase().includes(options.search.toLowerCase())
+            : true
+        )
+        .sort((a, b) => (a.sort_order ?? Number.MAX_SAFE_INTEGER) - (b.sort_order ?? Number.MAX_SAFE_INTEGER))
+        .map(mapSoccerApiLeague)
+    : (payload.leagues ?? []).map(mapBackendLeague);
+
+  return leagues;
 }
 
 export async function getApiFootballStandings(league: number, season: number) {
@@ -637,6 +798,91 @@ function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> 
   return query;
 }
 
+function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
+  const normalizedStatus = normalizeMatchStatus(fixture.status.short);
+  const status = fixture.is_live
+    ? MatchStatus.LIVE
+    : fixture.is_terminal
+      ? MatchStatus.FINISHED
+      : isMatchStatus(normalizedStatus)
+        ? normalizedStatus
+        : MatchStatus.UPCOMING;
+
+  return {
+    id: `api-football-${fixture.provider_id}`,
+    apiFixtureId: fixture.provider_id,
+    league: {
+      id: `api-league-${fixture.league_id}`,
+      apiLeagueId: fixture.league_id,
+      name: `League ${fixture.league_id}`,
+      country: "",
+      logo: getApiSportsLeagueLogoUrl(fixture.league_id),
+      flag: null,
+      season: fixture.season,
+      round: fixture.status.long,
+    },
+    home: {
+      id: `api-team-${fixture.teams.home.id}`,
+      apiTeamId: fixture.teams.home.id,
+      name: fixture.teams.home.name,
+      logo: fixture.teams.home.logo,
+      winner: winnerFor(fixture.goals.home, fixture.goals.away),
+    },
+    away: {
+      id: `api-team-${fixture.teams.away.id}`,
+      apiTeamId: fixture.teams.away.id,
+      name: fixture.teams.away.name,
+      logo: fixture.teams.away.logo,
+      winner: winnerFor(fixture.goals.away, fixture.goals.home),
+    },
+    score: {
+      home: fixture.goals.home,
+      away: fixture.goals.away,
+    },
+    status,
+    statusShort: fixture.status.short,
+    elapsed: fixture.status.elapsed,
+    kickoffTime: fixture.starts_at,
+    venue: "",
+  };
+}
+
+function withLeagueLogoFallbacks(fixtures: ApiFootballFixture[]): ApiFootballFixture[] {
+  return fixtures.map((fixture) => {
+    const logo = fixture.league.logo ?? getApiSportsLeagueLogoUrl(fixture.league.apiLeagueId);
+
+    if (logo === fixture.league.logo) {
+      return fixture;
+    }
+
+    return {
+      ...fixture,
+      league: {
+        ...fixture.league,
+        logo,
+      },
+    };
+  });
+}
+
+function getApiSportsLeagueLogoUrl(leagueId?: number | null): string | null {
+  return typeof leagueId === "number"
+    ? `${API_SPORTS_LEAGUE_LOGO_BASE_URL}/${leagueId}.png`
+    : null;
+}
+
+function isMatchStatus(status: string): status is MatchStatus {
+  return Object.values(MatchStatus).includes(status as MatchStatus);
+}
+
+function requiredEnv(value: string | undefined, name: string) {
+  if (!value) {
+    throw new Error(`${name} is required. Add it to .env.`);
+  }
+
+  return value;
+}
+
 async function fetchSoccerBackend<T>(
   pathname: string,
   query: Record<string, string>,
@@ -741,7 +987,7 @@ function mapBackendLeague(item: SoccerBackendLeagueEntry): ApiFootballLeagueEntr
       id: item.apiLeagueId,
       name: item.name,
       type: item.type,
-      logo: item.logo,
+      logo: item.logo ?? getApiSportsLeagueLogoUrl(item.apiLeagueId),
     },
     country: {
       name: item.country,
@@ -749,6 +995,33 @@ function mapBackendLeague(item: SoccerBackendLeagueEntry): ApiFootballLeagueEntr
       flag: item.countryFlag,
     },
     seasons: item.seasons,
+  };
+}
+
+function mapSoccerApiLeague(item: SoccerApiLeagueEntry): ApiFootballLeagueEntry {
+  return {
+    league: {
+      id: item.provider_id,
+      name: item.name,
+      type: item.type,
+      logo: item.logo ?? getApiSportsLeagueLogoUrl(item.provider_id),
+    },
+    country: {
+      name: item.country,
+      code: item.country_code,
+      flag: item.country_flag,
+    },
+    seasons:
+      typeof item.current_season === "number"
+        ? [
+            {
+              year: item.current_season,
+              start: "",
+              end: "",
+              current: true,
+            },
+          ]
+        : [],
   };
 }
 

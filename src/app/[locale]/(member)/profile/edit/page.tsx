@@ -1,18 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Save } from "lucide-react";
+import { Save, Upload } from "lucide-react";
 import { FavoriteTeamSelect } from "@/components/auth/FavoriteTeamSelect";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LOCALES } from "@/i18n";
 import { ApiClientError } from "@/lib/api-client";
-import { getMemberProfile, updateMemberProfile } from "@/lib/auth-api";
+import {
+  getCurrentUser,
+  updateCurrentUser,
+  uploadProfileAvatar,
+  type CurrentUserData,
+  type CurrentUserResponse,
+  type UploadProfileAvatarResponse,
+} from "@/lib/auth-api";
 import { getSoccerTeamGroups, type SoccerTeamGroup } from "@/lib/soccer-api";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
@@ -23,17 +31,13 @@ const languageOptions = LOCALES.map((l) => ({
   label: `${l.native} (${l.label})`,
 }));
 
-const countryOptions = [
-  { value: "", label: "-" },
-  { value: "TH", label: "TH - Thailand" },
-  { value: "LA", label: "LA - Laos" },
-  { value: "KH", label: "KH - Cambodia" },
-  { value: "MM", label: "MM - Myanmar" },
-  { value: "MY", label: "MY - Malaysia" },
-  { value: "SG", label: "SG - Singapore" },
-  { value: "VN", label: "VN - Vietnam" },
-  { value: "OTHER", label: "OTHER" },
-];
+type ProfileForm = {
+  displayName: string;
+  bio: string;
+  favoriteTeamId: string;
+  locale: string;
+  avatarUrl: string;
+};
 
 export default function EditProfilePage() {
   const profileT = useTranslations("profile");
@@ -41,49 +45,31 @@ export default function EditProfilePage() {
   const commonT = useTranslations("common");
   const router = useRouter();
   const { locale } = useParams<{ locale: string }>();
-  const currentYear = new Date().getFullYear();
   const addToast = useNotificationStore((s) => s.addToast);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const user = useUserStore(
     useShallow((s) => ({
       username: s.username,
       displayName: s.displayName,
-      email: s.email,
-      phone: s.phone,
-      birthYear: s.birthYear,
-      country: s.country,
       favoriteTeam: s.favoriteTeam,
-      playerType: s.playerType,
       language: s.language,
-      marketingConsent: s.marketingConsent,
-      updateProfile: s.updateProfile,
     }))
   );
-  const updateStoredProfile = user.updateProfile;
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     displayName: user.displayName,
-    email: user.email,
-    phone: user.phone,
-    birthYear: extractBirthYear(user.birthYear),
-    country: user.country,
-    favoriteTeam: user.favoriteTeam,
-    playerType: user.playerType,
-    language: user.language || locale,
-    marketingConsent: user.marketingConsent,
+    bio: "",
+    favoriteTeamId: user.favoriteTeam,
+    locale: user.language || locale,
+    avatarUrl: "",
   });
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [teamGroups, setTeamGroups] = useState<SoccerTeamGroup[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState("");
   const [saved, setSaved] = useState(false);
-
-  const playerTypeOptions = [
-    { value: "", label: authT("selectPlayerType") },
-    { value: "casual", label: authT("playerTypeCasual") },
-    { value: "analyst", label: authT("playerTypeAnalyst") },
-    { value: "competitive", label: authT("playerTypeCompetitive") },
-  ];
 
   useEffect(() => {
     let active = true;
@@ -102,24 +88,26 @@ export default function EditProfilePage() {
         setTeamsLoading(false);
       });
 
-    getMemberProfile({ locale })
+    getCurrentUser({ locale })
       .then((response) => {
-        if (!active || !response.data?.profile) return;
-        const profile = response.data.profile;
-        const nextProfile = {
-          displayName: profile.name ?? "",
-          email: profile.email ?? "",
-          phone: profile.phone ?? profile.tel ?? "",
-          birthYear: extractBirthYear(profile.birth_day),
-          country: profile.country ?? "",
-          favoriteTeam: profile.favorite_team ?? "",
-          playerType: profile.player_type ?? "",
-          language: profile.language ?? locale,
-          marketingConsent: Boolean(profile.marketing_consent),
+        if (!active) return;
+        const profile = extractCurrentUser(response);
+        if (!profile) return;
+
+        const nextForm = {
+          displayName: pickString(profile.displayName, profile.name) ?? "",
+          bio: pickString(profile.bio) ?? "",
+          favoriteTeamId: pickString(profile.favoriteTeamId) ?? "",
+          locale: pickString(profile.locale, profile.language) ?? locale,
+          avatarUrl: pickString(profile.avatarUrl) ?? "",
         };
 
-        setForm(nextProfile);
-        updateStoredProfile(nextProfile);
+        setForm(nextForm);
+        useUserStore.setState({
+          displayName: nextForm.displayName,
+          favoriteTeam: nextForm.favoriteTeamId,
+          language: nextForm.locale,
+        });
       })
       .catch((error) => {
         if (!active) return;
@@ -133,9 +121,9 @@ export default function EditProfilePage() {
     return () => {
       active = false;
     };
-  }, [locale, updateStoredProfile]);
+  }, [locale]);
 
-  const update = (field: keyof typeof form, value: string | boolean) => {
+  const update = (field: keyof ProfileForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setSaved(false);
     setServerError("");
@@ -148,39 +136,35 @@ export default function EditProfilePage() {
     const e: Record<string, string> = {};
 
     if (touched.displayName || form.displayName) {
-      if (form.displayName.length > 100) e.displayName = authT("displayNameMaxLength");
+      if (form.displayName.length > 50) e.displayName = profileT("displayNameMaxLength");
     }
-    if (touched.phone || form.phone) {
-      if (form.phone.length > 20) e.phone = authT("phoneMaxLength");
+    if (touched.bio || form.bio) {
+      if (form.bio.length > 200) e.bio = profileT("bioMaxLength");
     }
-    if (touched.birthYear || form.birthYear) {
-      const year = Number(form.birthYear);
-      if (!Number.isInteger(year) || year < 1900 || year > currentYear) {
-        e.birthYear = authT("birthYearInvalid");
+    if (touched.favoriteTeamId || form.favoriteTeamId) {
+      if (form.favoriteTeamId.length > 100) e.favoriteTeamId = authT("favoriteTeamMaxLength");
+    }
+    if (touched.locale || form.locale) {
+      if (form.locale.length > 10) e.locale = authT("languageMaxLength");
+    }
+    if (touched.avatarUrl || form.avatarUrl) {
+      if (form.avatarUrl.length > 500) e.avatarUrl = profileT("avatarUrlMaxLength");
+      if (form.avatarUrl && !isHttpUrl(form.avatarUrl)) {
+        e.avatarUrl = profileT("avatarUrlInvalid");
       }
-    }
-    if (touched.favoriteTeam || form.favoriteTeam) {
-      if (form.favoriteTeam.length > 100) e.favoriteTeam = authT("favoriteTeamMaxLength");
-    }
-    if (touched.playerType || form.playerType) {
-      if (form.playerType.length > 50) e.playerType = authT("playerTypeMaxLength");
-    }
-    if (touched.language || form.language) {
-      if (form.language.length > 10) e.language = authT("languageMaxLength");
     }
 
     return e;
-  }, [authT, currentYear, form, touched]);
+  }, [authT, form, profileT, touched]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({
       displayName: true,
-      phone: true,
-      birthYear: true,
-      favoriteTeam: true,
-      playerType: true,
-      language: true,
+      bio: true,
+      favoriteTeamId: true,
+      locale: true,
+      avatarUrl: true,
     });
 
     if (Object.keys(errors).length > 0) return;
@@ -189,31 +173,25 @@ export default function EditProfilePage() {
     setServerError("");
 
     try {
-      const response = await updateMemberProfile(
+      const response = await updateCurrentUser(
         {
-          displayName: form.displayName.trim() || undefined,
-          phone: form.phone.trim() || undefined,
-          country: form.country || undefined,
-          favoriteTeam: form.favoriteTeam || undefined,
-          language: form.language || undefined,
-          birthYear: form.birthYear ? Number(form.birthYear) : undefined,
-          playerType: form.playerType || undefined,
-          marketingConsent: form.marketingConsent,
+          displayName: optionalTrimmed(form.displayName),
+          bio: optionalTrimmed(form.bio),
+          favoriteTeamId: optionalTrimmed(form.favoriteTeamId),
+          locale: optionalTrimmed(form.locale),
+          avatarUrl: optionalTrimmed(form.avatarUrl),
         },
-        { locale: form.language }
+        { locale: form.locale }
       );
-      const data = response.data;
+      const profile = extractCurrentUser(response);
 
-      user.updateProfile({
-        displayName: data?.name ?? form.displayName.trim(),
-        email: data?.email ?? form.email,
-        phone: data?.tel ?? form.phone.trim(),
-        birthYear: extractBirthYear(data?.birth_day) || extractBirthYear(form.birthYear),
-        country: data?.country ?? form.country,
-        favoriteTeam: data?.favorite_team ?? form.favoriteTeam,
-        playerType: data?.player_type ?? form.playerType,
-        language: data?.language ?? form.language,
-        marketingConsent: data?.marketing_consent ?? form.marketingConsent,
+      useUserStore.setState({
+        displayName:
+          pickString(profile?.displayName, profile?.name) ??
+          form.displayName.trim(),
+        favoriteTeam:
+          pickString(profile?.favoriteTeamId) ?? form.favoriteTeamId,
+        language: pickString(profile?.locale, profile?.language) ?? form.locale,
       });
       setSaved(true);
       addToast({
@@ -231,6 +209,52 @@ export default function EditProfilePage() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file: File | undefined) => {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      const message = profileT("avatarFileInvalid");
+      setServerError(message);
+      addToast({ type: "error", title: commonT("error"), message });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      const message = profileT("avatarFileTooLarge");
+      setServerError(message);
+      addToast({ type: "error", title: commonT("error"), message });
+      return;
+    }
+
+    setUploading(true);
+    setServerError("");
+
+    try {
+      const response = await uploadProfileAvatar(file, { locale: form.locale });
+      const url = extractUploadedAvatarUrl(response);
+      if (!url) {
+        throw new Error(profileT("avatarUploadMissingUrl"));
+      }
+
+      update("avatarUrl", url);
+      addToast({
+        type: "success",
+        title: profileT("avatarUploaded"),
+      });
+    } catch (error) {
+      const message = getProfileErrorMessage(error);
+      setServerError(message);
+      addToast({
+        type: "error",
+        title: commonT("error"),
+        message,
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -260,79 +284,71 @@ export default function EditProfilePage() {
             className="disabled:cursor-not-allowed disabled:opacity-60"
           />
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label={authT("displayName")}
-              value={form.displayName}
-              onChange={(e) => update("displayName", e.target.value)}
-              onBlur={() => markTouched("displayName")}
-              error={errors.displayName}
-              autoComplete="name"
+          <Input
+            label={authT("displayName")}
+            value={form.displayName}
+            onChange={(e) => update("displayName", e.target.value)}
+            onBlur={() => markTouched("displayName")}
+            error={errors.displayName}
+            autoComplete="name"
+            disabled={profileLoading}
+            maxLength={50}
+          />
+
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-400">
+              {authT("bio")}
+            </label>
+            <textarea
+              value={form.bio}
+              onChange={(e) => update("bio", e.target.value)}
+              onBlur={() => markTouched("bio")}
               disabled={profileLoading}
-              maxLength={100}
+              maxLength={200}
+              rows={4}
+              className="w-full resize-none rounded-lg border border-gray-700 bg-[#0a0a0f] px-3 py-2 text-sm text-white placeholder-gray-500 transition-colors duration-200 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
             />
-            <Input
-              label={authT("email")}
-              type="email"
-              value={form.email}
-              disabled
-              className="disabled:cursor-not-allowed disabled:opacity-60"
-              autoComplete="email"
-            />
+            {errors.bio && <p className="mt-1 text-xs text-red-400">{errors.bio}</p>}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label={`${authT("phone")} (${authT("optional")})`}
-              type="tel"
-              value={form.phone}
-              onChange={(e) => update("phone", e.target.value)}
-              onBlur={() => markTouched("phone")}
-              error={errors.phone}
-              autoComplete="tel"
-              disabled={profileLoading}
-              maxLength={20}
-            />
-            <Input
-              label={authT("birthYear")}
-              type="text"
-              value={form.birthYear}
-              onChange={(e) => update("birthYear", normalizeBirthYearInput(e.target.value))}
-              onBlur={() => markTouched("birthYear")}
-              error={errors.birthYear}
-              min={1900}
-              max={currentYear}
-              maxLength={4}
-              pattern="[0-9]{4}"
-              inputMode="numeric"
-              disabled={profileLoading}
-            />
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-400">
-                {authT("country")}
-              </label>
-              <Select
-                options={countryOptions}
-                value={form.country}
-                onChange={(v) => update("country", v)}
-                className="w-full"
-                disabled={profileLoading}
+          <div className="rounded-xl border border-gray-800 bg-[#0d1118] p-4">
+            <label className="mb-3 block text-sm font-medium text-gray-400">
+              {profileT("profileImage")}
+            </label>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <Avatar
+                src={form.avatarUrl || null}
+                fallback={user.username}
+                size="xl"
+                className="ring-2 ring-cyan-500/30"
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-400">
-                {authT("language")}
-              </label>
-              <Select
-                options={languageOptions}
-                value={form.language}
-                onChange={(v) => update("language", v)}
-                className="w-full"
-                disabled={profileLoading}
-              />
+              <div className="min-w-0 flex-1 space-y-3">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(event) => handleAvatarUpload(event.target.files?.[0])}
+                  disabled={profileLoading || uploading}
+                />
+                <input type="hidden" name="avatarUrl" value={form.avatarUrl} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  loading={uploading}
+                  disabled={profileLoading || uploading}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload size={16} />
+                  {profileT("uploadProfileImage")}
+                </Button>
+                {form.avatarUrl && (
+                  <p className="truncate text-xs text-gray-500">{form.avatarUrl}</p>
+                )}
+                {errors.avatarUrl && (
+                  <p className="text-xs text-red-400">{errors.avatarUrl}</p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -343,39 +359,30 @@ export default function EditProfilePage() {
               </label>
               <FavoriteTeamSelect
                 groups={teamGroups}
-                value={form.favoriteTeam}
-                onChange={(v) => update("favoriteTeam", v)}
+                value={form.favoriteTeamId}
+                onChange={(v) => update("favoriteTeamId", v)}
                 placeholder={teamsLoading ? commonT("loading") : authT("selectTeam")}
                 searchPlaceholder={authT("searchTeams")}
                 loading={teamsLoading || profileLoading}
               />
+              {errors.favoriteTeamId && (
+                <p className="mt-1 text-xs text-red-400">{errors.favoriteTeamId}</p>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-400">
-                {authT("playerType")}
+                {authT("language")}
               </label>
               <Select
-                options={playerTypeOptions}
-                value={form.playerType}
-                onChange={(v) => update("playerType", v)}
-                className="h-[50px] w-full"
+                options={languageOptions}
+                value={form.locale}
+                onChange={(v) => update("locale", v)}
+                className="w-full"
                 disabled={profileLoading}
               />
+              {errors.locale && <p className="mt-1 text-xs text-red-400">{errors.locale}</p>}
             </div>
           </div>
-
-          <label className="flex cursor-pointer items-start gap-2">
-            <input
-              type="checkbox"
-              checked={form.marketingConsent}
-              onChange={(e) => update("marketingConsent", e.target.checked)}
-              disabled={profileLoading}
-              className="mt-0.5 h-4 w-4 rounded border-gray-700 bg-[#0a0a0f] text-cyan-500 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-            <span className="text-sm text-gray-400">
-              {authT("marketingConsent")}
-            </span>
-          </label>
 
           {serverError && (
             <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-400">
@@ -406,17 +413,45 @@ export default function EditProfilePage() {
   );
 }
 
-function extractBirthYear(value?: string | null) {
-  if (!value) return "";
-  const text = String(value).trim();
-  const leadingYear = text.match(/^(\d{4})/);
-  if (leadingYear) return leadingYear[1];
-
-  return text.match(/\b(19|20)\d{2}\b/)?.[0] ?? "";
+function extractCurrentUser(response: CurrentUserResponse): CurrentUserData | null {
+  if ("user" in response && response.user) return extractCurrentUser(response.user);
+  if ("member" in response && response.member) return extractCurrentUser(response.member);
+  if ("profile" in response && response.profile) return extractCurrentUser(response.profile);
+  if ("data" in response && response.data) return extractCurrentUser(response.data);
+  return response as CurrentUserData;
 }
 
-function normalizeBirthYearInput(value: string) {
-  return value.replace(/\D/g, "").slice(0, 4);
+function pickString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+    if (typeof value === "number") return String(value);
+  }
+  return undefined;
+}
+
+function optionalTrimmed(value: string) {
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function extractUploadedAvatarUrl(response: UploadProfileAvatarResponse) {
+  return pickString(
+    response.avatarUrl,
+    response.url,
+    response.imageUrl,
+    response.data?.avatarUrl,
+    response.data?.url,
+    response.data?.imageUrl
+  );
 }
 
 function getProfileErrorMessage(error: unknown) {

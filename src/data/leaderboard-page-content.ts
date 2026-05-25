@@ -20,6 +20,7 @@ export type LeaderboardPageCopy = {
     player: string;
     level: string;
     points: string;
+    credits: string;
     accuracy: string;
     streak: string;
     you: string;
@@ -61,6 +62,7 @@ const leaderboardCopy: Record<LocaleCode, LeaderboardPageCopy> = {
       player: "ผู้เล่น",
       level: "เลเวล",
       points: "คะแนน",
+      credits: "เครดิต",
       accuracy: "ความแม่นยำ",
       streak: "สตรีค",
       you: "คุณ",
@@ -101,6 +103,7 @@ const leaderboardCopy: Record<LocaleCode, LeaderboardPageCopy> = {
       player: "Player",
       level: "Level",
       points: "Points",
+      credits: "Credits",
       accuracy: "Accuracy",
       streak: "Streak",
       you: "You",
@@ -135,6 +138,7 @@ const leaderboardCopy: Record<LocaleCode, LeaderboardPageCopy> = {
       player: "ຜູ້ຫຼິ້ນ",
       level: "ເລເວວ",
       points: "ຄະແນນ",
+      credits: "ເຄຣດິດ",
       accuracy: "ຄວາມແມ່ນຍໍາ",
       streak: "ສະຕຣີກ",
       you: "ທ່ານ",
@@ -166,6 +170,7 @@ const leaderboardCopy: Record<LocaleCode, LeaderboardPageCopy> = {
       player: "ကစားသမား",
       level: "လယ်ဗယ်",
       points: "အမှတ်",
+      credits: "ခရက်ဒစ်",
       accuracy: "တိကျမှု",
       streak: "စထရိ",
       you: "သင်",
@@ -197,6 +202,7 @@ const leaderboardCopy: Record<LocaleCode, LeaderboardPageCopy> = {
       player: "អ្នកលេង",
       level: "កម្រិត",
       points: "ពិន្ទុ",
+      credits: "ក្រេឌីត",
       accuracy: "ភាពត្រឹមត្រូវ",
       streak: "streak",
       you: "អ្នក",
@@ -228,6 +234,7 @@ const leaderboardCopy: Record<LocaleCode, LeaderboardPageCopy> = {
       player: "玩家",
       level: "等级",
       points: "积分",
+      credits: "点数",
       accuracy: "准确率",
       streak: "连胜",
       you: "你",

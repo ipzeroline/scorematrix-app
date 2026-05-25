@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -23,7 +24,27 @@ import {
   Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DEFAULT_LEADERBOARD_RESPONSE,
+  getLeaderboard,
+  mapApiLeaderboardEntry,
+} from "@/lib/leaderboard-api";
+import {
+  DEFAULT_MISSIONS_RESPONSE,
+  getMissions,
+  mapApiMission,
+} from "@/lib/missions-api";
+import {
+  DEFAULT_REWARDS_RESPONSE,
+  getRewards,
+  mapApiReward,
+  type RewardViewItem,
+} from "@/lib/rewards-api";
+import { formatPoints } from "@/lib/currency";
 import { useUserStore } from "@/stores/user-store";
+import { MissionType } from "@/types/common";
+import type { LeaderboardEntry } from "@/types/leaderboard";
+import type { Mission } from "@/types/mission";
 
 const SIDEBAR_LINKS = [
   { href: "", label: "home", icon: Home },
@@ -42,39 +63,119 @@ const SIDEBAR_LINKS = [
   { href: "/news", label: "news", icon: Newspaper },
 ];
 
-const sidebarHighlights = {
-  leaders: [
-    { rank: 1, name: "CipherAce", level: 28, points: "12.4K" },
-    { rank: 2, name: "Phantom", level: 26, points: "11.9K" },
-    { rank: 3, name: "NeonPred", level: 25, points: "10.9K" },
-    { rank: 4, name: "GridWiz", level: 23, points: "10.3K" },
-    { rank: 5, name: "ScoreHunter", level: 22, points: "9.8K" },
-    { rank: 6, name: "GoalOracle", level: 21, points: "9.4K" },
-    { rank: 7, name: "PitchKing", level: 20, points: "9.1K" },
-    { rank: 8, name: "WinMatrix", level: 19, points: "8.7K" },
-    { rank: 9, name: "DataStriker", level: 18, points: "8.3K" },
-    { rank: 10, name: "FormReader", level: 17, points: "8.0K" },
-  ],
-  missions: [
-    { titleKey: "predict5.title", progress: 3, total: 5, reward: "+500 XP", color: "from-cyan-300 to-blue-300" },
-    { titleKey: "perfectAccuracy.title", progress: 3, total: 3, reward: "+1K XP", color: "from-green-300 to-emerald-300" },
-    { titleKey: "socialShare.title", progress: 0, total: 1, reward: "+250 XP", color: "from-purple-300 to-fuchsia-300" },
-    { title: "Daily check-in", progress: 1, total: 1, reward: "+100 XP", color: "from-amber-300 to-orange-300" },
-  ],
-  rewards: [
-    { nameKey: "jersey.name", category: "Merch", cost: "500 CR", stock: 42 },
-    { nameKey: "steam.name", category: "Voucher", cost: "2.5K XP", stock: 150 },
-    { nameKey: "badge.name", category: "Badge", cost: "5K XP", stock: 88 },
-    { nameKey: "scarf.name", category: "Merch", cost: "1.5K XP", stock: 25 },
-  ],
-};
+const missionColors = [
+  "from-cyan-300 to-blue-300",
+  "from-green-300 to-emerald-300",
+  "from-purple-300 to-fuchsia-300",
+  "from-amber-300 to-orange-300",
+];
+
+function getDefaultSidebarMissions() {
+  return [
+    ...DEFAULT_MISSIONS_RESPONSE.daily.map((mission) =>
+      mapApiMission(mission, MissionType.DAILY)
+    ),
+    ...DEFAULT_MISSIONS_RESPONSE.weekly.map((mission) =>
+      mapApiMission(mission, MissionType.WEEKLY)
+    ),
+    ...DEFAULT_MISSIONS_RESPONSE.special.map((mission) =>
+      mapApiMission(mission, MissionType.SPECIAL)
+    ),
+  ].slice(0, 4);
+}
+
+function getDefaultSidebarLeaders() {
+  return DEFAULT_LEADERBOARD_RESPONSE.entries
+    .map(mapApiLeaderboardEntry)
+    .slice(0, 10);
+}
+
+function getDefaultSidebarRewards() {
+  return DEFAULT_REWARDS_RESPONSE.data
+    .map(mapApiReward)
+    .filter((reward) => reward.isActive)
+    .slice(0, 4);
+}
 
 export function Sidebar() {
   const t = useTranslations();
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const [leaders, setLeaders] = useState<LeaderboardEntry[]>(getDefaultSidebarLeaders);
+  const [missions, setMissions] = useState<Mission[]>(getDefaultSidebarMissions);
+  const [rewards, setRewards] = useState<RewardViewItem[]>(getDefaultSidebarRewards);
   const visibleLinks = SIDEBAR_LINKS.filter((link) => !link.authRequired || isLoggedIn);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let active = true;
+
+    getLeaderboard({ locale })
+      .then((response) => {
+        if (!active) return;
+        const nextLeaders = response.entries
+          .map(mapApiLeaderboardEntry)
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, 10);
+        setLeaders(nextLeaders.length > 0 ? nextLeaders : getDefaultSidebarLeaders());
+      })
+      .catch(() => {
+        if (active) setLeaders(getDefaultSidebarLeaders());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn, locale]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let active = true;
+
+    getRewards({ locale })
+      .then((response) => {
+        if (!active) return;
+        const nextRewards = response.data
+          .map(mapApiReward)
+          .filter((reward) => reward.isActive)
+          .slice(0, 4);
+        setRewards(nextRewards.length > 0 ? nextRewards : getDefaultSidebarRewards());
+      })
+      .catch(() => {
+        if (active) setRewards(getDefaultSidebarRewards());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn, locale]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let active = true;
+
+    getMissions({ locale })
+      .then((response) => {
+        if (!active) return;
+        const nextMissions = [
+          ...response.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)),
+          ...response.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)),
+          ...response.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)),
+        ].slice(0, 4);
+        setMissions(nextMissions.length > 0 ? nextMissions : getDefaultSidebarMissions());
+      })
+      .catch(() => {
+        if (active) setMissions(getDefaultSidebarMissions());
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isLoggedIn, locale]);
 
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;
@@ -123,7 +224,7 @@ export function Sidebar() {
             />
           </div>
           <div className="space-y-0.5">
-            {sidebarHighlights.leaders.map((user) => (
+            {leaders.map((user) => (
               <div
                 key={user.rank}
                 className="grid grid-cols-[18px_minmax(0,1fr)_34px_36px] items-center gap-1.5"
@@ -132,13 +233,13 @@ export function Sidebar() {
                   {user.rank}
                 </span>
                 <span className="min-w-0 truncate text-[10px] text-gray-300">
-                  {user.name}
+                  {user.username}
                 </span>
                 <span className="rounded bg-cyan-300/10 px-1 py-0.5 text-center text-[8px] font-semibold text-cyan-200">
                   Lv.{user.level}
                 </span>
                 <span className="text-right text-[9px] font-mono font-semibold text-green-300">
-                  {user.points}
+                  {formatPoints(user.points)}
                 </span>
               </div>
             ))}
@@ -157,18 +258,20 @@ export function Sidebar() {
               {t("nav.missions")}
             </span>
             <span className="rounded-md border border-green-300/25 bg-green-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-green-200">
-              2/4
+              {missions.filter((mission) => mission.completed || mission.claimed).length}/{missions.length}
             </span>
           </div>
 
           <div className="space-y-1.5">
-            {sidebarHighlights.missions.map((mission) => {
-              const pct = Math.min(100, Math.round((mission.progress / mission.total) * 100));
-              const done = mission.progress >= mission.total;
-              const title = "titleKey" in mission ? t(`dashboard.missions.${mission.titleKey}`) : mission.title;
+            {missions.map((mission, index) => {
+              const pct = Math.min(100, Math.round((mission.progress / mission.target) * 100));
+              const done = mission.completed || mission.claimed || mission.progress >= mission.target;
+              const reward = mission.rewardCredits && mission.rewardCredits > 0
+                ? `+${mission.rewardCredits} CR`
+                : `+${mission.rewardXP} XP`;
 
               return (
-                <div key={title} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+                <div key={mission.id} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-gray-200">
                       <CheckCircle2
@@ -176,21 +279,21 @@ export function Sidebar() {
                         className={done ? "text-green-300" : "text-purple-300"}
                         aria-hidden="true"
                       />
-                      <span className="truncate">{title}</span>
+                      <span className="truncate">{mission.title}</span>
                     </span>
                     <span className="shrink-0 text-[9px] font-semibold text-cyan-200">
-                      {mission.reward}
+                      {reward}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-white/10">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${mission.color}`}
+                        className={`h-full rounded-full bg-gradient-to-r ${missionColors[index % missionColors.length]}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
                     <span className="w-7 text-right text-[9px] font-mono text-gray-400">
-                      {mission.progress}/{mission.total}
+                      {mission.progress}/{mission.target}
                     </span>
                   </div>
                 </div>
@@ -212,24 +315,24 @@ export function Sidebar() {
             </span>
             <span className="flex items-center gap-1 rounded-md border border-pink-300/20 bg-pink-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-pink-100">
               <Crown size={10} aria-hidden="true" />
-              {sidebarHighlights.rewards.length}
+              {rewards.length}
             </span>
           </div>
 
           <div className="space-y-1.5">
-            {sidebarHighlights.rewards.map((reward) => (
-              <div key={reward.nameKey} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
+            {rewards.map((reward) => (
+              <div key={reward.id} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
                 <div className="flex items-center justify-between gap-2">
                   <span className="min-w-0 truncate text-[10px] font-medium text-white">
-                    {t(`dashboard.rewardItems.${reward.nameKey}`)}
+                    {reward.name}
                   </span>
                   <span className="shrink-0 text-[9px] font-mono font-semibold text-pink-200">
-                    {reward.cost}
+                    {formatPoints(reward.pointsCost)}
                   </span>
                 </div>
                 <div className="mt-0.5 flex items-center justify-between gap-2">
                   <span className="rounded bg-pink-300/10 px-1.5 py-0.5 text-[8px] font-semibold text-pink-100">
-                    {reward.category}
+                    {t(`rewards.${reward.category}`)}
                   </span>
                   <span className={cn(
                     "text-[8px] font-mono",

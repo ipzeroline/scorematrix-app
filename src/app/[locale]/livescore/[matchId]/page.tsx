@@ -34,9 +34,10 @@ import { cn, formatDate, formatMatchDateTimeWithZone } from "@/lib/utils";
 
 type Props = {
   params: Promise<{ locale: string; matchId: string }>;
+  showJsonBox?: boolean;
 };
 
-export default async function MatchDetailPage({ params }: Props) {
+export default async function MatchDetailPage({ params, showJsonBox = false }: Props) {
   const { locale, matchId } = await params;
   const t = await getTranslations({ locale });
   const apiFixtureId = parseApiFixtureId(matchId);
@@ -168,6 +169,20 @@ export default async function MatchDetailPage({ params }: Props) {
         )}
       </Card>
 
+      {showJsonBox && (
+        <JsonBox
+          title={`GET /fixtures/${apiFixtureId}`}
+          value={{
+            fixture,
+            events,
+            lineups,
+            statistics,
+            playerStats,
+            h2h,
+          }}
+        />
+      )}
+
       <section className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
         <InfoTile icon={ClipboardList} label={t("matchDetail.events")} value={events.length} />
         <InfoTile icon={BarChart3} label={t("matchDetail.statsGroups")} value={statistics.length} />
@@ -213,6 +228,24 @@ export default async function MatchDetailPage({ params }: Props) {
         captain: t("matchDetail.captain"),
       }} />
     </MatchDetailShell>
+  );
+}
+
+function JsonBox({ title, value }: { title: string; value: unknown }) {
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="flex items-center justify-between gap-3 border-b border-gray-800 px-4 py-3">
+        <h2 className="min-w-0 truncate font-mono text-xs font-semibold text-cyan-300">
+          {title}
+        </h2>
+        <span className="shrink-0 rounded-md border border-cyan-500/25 bg-cyan-500/10 px-2 py-1 font-mono text-[10px] font-semibold text-cyan-200">
+          JSON
+        </span>
+      </div>
+      <pre className="max-h-[520px] overflow-auto bg-[#05070d] p-4 text-[11px] leading-5 text-gray-300">
+        <code>{JSON.stringify(value, null, 2)}</code>
+      </pre>
+    </Card>
   );
 }
 

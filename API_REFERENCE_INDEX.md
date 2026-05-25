@@ -1,14 +1,17 @@
 # ScoreMatrix Frontend API Index
 
-Source: `/Users/mckazine/Desktop/scorematrix-frontend-api-reference.html`
+Latest source: `/Users/mckazine/Desktop/SCOREMATRIX_API_LATEST.html`
 
-Last read: 2026-05-18
+Legacy source: `/Users/mckazine/Desktop/scorematrix-frontend-api-reference.html`
+
+Last read: 2026-05-24
 
 ## Scope
 
-This API reference covers Auth and Member endpoints for the ScoreMatrix frontend.
+This API reference covers the production ScoreMatrix SCORM API used by the frontend.
 
-- Base URL: `https://api.scorematrix.live/api/v1`
+- Base URL: `https://api.scorematrix.live/api/v1/scorm`
+- `src/lib/api-client.ts` appends `/scorm` to `NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL` when the env value is still `https://api.scorematrix.live/api/v1`.
 - All responses include a stable `code` field.
 - Frontend should map `code` values to localized UI messages instead of parsing backend Thai text.
 - Authenticated endpoints use:
@@ -45,6 +48,17 @@ type ApiError = {
 };
 ```
 
+Some newer business endpoints return errors as:
+
+```ts
+type ApiErrorEnvelope = {
+  error: {
+    code: string;
+    message: string;
+  };
+};
+```
+
 Common HTTP status codes:
 
 - `200`: success
@@ -57,15 +71,15 @@ Common HTTP status codes:
 
 ## Public Auth Endpoints
 
-### `POST /auth/register-app`
+### `POST /auth/register`
 
-Primary registration endpoint for `scorematrix-app`.
+Primary production registration endpoint for `scorematrix-app`.
 
 Required request fields:
 
 - `username`: string, 3-20 chars, unique in `members.user_name`
 - `email`: valid email, max 100 chars, unique in `members.email`
-- `password`: string, 8-10 chars
+- `password`: string, min 8 chars, must include at least one uppercase letter and one number
 
 Optional request fields:
 
@@ -76,116 +90,37 @@ Optional request fields:
 - `country`: max 50 chars
 - `favoriteTeam` or `favoriteTeamId`: team ID, max 100 chars
 - `playerType`: `casual`, `analyst`, or `competitive`
-- `language` or `locale`: max 10 chars
-- `referralCode`: max 24 chars
+- `language` or `locale`: `th`, `en`, `lo`, `my`, `km`, `zh`
+- `referralCode`: max 10 chars
 - `acceptTerms` or `acceptedTerms`: truthy if sent
 - `acceptTeam`: boolean
 - `marketingConsent`: boolean
 
-Backend mapping:
-
-- `username` -> `user_name`, lowercase and strip tags
-- `email` -> `email`, lowercase and strip tags
-- `displayName` -> `name`, `firstname`, `lastname`, split by first space
-- `phone` -> `tel`, `wallet_id`; if absent, uses username
-- `birthYear` -> `birth_day` as `{year}-01-01`
-- `playerType` -> `player_type`
-- `marketingConsent` -> `marketing_consent`
-- `referralCode` -> `upline_code`, looked up from `members.referral_code`
-
-Success code:
-
-- `A001`: registration success
-
-Validation/server error notes:
-
-- `A002`: invalid registration data
-- `duplicate_fields` can include `username` and/or `email`
-- Server failure may return `error_code: "REGISTER_UNKNOWN_FAILURE"` and `details.stage`
-
-### `POST /auth/register`
-
-Gambling platform registration. Use only if the product flow explicitly needs bank/wallet registration.
-
-Required:
-
-- `firstname`
-- `lastname`
-- `password`: 6-10 chars
-- `user_name`: phone number digits only, unique
-- `tel`: 10-digit phone starting with `0`, unique
-- `wallet_id`: digits only, unique
-- `bank`: integer from `GET /auth/register/banks`
-- `acc_no`: 1-14 digits, unique per bank
-- `refer`: member code
-
-Optional:
-
-- `password_confirm`
-- `favorite_team`
-- `referral_code`
-- `marketing`
-- `name`
-
-Success code:
-
-- `A001`
-
-### `POST /auth/register-with-username`
-
-Variant of gambling registration where `user_name` is 5-10 chars, contains at least one `a-z` letter, and must not be a phone number.
-
-### `GET /auth/register/banks`
-
-Returns bank dropdown options.
-
-Response data:
+Success response:
 
 ```ts
-type BankOption = {
-  code: number;
-  name: string;
-  name_th: string;
-  name_en: string;
-  shortcode: string;
-  image: string;
-  image_url: string;
+type RegisterData = {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+    displayName: string;
+    createdAt: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+  };
 };
 ```
 
-Success code:
+Notes:
 
-- `A007`
-
-Failure code:
-
-- `A008`
-
-### `POST /auth/register/bank-account-name`
-
-Resolves bank account owner name before registration.
-
-Required:
-
-- `bank`: integer bank code
-- `acc_no`: account number
-
-Success response includes:
-
-- `valid`
-- `bank`
-- `acc_no`
-- `account_name`
-- `firstname`
-- `lastname`
-
-Success code:
-
-- `A009`
-
-Failure code:
-
-- `A006`
+- `A001`: registration success
+- `A002`: invalid registration data
+- `duplicate_fields` can include `username` and/or `email`
+- `birthYear` is sent as a Gregorian year and stored as a backend `birth_day`.
 
 ### `POST /auth/login`
 
@@ -200,25 +135,29 @@ Optional:
 
 - `rememberMe`: currently reserved, does not affect token expiry
 
-Backward compatibility:
-
-- `user_name` can be sent instead of `identifier`.
-
 Success response data:
 
 ```ts
 type LoginData = {
-  access_token: string;
-  token_type: "Bearer";
-  expires_at: string;
-  expires_in: number;
-  member: {
-    code: number;
-    user_name: string;
-    name: string;
+  user: {
+    id: string;
+    username: string;
     email: string | null;
-    favorite_team: string | null;
-    confirm: string;
+    displayName: string;
+    avatarUrl: string | null;
+    role: "user" | string;
+    favoriteTeamId: string | null;
+    birthYear: number | null;
+    country: string | null;
+    locale: string;
+    stats: CurrentUserStats;
+    preferences: CurrentUserPreferences;
+    createdAt: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
   };
 };
 ```
@@ -250,17 +189,12 @@ Success code:
 
 ### `POST /auth/reset-password`
 
-Resets password using email token.
+Resets password using a reset token.
 
 Required:
 
-- `email`
 - `token`
-- `password`: 6-10 chars
-
-Optional:
-
-- `password_confirm`
+- `password`: min 8 chars
 
 Codes:
 
@@ -272,11 +206,55 @@ Codes:
 
 ### `POST /auth/logout`
 
-Requires bearer token. Blacklists current token.
+Requires bearer token. Revokes the user's refresh tokens; the JWT access token remains valid until expiry.
 
 Success code:
 
 - `A022`
+
+### `GET /users/me`
+
+Requires bearer token. Production response is a raw user object, not wrapped in `{ success, data }`.
+
+Important fields:
+
+- `id`, `username`, `email`, `displayName`, `avatarUrl`, `bio`, `role`
+- `favoriteTeamId`, `birthYear`, `country`, `locale`, `createdAt`
+- `stats`: snake_case keys such as `free_points`, `premium_credits`, `total_predictions`, `correct_predictions`, `missions_completed`, `achievements_unlocked`
+- `preferences`: snake_case keys such as `public_profile`, `push_notifications`, `match_reminder_1hr`, `match_reminder_30min`, `result_notification`, `rank_change_alert`
+
+Frontend note:
+
+- `src/lib/auth-api.ts` normalizes production snake_case stats/preferences into camelCase aliases used by existing UI code.
+
+### `PATCH /users/me`
+
+Requires bearer token. Light profile update.
+
+Optional request fields:
+
+- `displayName`: 1-50 chars
+- `bio`: max 200 chars
+- `favoriteTeamId`: max 50 chars
+- `locale`: `th`, `en`, `lo`, `my`, `km`, `zh`
+- `avatarUrl`: max 500 chars
+
+Response:
+
+- Same raw shape as `GET /users/me`.
+
+### `PATCH /users/me/preferences`
+
+Requires bearer token. Optional boolean request fields:
+
+- `publicProfile`
+- `pushNotifications`
+- `matchReminder1hr`
+- `matchReminder30min`
+- `resultNotification`
+- `rankChangeAlert`
+
+Production response uses snake_case preference keys with `0`/`1` values.
 
 ### `GET /member/profile`
 
@@ -361,11 +339,9 @@ Success response includes:
 - `member_code`
 - `favorite_team`
 
-Doc inconsistency:
+Success code:
 
-- Endpoint section says success code `M008`.
-- Code table says `M007` is Favorite Team Updated and `M008` is Wallet Updated.
-- Prefer handling both `M007` and `M008` as success for favorite-team until backend is verified.
+- `M007`
 
 ### `POST /member/change-password`
 
@@ -373,7 +349,7 @@ Requires bearer token.
 
 Required:
 
-- `password`: new password, 6-10 chars
+- `password`: new password, min 8 chars
 - `password_confirmation`
 
 Success response includes:
@@ -383,6 +359,27 @@ Success response includes:
 Success code:
 
 - `A034`
+
+## Product Endpoints
+
+These production endpoints are documented in `/Users/mckazine/Desktop/SCOREMATRIX_API_LATEST.html` but are not all wired into the UI yet.
+
+- `POST /checkins`: daily check-in, no body. Duplicate check-in returns `409` with `{ error: { code: "ALREADY_CHECKED_IN", message } }`.
+- `GET /checkins/history`: optional `month=YYYY-MM`.
+- `GET /rewards`: optional `category`, `page`, `limit`; response `{ data, pagination }`.
+- `GET /rewards/{id}`: reward detail with `userBalance` and `canAfford`.
+- `GET /redemptions`: optional `status`, `page`.
+- `GET /missions`: response groups `daily`, `weekly`, `special`.
+- `GET /achievements`: response groups `unlocked`, `locked`, `hidden`.
+- `GET /leaderboard`: optional `period=weekly|monthly|alltime`, `page`, `limit`; response includes `entries`, `userEntry`, `rewards`.
+- `GET /events`: response `{ data }`.
+- `GET /predictions`: response `{ data, pagination }`.
+- `GET /notifications`: response `{ data, unreadCount, pagination }`.
+- `GET /points/transactions`: response `{ data, pagination }`.
+- `GET /stats/accuracy`: response includes `overall`, breakdowns, trend, and league breakdown.
+- `GET /referrals`: response includes `referralCode`, totals, `shareUrl`, and `rewardTiers`.
+- `GET /credits/packages`: response `{ packages, firstPurchaseBonus }`.
+- `GET /leagues`: response `{ data, pagination }`.
 
 ## Response Code Groups
 
@@ -419,7 +416,7 @@ Member:
 - `M005`: preferences updated
 - `M006`: preferences failed
 - `M007`: favorite team updated
-- `M008`: wallet updated in code table, but favorite-team endpoint example returns this
+- `M008`: wallet updated
 - `M010`: balance success
 - `M011`: balance failed
 

@@ -10,10 +10,10 @@ interface ApiLeagueLogoProps {
 }
 
 const sizes = {
-  xs: { outer: "h-5 w-5", image: 16 },
-  sm: { outer: "h-9 w-9", image: 28 },
-  md: { outer: "h-12 w-12", image: 38 },
-  lg: { outer: "h-16 w-16", image: 52 },
+  xs: { outer: "h-5 w-5", image: "16px" },
+  sm: { outer: "h-9 w-9", image: "28px" },
+  md: { outer: "h-12 w-12", image: "38px" },
+  lg: { outer: "h-16 w-16", image: "52px" },
 };
 
 export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
@@ -26,17 +26,18 @@ export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
       className={`relative flex ${config.outer} shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white p-1`}
     >
       {showImage ? (
-        <Image
-          src={logo ?? ""}
-          alt={`${name} logo`}
-          width={config.image}
-          height={config.image}
-          unoptimized
-          loading="lazy"
-          className="object-contain"
-          style={{ width: config.image, height: config.image }}
-          onError={() => setFailedSrc(logo ?? null)}
-        />
+        <span className="relative block h-full w-full">
+          <Image
+            src={logo ?? ""}
+            alt={`${name} logo`}
+            fill
+            sizes={config.image}
+            unoptimized
+            loading="lazy"
+            className="object-contain"
+            onError={() => setFailedSrc(logo ?? null)}
+          />
+        </span>
       ) : (
         <span className="text-xs font-bold text-gray-700">
           {name.slice(0, 2).toUpperCase()}

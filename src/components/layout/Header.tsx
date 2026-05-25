@@ -8,7 +8,11 @@ import { Logo } from "./Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { UserMenu } from "./UserMenu";
 import { cn } from "@/lib/utils";
-import { getMemberProfile } from "@/lib/auth-api";
+import {
+  getCurrentUser,
+  type CurrentUserData,
+  type CurrentUserResponse,
+} from "@/lib/auth-api";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
 
@@ -34,6 +38,9 @@ export function Header() {
   const username = useUserStore((s) => s.username);
   const freePoints = useUserStore((s) => s.freePoints);
   const premiumCredits = useUserStore((s) => s.premiumCredits);
+  const xp = useUserStore((s) => s.xp);
+  const level = useUserStore((s) => s.level);
+  const rank = useUserStore((s) => s.rank);
   const syncWallet = useUserStore((s) => s.syncWallet);
   const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || isLoggedIn);
 
@@ -42,17 +49,22 @@ export function Header() {
 
     let active = true;
 
-    getMemberProfile({ locale })
+    getCurrentUser({ locale })
       .then((response) => {
-        if (!active || !response.data?.profile) return;
-        const profile = response.data.profile;
-        syncWallet({
-          freePoints: Number(profile.point_deposit ?? profile.balance_free ?? 0),
-          premiumCredits: Number(profile.credit ?? 0),
-        });
+        if (!active) return;
+        const profile = extractCurrentUser(response);
+        const stats = profile?.stats;
+        const nextStats = {
+          freePoints: pickNumber(stats?.freePoints, profile?.freePoints),
+          premiumCredits: pickNumber(stats?.premiumCredits, profile?.premiumCredits),
+          xp: pickNumber(stats?.xp, profile?.xp),
+          level: pickNumber(stats?.level, profile?.level),
+          rank: pickString(stats?.rank, profile?.rank),
+        };
+        syncWallet(stripUndefined(nextStats));
       })
       .catch(() => {
-        // Keep the last known wallet values in the navbar if profile sync fails.
+        // Keep the last known navbar values if profile sync fails.
       });
 
     return () => {
@@ -107,6 +119,9 @@ export function Header() {
           username={username}
           freePoints={freePoints}
           premiumCredits={premiumCredits}
+          rank={rank}
+          xp={xp}
+          level={level}
         />
 
       </div>
@@ -138,6 +153,39 @@ export function Header() {
       )}
     </header>
   );
+}
+
+function extractCurrentUser(response: CurrentUserResponse): CurrentUserData | null {
+  if (!response || typeof response !== "object") return null;
+  if ("user" in response && response.user) return extractCurrentUser(response.user);
+  if ("member" in response && response.member) return extractCurrentUser(response.member);
+  if ("profile" in response && response.profile) return extractCurrentUser(response.profile);
+  if ("data" in response && response.data) return extractCurrentUser(response.data);
+  return response as CurrentUserData;
+}
+
+function pickNumber(...values: Array<number | string | null | undefined>) {
+  const value = values.find((item) => item !== undefined && item !== null);
+  if (value === undefined || value === null || value === "") return undefined;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : undefined;
+}
+
+function pickString(...values: Array<string | null | undefined>) {
+  const value = values.find((item) => item !== undefined && item !== null && item.trim());
+  return value?.trim();
+}
+
+function stripUndefined<T extends Record<string, unknown>>(value: T) {
+  return Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined)
+  ) as Partial<{
+    freePoints: number;
+    premiumCredits: number;
+    xp: number;
+    level: number;
+    rank: string;
+  }>;
 }
 
 function NotificationBell() {

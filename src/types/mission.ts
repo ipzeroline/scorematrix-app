@@ -6,10 +6,12 @@ export interface Mission {
   description: string;
   type: MissionType;
   category: 'predict' | 'streak' | 'accuracy' | 'social' | 'daily_login';
+  icon?: string;
   target: number;
   progress: number;
   rewardPoints: number;
   rewardXP: number;
+  rewardCredits?: number;
   completed: boolean;
   claimed: boolean;
   expiresAt: string;

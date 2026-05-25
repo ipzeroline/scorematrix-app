@@ -81,16 +81,17 @@ export default function LoginPage() {
       if (!loginData) {
         throw new Error("Login response did not include member data");
       }
+      const loggedInUser = normalizeLoggedInUser(loginData);
 
       setLoggedInUser({
-        id: String(loginData.member.code),
-        username: loginData.member.user_name,
-        displayName: loginData.member.name || loginData.member.user_name,
+        id: loggedInUser.id,
+        username: loggedInUser.username,
+        displayName: loggedInUser.displayName,
       });
       addToast({
         type: "success",
         title: t("loginSuccess"),
-        message: loginData.member.name || loginData.member.user_name,
+        message: loggedInUser.displayName,
       });
       router.push(nextPath);
       router.refresh();
@@ -230,6 +231,26 @@ export default function LoginPage() {
       </aside>
     </div>
   );
+}
+
+function normalizeLoggedInUser(loginData: NonNullable<Awaited<ReturnType<typeof login>>["data"]>) {
+  if (loginData.user) {
+    return {
+      id: String(loginData.user.id),
+      username: loginData.user.username,
+      displayName: loginData.user.displayName || loginData.user.username,
+    };
+  }
+
+  if (loginData.member) {
+    return {
+      id: String(loginData.member.code),
+      username: loginData.member.user_name,
+      displayName: loginData.member.name || loginData.member.user_name,
+    };
+  }
+
+  throw new Error("Login response did not include user data");
 }
 
 function getLoginErrorMessage(error: unknown) {

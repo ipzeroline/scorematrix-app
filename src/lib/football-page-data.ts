@@ -2,6 +2,8 @@ import {
   ApiFootballError,
   type ApiFootballFixture,
   getApiFootballFixtures,
+  getApiFootballLiveFixtures,
+  getApiFootballUpcomingFixtures,
   getMockApiFootballFixtures,
 } from "@/lib/api-football";
 import { MatchStatus } from "@/types/common";
@@ -26,11 +28,24 @@ export async function loadLiveFixtures(
   revalidate = 15
 ): Promise<ApiFootballFixture[]> {
   try {
-    const result = await getApiFootballFixtures({ live: true, limit, revalidate });
+    const result = await getApiFootballLiveFixtures({ limit, revalidate });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
     return [];
+  }
+}
+
+export async function loadUpcomingFixtures(
+  limit?: number,
+  revalidate = 60
+): Promise<ApiFootballFixture[]> {
+  try {
+    const result = await getApiFootballUpcomingFixtures({ limit, revalidate });
+    return result.fixtures;
+  } catch (error) {
+    logUnexpectedApiError(error);
+    return getMockApiFootballFixtures(limit);
   }
 }
 

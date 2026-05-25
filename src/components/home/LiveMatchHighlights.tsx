@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types";
 import type { ApiFootballFixture } from "@/lib/api-football";
@@ -19,6 +20,7 @@ interface LiveMatch {
   awayScore: number;
   minute: number;
   league: string;
+  leagueLogo: string | null;
   status: MatchStatus;
 }
 
@@ -33,6 +35,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 1,
     minute: 67,
     league: "Premier",
+    leagueLogo: null,
     status: MatchStatus.LIVE,
   },
   {
@@ -45,6 +48,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 1,
     minute: 34,
     league: "La Liga",
+    leagueLogo: null,
     status: MatchStatus.LIVE,
   },
   {
@@ -57,6 +61,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 0,
     minute: 52,
     league: "Bundesliga",
+    leagueLogo: null,
     status: MatchStatus.LIVE,
   },
   {
@@ -69,6 +74,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 0,
     minute: 15,
     league: "Serie A",
+    leagueLogo: null,
     status: MatchStatus.LIVE,
   },
   {
@@ -81,6 +87,7 @@ const liveMatches: LiveMatch[] = [
     awayScore: 2,
     minute: 78,
     league: "Ligue 1",
+    leagueLogo: null,
     status: MatchStatus.LIVE,
   },
 ];
@@ -167,8 +174,13 @@ export function LiveMatchHighlights({
                   <div className="relative">
                     {/* League badge */}
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-[10px] text-green-200/80 uppercase tracking-wider">
-                        {match.league}
+                      <span className="flex min-w-0 items-center gap-1.5 text-[10px] uppercase tracking-wider text-green-200/80">
+                        <ApiLeagueLogo
+                          name={match.league}
+                          logo={match.leagueLogo}
+                          size="xs"
+                        />
+                        <span className="truncate">{match.league}</span>
                       </span>
                       <StatusBadge status={match.status} />
                     </div>
@@ -220,6 +232,7 @@ function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
     awayScore: fixture.score.away ?? 0,
     minute: fixture.elapsed ?? 0,
     league: fixture.league.name,
+    leagueLogo: fixture.league.logo,
     status: fixture.status,
   };
 }

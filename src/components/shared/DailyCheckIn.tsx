@@ -1,10 +1,12 @@
 'use client';
 import { useState, useSyncExternalStore } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/Card';
 import { useCheckinStore } from '@/stores/checkin-store';
 import { useUserStore } from '@/stores/user-store';
 import { useNotificationStore } from '@/stores/notification-store';
+import { ApiClientError } from '@/lib/api-client';
+import { createCheckIn, getCheckInBonus, getCheckInPoints } from '@/lib/checkins-api';
 import { cn } from '@/lib/utils';
 import { Check, Gift, Shield, Sparkles } from 'lucide-react';
 import { DAILY_CHECKIN_REWARDS } from '@/data/checkin-rewards';
@@ -14,10 +16,14 @@ const emptySubscribe = () => () => {};
 
 export function DailyCheckIn() {
   const t = useTranslations('checkin');
+  const tCommon = useTranslations('common');
+  const locale = useLocale();
   const { hasCheckedInToday, currentStreak, weeklyChecked, checkIn, getNextReward, getStreakProgress } = useCheckinStore();
   const addFreePoints = useUserStore((s) => s.addFreePoints);
   const addStreakShield = useUserStore((s) => s.addStreakShield);
   const addToast = useNotificationStore((s) => s.addToast);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -32,10 +38,24 @@ export function DailyCheckIn() {
   const nextReward = getNextReward();
   const daysToBonus = Math.max(streakProgress.target - streakProgress.current, 0);
 
-  const handleCheckIn = () => {
-    const result = checkIn();
-    if (result.amount > 0) {
-      addFreePoints(result.amount);
+  const handleCheckIn = async () => {
+    if (isCheckingIn) return;
+
+    setIsCheckingIn(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await createCheckIn({ locale });
+      const apiAmount = getCheckInPoints(response);
+      const apiBonus = getCheckInBonus(response);
+      const result = checkIn();
+      const amount = apiAmount > 0 ? apiAmount : result.amount;
+      const bonus = apiBonus ?? result.bonus;
+
+      if (amount > 0) {
+        addFreePoints(amount);
+      }
+
       addToast({
         type: 'points',
         title: t('claimed'),
@@ -43,9 +63,9 @@ export function DailyCheckIn() {
           day: streakProgress.current + 1,
           streak: currentStreak + 1,
         }),
-        amount: result.amount,
+        amount,
       });
-      if (result.bonus === 'streakShield') {
+      if (bonus === 'streakShield') {
         addStreakShield(1);
         addToast({
           type: 'success',
@@ -53,6 +73,16 @@ export function DailyCheckIn() {
           message: t('shieldBonusMessage'),
         });
       }
+    } catch (error) {
+      const message = getCheckInErrorMessage(error, tCommon('error'));
+      setErrorMessage(message);
+      addToast({
+        type: 'error',
+        title: tCommon('error'),
+        message,
+      });
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
@@ -194,14 +224,32 @@ export function DailyCheckIn() {
           ) : (
             <button
               onClick={handleCheckIn}
+              disabled={isCheckingIn}
               className="daily-checkin-button flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-cyan-400 px-4 py-2 text-xs font-black text-black transition-colors hover:bg-cyan-300 md:flex-none"
             >
-              <Gift size={14} /> {t('claimReward')}
+              <Gift size={14} /> {isCheckingIn ? tCommon('loading') : t('claimReward')}
             </button>
           )}
         </div>
+        {errorMessage && (
+          <p className="md:col-span-3 rounded-md border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            {errorMessage}
+          </p>
+        )}
       </div>
       )}
     </Card>
   );
+}
+
+function getCheckInErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof ApiClientError) {
+    return error.message || fallback;
+  }
+
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
+
+  return fallback;
 }

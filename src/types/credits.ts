@@ -20,3 +20,8 @@ export interface CreditFeature {
   value?: string;
   highlighted?: boolean;
 }
+
+export interface FirstPurchaseBonus {
+  bonusCredits: number;
+  minAmountThb: number;
+}

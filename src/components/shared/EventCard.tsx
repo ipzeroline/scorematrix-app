@@ -48,10 +48,10 @@ export function EventCard({ event }: { event: SpecialEvent }) {
         </div>
 
         {/* Name */}
-        <h3 className="text-sm font-bold text-white mb-2 line-clamp-2">{t(`items.${event.id}.name`)}</h3>
+        <h3 className="text-sm font-bold text-white mb-2 line-clamp-2">{event.name}</h3>
 
         {/* Description */}
-        <p className="text-xs text-gray-400 mb-4 line-clamp-2">{t(`items.${event.id}.description`)}</p>
+        <p className="text-xs text-gray-400 mb-4 line-clamp-2 whitespace-pre-line">{event.description}</p>
 
         {/* Meta */}
         <div className="space-y-1.5 text-[10px] text-gray-500">
@@ -69,7 +69,14 @@ export function EventCard({ event }: { event: SpecialEvent }) {
           </div>
           <div className="flex items-center gap-1.5">
             <Users size={12} />
-            <span>{t('participantCount', { count: event.participantCount.toLocaleString() })}</span>
+            <span>
+              {event.maxParticipants
+                ? t('participantLimit', {
+                    count: event.participantCount.toLocaleString(),
+                    max: event.maxParticipants.toLocaleString(),
+                  })
+                : t('participantCount', { count: event.participantCount.toLocaleString() })}
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <Trophy size={12} />
@@ -80,7 +87,7 @@ export function EventCard({ event }: { event: SpecialEvent }) {
         {/* Entry fee */}
         <div className="mt-4 pt-3 border-t border-gray-800/50 flex items-center justify-between">
           <span className={cn('text-xs font-bold', isFree ? 'text-green-400' : 'text-amber-400')}>
-            {isFree ? t('freeEntry') : t('creditsAmount', { amount: event.entryFee })}
+            {formatEntryFee(event, t)}
           </span>
           <span className="text-[10px] text-cyan-400 font-medium">
             {isActive ? t('viewEvent') : t('details')}
@@ -89,4 +96,19 @@ export function EventCard({ event }: { event: SpecialEvent }) {
       </Card>
     </Link>
   );
+}
+
+function formatEntryFee(
+  event: SpecialEvent,
+  t: ReturnType<typeof useTranslations<'events'>>
+) {
+  const points = event.entryFeePoints ?? 0;
+  const credits = event.entryFeeCredits ?? event.entryFee;
+
+  if (points <= 0 && credits <= 0) return t('freeEntry');
+  if (points > 0 && credits > 0) {
+    return `${t('pointsAmount', { amount: points })} + ${t('creditsAmount', { amount: credits })}`;
+  }
+  if (points > 0) return t('pointsAmount', { amount: points });
+  return t('creditsAmount', { amount: credits });
 }

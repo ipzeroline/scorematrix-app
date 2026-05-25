@@ -1,7 +1,7 @@
 import { Livescore, type FixturesPayload } from "@/components/livescore/Livescore";
 import {
   ApiFootballError,
-  getApiFootballFixtures,
+  getApiFootballTodayFixtures,
   getMockApiFootballFixtures,
 } from "@/lib/api-football";
 
@@ -17,10 +17,8 @@ export default async function LivescorePage({ params }: Props) {
 }
 
 async function loadInitialFixtures(): Promise<FixturesPayload> {
-  const date = new Date().toISOString().slice(0, 10);
-
   try {
-    return await getApiFootballFixtures({ date, limit: 50 });
+    return await getApiFootballTodayFixtures({ limit: 50 });
   } catch (error) {
     const apiError =
       error instanceof ApiFootballError

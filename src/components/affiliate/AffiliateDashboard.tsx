@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   CheckCircle2,
@@ -17,20 +17,45 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
-  affiliateProgram,
-  affiliateReferrals,
-  affiliateTiers,
-} from "@/data/affiliates";
+  DEFAULT_REFERRALS_VIEW_DATA,
+  getReferrals,
+  mapApiReferrals,
+  type AffiliateViewData,
+} from "@/lib/referrals-api";
 import { cn } from "@/lib/utils";
 
 export function AffiliateDashboard() {
   const t = useTranslations("affiliate");
   const locale = useLocale();
   const [copied, setCopied] = useState(false);
-  const inviteUrl = useMemo(
-    () => `https://scorematrix.app/${locale}/auth/register?ref=${affiliateProgram.code}`,
-    [locale]
+  const [affiliateData, setAffiliateData] = useState<AffiliateViewData>(
+    DEFAULT_REFERRALS_VIEW_DATA
   );
+  const { program, referrals, tiers } = affiliateData;
+  const inviteUrl = useMemo(
+    () => buildInviteUrl(program.shareUrl, locale, program.code),
+    [locale, program.code, program.shareUrl]
+  );
+
+  useEffect(() => {
+    let isActive = true;
+
+    getReferrals({ locale })
+      .then((response) => {
+        if (isActive) {
+          setAffiliateData(mapApiReferrals(response));
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setAffiliateData(DEFAULT_REFERRALS_VIEW_DATA);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [locale]);
 
   const copyInviteLink = async () => {
     try {
@@ -44,7 +69,7 @@ export function AffiliateDashboard() {
 
   const progress = Math.min(
     100,
-    Math.round((affiliateProgram.qualifiedSignups / 25) * 100)
+    Math.round((program.qualifiedSignups / Math.max(nextTierCount(tiers), 1)) * 100)
   );
 
   return (
@@ -72,7 +97,7 @@ export function AffiliateDashboard() {
                   {t("yourCode")}
                 </p>
                 <p className="mt-1 font-mono text-2xl font-black text-white">
-                  {affiliateProgram.code}
+                  {program.code}
                 </p>
               </div>
               <span className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-200">
@@ -101,25 +126,25 @@ export function AffiliateDashboard() {
         {[
           {
             label: t("clicks"),
-            value: affiliateProgram.totalClicks.toLocaleString(),
+            value: program.totalClicks.toLocaleString(),
             icon: Link2,
             tone: "text-cyan-300",
           },
           {
             label: t("signups"),
-            value: affiliateProgram.totalSignups.toLocaleString(),
+            value: program.totalSignups.toLocaleString(),
             icon: Users,
             tone: "text-green-300",
           },
           {
             label: t("qualified"),
-            value: affiliateProgram.qualifiedSignups.toLocaleString(),
+            value: program.qualifiedSignups.toLocaleString(),
             icon: UserPlus,
             tone: "text-amber-300",
           },
           {
             label: t("conversion"),
-            value: `${affiliateProgram.conversionRate}%`,
+            value: `${program.conversionRate}%`,
             icon: TrendingUp,
             tone: "text-purple-300",
           },
@@ -149,12 +174,12 @@ export function AffiliateDashboard() {
               </p>
             </div>
             <Badge variant="cyan" size="md">
-              {t("pending", { count: affiliateProgram.pendingSignups })}
+              {t("pending", { count: program.pendingSignups })}
             </Badge>
           </div>
 
           <div className="mt-4 divide-y divide-gray-800/80">
-            {affiliateReferrals.map((referral) => (
+            {referrals.length > 0 ? referrals.map((referral) => (
               <div
                 key={referral.id}
                 className="grid gap-2 py-3 md:grid-cols-[minmax(0,1fr)_130px_100px] md:items-center"
@@ -172,7 +197,11 @@ export function AffiliateDashboard() {
                   +{referral.rewardPoints.toLocaleString()} {t("pointsShort")}
                 </p>
               </div>
-            ))}
+            )) : (
+              <div className="py-8 text-center text-sm text-gray-500">
+                {t("noReferrals")}
+              </div>
+            )}
           </div>
         </Card>
 
@@ -187,8 +216,8 @@ export function AffiliateDashboard() {
               </h2>
               <p className="text-xs text-gray-500">
                 {t("earned", {
-                  points: affiliateProgram.totalPointsEarned.toLocaleString(),
-                  credits: affiliateProgram.totalCreditsEarned.toLocaleString(),
+                  points: program.totalPointsEarned.toLocaleString(),
+                  credits: program.totalCreditsEarned.toLocaleString(),
                 })}
               </p>
             </div>
@@ -202,17 +231,17 @@ export function AffiliateDashboard() {
           </div>
           <p className="mt-2 text-xs text-gray-500">
             {t("nextMilestone", {
-              count: Math.max(0, 25 - affiliateProgram.qualifiedSignups),
+              count: Math.max(0, nextTierCount(tiers) - program.qualifiedSignups),
             })}
           </p>
 
           <div className="mt-4 space-y-2">
-            {affiliateTiers.map((tier) => (
+            {tiers.map((tier) => (
               <div
                 key={tier.referrals}
                 className={cn(
                   "rounded-lg border px-3 py-2",
-                  affiliateProgram.qualifiedSignups >= tier.referrals
+                  program.qualifiedSignups >= tier.referrals
                     ? "border-green-400/30 bg-green-400/10"
                     : "border-gray-800 bg-white/[0.02]"
                 )}
@@ -221,15 +250,16 @@ export function AffiliateDashboard() {
                   <span className="text-sm font-semibold text-white">
                     {t("tier", { count: tier.referrals })}
                   </span>
-                  {affiliateProgram.qualifiedSignups >= tier.referrals && (
+                  {program.qualifiedSignups >= tier.referrals && (
                     <CheckCircle2 size={16} className="text-green-300" />
                   )}
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
-                  {t("tierReward", {
-                    points: tier.rewardPoints.toLocaleString(),
-                    credits: tier.rewardCredits.toLocaleString(),
-                  })}
+                  {tier.rewardLabel ??
+                    t("tierReward", {
+                      points: tier.rewardPoints.toLocaleString(),
+                      credits: tier.rewardCredits.toLocaleString(),
+                    })}
                 </p>
               </div>
             ))}
@@ -252,6 +282,16 @@ export function AffiliateDashboard() {
       </section>
     </div>
   );
+}
+
+function buildInviteUrl(shareUrl: string, locale: string, code: string) {
+  if (/^https?:\/\//i.test(shareUrl)) return shareUrl;
+  if (shareUrl.startsWith("/")) return `https://scorematrix.app${shareUrl}`;
+  return `https://scorematrix.app/${locale}/auth/register?ref=${code}`;
+}
+
+function nextTierCount(tiers: { referrals: number }[]) {
+  return tiers.reduce((max, tier) => Math.max(max, tier.referrals), 0);
 }
 
 function ReferralStatus({

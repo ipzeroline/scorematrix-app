@@ -6,9 +6,14 @@ export interface SpecialEvent {
   startDate: string;
   endDate: string;
   entryFee: number;
+  entryFeePoints?: number;
+  entryFeeCredits?: number;
   rewards: EventReward[];
   badges: EventBadge[];
   participantCount: number;
+  maxParticipants?: number | null;
+  bannerUrl?: string | null;
+  isRegistered?: boolean;
   status: 'upcoming' | 'active' | 'ended';
   rules?: string[];
 }
