@@ -13,7 +13,6 @@ export default async function LivescoreProviderMatchPage({ params }: Props) {
         locale,
         matchId: providerId,
       })}
-      showJsonBox
     />
   );
 }

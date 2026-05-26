@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Activity, CalendarDays, RefreshCw, Search } from "lucide-react";
+import { Activity, RefreshCw, Search } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -24,7 +24,6 @@ import {
   THAILAND_TIME_ZONE_LABEL,
   cn,
   formatDate,
-  formatMatchTimeWithZone,
   formatTime,
 } from "@/lib/utils";
 
@@ -191,7 +190,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, index) => (
-            <Card key={index} className="h-[58px] animate-pulse bg-white/[0.03]" />
+            <Card key={index} className="h-[132px] animate-pulse bg-white/[0.03] sm:h-[74px]" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -206,8 +205,8 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             const leagueInfo = leagueMatches[0]?.league;
             return (
               <div key={leagueName}>
-                <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-gradient-to-r from-cyan-500/10 via-[#101018] to-magenta-500/10 px-3 py-2">
-                  <div className="flex min-w-0 items-center gap-2">
+                <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_42%),linear-gradient(90deg,rgba(34,211,238,0.08),rgba(18,18,26,0.96)_52%,rgba(217,70,239,0.08))] px-3 py-2.5">
+                  <div className="flex min-w-0 items-center gap-2.5">
                     <ApiLeagueLogo
                       name={leagueName}
                       logo={leagueInfo?.logo}
@@ -222,72 +221,93 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                       </span>
                     </div>
                   </div>
-                  <span className="shrink-0 rounded-md border border-cyan-500/20 bg-black/20 px-2 py-1 text-[10px] font-semibold text-cyan-300">
+                  <span className="shrink-0 rounded-md border border-cyan-500/20 bg-black/25 px-2 py-1 text-[10px] font-semibold text-cyan-300">
                     {leagueMatches.length} matches
                   </span>
                 </div>
-                <div className="space-y-1">
-                  {leagueMatches.map((match, index) => (
-                    <Link
-                      key={match.id}
-                      href={buildMatchDetailHref(match, locale)}
-                      className="block"
-                    >
+                <div className="space-y-2 sm:space-y-1">
+                  {leagueMatches.map((match, index) => {
+                    const detailHref = buildMatchDetailHref(match, locale);
+                    const predictHref = `/${locale}/predict/${buildFixtureSeoSlug(match)}`;
+                    const canPredict = match.status === MatchStatus.UPCOMING;
+
+                    return (
                       <Card
+                        key={match.id}
                         hover
                         className={cn(
-                          "grid grid-cols-[64px_minmax(0,1fr)] items-center gap-2 p-3 sm:grid-cols-[84px_minmax(0,1fr)_128px] sm:gap-3",
+                          "overflow-hidden p-0 sm:grid sm:grid-cols-[220px_minmax(0,1fr)_104px] sm:gap-x-3 sm:p-3 lg:grid-cols-[220px_minmax(0,1fr)_116px]",
                           index % 2 === 0 ? "bg-[#12121a]" : "bg-cyan-500/[0.035]"
                         )}
                       >
-                        <StatusBadge
-                          status={match.status}
-                          label={getFixtureStatusLabel(match, statusLabels)}
-                          className="justify-self-center text-center"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] sm:gap-3">
+                        <div className="flex items-center justify-between gap-2 px-3 py-2.5 sm:col-span-3 sm:px-4 sm:py-3">
+                          <div className="inline-flex items-center gap-2 rounded-md border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5 font-mono text-sm font-bold text-cyan-200 sm:text-[13px]">
+                            <span className="font-medium text-gray-300">
+                              {formatDate(match.kickoffTime, locale)}
+                            </span>
+                            <span className="whitespace-nowrap">
+                              {formatTime(match.kickoffTime, locale)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <StatusBadge
+                              status={match.status}
+                              label={getFixtureStatusLabel(match, statusLabels)}
+                              className="text-center sm:hidden"
+                            />
+                            <div className="hidden sm:block">
+                              <StatusBadge
+                                status={match.status}
+                                label={getFixtureStatusLabel(match, statusLabels)}
+                                className="text-center"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="min-w-0 px-3 py-3 sm:col-span-2 sm:flex sm:flex-col sm:items-center sm:justify-center sm:px-0 sm:py-0">
+                          <Link
+                          href={detailHref}
+                            className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-2.5 sm:grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] sm:gap-2.5 lg:grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] lg:gap-3"
+                          >
                             <TeamInline
                               name={match.home.name}
                               logo={match.home.logo}
                               align="right"
                               accent="cyan"
                             />
-                            <span className="text-sm font-mono font-bold text-white mx-2 shrink-0">
-                              {match.score.home !== null
-                                ? `${match.score.home} - ${match.score.away}`
-                                : t("common.vs")}
-                            </span>
+                            <div className="mx-auto flex min-h-9 w-[68px] shrink-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/35 px-2 py-1 text-center font-mono text-base font-bold text-white shadow-[0_0_18px_rgba(34,211,238,0.08)] sm:min-h-10 sm:w-full sm:border-cyan-500/15 sm:bg-black/25 sm:px-2 sm:py-1.5 sm:text-[15px] sm:shadow-[0_0_14px_rgba(34,211,238,0.07)] lg:text-base">
+                              <span className="leading-none">
+                                {match.score.home !== null
+                                  ? `${match.score.home} - ${match.score.away}`
+                                  : t("common.vs")}
+                              </span>
+                              {match.status === MatchStatus.LIVE && match.elapsed !== null && (
+                                <span className="mt-0.5 inline-flex items-center justify-center rounded-full border border-green-300/40 bg-green-400/15 px-1.5 py-0.5 text-[10px] font-bold leading-none text-green-200">
+                                  {match.elapsed}&apos;
+                                </span>
+                              )}
+                            </div>
                             <TeamInline
                               name={match.away.name}
                               logo={match.away.logo}
                               accent="magenta"
                             />
-                          </div>
-                          <p className="mt-1 truncate text-[10px] text-gray-600">
-                            {match.venue || match.league.round}
-                          </p>
-                          <div className="mt-2 flex w-fit max-w-full items-center gap-2 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5 sm:hidden">
-                            <CalendarDays size={12} className="shrink-0 text-cyan-300" aria-hidden="true" />
-                            <span className="min-w-0 truncate text-[10px] font-medium text-gray-300">
-                              {formatFixtureDate(match, locale)}
-                            </span>
-                            <span className="whitespace-nowrap font-mono text-[11px] font-bold text-cyan-300">
-                              {formatFixtureTime(match, locale)}
-                            </span>
+                          </Link>
+                          <div className="mt-4 flex flex-col items-center gap-2 sm:mt-2">
+                            {canPredict && (
+                              <Link
+                                href={predictHref}
+                                className="inline-flex min-h-9 items-center justify-center rounded-lg bg-amber-500 px-4 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400"
+                              >
+                                {t("prediction.predictScore")}
+                              </Link>
+                            )}
                           </div>
                         </div>
-                        <div className="hidden w-32 shrink-0 flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center sm:flex">
-                          <span className="max-w-full truncate text-[10px] font-medium leading-none text-gray-300">
-                            {formatFixtureDate(match, locale)}
-                          </span>
-                          <span className="mt-1 whitespace-nowrap font-mono text-[11px] font-bold leading-none text-cyan-300">
-                            {formatFixtureTime(match, locale)}
-                          </span>
-                        </div>
+                   
                       </Card>
-                    </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -304,13 +324,6 @@ function buildMatchDetailHref(match: ApiFootballFixture, locale: string): string
     : `/${locale}/livescore/${buildFixtureSeoSlug(match)}`;
 }
 
-function formatFixtureDate(match: ApiFootballFixture, locale: string): string {
-  return formatDate(match.kickoffTime, locale);
-}
-
-function formatFixtureTime(match: ApiFootballFixture, locale: string): string {
-  return formatMatchTimeWithZone(match.kickoffTime, locale);
-}
 
 function TeamInline({
   name,
@@ -325,13 +338,17 @@ function TeamInline({
 }) {
   return (
     <div
-      className={`flex min-w-0 items-center gap-2 ${
-        align === "right" ? "justify-end text-right" : ""
-      }`}
+      className={cn(
+        "flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2",
+        align === "right"
+          ? "sm:flex-row-reverse sm:justify-start sm:text-left"
+          : "sm:flex-row sm:justify-start sm:text-left"
+      )}
     >
-      {align === "left" && <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />}
-      <span className="truncate text-sm text-white">{name}</span>
-      {align === "right" && <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />}
+      <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />
+      <span className="line-clamp-2 min-w-0 max-w-[140px] break-words text-[13px] font-semibold leading-tight text-white sm:max-w-[168px] sm:text-[13px] lg:max-w-[220px] lg:text-sm">
+        {name}
+      </span>
     </div>
   );
 }

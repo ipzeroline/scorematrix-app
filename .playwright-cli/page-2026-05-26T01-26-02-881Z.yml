@@ -1,0 +1,247 @@
+- generic [ref=e2]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - button [ref=e5] [cursor=pointer]:
+        - img [ref=e6]
+      - link "ScoreMatrix" [ref=e7] [cursor=pointer]:
+        - /url: /th
+        - img "ScoreMatrix" [ref=e9]
+      - generic [ref=e10]:
+        - link "สมัครสมาชิก" [ref=e11] [cursor=pointer]:
+          - /url: /th/auth/register
+        - link "เข้าสู่ระบบ" [ref=e12] [cursor=pointer]:
+          - /url: /th/auth/login
+  - main [ref=e14]:
+    - generic [ref=e15]:
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - heading "ผลการแข่งขันสด" [level=1] [ref=e18]:
+            - img [ref=e20]
+            - generic [ref=e22]: ผลการแข่งขันสด
+          - generic [ref=e23]:
+            - generic [ref=e24]: Live API
+            - generic [ref=e25]: Synced 08:15 Asia/Bangkok (UTC+7)
+        - button "Sync" [ref=e26] [cursor=pointer]:
+          - img [ref=e27]
+          - text: Sync
+      - generic [ref=e32]:
+        - button "ทั้งหมด(8)" [ref=e33] [cursor=pointer]:
+          - text: ทั้งหมด
+          - generic [ref=e34]: (8)
+        - button "สด(0)" [ref=e36] [cursor=pointer]:
+          - text: สด
+          - generic [ref=e37]: (0)
+        - button "กำลังจะแข่ง(8)" [ref=e38] [cursor=pointer]:
+          - text: กำลังจะแข่ง
+          - generic [ref=e39]: (8)
+        - button "จบแล้ว(0)" [ref=e40] [cursor=pointer]:
+          - text: จบแล้ว
+          - generic [ref=e41]: (0)
+      - generic [ref=e42]:
+        - combobox [ref=e43] [cursor=pointer]:
+          - option "กรองตามลีก" [disabled]
+          - option "ทุกลีก" [selected]
+          - option "League 345"
+          - option "League 61"
+          - option "League 11"
+          - option "League 13"
+        - generic [ref=e44]:
+          - img [ref=e45]
+          - textbox "ค้นหาทีม..." [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - generic [ref=e51]:
+            - generic [ref=e52]:
+              - img "League 345 logo" [ref=e55]
+              - heading "League 345" [level=3] [ref=e57]
+            - generic [ref=e58]: 1 matches
+          - link "ยังไม่เริ่ม 26 พ.ค. 2569 23:00 UTC+7 Baník Ostrava Baník Ostrava logo VS Táborsko logo Táborsko Not Started" [ref=e60] [cursor=pointer]:
+            - /url: /th/livescore/match/1546285
+            - generic [ref=e61]:
+              - generic [ref=e62]:
+                - generic [ref=e63]: ยังไม่เริ่ม
+                - generic [ref=e64]:
+                  - img [ref=e65]
+                  - generic [ref=e67]: 26 พ.ค. 2569
+                  - generic [ref=e68]: 23:00 UTC+7
+              - generic [ref=e69]:
+                - generic [ref=e70]:
+                  - generic [ref=e71]:
+                    - generic [ref=e72]: Baník Ostrava
+                    - img "Baník Ostrava logo" [ref=e75]
+                  - generic [ref=e76]: VS
+                  - generic [ref=e77]:
+                    - img "Táborsko logo" [ref=e80]
+                    - generic [ref=e81]: Táborsko
+                - paragraph [ref=e82]: Not Started
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - generic [ref=e85]:
+              - img "League 61 logo" [ref=e88]
+              - heading "League 61" [level=3] [ref=e90]
+            - generic [ref=e91]: 1 matches
+          - link "ยังไม่เริ่ม 27 พ.ค. 2569 01:45 UTC+7 Saint Etienne Saint Etienne logo VS Nice logo Nice Not Started" [ref=e93] [cursor=pointer]:
+            - /url: /th/livescore/match/1545408
+            - generic [ref=e94]:
+              - generic [ref=e95]:
+                - generic [ref=e96]: ยังไม่เริ่ม
+                - generic [ref=e97]:
+                  - img [ref=e98]
+                  - generic [ref=e100]: 27 พ.ค. 2569
+                  - generic [ref=e101]: 01:45 UTC+7
+              - generic [ref=e102]:
+                - generic [ref=e103]:
+                  - generic [ref=e104]:
+                    - generic [ref=e105]: Saint Etienne
+                    - img "Saint Etienne logo" [ref=e108]
+                  - generic [ref=e109]: VS
+                  - generic [ref=e110]:
+                    - img "Nice logo" [ref=e113]
+                    - generic [ref=e114]: Nice
+                - paragraph [ref=e115]: Not Started
+        - generic [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - img "League 11 logo" [ref=e121]
+              - heading "League 11" [level=3] [ref=e123]
+            - generic [ref=e124]: 4 matches
+          - generic [ref=e125]:
+            - link "ยังไม่เริ่ม 27 พ.ค. 2569 05:00 UTC+7 Sao Paulo Sao Paulo logo VS Boston River logo Boston River Not Started" [ref=e126] [cursor=pointer]:
+              - /url: /th/livescore/match/1535231
+              - generic [ref=e127]:
+                - generic [ref=e128]:
+                  - generic [ref=e129]: ยังไม่เริ่ม
+                  - generic [ref=e130]:
+                    - img [ref=e131]
+                    - generic [ref=e133]: 27 พ.ค. 2569
+                    - generic [ref=e134]: 05:00 UTC+7
+                - generic [ref=e135]:
+                  - generic [ref=e136]:
+                    - generic [ref=e137]:
+                      - generic [ref=e138]: Sao Paulo
+                      - img "Sao Paulo logo" [ref=e141]
+                    - generic [ref=e142]: VS
+                    - generic [ref=e143]:
+                      - img "Boston River logo" [ref=e146]
+                      - generic [ref=e147]: Boston River
+                  - paragraph [ref=e148]: Not Started
+            - link "ยังไม่เริ่ม 27 พ.ค. 2569 05:00 UTC+7 Gremio Gremio logo VS Atletico Torque logo Atletico Torque Not Started" [ref=e149] [cursor=pointer]:
+              - /url: /th/livescore/match/1535223
+              - generic [ref=e150]:
+                - generic [ref=e151]:
+                  - generic [ref=e152]: ยังไม่เริ่ม
+                  - generic [ref=e153]:
+                    - img [ref=e154]
+                    - generic [ref=e156]: 27 พ.ค. 2569
+                    - generic [ref=e157]: 05:00 UTC+7
+                - generic [ref=e158]:
+                  - generic [ref=e159]:
+                    - generic [ref=e160]:
+                      - generic [ref=e161]: Gremio
+                      - img "Gremio logo" [ref=e164]
+                    - generic [ref=e165]: VS
+                    - generic [ref=e166]:
+                      - img "Atletico Torque logo" [ref=e169]
+                      - generic [ref=e170]: Atletico Torque
+                  - paragraph [ref=e171]: Not Started
+            - link "ยังไม่เริ่ม 27 พ.ค. 2569 05:00 UTC+7 Millonarios Millonarios logo VS O'Higgins logo O'Higgins Not Started" [ref=e172] [cursor=pointer]:
+              - /url: /th/livescore/match/1535224
+              - generic [ref=e173]:
+                - generic [ref=e174]:
+                  - generic [ref=e175]: ยังไม่เริ่ม
+                  - generic [ref=e176]:
+                    - img [ref=e177]
+                    - generic [ref=e179]: 27 พ.ค. 2569
+                    - generic [ref=e180]: 05:00 UTC+7
+                - generic [ref=e181]:
+                  - generic [ref=e182]:
+                    - generic [ref=e183]:
+                      - generic [ref=e184]: Millonarios
+                      - img "Millonarios logo" [ref=e187]
+                    - generic [ref=e188]: VS
+                    - generic [ref=e189]:
+                      - img "O'Higgins logo" [ref=e192]
+                      - generic [ref=e193]: O'Higgins
+                  - paragraph [ref=e194]: Not Started
+            - link "ยังไม่เริ่ม 27 พ.ค. 2569 05:00 UTC+7 Palestino Palestino logo VS Deportivo Riestra logo Deportivo Riestra Not Started" [ref=e195] [cursor=pointer]:
+              - /url: /th/livescore/match/1535226
+              - generic [ref=e196]:
+                - generic [ref=e197]:
+                  - generic [ref=e198]: ยังไม่เริ่ม
+                  - generic [ref=e199]:
+                    - img [ref=e200]
+                    - generic [ref=e202]: 27 พ.ค. 2569
+                    - generic [ref=e203]: 05:00 UTC+7
+                - generic [ref=e204]:
+                  - generic [ref=e205]:
+                    - generic [ref=e206]:
+                      - generic [ref=e207]: Palestino
+                      - img "Palestino logo" [ref=e210]
+                    - generic [ref=e211]: VS
+                    - generic [ref=e212]:
+                      - img "Deportivo Riestra logo" [ref=e215]
+                      - generic [ref=e216]: Deportivo Riestra
+                  - paragraph [ref=e217]: Not Started
+        - generic [ref=e218]:
+          - generic [ref=e219]:
+            - generic [ref=e220]:
+              - img "League 13 logo" [ref=e223]
+              - heading "League 13" [level=3] [ref=e225]
+            - generic [ref=e226]: 2 matches
+          - generic [ref=e227]:
+            - link "ยังไม่เริ่ม 27 พ.ค. 2569 05:00 UTC+7 Lanus Lanus logo VS Mirassol logo Mirassol Not Started" [ref=e228] [cursor=pointer]:
+              - /url: /th/livescore/match/1535323
+              - generic [ref=e229]:
+                - generic [ref=e230]:
+                  - generic [ref=e231]: ยังไม่เริ่ม
+                  - generic [ref=e232]:
+                    - img [ref=e233]
+                    - generic [ref=e235]: 27 พ.ค. 2569
+                    - generic [ref=e236]: 05:00 UTC+7
+                - generic [ref=e237]:
+                  - generic [ref=e238]:
+                    - generic [ref=e239]:
+                      - generic [ref=e240]: Lanus
+                      - img "Lanus logo" [ref=e243]
+                    - generic [ref=e244]: VS
+                    - generic [ref=e245]:
+                      - img "Mirassol logo" [ref=e248]
+                      - generic [ref=e249]: Mirassol
+                  - paragraph [ref=e250]: Not Started
+            - link "ยังไม่เริ่ม 27 พ.ค. 2569 05:00 UTC+7 LDU de Quito LDU de Quito logo VS Always Ready logo Always Ready Not Started" [ref=e251] [cursor=pointer]:
+              - /url: /th/livescore/match/1535324
+              - generic [ref=e252]:
+                - generic [ref=e253]:
+                  - generic [ref=e254]: ยังไม่เริ่ม
+                  - generic [ref=e255]:
+                    - img [ref=e256]
+                    - generic [ref=e258]: 27 พ.ค. 2569
+                    - generic [ref=e259]: 05:00 UTC+7
+                - generic [ref=e260]:
+                  - generic [ref=e261]:
+                    - generic [ref=e262]:
+                      - generic [ref=e263]: LDU de Quito
+                      - img "LDU de Quito logo" [ref=e266]
+                    - generic [ref=e267]: VS
+                    - generic [ref=e268]:
+                      - img "Always Ready logo" [ref=e271]
+                      - generic [ref=e272]: Always Ready
+                  - paragraph [ref=e273]: Not Started
+  - navigation [ref=e274]:
+    - generic [ref=e275]:
+      - link "หน้าแรก" [ref=e276] [cursor=pointer]:
+        - /url: /th
+        - img [ref=e277]
+        - generic [ref=e280]: หน้าแรก
+      - link "สด" [ref=e281] [cursor=pointer]:
+        - /url: /th/livescore
+        - img [ref=e282]
+        - generic [ref=e284]: สด
+      - link "ทายผล" [ref=e285] [cursor=pointer]:
+        - /url: /th/predict
+        - img [ref=e286]
+        - generic [ref=e290]: ทายผล
+      - link "อันดับ" [ref=e291] [cursor=pointer]:
+        - /url: /th/leaderboard
+        - img [ref=e292]
+        - generic [ref=e298]: อันดับ

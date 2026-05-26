@@ -28,6 +28,7 @@ import {
   getApiFootballFixtureDetails,
   getApiFootballH2H,
 } from "@/lib/api-football";
+import { isIgnorableFixtureSupplementError } from "@/lib/api-football-fixture-details";
 import { buildFixtureSeoSlug, buildLeagueSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
 import { MatchStatus } from "@/types/common";
 import { cn, formatDate, formatMatchDateTimeWithZone } from "@/lib/utils";
@@ -71,10 +72,16 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
   try {
     const details = await getApiFootballFixtureDetails(apiFixtureId);
     const { fixture, events, lineups, statistics, playerStats } = details;
-    const h2h =
-      fixture.home.apiTeamId && fixture.away.apiTeamId
-        ? await getApiFootballH2H(fixture.home.apiTeamId, fixture.away.apiTeamId)
-        : [];
+    let h2h: ApiFootballFixture[] = [];
+    if (fixture.home.apiTeamId && fixture.away.apiTeamId) {
+      try {
+        h2h = await getApiFootballH2H(fixture.home.apiTeamId, fixture.away.apiTeamId);
+      } catch (error) {
+        if (!isIgnorableFixtureSupplementError(error)) {
+          throw error;
+        }
+      }
+    }
     const season = fixture.league.season ?? new Date().getFullYear();
 
     matchDetails = { fixture, events, lineups, statistics, playerStats, h2h, season };

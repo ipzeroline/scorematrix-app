@@ -1,6 +1,7 @@
 import { matches } from "@/data/matches";
 import { leagues } from "@/data/leagues";
 import { teams } from "@/data/teams";
+import { normalizeFixtureDetailsPayload } from "@/lib/api-football-fixture-details";
 import { proxyFootballMediaValue } from "@/lib/football-media";
 import { MatchStatus } from "@/types/common";
 
@@ -613,20 +614,21 @@ export async function getApiFootballFixtureDetails(
     `/fixtures/${fixtureId}`,
     {}
   );
-  const fixture = payload.fixture;
+  const details = normalizeFixtureDetailsPayload(payload);
+  const fixture = details.fixture as ApiFootballFixture | undefined;
 
   if (!fixture) {
     throw new ApiFootballError("Fixture not found", 404);
   }
 
   return {
-    source: payload.source ?? "api-football",
-    fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
+    source: details.source,
+    fetchedAt: details.fetchedAt,
     fixture,
-    events: payload.events ?? [],
-    lineups: payload.lineups ?? [],
-    statistics: payload.statistics ?? [],
-    playerStats: payload.playerStats ?? [],
+    events: details.events as ApiFootballEvent[],
+    lineups: details.lineups as ApiFootballLineup[],
+    statistics: details.statistics as ApiFootballTeamStatistics[],
+    playerStats: details.playerStats as ApiFootballPlayerStats[],
   };
 }
 

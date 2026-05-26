@@ -21,21 +21,21 @@ const ICON = {
 };
 
 const BG = {
-  success: 'border-emerald-500/30 bg-emerald-500/10',
-  error: 'border-red-500/30 bg-red-500/10',
-  info: 'border-blue-500/30 bg-blue-500/10',
-  warning: 'border-amber-500/30 bg-amber-500/10',
-  points: 'border-green-500/30 bg-green-500/10',
-  credits: 'border-amber-500/30 bg-amber-500/10',
+  success: 'border-emerald-500/40 bg-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.25)]',
+  error: 'border-red-500/40 bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.25)]',
+  info: 'border-blue-500/40 bg-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.25)]',
+  warning: 'border-amber-500/40 bg-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.25)]',
+  points: 'border-green-500/40 bg-green-500/20 shadow-[0_0_20px_rgba(34,197,94,0.25)]',
+  credits: 'border-amber-500/40 bg-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.25)]',
 };
 
 const ICON_COLOR = {
-  success: 'text-emerald-400',
-  error: 'text-red-400',
-  info: 'text-blue-400',
-  warning: 'text-amber-400',
-  points: 'text-green-400',
-  credits: 'text-amber-400',
+  success: 'text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]',
+  error: 'text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]',
+  info: 'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]',
+  warning: 'text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]',
+  points: 'text-green-400 drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]',
+  credits: 'text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]',
 };
 
 export function Toast({ id, type, title, message, amount, onDismiss }: ToastProps) {
@@ -49,7 +49,7 @@ export function Toast({ id, type, title, message, amount, onDismiss }: ToastProp
     <div
       role="alert"
       className={cn(
-        'flex items-start gap-3 p-3 rounded-xl border min-w-[300px] max-w-[400px]',
+        'flex items-start gap-3 p-3 rounded-xl border min-w-[300px] max-w-[400px] backdrop-blur-md',
         BG[type]
       )}
     >

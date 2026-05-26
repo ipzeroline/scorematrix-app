@@ -11,9 +11,9 @@ interface ApiTeamLogoProps {
 }
 
 const sizes = {
-  sm: { outer: "h-8 w-8", image: "inset-[3px]" },
-  md: { outer: "h-10 w-10", image: "inset-1" },
-  lg: { outer: "h-14 w-14", image: "inset-1.5" },
+  sm: { outer: "h-8 w-8", image: "inset-[3px]", imageSize: "26px" },
+  md: { outer: "h-10 w-10", image: "inset-1", imageSize: "32px" },
+  lg: { outer: "h-14 w-14", image: "inset-1.5", imageSize: "44px" },
 };
 
 const accents = {
@@ -63,7 +63,7 @@ export function ApiTeamLogo({
             src={logo ?? ""}
             alt={`${name} logo`}
             fill
-            sizes="56px"
+            sizes={config.imageSize}
             unoptimized
             loading="lazy"
             className="object-contain"

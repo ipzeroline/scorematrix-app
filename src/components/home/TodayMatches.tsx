@@ -242,7 +242,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       </div>
 
       {/* Match grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {filtered.map((match) => (
           <Link key={match.id} href={`/${locale}/livescore/${match.id}`}>
             <Card hover className="today-match-card flex h-full flex-col gap-3">

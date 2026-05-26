@@ -350,32 +350,6 @@ export function Sidebar() {
 
       <div className="h-3 shrink-0" />
 
-      <div className="mt-auto overflow-hidden rounded-xl border border-amber-300/30 bg-[radial-gradient(circle_at_top_left,rgba(74,222,128,0.18),transparent_34%),linear-gradient(135deg,rgba(245,158,11,0.2),rgba(34,197,94,0.12)_48%,rgba(10,10,15,0.96))] p-3 shadow-[0_0_22px_rgba(245,158,11,0.14)]">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white">
-            <span className="grid h-5 w-5 place-items-center rounded-md border border-green-300/40 bg-green-300/15 text-[10px] font-bold text-green-100 shadow-[0_0_10px_rgba(74,222,128,0.22)]">
-              12
-            </span>
-            {t("gamification.level")}
-          </span>
-          <span className="rounded-md border border-amber-300/30 bg-amber-300/15 px-2 py-0.5 text-xs font-bold text-amber-100">
-            2,840 XP
-          </span>
-        </div>
-
-        <div className="rounded-full border border-white/10 bg-black/30 p-0.5">
-          <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-green-300 via-lime-300 to-amber-300 shadow-[0_0_16px_rgba(245,158,11,0.55)] transition-all duration-500"
-              style={{ width: "84%" }}
-            />
-          </div>
-        </div>
-
-        <p className="mt-1 text-[10px] font-medium text-amber-100/75">
-          {t("dashboard.xpToNextLevel", { xp: 160, level: 13 })}
-        </p>
-      </div>
     </aside>
   );
 }

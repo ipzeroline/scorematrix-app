@@ -1,0 +1,1061 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "ScoreMatrix" [ref=e5] [cursor=pointer]:
+          - /url: /th
+          - img "ScoreMatrix" [ref=e7]
+        - navigation [ref=e8]:
+          - link "ผลสด" [ref=e9] [cursor=pointer]:
+            - /url: /th/livescore
+          - link "การแข่งขัน" [ref=e10] [cursor=pointer]:
+            - /url: /th/matches
+          - link "ทายผล" [ref=e11] [cursor=pointer]:
+            - /url: /th/predict
+          - link "AI วิเคราะห์" [ref=e12] [cursor=pointer]:
+            - /url: /th/ai-insight
+          - link "อันดับ" [ref=e13] [cursor=pointer]:
+            - /url: /th/leaderboard
+          - link "ข่าวสาร" [ref=e14] [cursor=pointer]:
+            - /url: /th/news
+        - generic "Change language, current language Thai" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: 🇹🇭
+          - generic [ref=e20]: TH
+        - generic [ref=e21]:
+          - link "สมัครสมาชิก" [ref=e22] [cursor=pointer]:
+            - /url: /th/auth/register
+          - link "เข้าสู่ระบบ" [ref=e23] [cursor=pointer]:
+            - /url: /th/auth/login
+    - generic [ref=e24]:
+      - complementary [ref=e25]:
+        - navigation [ref=e26]:
+          - link "หน้าแรก" [ref=e27] [cursor=pointer]:
+            - /url: /th
+            - img [ref=e28]
+            - text: หน้าแรก
+          - link "ผลสด" [ref=e31] [cursor=pointer]:
+            - /url: /th/livescore
+            - img [ref=e32]
+            - text: ผลสด
+          - link "การแข่งขัน" [ref=e34] [cursor=pointer]:
+            - /url: /th/matches
+            - img [ref=e35]
+            - text: การแข่งขัน
+          - link "ทายผล" [ref=e37] [cursor=pointer]:
+            - /url: /th/predict
+            - img [ref=e38]
+            - text: ทายผล
+          - link "AI วิเคราะห์" [ref=e42] [cursor=pointer]:
+            - /url: /th/ai-insight
+            - img [ref=e43]
+            - text: AI วิเคราะห์
+          - link "ซื้อเครดิต" [ref=e51] [cursor=pointer]:
+            - /url: /th/credits
+            - img [ref=e52]
+            - text: ซื้อเครดิต
+          - link "ข่าวสาร" [ref=e57] [cursor=pointer]:
+            - /url: /th/news
+            - img [ref=e58]
+            - text: ข่าวสาร
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - generic [ref=e65]: "12"
+              - text: เลเวล
+            - generic [ref=e66]: 2,840 XP
+          - paragraph [ref=e70]: อีก 160 XP ถึงเลเวล 13
+      - main [ref=e71]:
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e75]:
+              - generic [ref=e76]: Live API
+              - generic [ref=e77]:
+                - heading "การแข่งขัน" [level=1] [ref=e78]
+                - paragraph [ref=e79]: ศูนย์รวมแมตช์สำหรับดูบอลสด โปรแกรมที่กำลังจะมาถึง คู่เด่นสำหรับทายผล และผลย้อนหลังจากลีกที่รองรับ
+              - generic [ref=e80]:
+                - generic [ref=e81]: Asia/Bangkok (UTC+7)
+                - link "ศูนย์บอลสด" [ref=e82] [cursor=pointer]:
+                  - /url: /th/livescore
+                  - button "ศูนย์บอลสด" [ref=e83]:
+                    - img [ref=e84]
+                    - text: ศูนย์บอลสด
+                - link "เริ่มทายผล" [ref=e86] [cursor=pointer]:
+                  - /url: /th/predict
+                  - button "เริ่มทายผล" [ref=e87]
+                - link "ลีก" [ref=e88] [cursor=pointer]:
+                  - /url: /th/football/leagues
+                  - button "ลีก" [ref=e89]
+            - generic [ref=e90]:
+              - generic [ref=e91]:
+                - paragraph [ref=e92]: "0"
+                - paragraph [ref=e93]: สด
+              - generic [ref=e94]:
+                - paragraph [ref=e95]: "23"
+                - paragraph [ref=e96]: กำลังจะแข่ง
+              - generic [ref=e97]:
+                - paragraph [ref=e98]: "0"
+                - paragraph [ref=e99]: จบแล้ว
+              - generic [ref=e100]:
+                - paragraph [ref=e101]: "0"
+                - paragraph [ref=e102]: เลื่อน
+              - generic [ref=e103]:
+                - paragraph [ref=e104]: "0"
+                - paragraph [ref=e105]: ยกเลิก
+          - generic [ref=e106]:
+            - generic [ref=e107]:
+              - generic [ref=e108]:
+                - img [ref=e109]
+                - heading "บอร์ดคู่เด่น" [level=2] [ref=e112]
+              - generic [ref=e113]:
+                - generic [ref=e114]:
+                  - img
+                  - textbox [ref=e115]:
+                    - /placeholder: ค้นหาทีม...
+                - generic [ref=e116]:
+                  - img
+                  - textbox [ref=e117]:
+                    - /placeholder: ค้นหาลีก
+                - generic [ref=e118]: 23 คู่
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - button "ทั้งหมด" [ref=e121]
+                - button "League 345 logo League 345 2" [ref=e122]:
+                  - img "League 345 logo" [ref=e125]
+                  - generic [ref=e126]: League 345
+                  - generic [ref=e127]: "2"
+                - button "League 61 logo League 61 1" [ref=e128]:
+                  - img "League 61 logo" [ref=e131]
+                  - generic [ref=e132]: League 61
+                  - generic [ref=e133]: "1"
+                - button "League 11 logo League 11 10" [ref=e134]:
+                  - img "League 11 logo" [ref=e137]
+                  - generic [ref=e138]: League 11
+                  - generic [ref=e139]: "10"
+                - button "League 13 logo League 13 8" [ref=e140]:
+                  - img "League 13 logo" [ref=e143]
+                  - generic [ref=e144]: League 13
+                  - generic [ref=e145]: "8"
+                - button "League 1129 logo League 1129 1" [ref=e146]:
+                  - img "League 1129 logo" [ref=e149]
+                  - generic [ref=e150]: League 1129
+                  - generic [ref=e151]: "1"
+                - button "League 848 logo League 848 1" [ref=e152]:
+                  - img "League 848 logo" [ref=e155]
+                  - generic [ref=e156]: League 848
+                  - generic [ref=e157]: "1"
+              - generic [ref=e158]:
+                - generic [ref=e160]:
+                  - link "League 345 logo League 345" [ref=e161] [cursor=pointer]:
+                    - /url: /th/football/leagues/league-345-345?season=2025
+                    - img "League 345 logo" [ref=e163]
+                    - generic [ref=e164]:
+                      - heading "League 345" [level=3] [ref=e166]
+                      - paragraph
+                  - generic [ref=e167]:
+                    - generic [ref=e168]:
+                      - generic [ref=e169]: "2"
+                      - generic [ref=e170]: คู่
+                    - generic [ref=e171]:
+                      - generic [ref=e172]: "0"
+                      - generic [ref=e173]: สด
+                    - generic [ref=e174]:
+                      - generic [ref=e175]: "2"
+                      - generic [ref=e176]: กำลังจะแข่ง
+                    - generic [ref=e177]:
+                      - generic [ref=e178]: "0"
+                      - generic [ref=e179]: จบ
+                    - generic [ref=e180]:
+                      - generic [ref=e181]: "0"
+                      - generic [ref=e182]: เลื่อน
+                    - generic [ref=e183]:
+                      - generic [ref=e184]: "0"
+                      - generic [ref=e185]: ยกเลิก
+                - table [ref=e187]:
+                  - rowgroup [ref=e195]:
+                    - row "เวลา เจ้าบ้าน สกอร์ ทีมเยือน สถานะ ทายผล" [ref=e196]:
+                      - columnheader "เวลา" [ref=e197]
+                      - columnheader "เจ้าบ้าน" [ref=e198]
+                      - columnheader "สกอร์" [ref=e199]
+                      - columnheader "ทีมเยือน" [ref=e200]
+                      - columnheader "สถานะ" [ref=e201]
+                      - columnheader "ทายผล" [ref=e202]
+                  - rowgroup [ref=e203]:
+                    - row "26 พ.ค. 2569 23:00 UTC+7 Baník Ostrava logo Baník Ostrava VS Táborsko logo Táborsko ยังไม่เริ่ม -" [ref=e204]:
+                      - cell "26 พ.ค. 2569 23:00 UTC+7" [ref=e205]:
+                        - link "26 พ.ค. 2569 23:00 UTC+7" [ref=e206] [cursor=pointer]:
+                          - /url: /th/livescore/banik-ostrava-vs-taborsko-1546285
+                          - generic [ref=e207]: 26 พ.ค. 2569
+                          - generic [ref=e208]: 23:00 UTC+7
+                      - cell "Baník Ostrava logo Baník Ostrava" [ref=e209]:
+                        - link "Baník Ostrava logo Baník Ostrava" [ref=e210] [cursor=pointer]:
+                          - /url: /th/livescore/banik-ostrava-vs-taborsko-1546285
+                          - generic [ref=e211]:
+                            - img "Baník Ostrava logo" [ref=e214]
+                            - paragraph [ref=e215]: Baník Ostrava
+                      - cell "VS" [ref=e216]:
+                        - link "VS" [ref=e217] [cursor=pointer]:
+                          - /url: /th/livescore/banik-ostrava-vs-taborsko-1546285
+                      - cell "Táborsko logo Táborsko" [ref=e218]:
+                        - link "Táborsko logo Táborsko" [ref=e219] [cursor=pointer]:
+                          - /url: /th/livescore/banik-ostrava-vs-taborsko-1546285
+                          - generic [ref=e220]:
+                            - img "Táborsko logo" [ref=e223]
+                            - paragraph [ref=e224]: Táborsko
+                      - cell "ยังไม่เริ่ม" [ref=e225]:
+                        - link "ยังไม่เริ่ม" [ref=e226] [cursor=pointer]:
+                          - /url: /th/livescore/banik-ostrava-vs-taborsko-1546285
+                          - generic [ref=e227]: ยังไม่เริ่ม
+                      - cell "-" [ref=e228]:
+                        - generic [ref=e229]: "-"
+                    - row "27 พ.ค. 2569 23:00 UTC+7 Artis logo Artis VS Slovácko logo Slovácko ยังไม่เริ่ม -" [ref=e230]:
+                      - cell "27 พ.ค. 2569 23:00 UTC+7" [ref=e231]:
+                        - link "27 พ.ค. 2569 23:00 UTC+7" [ref=e232] [cursor=pointer]:
+                          - /url: /th/livescore/artis-vs-slovacko-1546286
+                          - generic [ref=e233]: 27 พ.ค. 2569
+                          - generic [ref=e234]: 23:00 UTC+7
+                      - cell "Artis logo Artis" [ref=e235]:
+                        - link "Artis logo Artis" [ref=e236] [cursor=pointer]:
+                          - /url: /th/livescore/artis-vs-slovacko-1546286
+                          - generic [ref=e237]:
+                            - img "Artis logo" [ref=e240]
+                            - paragraph [ref=e241]: Artis
+                      - cell "VS" [ref=e242]:
+                        - link "VS" [ref=e243] [cursor=pointer]:
+                          - /url: /th/livescore/artis-vs-slovacko-1546286
+                      - cell "Slovácko logo Slovácko" [ref=e244]:
+                        - link "Slovácko logo Slovácko" [ref=e245] [cursor=pointer]:
+                          - /url: /th/livescore/artis-vs-slovacko-1546286
+                          - generic [ref=e246]:
+                            - img "Slovácko logo" [ref=e249]
+                            - paragraph [ref=e250]: Slovácko
+                      - cell "ยังไม่เริ่ม" [ref=e251]:
+                        - link "ยังไม่เริ่ม" [ref=e252] [cursor=pointer]:
+                          - /url: /th/livescore/artis-vs-slovacko-1546286
+                          - generic [ref=e253]: ยังไม่เริ่ม
+                      - cell "-" [ref=e254]:
+                        - generic [ref=e255]: "-"
+              - generic [ref=e256]:
+                - generic [ref=e258]:
+                  - link "League 61 logo League 61" [ref=e259] [cursor=pointer]:
+                    - /url: /th/football/leagues/league-61-61?season=2025
+                    - img "League 61 logo" [ref=e261]
+                    - generic [ref=e262]:
+                      - heading "League 61" [level=3] [ref=e264]
+                      - paragraph
+                  - generic [ref=e265]:
+                    - generic [ref=e266]:
+                      - generic [ref=e267]: "1"
+                      - generic [ref=e268]: คู่
+                    - generic [ref=e269]:
+                      - generic [ref=e270]: "0"
+                      - generic [ref=e271]: สด
+                    - generic [ref=e272]:
+                      - generic [ref=e273]: "1"
+                      - generic [ref=e274]: กำลังจะแข่ง
+                    - generic [ref=e275]:
+                      - generic [ref=e276]: "0"
+                      - generic [ref=e277]: จบ
+                    - generic [ref=e278]:
+                      - generic [ref=e279]: "0"
+                      - generic [ref=e280]: เลื่อน
+                    - generic [ref=e281]:
+                      - generic [ref=e282]: "0"
+                      - generic [ref=e283]: ยกเลิก
+                - table [ref=e285]:
+                  - rowgroup [ref=e293]:
+                    - row "เวลา เจ้าบ้าน สกอร์ ทีมเยือน สถานะ ทายผล" [ref=e294]:
+                      - columnheader "เวลา" [ref=e295]
+                      - columnheader "เจ้าบ้าน" [ref=e296]
+                      - columnheader "สกอร์" [ref=e297]
+                      - columnheader "ทีมเยือน" [ref=e298]
+                      - columnheader "สถานะ" [ref=e299]
+                      - columnheader "ทายผล" [ref=e300]
+                  - rowgroup [ref=e301]:
+                    - row "27 พ.ค. 2569 01:45 UTC+7 Saint Etienne logo Saint Etienne VS Nice logo Nice ยังไม่เริ่ม -" [ref=e302]:
+                      - cell "27 พ.ค. 2569 01:45 UTC+7" [ref=e303]:
+                        - link "27 พ.ค. 2569 01:45 UTC+7" [ref=e304] [cursor=pointer]:
+                          - /url: /th/livescore/saint-etienne-vs-nice-1545408
+                          - generic [ref=e305]: 27 พ.ค. 2569
+                          - generic [ref=e306]: 01:45 UTC+7
+                      - cell "Saint Etienne logo Saint Etienne" [ref=e307]:
+                        - link "Saint Etienne logo Saint Etienne" [ref=e308] [cursor=pointer]:
+                          - /url: /th/livescore/saint-etienne-vs-nice-1545408
+                          - generic [ref=e309]:
+                            - img "Saint Etienne logo" [ref=e312]
+                            - paragraph [ref=e313]: Saint Etienne
+                      - cell "VS" [ref=e314]:
+                        - link "VS" [ref=e315] [cursor=pointer]:
+                          - /url: /th/livescore/saint-etienne-vs-nice-1545408
+                      - cell "Nice logo Nice" [ref=e316]:
+                        - link "Nice logo Nice" [ref=e317] [cursor=pointer]:
+                          - /url: /th/livescore/saint-etienne-vs-nice-1545408
+                          - generic [ref=e318]:
+                            - img "Nice logo" [ref=e321]
+                            - paragraph [ref=e322]: Nice
+                      - cell "ยังไม่เริ่ม" [ref=e323]:
+                        - link "ยังไม่เริ่ม" [ref=e324] [cursor=pointer]:
+                          - /url: /th/livescore/saint-etienne-vs-nice-1545408
+                          - generic [ref=e325]: ยังไม่เริ่ม
+                      - cell "-" [ref=e326]:
+                        - generic [ref=e327]: "-"
+              - generic [ref=e328]:
+                - generic [ref=e330]:
+                  - link "League 11 logo League 11" [ref=e331] [cursor=pointer]:
+                    - /url: /th/football/leagues/league-11-11?season=2026
+                    - img "League 11 logo" [ref=e333]
+                    - generic [ref=e334]:
+                      - heading "League 11" [level=3] [ref=e336]
+                      - paragraph
+                  - generic [ref=e337]:
+                    - generic [ref=e338]:
+                      - generic [ref=e339]: "10"
+                      - generic [ref=e340]: คู่
+                    - generic [ref=e341]:
+                      - generic [ref=e342]: "0"
+                      - generic [ref=e343]: สด
+                    - generic [ref=e344]:
+                      - generic [ref=e345]: "10"
+                      - generic [ref=e346]: กำลังจะแข่ง
+                    - generic [ref=e347]:
+                      - generic [ref=e348]: "0"
+                      - generic [ref=e349]: จบ
+                    - generic [ref=e350]:
+                      - generic [ref=e351]: "0"
+                      - generic [ref=e352]: เลื่อน
+                    - generic [ref=e353]:
+                      - generic [ref=e354]: "0"
+                      - generic [ref=e355]: ยกเลิก
+                - table [ref=e357]:
+                  - rowgroup [ref=e365]:
+                    - row "เวลา เจ้าบ้าน สกอร์ ทีมเยือน สถานะ ทายผล" [ref=e366]:
+                      - columnheader "เวลา" [ref=e367]
+                      - columnheader "เจ้าบ้าน" [ref=e368]
+                      - columnheader "สกอร์" [ref=e369]
+                      - columnheader "ทีมเยือน" [ref=e370]
+                      - columnheader "สถานะ" [ref=e371]
+                      - columnheader "ทายผล" [ref=e372]
+                  - rowgroup [ref=e373]:
+                    - row "27 พ.ค. 2569 05:00 UTC+7 Sao Paulo logo Sao Paulo VS Boston River logo Boston River ยังไม่เริ่ม -" [ref=e374]:
+                      - cell "27 พ.ค. 2569 05:00 UTC+7" [ref=e375]:
+                        - link "27 พ.ค. 2569 05:00 UTC+7" [ref=e376] [cursor=pointer]:
+                          - /url: /th/livescore/sao-paulo-vs-boston-river-1535231
+                          - generic [ref=e377]: 27 พ.ค. 2569
+                          - generic [ref=e378]: 05:00 UTC+7
+                      - cell "Sao Paulo logo Sao Paulo" [ref=e379]:
+                        - link "Sao Paulo logo Sao Paulo" [ref=e380] [cursor=pointer]:
+                          - /url: /th/livescore/sao-paulo-vs-boston-river-1535231
+                          - generic [ref=e381]:
+                            - img "Sao Paulo logo" [ref=e384]
+                            - paragraph [ref=e385]: Sao Paulo
+                      - cell "VS" [ref=e386]:
+                        - link "VS" [ref=e387] [cursor=pointer]:
+                          - /url: /th/livescore/sao-paulo-vs-boston-river-1535231
+                      - cell "Boston River logo Boston River" [ref=e388]:
+                        - link "Boston River logo Boston River" [ref=e389] [cursor=pointer]:
+                          - /url: /th/livescore/sao-paulo-vs-boston-river-1535231
+                          - generic [ref=e390]:
+                            - img "Boston River logo" [ref=e393]
+                            - paragraph [ref=e394]: Boston River
+                      - cell "ยังไม่เริ่ม" [ref=e395]:
+                        - link "ยังไม่เริ่ม" [ref=e396] [cursor=pointer]:
+                          - /url: /th/livescore/sao-paulo-vs-boston-river-1535231
+                          - generic [ref=e397]: ยังไม่เริ่ม
+                      - cell "-" [ref=e398]:
+                        - generic [ref=e399]: "-"
+                    - row "27 พ.ค. 2569 05:00 UTC+7 Gremio logo Gremio VS Atletico Torque logo Atletico Torque ยังไม่เริ่ม -" [ref=e400]:
+                      - cell "27 พ.ค. 2569 05:00 UTC+7" [ref=e401]:
+                        - link "27 พ.ค. 2569 05:00 UTC+7" [ref=e402] [cursor=pointer]:
+                          - /url: /th/livescore/gremio-vs-atletico-torque-1535223
+                          - generic [ref=e403]: 27 พ.ค. 2569
+                          - generic [ref=e404]: 05:00 UTC+7
+                      - cell "Gremio logo Gremio" [ref=e405]:
+                        - link "Gremio logo Gremio" [ref=e406] [cursor=pointer]:
+                          - /url: /th/livescore/gremio-vs-atletico-torque-1535223
+                          - generic [ref=e407]:
+                            - img "Gremio logo" [ref=e410]
+                            - paragraph [ref=e411]: Gremio
+                      - cell "VS" [ref=e412]:
+                        - link "VS" [ref=e413] [cursor=pointer]:
+                          - /url: /th/livescore/gremio-vs-atletico-torque-1535223
+                      - cell "Atletico Torque logo Atletico Torque" [ref=e414]:
+                        - link "Atletico Torque logo Atletico Torque" [ref=e415] [cursor=pointer]:
+                          - /url: /th/livescore/gremio-vs-atletico-torque-1535223
+                          - generic [ref=e416]:
+                            - img "Atletico Torque logo" [ref=e419]
+                            - paragraph [ref=e420]: Atletico Torque
+                      - cell "ยังไม่เริ่ม" [ref=e421]:
+                        - link "ยังไม่เริ่ม" [ref=e422] [cursor=pointer]:
+                          - /url: /th/livescore/gremio-vs-atletico-torque-1535223
+                          - generic [ref=e423]: ยังไม่เริ่ม
+                      - cell "-" [ref=e424]:
+                        - generic [ref=e425]: "-"
+                    - row "27 พ.ค. 2569 05:00 UTC+7 Millonarios logo Millonarios VS O'Higgins logo O'Higgins ยังไม่เริ่ม -" [ref=e426]:
+                      - cell "27 พ.ค. 2569 05:00 UTC+7" [ref=e427]:
+                        - link "27 พ.ค. 2569 05:00 UTC+7" [ref=e428] [cursor=pointer]:
+                          - /url: /th/livescore/millonarios-vs-o-higgins-1535224
+                          - generic [ref=e429]: 27 พ.ค. 2569
+                          - generic [ref=e430]: 05:00 UTC+7
+                      - cell "Millonarios logo Millonarios" [ref=e431]:
+                        - link "Millonarios logo Millonarios" [ref=e432] [cursor=pointer]:
+                          - /url: /th/livescore/millonarios-vs-o-higgins-1535224
+                          - generic [ref=e433]:
+                            - img "Millonarios logo" [ref=e436]
+                            - paragraph [ref=e437]: Millonarios
+                      - cell "VS" [ref=e438]:
+                        - link "VS" [ref=e439] [cursor=pointer]:
+                          - /url: /th/livescore/millonarios-vs-o-higgins-1535224
+                      - cell "O'Higgins logo O'Higgins" [ref=e440]:
+                        - link "O'Higgins logo O'Higgins" [ref=e441] [cursor=pointer]:
+                          - /url: /th/livescore/millonarios-vs-o-higgins-1535224
+                          - generic [ref=e442]:
+                            - img "O'Higgins logo" [ref=e445]
+                            - paragraph [ref=e446]: O'Higgins
+                      - cell "ยังไม่เริ่ม" [ref=e447]:
+                        - link "ยังไม่เริ่ม" [ref=e448] [cursor=pointer]:
+                          - /url: /th/livescore/millonarios-vs-o-higgins-1535224
+                          - generic [ref=e449]: ยังไม่เริ่ม
+                      - cell "-" [ref=e450]:
+                        - generic [ref=e451]: "-"
+                    - row "27 พ.ค. 2569 05:00 UTC+7 Palestino logo Palestino VS Deportivo Riestra logo Deportivo Riestra ยังไม่เริ่ม -" [ref=e452]:
+                      - cell "27 พ.ค. 2569 05:00 UTC+7" [ref=e453]:
+                        - link "27 พ.ค. 2569 05:00 UTC+7" [ref=e454] [cursor=pointer]:
+                          - /url: /th/livescore/palestino-vs-deportivo-riestra-1535226
+                          - generic [ref=e455]: 27 พ.ค. 2569
+                          - generic [ref=e456]: 05:00 UTC+7
+                      - cell "Palestino logo Palestino" [ref=e457]:
+                        - link "Palestino logo Palestino" [ref=e458] [cursor=pointer]:
+                          - /url: /th/livescore/palestino-vs-deportivo-riestra-1535226
+                          - generic [ref=e459]:
+                            - img "Palestino logo" [ref=e462]
+                            - paragraph [ref=e463]: Palestino
+                      - cell "VS" [ref=e464]:
+                        - link "VS" [ref=e465] [cursor=pointer]:
+                          - /url: /th/livescore/palestino-vs-deportivo-riestra-1535226
+                      - cell "Deportivo Riestra logo Deportivo Riestra" [ref=e466]:
+                        - link "Deportivo Riestra logo Deportivo Riestra" [ref=e467] [cursor=pointer]:
+                          - /url: /th/livescore/palestino-vs-deportivo-riestra-1535226
+                          - generic [ref=e468]:
+                            - img "Deportivo Riestra logo" [ref=e471]
+                            - paragraph [ref=e472]: Deportivo Riestra
+                      - cell "ยังไม่เริ่ม" [ref=e473]:
+                        - link "ยังไม่เริ่ม" [ref=e474] [cursor=pointer]:
+                          - /url: /th/livescore/palestino-vs-deportivo-riestra-1535226
+                          - generic [ref=e475]: ยังไม่เริ่ม
+                      - cell "-" [ref=e476]:
+                        - generic [ref=e477]: "-"
+                    - row "27 พ.ค. 2569 07:30 UTC+7 Santos logo Santos VS Deportivo Cuenca logo Deportivo Cuenca ยังไม่เริ่ม -" [ref=e478]:
+                      - cell "27 พ.ค. 2569 07:30 UTC+7" [ref=e479]:
+                        - link "27 พ.ค. 2569 07:30 UTC+7" [ref=e480] [cursor=pointer]:
+                          - /url: /th/livescore/santos-vs-deportivo-cuenca-1535230
+                          - generic [ref=e481]: 27 พ.ค. 2569
+                          - generic [ref=e482]: 07:30 UTC+7
+                      - cell "Santos logo Santos" [ref=e483]:
+                        - link "Santos logo Santos" [ref=e484] [cursor=pointer]:
+                          - /url: /th/livescore/santos-vs-deportivo-cuenca-1535230
+                          - generic [ref=e485]:
+                            - img "Santos logo" [ref=e488]
+                            - paragraph [ref=e489]: Santos
+                      - cell "VS" [ref=e490]:
+                        - link "VS" [ref=e491] [cursor=pointer]:
+                          - /url: /th/livescore/santos-vs-deportivo-cuenca-1535230
+                      - cell "Deportivo Cuenca logo Deportivo Cuenca" [ref=e492]:
+                        - link "Deportivo Cuenca logo Deportivo Cuenca" [ref=e493] [cursor=pointer]:
+                          - /url: /th/livescore/santos-vs-deportivo-cuenca-1535230
+                          - generic [ref=e494]:
+                            - img "Deportivo Cuenca logo" [ref=e497]
+                            - paragraph [ref=e498]: Deportivo Cuenca
+                      - cell "ยังไม่เริ่ม" [ref=e499]:
+                        - link "ยังไม่เริ่ม" [ref=e500] [cursor=pointer]:
+                          - /url: /th/livescore/santos-vs-deportivo-cuenca-1535230
+                          - generic [ref=e501]: ยังไม่เริ่ม
+                      - cell "-" [ref=e502]:
+                        - generic [ref=e503]: "-"
+                    - row "27 พ.ค. 2569 07:30 UTC+7 San Lorenzo logo San Lorenzo VS Deportivo Recoleta logo Deportivo Recoleta ยังไม่เริ่ม -" [ref=e504]:
+                      - cell "27 พ.ค. 2569 07:30 UTC+7" [ref=e505]:
+                        - link "27 พ.ค. 2569 07:30 UTC+7" [ref=e506] [cursor=pointer]:
+                          - /url: /th/livescore/san-lorenzo-vs-deportivo-recoleta-1535229
+                          - generic [ref=e507]: 27 พ.ค. 2569
+                          - generic [ref=e508]: 07:30 UTC+7
+                      - cell "San Lorenzo logo San Lorenzo" [ref=e509]:
+                        - link "San Lorenzo logo San Lorenzo" [ref=e510] [cursor=pointer]:
+                          - /url: /th/livescore/san-lorenzo-vs-deportivo-recoleta-1535229
+                          - generic [ref=e511]:
+                            - img "San Lorenzo logo" [ref=e514]
+                            - paragraph [ref=e515]: San Lorenzo
+                      - cell "VS" [ref=e516]:
+                        - link "VS" [ref=e517] [cursor=pointer]:
+                          - /url: /th/livescore/san-lorenzo-vs-deportivo-recoleta-1535229
+                      - cell "Deportivo Recoleta logo Deportivo Recoleta" [ref=e518]:
+                        - link "Deportivo Recoleta logo Deportivo Recoleta" [ref=e519] [cursor=pointer]:
+                          - /url: /th/livescore/san-lorenzo-vs-deportivo-recoleta-1535229
+                          - generic [ref=e520]:
+                            - img "Deportivo Recoleta logo" [ref=e523]
+                            - paragraph [ref=e524]: Deportivo Recoleta
+                      - cell "ยังไม่เริ่ม" [ref=e525]:
+                        - link "ยังไม่เริ่ม" [ref=e526] [cursor=pointer]:
+                          - /url: /th/livescore/san-lorenzo-vs-deportivo-recoleta-1535229
+                          - generic [ref=e527]: ยังไม่เริ่ม
+                      - cell "-" [ref=e528]:
+                        - generic [ref=e529]: "-"
+                    - row "28 พ.ค. 2569 05:00 UTC+7 Racing Club logo Racing Club VS Independiente Petrolero logo Independiente Petrolero ยังไม่เริ่ม -" [ref=e530]:
+                      - cell "28 พ.ค. 2569 05:00 UTC+7" [ref=e531]:
+                        - link "28 พ.ค. 2569 05:00 UTC+7" [ref=e532] [cursor=pointer]:
+                          - /url: /th/livescore/racing-club-vs-independiente-petrolero-1535227
+                          - generic [ref=e533]: 28 พ.ค. 2569
+                          - generic [ref=e534]: 05:00 UTC+7
+                      - cell "Racing Club logo Racing Club" [ref=e535]:
+                        - link "Racing Club logo Racing Club" [ref=e536] [cursor=pointer]:
+                          - /url: /th/livescore/racing-club-vs-independiente-petrolero-1535227
+                          - generic [ref=e537]:
+                            - img "Racing Club logo" [ref=e540]
+                            - paragraph [ref=e541]: Racing Club
+                      - cell "VS" [ref=e542]:
+                        - link "VS" [ref=e543] [cursor=pointer]:
+                          - /url: /th/livescore/racing-club-vs-independiente-petrolero-1535227
+                      - cell "Independiente Petrolero logo Independiente Petrolero" [ref=e544]:
+                        - link "Independiente Petrolero logo Independiente Petrolero" [ref=e545] [cursor=pointer]:
+                          - /url: /th/livescore/racing-club-vs-independiente-petrolero-1535227
+                          - generic [ref=e546]:
+                            - img "Independiente Petrolero logo" [ref=e549]
+                            - paragraph [ref=e550]: Independiente Petrolero
+                      - cell "ยังไม่เริ่ม" [ref=e551]:
+                        - link "ยังไม่เริ่ม" [ref=e552] [cursor=pointer]:
+                          - /url: /th/livescore/racing-club-vs-independiente-petrolero-1535227
+                          - generic [ref=e553]: ยังไม่เริ่ม
+                      - cell "-" [ref=e554]:
+                        - generic [ref=e555]: "-"
+                    - row "28 พ.ค. 2569 05:00 UTC+7 Atletico-MG logo Atletico-MG VS Puerto Cabello logo Puerto Cabello ยังไม่เริ่ม -" [ref=e556]:
+                      - cell "28 พ.ค. 2569 05:00 UTC+7" [ref=e557]:
+                        - link "28 พ.ค. 2569 05:00 UTC+7" [ref=e558] [cursor=pointer]:
+                          - /url: /th/livescore/atletico-mg-vs-puerto-cabello-1535219
+                          - generic [ref=e559]: 28 พ.ค. 2569
+                          - generic [ref=e560]: 05:00 UTC+7
+                      - cell "Atletico-MG logo Atletico-MG" [ref=e561]:
+                        - link "Atletico-MG logo Atletico-MG" [ref=e562] [cursor=pointer]:
+                          - /url: /th/livescore/atletico-mg-vs-puerto-cabello-1535219
+                          - generic [ref=e563]:
+                            - img "Atletico-MG logo" [ref=e566]
+                            - paragraph [ref=e567]: Atletico-MG
+                      - cell "VS" [ref=e568]:
+                        - link "VS" [ref=e569] [cursor=pointer]:
+                          - /url: /th/livescore/atletico-mg-vs-puerto-cabello-1535219
+                      - cell "Puerto Cabello logo Puerto Cabello" [ref=e570]:
+                        - link "Puerto Cabello logo Puerto Cabello" [ref=e571] [cursor=pointer]:
+                          - /url: /th/livescore/atletico-mg-vs-puerto-cabello-1535219
+                          - generic [ref=e572]:
+                            - img "Puerto Cabello logo" [ref=e575]
+                            - paragraph [ref=e576]: Puerto Cabello
+                      - cell "ยังไม่เริ่ม" [ref=e577]:
+                        - link "ยังไม่เริ่ม" [ref=e578] [cursor=pointer]:
+                          - /url: /th/livescore/atletico-mg-vs-puerto-cabello-1535219
+                          - generic [ref=e579]: ยังไม่เริ่ม
+                      - cell "-" [ref=e580]:
+                        - generic [ref=e581]: "-"
+                    - row "28 พ.ค. 2569 05:00 UTC+7 Cienciano logo Cienciano VS Juventud logo Juventud ยังไม่เริ่ม -" [ref=e582]:
+                      - cell "28 พ.ค. 2569 05:00 UTC+7" [ref=e583]:
+                        - link "28 พ.ค. 2569 05:00 UTC+7" [ref=e584] [cursor=pointer]:
+                          - /url: /th/livescore/cienciano-vs-juventud-1535222
+                          - generic [ref=e585]: 28 พ.ค. 2569
+                          - generic [ref=e586]: 05:00 UTC+7
+                      - cell "Cienciano logo Cienciano" [ref=e587]:
+                        - link "Cienciano logo Cienciano" [ref=e588] [cursor=pointer]:
+                          - /url: /th/livescore/cienciano-vs-juventud-1535222
+                          - generic [ref=e589]:
+                            - img "Cienciano logo" [ref=e592]
+                            - paragraph [ref=e593]: Cienciano
+                      - cell "VS" [ref=e594]:
+                        - link "VS" [ref=e595] [cursor=pointer]:
+                          - /url: /th/livescore/cienciano-vs-juventud-1535222
+                      - cell "Juventud logo Juventud" [ref=e596]:
+                        - link "Juventud logo Juventud" [ref=e597] [cursor=pointer]:
+                          - /url: /th/livescore/cienciano-vs-juventud-1535222
+                          - generic [ref=e598]:
+                            - img "Juventud logo" [ref=e601]
+                            - paragraph [ref=e602]: Juventud
+                      - cell "ยังไม่เริ่ม" [ref=e603]:
+                        - link "ยังไม่เริ่ม" [ref=e604] [cursor=pointer]:
+                          - /url: /th/livescore/cienciano-vs-juventud-1535222
+                          - generic [ref=e605]: ยังไม่เริ่ม
+                      - cell "-" [ref=e606]:
+                        - generic [ref=e607]: "-"
+                    - row "28 พ.ค. 2569 05:00 UTC+7 Caracas FC logo Caracas FC VS Botafogo logo Botafogo ยังไม่เริ่ม -" [ref=e608]:
+                      - cell "28 พ.ค. 2569 05:00 UTC+7" [ref=e609]:
+                        - link "28 พ.ค. 2569 05:00 UTC+7" [ref=e610] [cursor=pointer]:
+                          - /url: /th/livescore/caracas-fc-vs-botafogo-1535221
+                          - generic [ref=e611]: 28 พ.ค. 2569
+                          - generic [ref=e612]: 05:00 UTC+7
+                      - cell "Caracas FC logo Caracas FC" [ref=e613]:
+                        - link "Caracas FC logo Caracas FC" [ref=e614] [cursor=pointer]:
+                          - /url: /th/livescore/caracas-fc-vs-botafogo-1535221
+                          - generic [ref=e615]:
+                            - img "Caracas FC logo" [ref=e618]
+                            - paragraph [ref=e619]: Caracas FC
+                      - cell "VS" [ref=e620]:
+                        - link "VS" [ref=e621] [cursor=pointer]:
+                          - /url: /th/livescore/caracas-fc-vs-botafogo-1535221
+                      - cell "Botafogo logo Botafogo" [ref=e622]:
+                        - link "Botafogo logo Botafogo" [ref=e623] [cursor=pointer]:
+                          - /url: /th/livescore/caracas-fc-vs-botafogo-1535221
+                          - generic [ref=e624]:
+                            - img "Botafogo logo" [ref=e627]
+                            - paragraph [ref=e628]: Botafogo
+                      - cell "ยังไม่เริ่ม" [ref=e629]:
+                        - link "ยังไม่เริ่ม" [ref=e630] [cursor=pointer]:
+                          - /url: /th/livescore/caracas-fc-vs-botafogo-1535221
+                          - generic [ref=e631]: ยังไม่เริ่ม
+                      - cell "-" [ref=e632]:
+                        - generic [ref=e633]: "-"
+              - generic [ref=e634]:
+                - generic [ref=e636]:
+                  - link "League 13 logo League 13" [ref=e637] [cursor=pointer]:
+                    - /url: /th/football/leagues/league-13-13?season=2026
+                    - img "League 13 logo" [ref=e639]
+                    - generic [ref=e640]:
+                      - heading "League 13" [level=3] [ref=e642]
+                      - paragraph
+                  - generic [ref=e643]:
+                    - generic [ref=e644]:
+                      - generic [ref=e645]: "8"
+                      - generic [ref=e646]: คู่
+                    - generic [ref=e647]:
+                      - generic [ref=e648]: "0"
+                      - generic [ref=e649]: สด
+                    - generic [ref=e650]:
+                      - generic [ref=e651]: "8"
+                      - generic [ref=e652]: กำลังจะแข่ง
+                    - generic [ref=e653]:
+                      - generic [ref=e654]: "0"
+                      - generic [ref=e655]: จบ
+                    - generic [ref=e656]:
+                      - generic [ref=e657]: "0"
+                      - generic [ref=e658]: เลื่อน
+                    - generic [ref=e659]:
+                      - generic [ref=e660]: "0"
+                      - generic [ref=e661]: ยกเลิก
+                - table [ref=e663]:
+                  - rowgroup [ref=e671]:
+                    - row "เวลา เจ้าบ้าน สกอร์ ทีมเยือน สถานะ ทายผล" [ref=e672]:
+                      - columnheader "เวลา" [ref=e673]
+                      - columnheader "เจ้าบ้าน" [ref=e674]
+                      - columnheader "สกอร์" [ref=e675]
+                      - columnheader "ทีมเยือน" [ref=e676]
+                      - columnheader "สถานะ" [ref=e677]
+                      - columnheader "ทายผล" [ref=e678]
+                  - rowgroup [ref=e679]:
+                    - row "27 พ.ค. 2569 05:00 UTC+7 Lanus logo Lanus VS Mirassol logo Mirassol ยังไม่เริ่ม -" [ref=e680]:
+                      - cell "27 พ.ค. 2569 05:00 UTC+7" [ref=e681]:
+                        - link "27 พ.ค. 2569 05:00 UTC+7" [ref=e682] [cursor=pointer]:
+                          - /url: /th/livescore/lanus-vs-mirassol-1535323
+                          - generic [ref=e683]: 27 พ.ค. 2569
+                          - generic [ref=e684]: 05:00 UTC+7
+                      - cell "Lanus logo Lanus" [ref=e685]:
+                        - link "Lanus logo Lanus" [ref=e686] [cursor=pointer]:
+                          - /url: /th/livescore/lanus-vs-mirassol-1535323
+                          - generic [ref=e687]:
+                            - img "Lanus logo" [ref=e690]
+                            - paragraph [ref=e691]: Lanus
+                      - cell "VS" [ref=e692]:
+                        - link "VS" [ref=e693] [cursor=pointer]:
+                          - /url: /th/livescore/lanus-vs-mirassol-1535323
+                      - cell "Mirassol logo Mirassol" [ref=e694]:
+                        - link "Mirassol logo Mirassol" [ref=e695] [cursor=pointer]:
+                          - /url: /th/livescore/lanus-vs-mirassol-1535323
+                          - generic [ref=e696]:
+                            - img "Mirassol logo" [ref=e699]
+                            - paragraph [ref=e700]: Mirassol
+                      - cell "ยังไม่เริ่ม" [ref=e701]:
+                        - link "ยังไม่เริ่ม" [ref=e702] [cursor=pointer]:
+                          - /url: /th/livescore/lanus-vs-mirassol-1535323
+                          - generic [ref=e703]: ยังไม่เริ่ม
+                      - cell "-" [ref=e704]:
+                        - generic [ref=e705]: "-"
+                    - row "27 พ.ค. 2569 05:00 UTC+7 LDU de Quito logo LDU de Quito VS Always Ready logo Always Ready ยังไม่เริ่ม -" [ref=e706]:
+                      - cell "27 พ.ค. 2569 05:00 UTC+7" [ref=e707]:
+                        - link "27 พ.ค. 2569 05:00 UTC+7" [ref=e708] [cursor=pointer]:
+                          - /url: /th/livescore/ldu-de-quito-vs-always-ready-1535324
+                          - generic [ref=e709]: 27 พ.ค. 2569
+                          - generic [ref=e710]: 05:00 UTC+7
+                      - cell "LDU de Quito logo LDU de Quito" [ref=e711]:
+                        - link "LDU de Quito logo LDU de Quito" [ref=e712] [cursor=pointer]:
+                          - /url: /th/livescore/ldu-de-quito-vs-always-ready-1535324
+                          - generic [ref=e713]:
+                            - img "LDU de Quito logo" [ref=e716]
+                            - paragraph [ref=e717]: LDU de Quito
+                      - cell "VS" [ref=e718]:
+                        - link "VS" [ref=e719] [cursor=pointer]:
+                          - /url: /th/livescore/ldu-de-quito-vs-always-ready-1535324
+                      - cell "Always Ready logo Always Ready" [ref=e720]:
+                        - link "Always Ready logo Always Ready" [ref=e721] [cursor=pointer]:
+                          - /url: /th/livescore/ldu-de-quito-vs-always-ready-1535324
+                          - generic [ref=e722]:
+                            - img "Always Ready logo" [ref=e725]
+                            - paragraph [ref=e726]: Always Ready
+                      - cell "ยังไม่เริ่ม" [ref=e727]:
+                        - link "ยังไม่เริ่ม" [ref=e728] [cursor=pointer]:
+                          - /url: /th/livescore/ldu-de-quito-vs-always-ready-1535324
+                          - generic [ref=e729]: ยังไม่เริ่ม
+                      - cell "-" [ref=e730]:
+                        - generic [ref=e731]: "-"
+                    - row "27 พ.ค. 2569 07:30 UTC+7 Flamengo logo Flamengo VS Cusco logo Cusco ยังไม่เริ่ม -" [ref=e732]:
+                      - cell "27 พ.ค. 2569 07:30 UTC+7" [ref=e733]:
+                        - link "27 พ.ค. 2569 07:30 UTC+7" [ref=e734] [cursor=pointer]:
+                          - /url: /th/livescore/flamengo-vs-cusco-1535320
+                          - generic [ref=e735]: 27 พ.ค. 2569
+                          - generic [ref=e736]: 07:30 UTC+7
+                      - cell "Flamengo logo Flamengo" [ref=e737]:
+                        - link "Flamengo logo Flamengo" [ref=e738] [cursor=pointer]:
+                          - /url: /th/livescore/flamengo-vs-cusco-1535320
+                          - generic [ref=e739]:
+                            - img "Flamengo logo" [ref=e742]
+                            - paragraph [ref=e743]: Flamengo
+                      - cell "VS" [ref=e744]:
+                        - link "VS" [ref=e745] [cursor=pointer]:
+                          - /url: /th/livescore/flamengo-vs-cusco-1535320
+                      - cell "Cusco logo Cusco" [ref=e746]:
+                        - link "Cusco logo Cusco" [ref=e747] [cursor=pointer]:
+                          - /url: /th/livescore/flamengo-vs-cusco-1535320
+                          - generic [ref=e748]:
+                            - img "Cusco logo" [ref=e751]
+                            - paragraph [ref=e752]: Cusco
+                      - cell "ยังไม่เริ่ม" [ref=e753]:
+                        - link "ยังไม่เริ่ม" [ref=e754] [cursor=pointer]:
+                          - /url: /th/livescore/flamengo-vs-cusco-1535320
+                          - generic [ref=e755]: ยังไม่เริ่ม
+                      - cell "-" [ref=e756]:
+                        - generic [ref=e757]: "-"
+                    - row "27 พ.ค. 2569 07:30 UTC+7 Estudiantes L.P. logo Estudiantes L.P. VS Independiente Medellin logo Independiente Medellin ยังไม่เริ่ม -" [ref=e758]:
+                      - cell "27 พ.ค. 2569 07:30 UTC+7" [ref=e759]:
+                        - link "27 พ.ค. 2569 07:30 UTC+7" [ref=e760] [cursor=pointer]:
+                          - /url: /th/livescore/estudiantes-l-p-vs-independiente-medellin-1535319
+                          - generic [ref=e761]: 27 พ.ค. 2569
+                          - generic [ref=e762]: 07:30 UTC+7
+                      - cell "Estudiantes L.P. logo Estudiantes L.P." [ref=e763]:
+                        - link "Estudiantes L.P. logo Estudiantes L.P." [ref=e764] [cursor=pointer]:
+                          - /url: /th/livescore/estudiantes-l-p-vs-independiente-medellin-1535319
+                          - generic [ref=e765]:
+                            - img "Estudiantes L.P. logo" [ref=e768]
+                            - paragraph [ref=e769]: Estudiantes L.P.
+                      - cell "VS" [ref=e770]:
+                        - link "VS" [ref=e771] [cursor=pointer]:
+                          - /url: /th/livescore/estudiantes-l-p-vs-independiente-medellin-1535319
+                      - cell "Independiente Medellin logo Independiente Medellin" [ref=e772]:
+                        - link "Independiente Medellin logo Independiente Medellin" [ref=e773] [cursor=pointer]:
+                          - /url: /th/livescore/estudiantes-l-p-vs-independiente-medellin-1535319
+                          - generic [ref=e774]:
+                            - img "Independiente Medellin logo" [ref=e777]
+                            - paragraph [ref=e778]: Independiente Medellin
+                      - cell "ยังไม่เริ่ม" [ref=e779]:
+                        - link "ยังไม่เริ่ม" [ref=e780] [cursor=pointer]:
+                          - /url: /th/livescore/estudiantes-l-p-vs-independiente-medellin-1535319
+                          - generic [ref=e781]: ยังไม่เริ่ม
+                      - cell "-" [ref=e782]:
+                        - generic [ref=e783]: "-"
+                    - row "27 พ.ค. 2569 07:30 UTC+7 Club Nacional logo Club Nacional VS Coquimbo Unido logo Coquimbo Unido ยังไม่เริ่ม -" [ref=e784]:
+                      - cell "27 พ.ค. 2569 07:30 UTC+7" [ref=e785]:
+                        - link "27 พ.ค. 2569 07:30 UTC+7" [ref=e786] [cursor=pointer]:
+                          - /url: /th/livescore/club-nacional-vs-coquimbo-unido-1535326
+                          - generic [ref=e787]: 27 พ.ค. 2569
+                          - generic [ref=e788]: 07:30 UTC+7
+                      - cell "Club Nacional logo Club Nacional" [ref=e789]:
+                        - link "Club Nacional logo Club Nacional" [ref=e790] [cursor=pointer]:
+                          - /url: /th/livescore/club-nacional-vs-coquimbo-unido-1535326
+                          - generic [ref=e791]:
+                            - img "Club Nacional logo" [ref=e794]
+                            - paragraph [ref=e795]: Club Nacional
+                      - cell "VS" [ref=e796]:
+                        - link "VS" [ref=e797] [cursor=pointer]:
+                          - /url: /th/livescore/club-nacional-vs-coquimbo-unido-1535326
+                      - cell "Coquimbo Unido logo Coquimbo Unido" [ref=e798]:
+                        - link "Coquimbo Unido logo Coquimbo Unido" [ref=e799] [cursor=pointer]:
+                          - /url: /th/livescore/club-nacional-vs-coquimbo-unido-1535326
+                          - generic [ref=e800]:
+                            - img "Coquimbo Unido logo" [ref=e803]
+                            - paragraph [ref=e804]: Coquimbo Unido
+                      - cell "ยังไม่เริ่ม" [ref=e805]:
+                        - link "ยังไม่เริ่ม" [ref=e806] [cursor=pointer]:
+                          - /url: /th/livescore/club-nacional-vs-coquimbo-unido-1535326
+                          - generic [ref=e807]: ยังไม่เริ่ม
+                      - cell "-" [ref=e808]:
+                        - generic [ref=e809]: "-"
+                    - row "27 พ.ค. 2569 07:30 UTC+7 Universitario logo Universitario VS Deportes Tolima logo Deportes Tolima ยังไม่เริ่ม -" [ref=e810]:
+                      - cell "27 พ.ค. 2569 07:30 UTC+7" [ref=e811]:
+                        - link "27 พ.ค. 2569 07:30 UTC+7" [ref=e812] [cursor=pointer]:
+                          - /url: /th/livescore/universitario-vs-deportes-tolima-1535329
+                          - generic [ref=e813]: 27 พ.ค. 2569
+                          - generic [ref=e814]: 07:30 UTC+7
+                      - cell "Universitario logo Universitario" [ref=e815]:
+                        - link "Universitario logo Universitario" [ref=e816] [cursor=pointer]:
+                          - /url: /th/livescore/universitario-vs-deportes-tolima-1535329
+                          - generic [ref=e817]:
+                            - img "Universitario logo" [ref=e820]
+                            - paragraph [ref=e821]: Universitario
+                      - cell "VS" [ref=e822]:
+                        - link "VS" [ref=e823] [cursor=pointer]:
+                          - /url: /th/livescore/universitario-vs-deportes-tolima-1535329
+                      - cell "Deportes Tolima logo Deportes Tolima" [ref=e824]:
+                        - link "Deportes Tolima logo Deportes Tolima" [ref=e825] [cursor=pointer]:
+                          - /url: /th/livescore/universitario-vs-deportes-tolima-1535329
+                          - generic [ref=e826]:
+                            - img "Deportes Tolima logo" [ref=e829]
+                            - paragraph [ref=e830]: Deportes Tolima
+                      - cell "ยังไม่เริ่ม" [ref=e831]:
+                        - link "ยังไม่เริ่ม" [ref=e832] [cursor=pointer]:
+                          - /url: /th/livescore/universitario-vs-deportes-tolima-1535329
+                          - generic [ref=e833]: ยังไม่เริ่ม
+                      - cell "-" [ref=e834]:
+                        - generic [ref=e835]: "-"
+                    - row "28 พ.ค. 2569 05:00 UTC+7 Independiente del Valle logo Independiente del Valle VS Rosario Central logo Rosario Central ยังไม่เริ่ม -" [ref=e836]:
+                      - cell "28 พ.ค. 2569 05:00 UTC+7" [ref=e837]:
+                        - link "28 พ.ค. 2569 05:00 UTC+7" [ref=e838] [cursor=pointer]:
+                          - /url: /th/livescore/independiente-del-valle-vs-rosario-central-1535322
+                          - generic [ref=e839]: 28 พ.ค. 2569
+                          - generic [ref=e840]: 05:00 UTC+7
+                      - cell "Independiente del Valle logo Independiente del Valle" [ref=e841]:
+                        - link "Independiente del Valle logo Independiente del Valle" [ref=e842] [cursor=pointer]:
+                          - /url: /th/livescore/independiente-del-valle-vs-rosario-central-1535322
+                          - generic [ref=e843]:
+                            - img "Independiente del Valle logo" [ref=e846]
+                            - paragraph [ref=e847]: Independiente del Valle
+                      - cell "VS" [ref=e848]:
+                        - link "VS" [ref=e849] [cursor=pointer]:
+                          - /url: /th/livescore/independiente-del-valle-vs-rosario-central-1535322
+                      - cell "Rosario Central logo Rosario Central" [ref=e850]:
+                        - link "Rosario Central logo Rosario Central" [ref=e851] [cursor=pointer]:
+                          - /url: /th/livescore/independiente-del-valle-vs-rosario-central-1535322
+                          - generic [ref=e852]:
+                            - img "Rosario Central logo" [ref=e855]
+                            - paragraph [ref=e856]: Rosario Central
+                      - cell "ยังไม่เริ่ม" [ref=e857]:
+                        - link "ยังไม่เริ่ม" [ref=e858] [cursor=pointer]:
+                          - /url: /th/livescore/independiente-del-valle-vs-rosario-central-1535322
+                          - generic [ref=e859]: ยังไม่เริ่ม
+                      - cell "-" [ref=e860]:
+                        - generic [ref=e861]: "-"
+                    - row "28 พ.ค. 2569 05:00 UTC+7 Libertad Asuncion logo Libertad Asuncion VS UCV logo UCV ยังไม่เริ่ม -" [ref=e862]:
+                      - cell "28 พ.ค. 2569 05:00 UTC+7" [ref=e863]:
+                        - link "28 พ.ค. 2569 05:00 UTC+7" [ref=e864] [cursor=pointer]:
+                          - /url: /th/livescore/libertad-asuncion-vs-ucv-1535325
+                          - generic [ref=e865]: 28 พ.ค. 2569
+                          - generic [ref=e866]: 05:00 UTC+7
+                      - cell "Libertad Asuncion logo Libertad Asuncion" [ref=e867]:
+                        - link "Libertad Asuncion logo Libertad Asuncion" [ref=e868] [cursor=pointer]:
+                          - /url: /th/livescore/libertad-asuncion-vs-ucv-1535325
+                          - generic [ref=e869]:
+                            - img "Libertad Asuncion logo" [ref=e872]
+                            - paragraph [ref=e873]: Libertad Asuncion
+                      - cell "VS" [ref=e874]:
+                        - link "VS" [ref=e875] [cursor=pointer]:
+                          - /url: /th/livescore/libertad-asuncion-vs-ucv-1535325
+                      - cell "UCV logo UCV" [ref=e876]:
+                        - link "UCV logo UCV" [ref=e877] [cursor=pointer]:
+                          - /url: /th/livescore/libertad-asuncion-vs-ucv-1535325
+                          - generic [ref=e878]:
+                            - img "UCV logo" [ref=e881]
+                            - paragraph [ref=e882]: UCV
+                      - cell "ยังไม่เริ่ม" [ref=e883]:
+                        - link "ยังไม่เริ่ม" [ref=e884] [cursor=pointer]:
+                          - /url: /th/livescore/libertad-asuncion-vs-ucv-1535325
+                          - generic [ref=e885]: ยังไม่เริ่ม
+                      - cell "-" [ref=e886]:
+                        - generic [ref=e887]: "-"
+              - generic [ref=e888]:
+                - generic [ref=e890]:
+                  - link "League 1129 logo League 1129" [ref=e891] [cursor=pointer]:
+                    - /url: /th/football/leagues/league-1129-1129?season=2025
+                    - img "League 1129 logo" [ref=e893]
+                    - generic [ref=e894]:
+                      - heading "League 1129" [level=3] [ref=e896]
+                      - paragraph
+                  - generic [ref=e897]:
+                    - generic [ref=e898]:
+                      - generic [ref=e899]: "1"
+                      - generic [ref=e900]: คู่
+                    - generic [ref=e901]:
+                      - generic [ref=e902]: "0"
+                      - generic [ref=e903]: สด
+                    - generic [ref=e904]:
+                      - generic [ref=e905]: "1"
+                      - generic [ref=e906]: กำลังจะแข่ง
+                    - generic [ref=e907]:
+                      - generic [ref=e908]: "0"
+                      - generic [ref=e909]: จบ
+                    - generic [ref=e910]:
+                      - generic [ref=e911]: "0"
+                      - generic [ref=e912]: เลื่อน
+                    - generic [ref=e913]:
+                      - generic [ref=e914]: "0"
+                      - generic [ref=e915]: ยกเลิก
+                - table [ref=e917]:
+                  - rowgroup [ref=e925]:
+                    - row "เวลา เจ้าบ้าน สกอร์ ทีมเยือน สถานะ ทายผล" [ref=e926]:
+                      - columnheader "เวลา" [ref=e927]
+                      - columnheader "เจ้าบ้าน" [ref=e928]
+                      - columnheader "สกอร์" [ref=e929]
+                      - columnheader "ทีมเยือน" [ref=e930]
+                      - columnheader "สถานะ" [ref=e931]
+                      - columnheader "ทายผล" [ref=e932]
+                  - rowgroup [ref=e933]:
+                    - row "27 พ.ค. 2569 19:00 UTC+7 Buriram United logo Buriram United VS Selangor logo Selangor ยังไม่เริ่ม -" [ref=e934]:
+                      - cell "27 พ.ค. 2569 19:00 UTC+7" [ref=e935]:
+                        - link "27 พ.ค. 2569 19:00 UTC+7" [ref=e936] [cursor=pointer]:
+                          - /url: /th/livescore/buriram-united-vs-selangor-1545068
+                          - generic [ref=e937]: 27 พ.ค. 2569
+                          - generic [ref=e938]: 19:00 UTC+7
+                      - cell "Buriram United logo Buriram United" [ref=e939]:
+                        - link "Buriram United logo Buriram United" [ref=e940] [cursor=pointer]:
+                          - /url: /th/livescore/buriram-united-vs-selangor-1545068
+                          - generic [ref=e941]:
+                            - img "Buriram United logo" [ref=e944]
+                            - paragraph [ref=e945]: Buriram United
+                      - cell "VS" [ref=e946]:
+                        - link "VS" [ref=e947] [cursor=pointer]:
+                          - /url: /th/livescore/buriram-united-vs-selangor-1545068
+                      - cell "Selangor logo Selangor" [ref=e948]:
+                        - link "Selangor logo Selangor" [ref=e949] [cursor=pointer]:
+                          - /url: /th/livescore/buriram-united-vs-selangor-1545068
+                          - generic [ref=e950]:
+                            - img "Selangor logo" [ref=e953]
+                            - paragraph [ref=e954]: Selangor
+                      - cell "ยังไม่เริ่ม" [ref=e955]:
+                        - link "ยังไม่เริ่ม" [ref=e956] [cursor=pointer]:
+                          - /url: /th/livescore/buriram-united-vs-selangor-1545068
+                          - generic [ref=e957]: ยังไม่เริ่ม
+                      - cell "-" [ref=e958]:
+                        - generic [ref=e959]: "-"
+              - generic [ref=e960]:
+                - generic [ref=e962]:
+                  - link "League 848 logo League 848" [ref=e963] [cursor=pointer]:
+                    - /url: /th/football/leagues/league-848-848?season=2025
+                    - img "League 848 logo" [ref=e965]
+                    - generic [ref=e966]:
+                      - heading "League 848" [level=3] [ref=e968]
+                      - paragraph
+                  - generic [ref=e969]:
+                    - generic [ref=e970]:
+                      - generic [ref=e971]: "1"
+                      - generic [ref=e972]: คู่
+                    - generic [ref=e973]:
+                      - generic [ref=e974]: "0"
+                      - generic [ref=e975]: สด
+                    - generic [ref=e976]:
+                      - generic [ref=e977]: "1"
+                      - generic [ref=e978]: กำลังจะแข่ง
+                    - generic [ref=e979]:
+                      - generic [ref=e980]: "0"
+                      - generic [ref=e981]: จบ
+                    - generic [ref=e982]:
+                      - generic [ref=e983]: "0"
+                      - generic [ref=e984]: เลื่อน
+                    - generic [ref=e985]:
+                      - generic [ref=e986]: "0"
+                      - generic [ref=e987]: ยกเลิก
+                - table [ref=e989]:
+                  - rowgroup [ref=e997]:
+                    - row "เวลา เจ้าบ้าน สกอร์ ทีมเยือน สถานะ ทายผล" [ref=e998]:
+                      - columnheader "เวลา" [ref=e999]
+                      - columnheader "เจ้าบ้าน" [ref=e1000]
+                      - columnheader "สกอร์" [ref=e1001]
+                      - columnheader "ทีมเยือน" [ref=e1002]
+                      - columnheader "สถานะ" [ref=e1003]
+                      - columnheader "ทายผล" [ref=e1004]
+                  - rowgroup [ref=e1005]:
+                    - row "28 พ.ค. 2569 02:00 UTC+7 Crystal Palace logo Crystal Palace VS Rayo Vallecano logo Rayo Vallecano ยังไม่เริ่ม -" [ref=e1006]:
+                      - cell "28 พ.ค. 2569 02:00 UTC+7" [ref=e1007]:
+                        - link "28 พ.ค. 2569 02:00 UTC+7" [ref=e1008] [cursor=pointer]:
+                          - /url: /th/livescore/crystal-palace-vs-rayo-vallecano-1544608
+                          - generic [ref=e1009]: 28 พ.ค. 2569
+                          - generic [ref=e1010]: 02:00 UTC+7
+                      - cell "Crystal Palace logo Crystal Palace" [ref=e1011]:
+                        - link "Crystal Palace logo Crystal Palace" [ref=e1012] [cursor=pointer]:
+                          - /url: /th/livescore/crystal-palace-vs-rayo-vallecano-1544608
+                          - generic [ref=e1013]:
+                            - img "Crystal Palace logo" [ref=e1016]
+                            - paragraph [ref=e1017]: Crystal Palace
+                      - cell "VS" [ref=e1018]:
+                        - link "VS" [ref=e1019] [cursor=pointer]:
+                          - /url: /th/livescore/crystal-palace-vs-rayo-vallecano-1544608
+                      - cell "Rayo Vallecano logo Rayo Vallecano" [ref=e1020]:
+                        - link "Rayo Vallecano logo Rayo Vallecano" [ref=e1021] [cursor=pointer]:
+                          - /url: /th/livescore/crystal-palace-vs-rayo-vallecano-1544608
+                          - generic [ref=e1022]:
+                            - img "Rayo Vallecano logo" [ref=e1025]
+                            - paragraph [ref=e1026]: Rayo Vallecano
+                      - cell "ยังไม่เริ่ม" [ref=e1027]:
+                        - link "ยังไม่เริ่ม" [ref=e1028] [cursor=pointer]:
+                          - /url: /th/livescore/crystal-palace-vs-rayo-vallecano-1544608
+                          - generic [ref=e1029]: ยังไม่เริ่ม
+                      - cell "-" [ref=e1030]:
+                        - generic [ref=e1031]: "-"
+          - generic [ref=e1032]:
+            - generic [ref=e1033]:
+              - img [ref=e1034]
+              - heading "มุมมองตารางครบถ้วน" [level=3] [ref=e1036]
+              - paragraph [ref=e1037]: ดูโปรแกรมที่กำลังจะมาถึง พร้อมเวลาแข่ง บริบทลีก และลิงก์เข้าสู่การทายผล
+            - generic [ref=e1038]:
+              - img [ref=e1039]
+              - heading "ประสบการณ์เน้นทักษะ" [level=3] [ref=e1042]
+              - paragraph [ref=e1043]: การทายผลอิงจากความรู้ฟุตบอลและแต้มในแพลตฟอร์ม ไม่มีการเดิมพันด้วยเงินจริง
+            - generic [ref=e1044]:
+              - img [ref=e1045]
+              - heading "สัญญาณสถานะแมตช์" [level=3] [ref=e1047]
+              - paragraph [ref=e1048]: สแกนสถานะสด กำลังจะแข่ง และจบแล้วได้รวดเร็ว เหมาะกับวันที่มีหลายคู่พร้อมกัน
+    - contentinfo [ref=e1049]:
+      - generic [ref=e1050]:
+        - generic [ref=e1051]:
+          - generic [ref=e1052]:
+            - link "ScoreMatrix" [ref=e1053] [cursor=pointer]:
+              - /url: /th
+              - img "ScoreMatrix" [ref=e1055]
+            - paragraph [ref=e1056]: ScoreMatrix เป็นเกมทายผลที่ใช้ทักษะ แต้มไม่มีมูลค่าเป็นเงินสดและไม่สามารถถอนเป็นเงินได้
+          - generic [ref=e1057]:
+            - generic [ref=e1058]:
+              - heading "แพลตฟอร์ม" [level=4] [ref=e1059]
+              - list [ref=e1060]:
+                - listitem [ref=e1061]:
+                  - link "ผลสด" [ref=e1062] [cursor=pointer]:
+                    - /url: /th/livescore
+                - listitem [ref=e1063]:
+                  - link "ทายผล" [ref=e1064] [cursor=pointer]:
+                    - /url: /th/predict
+                - listitem [ref=e1065]:
+                  - link "AI วิเคราะห์" [ref=e1066] [cursor=pointer]:
+                    - /url: /th/ai-insight
+                - listitem [ref=e1067]:
+                  - link "อันดับ" [ref=e1068] [cursor=pointer]:
+                    - /url: /th/leaderboard
+            - generic [ref=e1069]:
+              - heading "ฟีเจอร์" [level=4] [ref=e1070]
+              - list [ref=e1071]:
+                - listitem [ref=e1072]:
+                  - link "ภารกิจ" [ref=e1073] [cursor=pointer]:
+                    - /url: /th/missions
+                - listitem [ref=e1074]:
+                  - link "รางวัล" [ref=e1075] [cursor=pointer]:
+                    - /url: /th/rewards
+                - listitem [ref=e1076]:
+                  - link "ลีก" [ref=e1077] [cursor=pointer]:
+                    - /url: /th/leagues
+                - listitem [ref=e1078]:
+                  - link "ข่าวสาร" [ref=e1079] [cursor=pointer]:
+                    - /url: /th/news
+            - generic [ref=e1080]:
+              - heading "กฎหมาย" [level=4] [ref=e1081]
+              - list [ref=e1082]:
+                - listitem [ref=e1083]:
+                  - link "ข้อตกลงการใช้งาน" [ref=e1084] [cursor=pointer]:
+                    - /url: /th/legal/terms
+                - listitem [ref=e1085]:
+                  - link "นโยบายความเป็นส่วนตัว" [ref=e1086] [cursor=pointer]:
+                    - /url: /th/legal/privacy
+                - listitem [ref=e1087]:
+                  - link "กฎการรับรางวัล" [ref=e1088] [cursor=pointer]:
+                    - /url: /th/legal/reward-rules
+                - listitem [ref=e1089]:
+                  - link "ประกาศทางกฎหมาย" [ref=e1090] [cursor=pointer]:
+                    - /url: /th/legal/legal-notice
+        - generic [ref=e1091]:
+          - paragraph [ref=e1092]: © 2026 ScoreMatrix สงวนลิขสิทธิ์
+          - paragraph [ref=e1093]: ไม่มีการถอนเงินสด ไม่มีการพนันด้วยเงินจริง
+  - button "Open Next.js Dev Tools" [ref=e1099] [cursor=pointer]:
+    - img [ref=e1100]
+  - alert [ref=e1103]

@@ -111,8 +111,6 @@ export function LiveMatchHighlights({
     : apiMatches.length > 0
       ? apiMatches
       : liveMatches;
-  const shouldMarquee = displayMatches.length > 4;
-  const visibleMatches = shouldMarquee ? [...displayMatches, ...displayMatches] : displayMatches;
 
   return (
     <div className="flex flex-col gap-4">
@@ -147,26 +145,13 @@ export function LiveMatchHighlights({
           {t("livescore.noMatches")}
         </Card>
       ) : (
-        <div className="relative overflow-hidden">
-          {shouldMarquee && (
-            <>
-              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-[#050812] to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-[#050812] to-transparent" />
-            </>
-          )}
-          <div
-            className={`${shouldMarquee ? "live-match-marquee w-max" : "overflow-x-auto scrollbar-hide"} flex gap-4 pb-1`}
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {visibleMatches.map((match, index) => (
-              <Link
-                key={`${match.id}-${index}`}
-                href={`/${locale}/livescore/${match.id}`}
-                aria-hidden={shouldMarquee && index >= displayMatches.length}
-                className="flex-shrink-0"
-                tabIndex={shouldMarquee && index >= displayMatches.length ? -1 : undefined}
-              >
-                <Card neon="green" hover className="cyber-live-card relative w-64 overflow-hidden border-green-400/45 bg-[#07140f]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {displayMatches.map((match) => (
+            <Link
+              key={match.id}
+              href={`/${locale}/livescore/${match.id}`}
+            >
+              <Card neon="green" hover className="cyber-live-card relative overflow-hidden border-green-400/45 bg-[#07140f]">
                   <div className="cyber-live-card-scan absolute inset-0" />
                   <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-300 via-cyan-300 to-green-300" />
                   <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-green-400/15 blur-2xl" />
@@ -215,7 +200,6 @@ export function LiveMatchHighlights({
               </Link>
             ))}
           </div>
-        </div>
       )}
     </div>
   );

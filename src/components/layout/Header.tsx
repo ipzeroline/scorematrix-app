@@ -108,11 +108,9 @@ export function Header() {
 
         <div className="flex-1" />
 
-        <div className="hidden sm:block">
-          <LanguageSwitcher />
-        </div>
-
         {isLoggedIn && <NotificationBell />}
+
+        <LanguageSwitcher />
 
         <UserMenu
           isLoggedIn={isLoggedIn}

@@ -24,7 +24,7 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { useUserStore } from "@/stores/user-store";
 import { MatchStatus } from "@/types/common";
-import { THAILAND_TIME_ZONE_LABEL, cn, formatDate, formatMatchTimeWithZone } from "@/lib/utils";
+import { THAILAND_TIME_ZONE_LABEL, cn, formatDate, formatTime } from "@/lib/utils";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug, buildLeagueSeoSlug } from "@/lib/football-slugs";
 import {
@@ -588,16 +588,37 @@ const LeagueSection = memo(function LeagueSection({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-sm">
+      <div className="space-y-2 p-3 sm:hidden">
+        {matches.map((match, index) => (
+          <MatchMobileCard
+            key={match.id}
+            match={match}
+            index={index}
+            locale={locale}
+            labels={labels}
+            isLoggedIn={isLoggedIn}
+          />
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto sm:block">
+        <table className="w-full min-w-[860px] table-fixed border-collapse text-sm">
+          <colgroup>
+            <col className="w-[220px]" />
+            <col className="w-[220px]" />
+            <col className="w-[96px]" />
+            <col className="w-[220px]" />
+            <col className="w-[140px]" />
+            <col className="w-[120px]" />
+          </colgroup>
           <thead>
             <tr className="border-b border-gray-800 bg-[#0a0a0f] text-left text-[10px] uppercase tracking-wider text-gray-500">
-              <th className="w-[150px] px-4 py-3 text-center font-semibold">{labels.time}</th>
-              <th className="px-3 py-3 text-right font-semibold">{labels.home}</th>
-              <th className="w-[96px] px-3 py-3 text-center font-semibold">{labels.score}</th>
-              <th className="px-3 py-3 font-semibold">{labels.away}</th>
-              <th className="w-[180px] px-4 py-3 text-right font-semibold">{labels.status}</th>
-              <th className="w-[120px] px-4 py-3 text-right font-semibold">{labels.predict}</th>
+              <th className="px-4 py-3 text-center text-[11px] font-semibold">{labels.time}</th>
+              <th className="px-4 py-3 text-right font-semibold">{labels.home}</th>
+              <th className="px-4 py-3 text-center font-semibold">{labels.score}</th>
+              <th className="px-4 py-3 text-left font-semibold">{labels.away}</th>
+              <th className="px-4 py-3 text-right font-semibold">{labels.status}</th>
+              <th className="px-4 py-3 text-right font-semibold">{labels.predict}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-800/70">
@@ -615,6 +636,86 @@ const LeagueSection = memo(function LeagueSection({
         </table>
       </div>
     </section>
+  );
+});
+
+const MatchMobileCard = memo(function MatchMobileCard({
+  match,
+  index,
+  locale,
+  labels,
+  isLoggedIn,
+}: {
+  match: ApiFootballFixture;
+  index: number;
+  locale: string;
+  labels: MatchTableLabels;
+  isLoggedIn: boolean;
+}) {
+  const matchSlug = useMemo(() => buildFixtureSeoSlug(match), [match]);
+  const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
+  const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
+  const statusGroup = useMemo(() => getFixtureStatusGroup(match), [match]);
+  const statusLabel = useMemo(
+    () => getFixtureStatusLabel(match, labels.statusLabels),
+    [match, labels.statusLabels]
+  );
+  const rowTone = index % 2 === 0 ? "bg-[#101018]" : "bg-cyan-500/[0.025]";
+
+  return (
+    <Link
+      href={`/${locale}/livescore/${matchSlug}`}
+      className="block"
+    >
+      <Card
+        hover
+        className={cn("overflow-hidden p-0", rowTone)}
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-gray-800/70 bg-black/15 px-3 py-2">
+          <div className="flex min-w-0 items-center gap-2 rounded-md border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5">
+            <CalendarDays size={14} className="shrink-0 text-cyan-300" aria-hidden="true" />
+            <span className="min-w-0 truncate text-xs font-medium text-gray-300">
+              {matchDate}
+            </span>
+            <span className="whitespace-nowrap font-mono text-sm font-bold text-cyan-300">
+              {matchTime}
+            </span>
+          </div>
+          <StatusBadge
+            status={match.status}
+            label={statusLabel}
+            className="justify-self-center text-center"
+          />
+        </div>
+
+        <div className="min-w-0 px-3 py-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-start gap-4">
+            <MobileTeamInline
+              name={match.home.name}
+              logo={match.home.logo}
+              accent="cyan"
+            />
+            <span className="mx-auto flex min-h-9 w-[68px] shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/35 px-2 text-center font-mono text-base font-bold text-white shadow-[0_0_18px_rgba(34,211,238,0.08)]">
+              {match.score.home !== null
+                ? `${match.score.home} - ${match.score.away}`
+                : labels.vs}
+            </span>
+            <MobileTeamInline
+              name={match.away.name}
+              logo={match.away.logo}
+              accent="magenta"
+            />
+          </div>
+          {isLoggedIn && statusGroup === MatchStatus.UPCOMING && (
+            <div className="mt-3 flex justify-center">
+              <span className="inline-flex min-h-9 items-center justify-center rounded-lg bg-amber-500 px-4 text-xs font-semibold text-black transition-all duration-200 group-hover:bg-amber-400">
+                {labels.predictScore}
+              </span>
+            </div>
+          )}
+        </div>
+      </Card>
+    </Link>
   );
 });
 
@@ -643,21 +744,21 @@ const MatchRow = memo(function MatchRow({
 
   return (
     <tr className={cn(rowTone, "hover:bg-white/[0.045]")}>
-      <td className="px-4 py-3 text-center">
+      <td className="px-1.5 py-2.5 text-center sm:px-4 sm:py-3">
         <Link
           href={`/${locale}/livescore/${matchSlug}`}
-          className="mx-auto flex w-[124px] flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center hover:border-cyan-400/40"
+          className="mx-auto flex w-[54px] flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-1 py-1.5 text-center hover:border-cyan-400/40 sm:w-[204px] sm:flex-row sm:justify-center sm:gap-1.5 sm:px-3 sm:py-2.5"
         >
-          <span className="max-w-full truncate text-[10px] font-medium leading-none text-gray-300">
+          <span className="hidden max-w-full truncate text-xs font-medium leading-none text-gray-300 sm:block">
             {matchDate}
           </span>
-          <span className="mt-1 whitespace-nowrap font-mono text-[11px] font-bold leading-none text-cyan-300">
+          <span className="whitespace-nowrap font-mono text-[10px] font-bold leading-none text-cyan-300 sm:text-sm">
             {matchTime}
           </span>
         </Link>
       </td>
-      <td className="px-3 py-3">
-        <Link href={`/${locale}/livescore/${matchSlug}`}>
+      <td className="py-2.5 pl-1 pr-2 sm:py-3 sm:pl-3 sm:pr-5">
+        <Link href={`/${locale}/livescore/${matchSlug}`} className="block min-w-0">
           <TeamInline
             name={match.home.name}
             logo={match.home.logo}
@@ -665,27 +766,27 @@ const MatchRow = memo(function MatchRow({
           />
         </Link>
       </td>
-      <td className="px-3 py-3 text-center">
+      <td className="px-2 py-2.5 text-center sm:px-4 sm:py-3">
         <Link
           href={`/${locale}/livescore/${matchSlug}`}
-          className="inline-flex min-w-16 justify-center rounded-md border border-gray-800 bg-black/20 px-2 py-1 font-mono text-sm font-bold text-white"
+          className="inline-flex min-w-14 justify-center rounded-md border border-gray-800 bg-black/20 px-2 py-1 font-mono text-xs font-bold text-white sm:min-w-16 sm:px-2.5 sm:text-sm"
         >
           {match.score.home !== null
             ? `${match.score.home} - ${match.score.away}`
             : labels.vs}
         </Link>
       </td>
-      <td className="px-3 py-3">
-        <Link href={`/${locale}/livescore/${matchSlug}`}>
+      <td className="py-2.5 pl-2 pr-1 sm:py-3 sm:pl-5 sm:pr-3">
+        <Link href={`/${locale}/livescore/${matchSlug}`} className="block min-w-0">
           <TeamInline name={match.away.name} logo={match.away.logo} />
         </Link>
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="hidden px-4 py-3 text-right sm:table-cell">
         <Link href={`/${locale}/livescore/${matchSlug}`}>
           <StatusBadge status={match.status} label={statusLabel} />
         </Link>
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="hidden px-4 py-3 text-right sm:table-cell">
         {isLoggedIn && statusGroup === MatchStatus.UPCOMING ? (
           <a
             href={`/${locale}/predict/${matchSlug}`}
@@ -761,13 +862,34 @@ function TeamInline({
   return (
     <div
       className={cn(
-        "flex min-w-0 items-center gap-2",
+        "flex min-w-0 items-center gap-1.5 sm:gap-2",
         align === "right" && "justify-end text-right"
       )}
     >
-      {align === "left" && <ApiTeamLogo name={name} logo={logo} size="sm" />}
-      <p className="truncate text-sm font-semibold text-white">{name}</p>
+      {align !== "right" && <ApiTeamLogo name={name} logo={logo} size="sm" />}
+      <p className="min-w-0 truncate text-[14px] font-semibold text-white sm:text-sm lg:text-[15px]">{name}</p>
       {align === "right" && <ApiTeamLogo name={name} logo={logo} size="sm" />}
+    </div>
+  );
+}
+
+function MobileTeamInline({
+  name,
+  logo,
+  accent,
+}: {
+  name: string;
+  logo: string | null;
+  accent: "cyan" | "magenta";
+}) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+      <div className="flex h-10 w-full items-center justify-center">
+        <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />
+      </div>
+      <span className="line-clamp-2 min-h-[28px] max-w-[140px] break-words text-center text-[13px] font-semibold leading-tight text-white sm:max-w-[144px] sm:text-[13px]">
+        {name}
+      </span>
     </div>
   );
 }
@@ -777,5 +899,5 @@ function formatMatchDate(match: ApiFootballFixture, locale: string) {
 }
 
 function formatMatchTime(match: ApiFootballFixture, locale: string) {
-  return formatMatchTimeWithZone(match.kickoffTime, locale);
+  return formatTime(match.kickoffTime, locale);
 }

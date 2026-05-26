@@ -73,13 +73,13 @@ export function UserMenu({
       <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <Link
           href={`/${locale}/auth/register`}
-          className="whitespace-nowrap rounded-lg bg-cyan-500 px-2 py-1 text-[11px] font-semibold text-black transition-colors hover:bg-cyan-400 sm:px-3 sm:py-1.5 sm:text-sm"
+          className="whitespace-nowrap rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-cyan-400 sm:px-3 sm:py-1.5 sm:text-sm"
         >
           {t("auth.register")}
         </Link>
         <Link
           href={`/${locale}/auth/login`}
-          className="whitespace-nowrap px-1.5 py-1 text-[11px] font-medium text-gray-400 transition-colors hover:text-white sm:px-3 sm:py-1.5 sm:text-sm"
+          className="whitespace-nowrap px-2.5 py-1.5 text-xs font-medium text-gray-400 transition-colors hover:text-white sm:px-3 sm:py-1.5 sm:text-sm"
         >
           {t("auth.login")}
         </Link>
