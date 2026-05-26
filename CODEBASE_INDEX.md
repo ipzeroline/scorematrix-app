@@ -44,7 +44,7 @@ Main pages:
 - `src/app/[locale]/page.tsx` dashboard/home
 - Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `credits`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
 - Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`
-- Detail routes include `predict/[matchId]`, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `match/[providerId]`
+- Detail routes include `predict/[matchId]`, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
 - Admin pages under `src/app/[locale]/(admin)/admin/*`
 - Legal pages under `src/app/[locale]/legal/*`
 
@@ -109,8 +109,9 @@ Static data:
   - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
   - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
-- `src/app/[locale]/livescore/page.tsx` uses `GET /fixtures/today` through `getApiFootballTodayFixtures` for its initial fixture list; the `Livescore` client view displays only fixtures whose normalized status group is `live`.
-- `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}`
+- `src/app/[locale]/livescore/page.tsx` uses `GET /fixtures/today` through `getApiFootballTodayFixtures` for its initial fixture list with `revalidate: 0` and no limit; the `Livescore` client view displays only fixtures whose normalized status group is `live`.
+- `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
+- `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
 - `src/app/[locale]/matches/page.tsx` uses `GET /fixtures/upcoming` through `loadUpcomingFixtures`; `MatchesApi` includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes

@@ -16,6 +16,13 @@ export type ApiFootballSource = "api-football" | "mock";
 export interface ApiFootballFixture {
   id: string;
   apiFixtureId: number | null;
+  referee: string | null;
+  timezone: string | null;
+  timestamp: number | null;
+  periods: {
+    first: number | null;
+    second: number | null;
+  };
   league: {
     id: string;
     apiLeagueId: number | null;
@@ -46,6 +53,8 @@ export interface ApiFootballFixture {
   };
   status: MatchStatus;
   statusShort: string;
+  statusLong: string;
+  statusExtra: number | null;
   elapsed: number | null;
   kickoffTime: string;
   venue: string;
@@ -383,6 +392,10 @@ export interface ApiFootballLineup {
     id: number;
     name: string;
     logo: string | null;
+    colors?: {
+      player?: ApiFootballKitColor | null;
+      goalkeeper?: ApiFootballKitColor | null;
+    } | null;
   };
   coach: {
     id: number | null;
@@ -392,6 +405,12 @@ export interface ApiFootballLineup {
   formation: string | null;
   startXI: ApiFootballLineupPlayer[];
   substitutes: ApiFootballLineupPlayer[];
+}
+
+export interface ApiFootballKitColor {
+  primary: string | null;
+  number: string | null;
+  border: string | null;
 }
 
 export interface ApiFootballLineupPlayer {
@@ -615,6 +634,11 @@ export async function getApiFootballFixtureDetails(
     {}
   );
   const details = normalizeFixtureDetailsPayload(payload);
+
+  if (details.source === "mock") {
+    throw new ApiFootballError("Fixture details must come from the live football API", 502);
+  }
+
   const fixture = details.fixture as ApiFootballFixture | undefined;
 
   if (!fixture) {
@@ -744,6 +768,13 @@ export function getMockApiFootballFixtures(limit?: number): ApiFootballFixture[]
     return {
       id: match.id,
       apiFixtureId: null,
+      referee: null,
+      timezone: null,
+      timestamp: null,
+      periods: {
+        first: null,
+        second: null,
+      },
       league: {
         id: league?.id ?? match.leagueId,
         apiLeagueId: null,
@@ -774,6 +805,8 @@ export function getMockApiFootballFixtures(limit?: number): ApiFootballFixture[]
       },
       status: match.status,
       statusShort: statusShortFor(match.status),
+      statusLong: match.status,
+      statusExtra: null,
       elapsed: match.minute,
       kickoffTime: match.kickoffTime,
       venue: match.venue,
@@ -813,6 +846,13 @@ function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
   return {
     id: `api-football-${fixture.provider_id}`,
     apiFixtureId: fixture.provider_id,
+    referee: null,
+    timezone: null,
+    timestamp: null,
+    periods: {
+      first: null,
+      second: null,
+    },
     league: {
       id: `api-league-${fixture.league_id}`,
       apiLeagueId: fixture.league_id,
@@ -843,6 +883,8 @@ function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
     },
     status,
     statusShort: fixture.status.short,
+    statusLong: fixture.status.long,
+    statusExtra: null,
     elapsed: fixture.status.elapsed,
     kickoffTime: fixture.starts_at,
     venue: "",

@@ -18,7 +18,14 @@ type RawFixtureDetail = {
   provider_id?: number | null;
   fixture?: {
     id?: number | null;
+    referee?: string | null;
+    timezone?: string | null;
     date?: string | null;
+    timestamp?: number | null;
+    periods?: {
+      first?: number | null;
+      second?: number | null;
+    } | null;
     venue?: {
       name?: string | null;
       city?: string | null;
@@ -27,6 +34,7 @@ type RawFixtureDetail = {
       short?: string | null;
       long?: string | null;
       elapsed?: number | null;
+      extra?: number | null;
     } | null;
   } | null;
   league?: {
@@ -109,6 +117,13 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
     fixture: {
       id: fixtureId ? `api-football-${fixtureId}` : "api-football-unknown",
       apiFixtureId: fixtureId,
+      referee: rawFixture.referee ?? null,
+      timezone: rawFixture.timezone ?? null,
+      timestamp: rawFixture.timestamp ?? null,
+      periods: {
+        first: rawFixture.periods?.first ?? null,
+        second: rawFixture.periods?.second ?? null,
+      },
       league: {
         id: detail.league?.id ? `api-league-${detail.league.id}` : "api-league-unknown",
         apiLeagueId: detail.league?.id ?? null,
@@ -127,6 +142,8 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       },
       status: normalizeFixtureStatus(rawFixture.status?.short),
       statusShort: rawFixture.status?.short ?? "",
+      statusLong: rawFixture.status?.long ?? "",
+      statusExtra: rawFixture.status?.extra ?? null,
       elapsed: rawFixture.status?.elapsed ?? null,
       kickoffTime: rawFixture.date ?? "",
       venue: formatVenue(rawFixture.venue),

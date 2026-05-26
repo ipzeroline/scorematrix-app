@@ -58,7 +58,9 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
     setError(null);
 
     try {
-      const response = await fetch("/api/football/fixtures/today?limit=50");
+      const response = await fetch("/api/football/fixtures/today", {
+        cache: "no-store",
+      });
       const data = (await response.json()) as FixturesPayload;
 
       if (!response.ok) {
@@ -211,70 +213,67 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                     const detailHref = buildMatchDetailHref(match, locale);
 
                     return (
-                      <Card
-                        key={match.id}
-                        hover
-                        className={cn(
-                          "overflow-hidden p-0 sm:grid sm:grid-cols-[220px_minmax(0,1fr)_104px] sm:gap-x-3 sm:p-3 lg:grid-cols-[220px_minmax(0,1fr)_116px]",
-                          index % 2 === 0 ? "bg-[#12121a]" : "bg-cyan-500/[0.035]"
-                        )}
-                      >
-                        <div className="flex items-center justify-between gap-2 px-3 py-2.5 sm:col-span-3 sm:px-4 sm:py-3">
-                          <div className="inline-flex items-center gap-2 rounded-md border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5 font-mono text-sm font-bold text-cyan-200 sm:text-[13px]">
-                            <span className="font-medium text-gray-300">
-                              {formatDate(match.kickoffTime, locale)}
-                            </span>
-                            <span className="whitespace-nowrap">
-                              {formatTime(match.kickoffTime, locale)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <StatusBadge
-                              status={match.status}
-                              label={getFixtureStatusLabel(match, statusLabels)}
-                              className="text-center sm:hidden"
-                            />
-                            <div className="hidden sm:block">
+                      <Link key={match.id} href={detailHref} className="block">
+                        <Card
+                          hover
+                          className={cn(
+                            "overflow-hidden p-0 sm:grid sm:grid-cols-[220px_minmax(0,1fr)_104px] sm:gap-x-3 sm:p-3 lg:grid-cols-[220px_minmax(0,1fr)_116px]",
+                            index % 2 === 0 ? "bg-[#12121a]" : "bg-cyan-500/[0.035]"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-2 px-3 py-2.5 sm:col-span-3 sm:px-4 sm:py-3">
+                            <div className="inline-flex items-center gap-2 rounded-md border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5 font-mono text-sm font-bold text-cyan-200 sm:text-[13px]">
+                              <span className="font-medium text-gray-300">
+                                {formatDate(match.kickoffTime, locale)}
+                              </span>
+                              <span className="whitespace-nowrap">
+                                {formatTime(match.kickoffTime, locale)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
                               <StatusBadge
                                 status={match.status}
                                 label={getFixtureStatusLabel(match, statusLabels)}
-                                className="text-center"
+                                className="text-center sm:hidden"
+                              />
+                              <div className="hidden sm:block">
+                                <StatusBadge
+                                  status={match.status}
+                                  label={getFixtureStatusLabel(match, statusLabels)}
+                                  className="text-center"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="min-w-0 px-3 py-3 sm:col-span-2 sm:flex sm:flex-col sm:items-center sm:justify-center sm:px-0 sm:py-0">
+                            <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-2.5 sm:grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] sm:gap-2.5 lg:grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] lg:gap-3">
+                              <TeamInline
+                                name={match.home.name}
+                                logo={match.home.logo}
+                                align="right"
+                                accent="cyan"
+                              />
+                              <div className="mx-auto flex min-h-9 w-[68px] shrink-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/35 px-2 py-1 text-center font-mono text-base font-bold text-white shadow-[0_0_18px_rgba(34,211,238,0.08)] sm:min-h-10 sm:w-full sm:border-cyan-500/15 sm:bg-black/25 sm:px-2 sm:py-1.5 sm:text-[15px] sm:shadow-[0_0_14px_rgba(34,211,238,0.07)] lg:text-base">
+                                <span className="leading-none">
+                                  {match.score.home !== null
+                                    ? `${match.score.home} - ${match.score.away}`
+                                    : t("common.vs")}
+                                </span>
+                                {match.status === MatchStatus.LIVE && match.elapsed !== null && (
+                                  <span className="mt-0.5 inline-flex items-center justify-center rounded-full border border-green-300/40 bg-green-400/15 px-1.5 py-0.5 text-[10px] font-bold leading-none text-green-200">
+                                    {match.elapsed}&apos;
+                                  </span>
+                                )}
+                              </div>
+                              <TeamInline
+                                name={match.away.name}
+                                logo={match.away.logo}
+                                accent="magenta"
                               />
                             </div>
                           </div>
-                        </div>
-                        <div className="min-w-0 px-3 py-3 sm:col-span-2 sm:flex sm:flex-col sm:items-center sm:justify-center sm:px-0 sm:py-0">
-                          <Link
-                          href={detailHref}
-                            className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-2.5 sm:grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] sm:gap-2.5 lg:grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] lg:gap-3"
-                          >
-                            <TeamInline
-                              name={match.home.name}
-                              logo={match.home.logo}
-                              align="right"
-                              accent="cyan"
-                            />
-                            <div className="mx-auto flex min-h-9 w-[68px] shrink-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/35 px-2 py-1 text-center font-mono text-base font-bold text-white shadow-[0_0_18px_rgba(34,211,238,0.08)] sm:min-h-10 sm:w-full sm:border-cyan-500/15 sm:bg-black/25 sm:px-2 sm:py-1.5 sm:text-[15px] sm:shadow-[0_0_14px_rgba(34,211,238,0.07)] lg:text-base">
-                              <span className="leading-none">
-                                {match.score.home !== null
-                                  ? `${match.score.home} - ${match.score.away}`
-                                  : t("common.vs")}
-                              </span>
-                              {match.status === MatchStatus.LIVE && match.elapsed !== null && (
-                                <span className="mt-0.5 inline-flex items-center justify-center rounded-full border border-green-300/40 bg-green-400/15 px-1.5 py-0.5 text-[10px] font-bold leading-none text-green-200">
-                                  {match.elapsed}&apos;
-                                </span>
-                              )}
-                            </div>
-                            <TeamInline
-                              name={match.away.name}
-                              logo={match.away.logo}
-                              accent="magenta"
-                            />
-                          </Link>
-                        </div>
-                   
-                      </Card>
+                        </Card>
+                      </Link>
                     );
                   })}
                 </div>

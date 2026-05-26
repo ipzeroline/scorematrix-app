@@ -261,7 +261,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
 
       {fixtures.length > 0 && (
         <Card className="overflow-hidden p-2 sm:p-3">
-          <div className="-mx-2 flex snap-x gap-2 overflow-x-auto px-2 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+          <div className="-mx-2 flex snap-x gap-2 overflow-x-auto px-2 pb-1  sm:mx-0 sm:px-0  ">
             {statusTabs.map((tab) => {
               const isActive = activeStatusTab === tab.key;
 
@@ -750,7 +750,7 @@ const MatchMobileCard = memo(function MatchMobileCard({
   labels: MatchTableLabels;
   isLoggedIn: boolean;
 }) {
-  const matchSlug = useMemo(() => buildFixtureSeoSlug(match), [match]);
+  const matchDetailHref = useMemo(() => buildMatchDetailHref(match, locale), [match, locale]);
   const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
   const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
   const statusGroup = useMemo(() => getFixtureStatusGroup(match), [match]);
@@ -762,7 +762,7 @@ const MatchMobileCard = memo(function MatchMobileCard({
 
   return (
     <Link
-      href={`/${locale}/livescore/${matchSlug}`}
+      href={matchDetailHref}
       className="block"
     >
       <Card
@@ -831,6 +831,7 @@ const MatchRow = memo(function MatchRow({
   isLoggedIn: boolean;
 }) {
   const matchSlug = useMemo(() => buildFixtureSeoSlug(match), [match]);
+  const matchDetailHref = useMemo(() => buildMatchDetailHref(match, locale), [match, locale]);
   const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
   const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
   const statusGroup = useMemo(() => getFixtureStatusGroup(match), [match]);
@@ -844,7 +845,7 @@ const MatchRow = memo(function MatchRow({
     <tr className={cn(rowTone, "hover:bg-white/[0.045]")}>
       <td className="px-1.5 py-2.5 text-center sm:px-4 sm:py-3">
         <Link
-          href={`/${locale}/livescore/${matchSlug}`}
+          href={matchDetailHref}
           className="mx-auto flex w-[54px] flex-col items-center rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-1 py-1.5 text-center hover:border-cyan-400/40 sm:w-[204px] sm:flex-row sm:justify-center sm:gap-1.5 sm:px-3 sm:py-2.5"
         >
           <span className="hidden max-w-full truncate text-xs font-medium leading-none text-gray-300 sm:block">
@@ -856,7 +857,7 @@ const MatchRow = memo(function MatchRow({
         </Link>
       </td>
       <td className="py-2.5 pl-1 pr-2 sm:py-3 sm:pl-3 sm:pr-5">
-        <Link href={`/${locale}/livescore/${matchSlug}`} className="block min-w-0">
+        <Link href={matchDetailHref} className="block min-w-0">
           <TeamInline
             name={match.home.name}
             logo={match.home.logo}
@@ -866,7 +867,7 @@ const MatchRow = memo(function MatchRow({
       </td>
       <td className="px-2 py-2.5 text-center sm:px-4 sm:py-3">
         <Link
-          href={`/${locale}/livescore/${matchSlug}`}
+          href={matchDetailHref}
           className="inline-flex min-w-14 justify-center rounded-md border border-gray-800 bg-black/20 px-2 py-1 font-mono text-xs font-bold text-white sm:min-w-16 sm:px-2.5 sm:text-sm"
         >
           {match.score.home !== null
@@ -875,12 +876,12 @@ const MatchRow = memo(function MatchRow({
         </Link>
       </td>
       <td className="py-2.5 pl-2 pr-1 sm:py-3 sm:pl-5 sm:pr-3">
-        <Link href={`/${locale}/livescore/${matchSlug}`} className="block min-w-0">
+        <Link href={matchDetailHref} className="block min-w-0">
           <TeamInline name={match.away.name} logo={match.away.logo} />
         </Link>
       </td>
       <td className="hidden px-4 py-3 text-right sm:table-cell">
-        <Link href={`/${locale}/livescore/${matchSlug}`}>
+        <Link href={matchDetailHref}>
           <StatusBadge status={match.status} label={statusLabel} />
         </Link>
       </td>
@@ -901,6 +902,10 @@ const MatchRow = memo(function MatchRow({
     </tr>
   );
 });
+
+function buildMatchDetailHref(match: ApiFootballFixture, locale: string) {
+  return `/${locale}/matches/detail/${match.apiFixtureId ?? buildFixtureSeoSlug(match)}`;
+}
 
 function LeagueLogo({ name, logo }: { name: string; logo: string | null }) {
   return (

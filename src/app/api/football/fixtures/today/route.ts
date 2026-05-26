@@ -3,21 +3,20 @@ import {
   getApiFootballTodayFixtures,
 } from "@/lib/api-football";
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limit = toPositiveInt(searchParams.get("limit"), 50);
 
   try {
     const result = await getApiFootballTodayFixtures({
-      limit,
-      revalidate: 10,
+      revalidate: 0,
     });
 
     return Response.json(result, {
       headers: {
-        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
       },
     });
   } catch (error) {
@@ -42,11 +41,4 @@ export async function GET(request: Request) {
       { status: apiError.status }
     );
   }
-}
-
-function toPositiveInt(value: string | null, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number.parseInt(value, 10);
-  if (Number.isNaN(parsed) || parsed < 1) return fallback;
-  return Math.min(parsed, 100);
 }
