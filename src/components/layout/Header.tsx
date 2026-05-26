@@ -29,11 +29,16 @@ const NAV_LINKS = [
 
 const emptySubscribe = () => () => {};
 
-export function Header() {
+interface HeaderProps {
+  initialHasAuthSession?: boolean;
+}
+
+export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const walletReady = useClientMounted();
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const username = useUserStore((s) => s.username);
   const freePoints = useUserStore((s) => s.freePoints);
@@ -42,10 +47,11 @@ export function Header() {
   const level = useUserStore((s) => s.level);
   const rank = useUserStore((s) => s.rank);
   const syncWallet = useUserStore((s) => s.syncWallet);
-  const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || isLoggedIn);
+  const effectiveIsLoggedIn = isLoggedIn || initialHasAuthSession;
+  const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!effectiveIsLoggedIn) return;
 
     let active = true;
 
@@ -70,14 +76,14 @@ export function Header() {
     return () => {
       active = false;
     };
-  }, [isLoggedIn, locale, syncWallet]);
+  }, [effectiveIsLoggedIn, locale, syncWallet]);
 
   const isActive = (href: string) =>
     pathname.includes(`/${locale}${href}`);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-800 bg-[#0a0a0f] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-      <div className="max-w-[1440px] mx-auto px-2 h-14 flex items-center gap-2 sm:px-4 sm:gap-4">
+    <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-800 bg-[#0a0a0f] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
+      <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-2 px-2 sm:gap-4 sm:px-4">
         {/* Mobile hamburger */}
         <button
           className="lg:hidden p-1.5 text-gray-400 hover:text-white cursor-pointer sm:p-2"
@@ -108,18 +114,21 @@ export function Header() {
 
         <div className="flex-1" />
 
-        {isLoggedIn && <NotificationBell />}
+        {effectiveIsLoggedIn && <NotificationBell />}
 
-        <LanguageSwitcher />
+        <div className="hidden sm:block">
+          <LanguageSwitcher />
+        </div>
 
         <UserMenu
-          isLoggedIn={isLoggedIn}
+          isLoggedIn={effectiveIsLoggedIn}
           username={username}
           freePoints={freePoints}
           premiumCredits={premiumCredits}
           rank={rank}
           xp={xp}
           level={level}
+          walletReady={walletReady}
         />
 
       </div>
@@ -150,6 +159,14 @@ export function Header() {
         </nav>
       )}
     </header>
+  );
+}
+
+function useClientMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
   );
 }
 

@@ -36,6 +36,8 @@ Locale shell:
 - Valid locales from `src/i18n.ts`: `th`, `en`, `lo`, `my`, `km`, `zh`
 - Default locale: `th`
 - Layout wraps pages with `NextIntlClientProvider`, `Header`, `Sidebar`, `Footer`, `MobileBottomNav`, `ToastContainer`
+- Locale layout reads auth cookies with `cookies()` and passes the initial session hint to `Header`, so locale routes are dynamic and the navbar does not flash guest auth buttons before Zustand rehydrates.
+- Locale layout reserves top padding for the fixed `Header`; mobile footer navigation is fixed at the viewport bottom.
 
 Main pages:
 
@@ -107,10 +109,10 @@ Static data:
   - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
   - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
-- `src/app/[locale]/livescore/page.tsx` uses `GET /fixtures/today` through `getApiFootballTodayFixtures` for its initial fixture list
+- `src/app/[locale]/livescore/page.tsx` uses `GET /fixtures/today` through `getApiFootballTodayFixtures` for its initial fixture list; the `Livescore` client view displays only fixtures whose normalized status group is `live`.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}`
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
-- `src/app/[locale]/matches/page.tsx` uses `GET /fixtures/upcoming` through `loadUpcomingFixtures`
+- `src/app/[locale]/matches/page.tsx` uses `GET /fixtures/upcoming` through `loadUpcomingFixtures`; `MatchesApi` includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes
 - `src/lib/football-slugs.ts`: builds/extracts SEO slugs for fixtures/leagues/entities
 
@@ -148,7 +150,7 @@ Local API modules:
 - `src/lib/events-api.ts`: typed wrapper for `GET /events`; the `/events` page maps API event fields into the existing event card grid and active-event highlight UI.
 - `src/lib/leaderboard-api.ts`: typed wrapper for `GET /leaderboard`; the `/leaderboard` page maps API entries, user entry, period, and rewards into the existing ranking UI, and the desktop sidebar leaderboard card loads the top entries from the same endpoint.
 - `src/lib/missions-api.ts`: typed wrapper for `GET /missions`; the `/missions` page maps `daily`, `weekly`, and `special` API missions into the existing mission card UI.
-- `src/lib/referrals-api.ts`: typed wrapper for `GET /referrals`; the `/affiliate` page maps referral code, totals, share URL, referral rows, and reward tiers into the existing affiliate dashboard UI.
+- `src/lib/referrals-api.ts`: typed wrapper for `GET /referrals`; the `/affiliate` page maps referral code, totals, share URL, referral rows, and reward tiers into the existing affiliate dashboard UI. Invite links are normalized client-side to the current origin and locale register route `/{locale}/auth/register?ref=...`.
 - `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards` and `GET /rewards/{id}`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend, and the desktop sidebar rewards card loads active reward highlights from the same catalogue endpoint.
 - `src/lib/soccer-api.ts`: typed client wrapper for local `/api/football/teams`, which proxies soccer backend `GET /teams`; the local route returns normalized `teams` groups for favorite-team selection while preserving the backend `data` payload.
 - `src/components/auth/FavoriteTeamSelect.tsx`: grouped team selector for registration, grouped by league and showing league/team logos.
@@ -156,7 +158,7 @@ Local API modules:
 - `src/app/[locale]/(public)/auth/login/page.tsx`: submits to `POST /auth/login`, stores returned access/refresh tokens through `auth-api`, updates `useUserStore`, then redirects to locale home or `next` target.
 - `src/components/layout/UserMenu.tsx`: profile dropdown logout calls `POST /auth/logout`, clears auth token and user store, then redirects to locale home.
 - `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login with `next` set to the current URL.
-- `src/components/layout/Header.tsx`: when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
+- `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
 - `src/app/[locale]/(admin)/admin/layout.tsx`: admin shell and sidebar for the `/admin` section, organized under the `(admin)` route group.
 - `src/app/[locale]/(member)/profile/page.tsx`: profile dashboard UI loads current profile data through `getCurrentUser()` (`GET /scorm/users/me` via the API client base URL), syncs known fields into `useUserStore`, and falls back to the last store values on load failure.
 - `src/app/[locale]/(member)/profile/edit/page.tsx`: loads `GET /member/profile`, validates editable API fields, and submits `POST /member/update-profile`.

@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
-import { Tabs } from "@/components/ui/Tabs";
 import { Select } from "@/components/ui/Select";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
@@ -17,6 +16,7 @@ import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import {
   buildFootballStatusLabels,
+  getFixtureStatusGroup,
   getFixtureStatusLabel,
 } from "@/lib/football-status";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
@@ -47,7 +47,6 @@ interface LivescoreProps {
 export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const t = useTranslations();
   const statusLabels = useMemo(() => buildFootballStatusLabels(t), [t]);
-  const [activeTab, setActiveTab] = useState("all");
   const [league, setLeague] = useState("");
   const [search, setSearch] = useState("");
   const [payload, setPayload] = useState(initialPayload);
@@ -75,28 +74,12 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
   }
 
   const apiMatches = payload.fixtures;
+  const liveMatches = useMemo(
+    () => apiMatches.filter((match) => getFixtureStatusGroup(match) === MatchStatus.LIVE),
+    [apiMatches]
+  );
 
-  const tabs = [
-    { key: "all", label: t("livescore.allMatches"), count: apiMatches.length },
-    {
-      key: "live",
-      label: t("livescore.live"),
-      count: apiMatches.filter((m) => m.status === MatchStatus.LIVE).length,
-    },
-    {
-      key: "upcoming",
-      label: t("livescore.upcoming"),
-      count: apiMatches.filter((m) => m.status === MatchStatus.UPCOMING).length,
-    },
-    {
-      key: "finished",
-      label: t("livescore.finished"),
-      count: apiMatches.filter((m) => m.status === MatchStatus.FINISHED).length,
-    },
-  ];
-
-  const filtered = apiMatches.filter((m) => {
-    if (activeTab !== "all" && m.status !== activeTab) return false;
+  const filtered = liveMatches.filter((m) => {
     if (league && m.league.name !== league) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -109,7 +92,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
     return true;
   });
 
-  const leagues = [...new Set(apiMatches.map((m) => m.league.name))];
+  const leagues = [...new Set(liveMatches.map((m) => m.league.name))];
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -159,8 +142,6 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
           {error}
         </Card>
       )}
-
-      <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
       <div className="flex gap-3 flex-wrap">
         <Select
@@ -228,8 +209,6 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                 <div className="space-y-2 sm:space-y-1">
                   {leagueMatches.map((match, index) => {
                     const detailHref = buildMatchDetailHref(match, locale);
-                    const predictHref = `/${locale}/predict/${buildFixtureSeoSlug(match)}`;
-                    const canPredict = match.status === MatchStatus.UPCOMING;
 
                     return (
                       <Card
@@ -293,16 +272,6 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                               accent="magenta"
                             />
                           </Link>
-                          <div className="mt-4 flex flex-col items-center gap-2 sm:mt-2">
-                            {canPredict && (
-                              <Link
-                                href={predictHref}
-                                className="inline-flex min-h-9 items-center justify-center rounded-lg bg-amber-500 px-4 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400"
-                              >
-                                {t("prediction.predictScore")}
-                              </Link>
-                            )}
-                          </div>
                         </div>
                    
                       </Card>

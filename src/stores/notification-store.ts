@@ -37,6 +37,8 @@ interface NotificationActions {
 let toastId = 0;
 let notifId = 0;
 
+type PersistedNotificationState = Pick<NotificationState, 'notifications'>;
+
 export const useNotificationStore = create<NotificationState & NotificationActions>()(
   persist(
     (set, get) => ({
@@ -89,6 +91,16 @@ export const useNotificationStore = create<NotificationState & NotificationActio
           toastQueue: s.toastQueue.filter((t) => t.id !== id),
         })),
     }),
-    { name: 'scorematrix-notifications' }
+    {
+      name: 'scorematrix-notifications',
+      partialize: (state): PersistedNotificationState => ({
+        notifications: state.notifications,
+      }),
+      merge: (persistedState, currentState) => ({
+        ...currentState,
+        ...((persistedState ?? {}) as Partial<PersistedNotificationState>),
+        toastQueue: [],
+      }),
+    }
   )
 );

@@ -27,8 +27,8 @@ export function MobileBottomNav() {
   };
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-gray-800 bg-[#0a0a0f] shadow-[0_-10px_30px_rgba(0,0,0,0.35)] safe-area-bottom">
-      <div className="flex items-center justify-around h-14 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-800 bg-[#0a0a0f] shadow-[0_-10px_30px_rgba(0,0,0,0.35)] safe-area-bottom lg:hidden">
+      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-1.5">
         {visibleLinks.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
@@ -37,12 +37,12 @@ export function MobileBottomNav() {
               key={link.href}
               href={`/${locale}${link.href}`}
               className={cn(
-                "flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg min-w-0 transition-colors",
+                "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
                 active ? "text-cyan-400" : "text-gray-500"
               )}
             >
-              <Icon size={20} />
-              <span className="text-[10px] font-medium leading-none">
+              <Icon size={20} className="shrink-0" />
+              <span className="max-w-[76px] truncate text-[10px] font-medium leading-none">
                 {t(link.label)}
               </span>
             </Link>

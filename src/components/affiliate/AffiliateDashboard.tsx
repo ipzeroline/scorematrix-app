@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
   CheckCircle2,
@@ -22,6 +22,7 @@ import {
   mapApiReferrals,
   type AffiliateViewData,
 } from "@/lib/referrals-api";
+import { SITE_URL } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 export function AffiliateDashboard() {
@@ -35,6 +36,13 @@ export function AffiliateDashboard() {
   const inviteUrl = useMemo(
     () => buildInviteUrl(program.shareUrl, locale, program.code),
     [locale, program.code, program.shareUrl]
+  );
+  const inviteLayoutStyle = useMemo(
+    () =>
+      ({
+        "--invite-card-width": `${Math.min(Math.max(inviteUrl.length + 8, 44), 96)}ch`,
+      }) as CSSProperties & Record<"--invite-card-width", string>,
+    [inviteUrl]
   );
 
   useEffect(() => {
@@ -76,7 +84,10 @@ export function AffiliateDashboard() {
     <div className="space-y-6 pb-8">
       <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b1018] p-5 md:p-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_82%_28%,rgba(245,158,11,0.12),transparent_28%)]" />
-        <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+        <div
+          className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(440px,var(--invite-card-width))] lg:items-center"
+          style={inviteLayoutStyle}
+        >
           <div>
             <Badge variant="gold" size="md">
               {t("eyebrow")}
@@ -89,23 +100,23 @@ export function AffiliateDashboard() {
             </p>
           </div>
 
-          <Card className="relative overflow-hidden border-amber-400/20 bg-black/25 p-4">
+          <Card className="relative w-full overflow-hidden border-amber-400/20 bg-black/25 p-4 sm:p-5">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
             <div className="flex items-center justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <p className="text-[10px] uppercase tracking-[0.2em] text-amber-300">
                   {t("yourCode")}
                 </p>
-                <p className="mt-1 font-mono text-2xl font-black text-white">
+                <p className="mt-1 break-all font-mono text-2xl font-black text-white">
                   {program.code}
                 </p>
               </div>
-              <span className="grid h-12 w-12 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-200">
+              <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-cyan-400/30 bg-cyan-400/10 text-cyan-200">
                 <Share2 size={22} />
               </span>
             </div>
-            <div className="mt-4 rounded-lg border border-gray-800 bg-[#070a10] p-3">
-              <p className="truncate font-mono text-xs text-gray-300">
+            <div className="mt-4 rounded-lg border border-gray-800 bg-[#070a10] p-3 sm:p-4">
+              <p className="break-all font-mono text-xs leading-5 text-gray-300 sm:text-sm">
                 {inviteUrl}
               </p>
             </div>
@@ -285,9 +296,30 @@ export function AffiliateDashboard() {
 }
 
 function buildInviteUrl(shareUrl: string, locale: string, code: string) {
-  if (/^https?:\/\//i.test(shareUrl)) return shareUrl;
-  if (shareUrl.startsWith("/")) return `https://scorematrix.app${shareUrl}`;
-  return `https://scorematrix.app/${locale}/auth/register?ref=${code}`;
+  const origin =
+    typeof window !== "undefined" && window.location.origin
+      ? window.location.origin
+      : SITE_URL;
+  const referralCode = extractReferralCode(shareUrl) || code;
+  const url = new URL(`/${locale}/auth/register`, origin);
+  url.searchParams.set("ref", referralCode);
+  return url.toString();
+}
+
+function extractReferralCode(shareUrl: string) {
+  if (!shareUrl) return "";
+
+  try {
+    const url = new URL(
+      shareUrl,
+      typeof window !== "undefined" && window.location.origin
+        ? window.location.origin
+        : SITE_URL
+    );
+    return url.searchParams.get("ref") ?? "";
+  } catch {
+    return "";
+  }
 }
 
 function nextTierCount(tiers: { referrals: number }[]) {

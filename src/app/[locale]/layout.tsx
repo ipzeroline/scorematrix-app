@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -7,6 +8,10 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Footer } from "@/components/layout/Footer";
 import { StoreInitializer } from "@/components/shared/StoreInitializer";
 import { ToastContainer } from "@/components/ui/ToastContainer";
+import {
+  AUTH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from "@/lib/auth-guard";
 import { LOCALE_CODES, type LocaleCode } from "@/i18n";
 
 export function generateStaticParams() {
@@ -32,13 +37,17 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages({ locale });
+  const cookieStore = await cookies();
+  const hasAuthSession =
+    cookieStore.has(AUTH_TOKEN_COOKIE_NAME) ||
+    cookieStore.has(REFRESH_TOKEN_COOKIE_NAME);
 
   return (
     <NextIntlClientProvider key={locale} locale={locale} messages={messages}>
       <StoreInitializer />
       <ToastContainer />
-      <div className="flex flex-col min-h-screen">
-        <Header />
+      <div className="flex min-h-screen flex-col pt-14">
+        <Header initialHasAuthSession={hasAuthSession} />
         <div className="flex flex-1 max-w-[1440px] mx-auto w-full">
           <Sidebar />
           <main className="flex-1 min-w-0 p-4 pb-20 lg:pb-4">{children}</main>

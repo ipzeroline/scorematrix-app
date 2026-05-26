@@ -25,16 +25,16 @@ export async function Footer() {
   ];
 
   return (
-    <footer className="hidden lg:block border-t border-gray-800/50 bg-[#0a0a0f] mt-auto">
-      <div className="max-w-[1440px] mx-auto px-4 py-6">
-        <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-          <div className="flex flex-col gap-2">
+    <footer className="mt-auto border-t border-gray-800/50 bg-[#0a0a0f]">
+      <div className="mx-auto max-w-[1440px] px-4 py-6 pb-20 lg:pb-6">
+        <div className="flex flex-col items-start justify-between gap-6 lg:flex-row">
+          <div className="flex max-w-sm flex-col gap-2">
             <Logo />
-            <p className="text-xs text-gray-500 max-w-xs">
+            <p className="text-xs leading-5 text-gray-500">
               {t("common.disclaimer")}
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+          <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-3 lg:w-auto lg:gap-8">
             <div>
               <h4 className="text-xs font-semibold text-gray-400 mb-2">
                 {t("footer.platform")}
@@ -88,11 +88,11 @@ export async function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-6 pt-4 border-t border-gray-800/50 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-gray-600">
+        <div className="mt-6 flex flex-col items-start justify-between gap-2 border-t border-gray-800/50 pt-4 sm:flex-row sm:items-center">
+          <p className="text-xs leading-5 text-gray-600">
             {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
-          <p className="text-xs text-gray-600">
+          <p className="text-xs leading-5 text-gray-600 sm:text-right">
             {t("common.noGambling")}
           </p>
         </div>

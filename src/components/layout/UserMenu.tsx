@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { PointsBadge } from "@/components/shared/PointsBadge";
-import { RankBadge } from "@/components/shared/RankBadge";
 import { Dropdown, DropdownItem } from "@/components/ui/Dropdown";
 import { logout as logoutApi } from "@/lib/auth-api";
+import { cn } from "@/lib/utils";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
 
@@ -27,6 +27,7 @@ interface UserMenuProps {
   rank?: string;
   xp?: number;
   level?: number;
+  walletReady?: boolean;
   role?: "user" | "admin";
 }
 
@@ -39,6 +40,7 @@ export function UserMenu({
   rank = "bronze",
   xp = 0,
   level = 1,
+  walletReady = true,
   role = "user",
 }: UserMenuProps) {
   const locale = useLocale();
@@ -70,18 +72,19 @@ export function UserMenu({
 
   if (!isLoggedIn) {
     return (
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
         <Link
           href={`/${locale}/auth/register`}
-          className="whitespace-nowrap rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-cyan-400 sm:px-3 sm:py-1.5 sm:text-sm"
+          className="inline-flex max-w-[72px] items-center justify-center rounded-lg bg-cyan-500 px-2.5 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-cyan-400 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-sm"
         >
-          {t("auth.register")}
+          <span className="sm:hidden">สมัคร</span>
+          <span className="hidden sm:inline">{t("auth.register")}</span>
         </Link>
         <Link
           href={`/${locale}/auth/login`}
-          className="whitespace-nowrap px-2.5 py-1.5 text-xs font-medium text-gray-400 transition-colors hover:text-white sm:px-3 sm:py-1.5 sm:text-sm"
+          className="inline-flex max-w-[92px] items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-400/50 hover:text-white sm:max-w-none sm:border-transparent sm:bg-transparent sm:px-3 sm:py-1.5 sm:text-sm sm:font-medium sm:text-gray-400"
         >
-          {t("auth.login")}
+          <span className="truncate">{t("auth.login")}</span>
         </Link>
       </div>
     );
@@ -89,56 +92,91 @@ export function UserMenu({
 
   return (
     <Dropdown
+      className="w-[min(92vw,296px)] overflow-hidden border-gray-800/90 bg-[#111722] py-0"
       trigger={
         <div className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
           <Avatar src={avatar} fallback={username} size="sm" />
           <div className="hidden sm:flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <PointsBadge type="free" amount={freePoints} size="sm" />
-              <PointsBadge type="premium" amount={premiumCredits} size="sm" />
+              {walletReady ? (
+                <>
+                  <PointsBadge type="free" amount={freePoints} size="sm" />
+                  <PointsBadge type="premium" amount={premiumCredits} size="sm" />
+                </>
+              ) : (
+                <>
+                  <WalletBadgeSkeleton className="w-16" />
+                  <WalletBadgeSkeleton className="w-14" />
+                </>
+              )}
             </div>
             <ChevronDown size={14} className="text-gray-500" />
           </div>
         </div>
       }
     >
-      <div className="px-4 py-2 border-b border-gray-800">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white">{username}</p>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-gray-500">
-              {t("gamification.level")} {level}
-            </p>
-          </div>
-          <RankBadge rank={rank} level={level} size="sm" />
-        </div>
-        <div className="mt-3 rounded-lg border border-gray-800 bg-[#070a10] p-2">
-          <div className="mb-1 flex items-center justify-between text-[10px] text-gray-500">
-            <span>{t("gamification.xp")}</span>
-            <span className="font-mono text-purple-300">
-              {xpProgress.current.toLocaleString()} / {xpProgress.target.toLocaleString()}
-            </span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-gray-800">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-purple-400 to-cyan-300"
-              style={{ width: `${xpProgress.percent}%` }}
+      <div className="border-b border-gray-800 bg-[#0d121b]">
+        <div className="p-3.5">
+          <div className="flex items-center gap-3">
+            <Avatar
+              src={avatar}
+              fallback={username}
+              size="md"
+              className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
             />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">
+                {username}
+              </p>
+              <p className="mt-0.5 text-[11px] text-gray-500">
+                {t("nav.profile")}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-3 mt-2">
-          <PointsBadge
-            type="free"
-            amount={freePoints}
-            size="sm"
-            showLabel
-          />
-          <PointsBadge
-            type="premium"
-            amount={premiumCredits}
-            size="sm"
-            showLabel
-          />
+
+          <MemberRankLevel rank={rank} level={level} />
+
+          <div className="mt-3 rounded-lg border border-gray-800 bg-[#090d14] p-2.5">
+            <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-gray-500">
+              <span>{t("gamification.xp")}</span>
+              <span className="font-mono text-cyan-200">
+                {xpProgress.current.toLocaleString()} / {xpProgress.target.toLocaleString()}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-gray-800">
+              <div
+                className="h-full rounded-full bg-cyan-300"
+                style={{ width: `${xpProgress.percent}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="mt-2 rounded-lg border border-gray-700/80 bg-[#090d14] px-3 py-2.5">
+            {walletReady ? (
+              <div className="flex items-center justify-between gap-3">
+                <WalletBalance
+                  label={t("common.points")}
+                  value={freePoints}
+                  dotClassName="bg-green-300"
+                  valueClassName="text-green-300"
+                />
+                <div className="h-7 w-px shrink-0 bg-gray-800" />
+                <WalletBalance
+                  label={t("common.credits")}
+                  value={premiumCredits}
+                  align="right"
+                  dotClassName="bg-amber-300"
+                  valueClassName="text-amber-300"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <WalletBalanceSkeleton />
+                <div className="h-7 w-px shrink-0 bg-gray-800" />
+                <WalletBalanceSkeleton align="right" />
+              </div>
+            )}
+          </div>
         </div>
       </div>
       <Link href={`/${locale}/profile`}>
@@ -180,6 +218,92 @@ export function UserMenu({
       </div>
     </Dropdown>
   );
+}
+
+function MemberRankLevel({ rank, level }: { rank: string; level: number }) {
+  const t = useTranslations();
+
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-white/[0.025] px-3 py-2">
+      <div className="min-w-0">
+        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-gray-500">
+          {t("gamification.level")}
+        </p>
+        <p className="mt-0.5 font-mono text-sm font-semibold text-white">
+          {level}
+        </p>
+      </div>
+      <div className="h-7 w-px shrink-0 bg-gray-800" />
+      <div className="min-w-0 text-right">
+        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-gray-500">
+          {t("gamification.rank")}
+        </p>
+        <p className="mt-0.5 truncate text-sm font-semibold text-cyan-200">
+          {formatRankLabel(rank)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function WalletBalance({
+  label,
+  value,
+  align = "left",
+  dotClassName,
+  valueClassName,
+}: {
+  label: string;
+  value: number;
+  align?: "left" | "right";
+  dotClassName?: string;
+  valueClassName?: string;
+}) {
+  return (
+    <div className={cn("min-w-0 flex-1", align === "right" && "text-right")}>
+      <div
+        className={cn(
+          "flex items-center gap-1.5",
+          align === "right" && "justify-end"
+        )}
+      >
+        <span className={cn("h-1.5 w-1.5 rounded-full", dotClassName)} />
+        <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-gray-500">
+          {label}
+        </p>
+      </div>
+      <p className={cn("mt-0.5 truncate font-mono text-base font-bold", valueClassName)}>
+        {value.toLocaleString()}
+      </p>
+    </div>
+  );
+}
+
+function WalletBalanceSkeleton({ align = "left" }: { align?: "left" | "right" }) {
+  return (
+    <div className={cn("flex min-w-0 flex-1 flex-col", align === "right" && "items-end")}>
+      <WalletBadgeSkeleton className="h-3 w-14" />
+      <WalletBadgeSkeleton className="mt-2 h-4 w-16" />
+    </div>
+  );
+}
+
+function WalletBadgeSkeleton({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-flex h-5 rounded-full border border-gray-700 bg-white/[0.04]",
+        className
+      )}
+    />
+  );
+}
+
+function formatRankLabel(rank: string) {
+  return rank
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function getLevelXpProgress(xp: number, level: number) {

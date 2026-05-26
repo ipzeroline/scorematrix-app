@@ -56,7 +56,7 @@ export type AffiliateViewData = {
 export const DEFAULT_REFERRALS_VIEW_DATA: AffiliateViewData = {
   program: {
     ...affiliateProgram,
-    shareUrl: `/join?ref=${affiliateProgram.code}`,
+    shareUrl: `/auth/register?ref=${affiliateProgram.code}`,
   },
   referrals: affiliateReferrals,
   tiers: affiliateTiers,
@@ -92,7 +92,7 @@ export function mapApiReferrals(response: ReferralsResponse): AffiliateViewData 
       totalPointsEarned: Number(response.totalEarnings ?? 0),
       totalCreditsEarned: 0,
       conversionRate,
-      shareUrl: response.shareUrl || `/join?ref=${response.referralCode}`,
+      shareUrl: response.shareUrl || `/auth/register?ref=${response.referralCode}`,
     },
     referrals: response.referrals.map(mapApiReferral),
     tiers: response.rewardTiers.map(mapApiReferralTier),

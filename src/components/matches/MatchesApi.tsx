@@ -40,6 +40,16 @@ interface MatchesApiProps {
 
 const INITIAL_MATCH_RENDER_LIMIT = 80;
 const MATCH_RENDER_STEP = 80;
+const STATUS_TAB_DEFINITIONS = [
+  { key: "all", tone: "cyan" },
+  { key: MatchStatus.LIVE, tone: "green" },
+  { key: MatchStatus.UPCOMING, tone: "cyan" },
+  { key: MatchStatus.FINISHED, tone: "green" },
+  { key: MatchStatus.POSTPONED, tone: "amber" },
+  { key: MatchStatus.CANCELLED, tone: "red" },
+] as const;
+
+type MatchStatusTab = (typeof STATUS_TAB_DEFINITIONS)[number]["key"];
 
 type LeagueGroup = {
   key: string;
@@ -75,6 +85,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
   const t = useTranslations();
   const isLoggedIn = useUserStore((state) => state.isLoggedIn);
   const [activeLeague, setActiveLeague] = useState("All");
+  const [activeStatusTab, setActiveStatusTab] = useState<MatchStatusTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [leagueQuery, setLeagueQuery] = useState("");
   const [visibleMatchLimit, setVisibleMatchLimit] = useState(
@@ -83,22 +94,50 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const deferredLeagueQuery = useDeferredValue(leagueQuery);
   const matchStats = useMemo(() => getMatchStats(fixtures), [fixtures]);
-  const allLeagueGroups = useMemo(() => groupFixturesByLeague(fixtures), [fixtures]);
+  const tableLabels = useMemo(
+    () => ({
+      matches: t("matches.metricMatches"),
+      live: t("livescore.live"),
+      upcoming: t("livescore.upcoming"),
+      fullTime: t("livescore.fullTime"),
+      postponed: t("status.postponed"),
+      cancelled: t("status.cancelled"),
+      time: t("football.table.time"),
+      home: t("football.table.home"),
+      score: t("football.table.score"),
+      away: t("football.table.away"),
+      status: t("football.table.status"),
+      predict: t("matchDetail.predict"),
+      predictScore: t("prediction.predictScore"),
+      vs: t("common.vs"),
+      statusLabels: buildFootballStatusLabels(t),
+    }),
+    [t]
+  );
   const searchedFixtures = useMemo(
     () => filterFixtures(fixtures, deferredSearchQuery),
     [fixtures, deferredSearchQuery]
   );
+  const statusTabs = useMemo(
+    () =>
+      STATUS_TAB_DEFINITIONS.map((tab) => ({
+        ...tab,
+        label: getStatusTabLabel(tab.key, tableLabels),
+        count: getStatusTabCount(searchedFixtures, tab.key),
+      })),
+    [searchedFixtures, tableLabels]
+  );
+  const statusFilteredFixtures = useMemo(
+    () => filterFixturesByStatus(searchedFixtures, activeStatusTab),
+    [searchedFixtures, activeStatusTab]
+  );
   const leagueGroups = useMemo(
     () =>
       filterLeagueGroups(
-        groupFixturesByLeague(searchedFixtures),
+        groupFixturesByLeague(statusFilteredFixtures),
         deferredLeagueQuery
       ),
-    [searchedFixtures, deferredLeagueQuery]
-  );
-  const visibleLeagueGroups = useMemo(
-    () => filterLeagueGroups(allLeagueGroups, deferredLeagueQuery),
-    [allLeagueGroups, deferredLeagueQuery]
+    [statusFilteredFixtures, deferredLeagueQuery]
   );
   const leagueCounts = useMemo(
     () => new Map(leagueGroups.map((group) => [group.key, group.matches.length])),
@@ -106,7 +145,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
   );
   const effectiveActiveLeague =
     activeLeague === "All" ||
-    visibleLeagueGroups.some((group) => group.key === activeLeague)
+    leagueGroups.some((group) => group.key === activeLeague)
       ? activeLeague
       : "All";
   const activeLeagueGroups = useMemo(
@@ -137,26 +176,6 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
     [displayedLeagueGroups]
   );
   const hasMoreMatches = displayedMatchCount < activeMatchCount;
-  const tableLabels = useMemo(
-    () => ({
-      matches: t("matches.metricMatches"),
-      live: t("livescore.live"),
-      upcoming: t("livescore.upcoming"),
-      fullTime: t("livescore.fullTime"),
-      postponed: t("status.postponed"),
-      cancelled: t("status.cancelled"),
-      time: t("football.table.time"),
-      home: t("football.table.home"),
-      score: t("football.table.score"),
-      away: t("football.table.away"),
-      status: t("football.table.status"),
-      predict: t("matchDetail.predict"),
-      predictScore: t("prediction.predictScore"),
-      vs: t("common.vs"),
-      statusLabels: buildFootballStatusLabels(t),
-    }),
-    [t]
-  );
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
@@ -240,6 +259,38 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
         </Card>
       </section>
 
+      {fixtures.length > 0 && (
+        <Card className="overflow-hidden p-2 sm:p-3">
+          <div className="-mx-2 flex snap-x gap-2 overflow-x-auto px-2 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+            {statusTabs.map((tab) => {
+              const isActive = activeStatusTab === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => {
+                    setActiveStatusTab(tab.key);
+                    setVisibleMatchLimit(INITIAL_MATCH_RENDER_LIMIT);
+                  }}
+                  className={cn(
+                    "flex min-h-10 snap-start shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200 sm:min-h-8 sm:py-1.5",
+                    isActive
+                      ? getActiveStatusTabClass(tab.tone)
+                      : "border-gray-800 bg-[#12121a] text-gray-400 hover:border-gray-600"
+                  )}
+                >
+                  <span>{tab.label}</span>
+                  <span className="rounded border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
+                    {tab.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       <Card className="overflow-hidden p-0">
         <div className="flex flex-col gap-3 border-b border-gray-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
@@ -306,7 +357,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
               >
                 {t("rewards.all")}
               </button>
-              {visibleLeagueGroups.map(({ key, league }) => {
+              {leagueGroups.map(({ key, league }) => {
                 const filteredCount = leagueCounts.get(key) ?? 0;
 
                 return (
@@ -454,6 +505,53 @@ function filterFixtures(fixtures: ApiFootballFixture[], query: string) {
       .filter((value): value is string => typeof value === "string")
       .some((value) => value.toLowerCase().includes(normalizedQuery))
   );
+}
+
+function filterFixturesByStatus(
+  fixtures: ApiFootballFixture[],
+  activeStatusTab: MatchStatusTab
+) {
+  if (activeStatusTab === "all") {
+    return fixtures;
+  }
+
+  return fixtures.filter(
+    (fixture) => getFixtureStatusGroup(fixture) === activeStatusTab
+  );
+}
+
+function getStatusTabCount(
+  fixtures: ApiFootballFixture[],
+  activeStatusTab: MatchStatusTab
+) {
+  return filterFixturesByStatus(fixtures, activeStatusTab).length;
+}
+
+function getStatusTabLabel(
+  activeStatusTab: MatchStatusTab,
+  labels: MatchTableLabels
+) {
+  if (activeStatusTab === "all") return labels.matches;
+  if (activeStatusTab === MatchStatus.LIVE) return labels.live;
+  if (activeStatusTab === MatchStatus.UPCOMING) return labels.upcoming;
+  if (activeStatusTab === MatchStatus.FINISHED) return labels.fullTime;
+  if (activeStatusTab === MatchStatus.POSTPONED) return labels.postponed;
+  return labels.cancelled;
+}
+
+function getActiveStatusTabClass(
+  tone: (typeof STATUS_TAB_DEFINITIONS)[number]["tone"]
+) {
+  if (tone === "green") {
+    return "border-green-500/30 bg-green-500/15 text-green-300";
+  }
+  if (tone === "amber") {
+    return "border-amber-500/30 bg-amber-500/15 text-amber-300";
+  }
+  if (tone === "red") {
+    return "border-red-500/30 bg-red-500/15 text-red-300";
+  }
+  return "border-cyan-500/30 bg-cyan-500/20 text-cyan-400";
 }
 
 function groupFixturesByLeague(fixtures: ApiFootballFixture[]) {
