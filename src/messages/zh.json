@@ -540,7 +540,9 @@
     "noUpcomingMatches": "暂无即将开始的比赛",
     "checkBackLater": "稍后再来查看可预测比赛。",
     "startPredictingHistory": "开始预测比赛来建立历史记录。",
-    "predicted": "已预测"
+    "predicted": "已预测",
+    "submittedAt": "提交时间",
+    "lockedAt": "锁定时间"
   },
   "aiInsight": {
     "title": "AI 分析",
@@ -817,11 +819,12 @@
       "no": "没有",
       "cancel": "取消",
       "confirm": "确认",
+      "clear": "清除",
       "vs": "VS"
     },
     "basic": {
       "title": "基础预测",
-      "subtitle": "必填：胜平负、精确比分和获胜球队。",
+      "subtitle": "必填：主队和客队预测比分，范围 0-20。",
       "result": "胜 / 平 / 负",
       "fullScore": "精确比分",
       "winnerTeam": "获胜球队",
@@ -855,7 +858,21 @@
     },
     "summary": {
       "title": "预测单",
-      "overUnder": "大/小 2.5"
+      "description": "字段与预测 API payload 保持一致。",
+      "overUnder": "大/小 2.5",
+      "firstScorerName": "首位进球者",
+      "halfTime": "半场比分"
+    },
+    "payload": {
+      "matchId": "比赛ID",
+      "predictedHomeScore": "预测主队比分",
+      "predictedAwayScore": "预测客队比分",
+      "firstScorerPlayerId": "首位进球球员",
+      "totalGoals": "总进球数",
+      "halfTimeHome": "半场主队比分",
+      "halfTimeAway": "半场客队比分",
+      "confidenceLevel": "信心指数",
+      "useBoost": "使用加倍"
     },
     "side": {
       "streak": "连中",
@@ -866,6 +883,14 @@
       "title": "AI 辅助预测",
       "description": "AI 建议：接近 2-1，总进球大于 2.5，主队更可能先进球。",
       "use": "使用 AI 建议"
+    },
+    "boost": {
+      "label": "使用加成",
+      "description": "使用可用加成来提高本次预测的潜在积分。"
+    },
+    "h2h": {
+      "title": "历史交锋",
+      "empty": "暂无交锋记录"
     },
     "submitted": {
       "title": "预测已提交！",

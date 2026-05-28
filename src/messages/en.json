@@ -540,7 +540,9 @@
     "noUpcomingMatches": "No upcoming matches",
     "checkBackLater": "Check back later for matches to predict.",
     "startPredictingHistory": "Start predicting matches to build your history.",
-    "predicted": "Predicted"
+    "predicted": "Predicted",
+    "submittedAt": "Submitted At",
+    "lockedAt": "Locked At"
   },
   "aiInsight": {
     "title": "AI Insight",
@@ -817,11 +819,12 @@
       "no": "No",
       "cancel": "Cancel",
       "confirm": "Confirm",
+      "clear": "Clear",
       "vs": "VS"
     },
     "basic": {
       "title": "Basic prediction",
-      "subtitle": "Required: result, exact score and winner team.",
+      "subtitle": "Required: predicted home and away score, 0-20.",
       "result": "Result / win / draw",
       "fullScore": "Exact score",
       "winnerTeam": "Winner team",
@@ -838,6 +841,7 @@
       "subtitle": "Add more fun and earn bonus chances from match details.",
       "firstScorer": "First goalscorer",
       "totalGoals": "Total goals",
+      "autoCalculated": "Auto-calculated from score",
       "over25": "Over 2.5",
       "under25": "Under 2.5",
       "firstGoalTeam": "Team to score first",
@@ -855,7 +859,21 @@
     },
     "summary": {
       "title": "Prediction slip",
-      "overUnder": "Over/Under 2.5"
+      "description": "Fields mirror the prediction API payload.",
+      "overUnder": "Over/Under 2.5",
+      "firstScorerName": "First scorer",
+      "halfTime": "Half-time score"
+    },
+    "payload": {
+      "matchId": "Match ID",
+      "predictedHomeScore": "Predicted Home Score",
+      "predictedAwayScore": "Predicted Away Score",
+      "firstScorerPlayerId": "First Scorer Player ID",
+      "totalGoals": "Total Goals",
+      "halfTimeHome": "Half-time Home Score",
+      "halfTimeAway": "Half-time Away Score",
+      "confidenceLevel": "Confidence Level",
+      "useBoost": "Use Boost"
     },
     "side": {
       "streak": "Streak",
@@ -866,6 +884,14 @@
       "title": "Predict with AI",
       "description": "AI tip: close to 2-1, over 2.5 total goals, and the home team has a strong chance to score first.",
       "use": "Use AI suggestion"
+    },
+    "boost": {
+      "label": "Use boost",
+      "description": "Apply an available boost to increase possible points for this prediction."
+    },
+    "h2h": {
+      "title": "Historical head-to-head",
+      "empty": "No head-to-head data available yet"
     },
     "submitted": {
       "title": "Prediction submitted!",

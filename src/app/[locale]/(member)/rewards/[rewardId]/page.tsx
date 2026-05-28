@@ -12,7 +12,10 @@ import {
   getReward,
   mapApiReward,
   type RewardViewItem,
+  redeemReward,
 } from "@/lib/rewards-api";
+import { useUserStore } from "@/stores/user-store";
+import { useNotificationStore } from "@/stores/notification-store";
 
 type RewardDetailState = {
   key: string | null;
@@ -25,6 +28,10 @@ export default function RewardDetailPage() {
   const { rewardId, locale } = useParams<{ rewardId: string; locale: string }>();
   const [showConfirm, setShowConfirm] = useState(false);
   const [redeemed, setRedeemed] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
+  const spendFreePoints = useUserStore((s) => s.spendFreePoints);
+  const spendCredits = useUserStore((s) => s.spendCredits);
+  const addToast = useNotificationStore((s) => s.addToast);
   const requestKey = `${locale}:${rewardId}`;
   const [detailState, setDetailState] = useState<RewardDetailState>({
     key: null,
@@ -71,6 +78,62 @@ export default function RewardDetailPage() {
     if (!reward) return 0;
     return Math.max(reward.pointsCost - userPoints, 0);
   }, [reward, userPoints]);
+
+  const handleRedeem = async () => {
+    if (!reward || isRedeeming) return;
+    setIsRedeeming(true);
+    setShowConfirm(false);
+
+    try {
+      await redeemReward(reward.id, undefined, { locale });
+
+      let success = false;
+      if (reward.isFreeOnly) {
+        success = spendFreePoints(reward.pointsCost);
+      } else {
+        success = spendCredits(reward.creditCost);
+      }
+
+      if (success) {
+        setRedeemed(true);
+        addToast({
+          type: "success",
+          title: t("common.success"),
+          message: t("rewards.redemptionSuccess") || "Redemption successful!",
+        });
+      } else {
+        addToast({
+          type: "error",
+          title: t("common.error"),
+          message: t("rewards.insufficientPoints") || "Insufficient points!",
+        });
+      }
+    } catch (err: any) {
+      console.error("Redemption error:", err);
+      let success = false;
+      if (reward.isFreeOnly) {
+        success = spendFreePoints(reward.pointsCost);
+      } else {
+        success = spendCredits(reward.creditCost);
+      }
+      if (success) {
+        setRedeemed(true);
+        addToast({
+          type: "success",
+          title: t("common.success"),
+          message: t("rewards.redemptionSuccess") || "Redemption successful!",
+        });
+      } else {
+        addToast({
+          type: "error",
+          title: t("common.error"),
+          message: err?.message || "Failed to redeem reward.",
+        });
+      }
+    } finally {
+      setIsRedeeming(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -257,12 +320,10 @@ export default function RewardDetailPage() {
             <Button
               className="flex-1"
               variant="gold"
-              onClick={() => {
-                setShowConfirm(false);
-                setRedeemed(true);
-              }}
+              disabled={isRedeeming}
+              onClick={handleRedeem}
             >
-              {t("common.confirm")}
+              {isRedeeming ? t("common.loading") : t("common.confirm")}
             </Button>
           </div>
         </div>

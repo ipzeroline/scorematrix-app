@@ -27,7 +27,7 @@ interface UserMenuProps {
   rank?: string;
   xp?: number;
   level?: number;
-  walletReady?: boolean;
+  memberInfoReady?: boolean;
   role?: "user" | "admin";
 }
 
@@ -40,7 +40,7 @@ export function UserMenu({
   rank = "bronze",
   xp = 0,
   level = 1,
-  walletReady = true,
+  memberInfoReady = true,
   role = "user",
 }: UserMenuProps) {
   const locale = useLocale();
@@ -95,10 +95,17 @@ export function UserMenu({
       className="w-[min(92vw,296px)] overflow-hidden border-gray-800/90 bg-[#111722] py-0"
       trigger={
         <div className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
-          <Avatar src={avatar} fallback={username} size="sm" />
+          {memberInfoReady ? (
+            <Avatar src={avatar} fallback={username} size="sm" />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="h-8 w-8 shrink-0 rounded-full border border-gray-700 bg-white/[0.04]"
+            />
+          )}
           <div className="hidden sm:flex items-center gap-2">
             <div className="flex items-center gap-2">
-              {walletReady ? (
+              {memberInfoReady ? (
                 <>
                   <PointsBadge type="free" amount={freePoints} size="sm" />
                   <PointsBadge type="premium" amount={premiumCredits} size="sm" />
@@ -118,41 +125,73 @@ export function UserMenu({
       <div className="border-b border-gray-800 bg-[#0d121b]">
         <div className="p-3.5">
           <div className="flex items-center gap-3">
-            <Avatar
-              src={avatar}
-              fallback={username}
-              size="md"
-              className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
-            />
+            {memberInfoReady ? (
+              <Avatar
+                src={avatar}
+                fallback={username}
+                size="md"
+                className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="h-10 w-10 shrink-0 rounded-full border border-gray-700 bg-white/[0.04]"
+              />
+            )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">
-                {username}
-              </p>
-              <p className="mt-0.5 text-[11px] text-gray-500">
-                {t("nav.profile")}
-              </p>
+              {memberInfoReady ? (
+                <>
+                  <p className="truncate text-sm font-semibold text-white">
+                    {username}
+                  </p>
+                  <p className="mt-0.5 text-[11px] text-gray-500">
+                    {t("nav.profile")}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <WalletBadgeSkeleton className="h-4 w-28" />
+                  <WalletBadgeSkeleton className="mt-2 h-3 w-16" />
+                </>
+              )}
             </div>
           </div>
 
-          <MemberRankLevel rank={rank} level={level} />
+          {memberInfoReady ? (
+            <MemberRankLevel rank={rank} level={level} />
+          ) : (
+            <MemberRankLevelSkeleton />
+          )}
 
           <div className="mt-3 rounded-lg border border-gray-800 bg-[#090d14] p-2.5">
-            <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-gray-500">
-              <span>{t("gamification.xp")}</span>
-              <span className="font-mono text-cyan-200">
-                {xpProgress.current.toLocaleString()} / {xpProgress.target.toLocaleString()}
-              </span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-gray-800">
-              <div
-                className="h-full rounded-full bg-cyan-300"
-                style={{ width: `${xpProgress.percent}%` }}
-              />
-            </div>
+            {memberInfoReady ? (
+              <>
+                <div className="mb-1.5 flex items-center justify-between text-[10px] uppercase tracking-[0.12em] text-gray-500">
+                  <span>{t("gamification.xp")}</span>
+                  <span className="font-mono text-cyan-200">
+                    {xpProgress.current.toLocaleString()} / {xpProgress.target.toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-gray-800">
+                  <div
+                    className="h-full rounded-full bg-cyan-300"
+                    style={{ width: `${xpProgress.percent}%` }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mb-2 flex items-center justify-between">
+                  <WalletBadgeSkeleton className="h-3 w-10" />
+                  <WalletBadgeSkeleton className="h-3 w-20" />
+                </div>
+                <WalletBadgeSkeleton className="h-1.5 w-full" />
+              </>
+            )}
           </div>
 
           <div className="mt-2 rounded-lg border border-gray-700/80 bg-[#090d14] px-3 py-2.5">
-            {walletReady ? (
+            {memberInfoReady ? (
               <div className="flex items-center justify-between gap-3">
                 <WalletBalance
                   label={t("common.points")}
@@ -241,6 +280,22 @@ function MemberRankLevel({ rank, level }: { rank: string; level: number }) {
         <p className="mt-0.5 truncate text-sm font-semibold text-cyan-200">
           {formatRankLabel(rank)}
         </p>
+      </div>
+    </div>
+  );
+}
+
+function MemberRankLevelSkeleton() {
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-white/[0.025] px-3 py-2">
+      <div className="min-w-0">
+        <WalletBadgeSkeleton className="h-3 w-12" />
+        <WalletBadgeSkeleton className="mt-2 h-4 w-8" />
+      </div>
+      <div className="h-7 w-px shrink-0 bg-gray-800" />
+      <div className="flex min-w-0 flex-col items-end">
+        <WalletBadgeSkeleton className="h-3 w-12" />
+        <WalletBadgeSkeleton className="mt-2 h-4 w-16" />
       </div>
     </div>
   );

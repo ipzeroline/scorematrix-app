@@ -23,6 +23,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import { MatchStatus } from "@/types/common";
 import { formatMatchDateTimeWithZone } from "@/lib/utils";
+import { buildPredictMatchHref } from "@/lib/predict-route";
 
 type FilterKey = "all" | "live" | "upcoming" | "highConfidence" | "upset";
 type MatchResult = "W" | "D" | "L";
@@ -185,7 +186,7 @@ export function AIInsightListClient({
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto w-full max-w-6xl space-y-6 px-3 sm:px-4 md:px-6">
       <section className="rounded-xl border border-gray-800 bg-[#12121a] p-5 sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-2xl space-y-3">
@@ -296,7 +297,7 @@ export function AIInsightListClient({
                   key={insight.id}
                   hover
                   neon={insight.upsetAlert ? "magenta" : "cyan"}
-                  className="space-y-4 p-4"
+                  className="w-full space-y-4 p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -339,7 +340,7 @@ export function AIInsightListClient({
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-2 sm:grid-cols-3">
                     <ProbabilityCard
                       label={copy.labels.homeWin}
                       value={insight.homeWinProbability}
@@ -441,7 +442,12 @@ export function AIInsightListClient({
                     </p>
                     <div className="flex gap-2">
                       <Link
-                        href={`/${locale}/predict/${insight.matchId}`}
+                        href={buildPredictMatchHref(
+                          locale,
+                          insight.matchId,
+                          insight.homeTeam.id,
+                          insight.awayTeam.id
+                        )}
                         className="inline-flex items-center justify-center rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-cyan-500/50 hover:text-cyan-300"
                       >
                         {copy.actions.predictNow}
@@ -488,14 +494,14 @@ export function AIInsightListClient({
 
 function TeamLine({ insight }: { insight: AIInsightListItem }) {
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-      <TeamName name={insight.homeTeam.name} logo={insight.homeTeam.logo} align="left" />
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <TeamName name={insight.homeTeam.name} logo={insight.homeTeam.logo} />
       <span className="font-mono text-sm font-bold text-white">
         {insight.score.home === null
           ? "VS"
           : `${insight.score.home} - ${insight.score.away}`}
       </span>
-      <TeamName name={insight.awayTeam.name} logo={insight.awayTeam.logo} align="right" />
+      <TeamName name={insight.awayTeam.name} logo={insight.awayTeam.logo} />
     </div>
   );
 }
@@ -503,21 +509,16 @@ function TeamLine({ insight }: { insight: AIInsightListItem }) {
 function TeamName({
   name,
   logo,
-  align,
 }: {
   name: string;
   logo: string | null;
-  align: "left" | "right";
 }) {
   return (
-    <div
-      className={`flex min-w-0 items-center gap-2 ${
-        align === "right" ? "justify-end text-right" : ""
-      }`}
-    >
-      {align === "left" && <ApiTeamLogo name={name} logo={logo} size="sm" />}
-      <span className="truncate text-sm font-semibold text-white">{name}</span>
-      {align === "right" && <ApiTeamLogo name={name} logo={logo} size="sm" />}
+    <div className="flex w-full min-w-0 flex-col items-center gap-1">
+      <ApiTeamLogo name={name} logo={logo} size="sm" />
+      <span className="w-full break-words text-center text-[13px] font-semibold leading-tight text-white sm:text-sm">
+        {name}
+      </span>
     </div>
   );
 }

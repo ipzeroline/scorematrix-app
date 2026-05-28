@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 interface ApiTeamLogoProps {
@@ -58,15 +57,12 @@ export function ApiTeamLogo({
           </span>
         </span>
       ) : (
-        <span className={`absolute ${config.image}`}>
-          <Image
+        <span className={`absolute ${config.image} flex items-center justify-center`}>
+          <img
             src={logo ?? ""}
             alt={`${name} logo`}
-            fill
-            sizes={config.imageSize}
-            unoptimized
+            className="h-full w-full object-contain"
             loading="lazy"
-            className="object-contain"
             onError={() => setFailedSrc(logo ?? null)}
           />
         </span>

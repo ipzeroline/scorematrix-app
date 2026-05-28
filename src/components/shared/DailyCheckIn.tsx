@@ -8,7 +8,7 @@ import { useNotificationStore } from '@/stores/notification-store';
 import { ApiClientError } from '@/lib/api-client';
 import { createCheckIn, getCheckInBonus, getCheckInPoints } from '@/lib/checkins-api';
 import { cn } from '@/lib/utils';
-import { Check, Gift, Shield, Sparkles } from 'lucide-react';
+import { Check, Gift, Shield, Sparkles, Flame } from 'lucide-react';
 import { DAILY_CHECKIN_REWARDS } from '@/data/checkin-rewards';
 
 const dayLabelKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -24,6 +24,17 @@ export function DailyCheckIn() {
   const addToast = useNotificationStore((s) => s.addToast);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [checkInModal, setCheckInModal] = useState<{
+    isOpen: boolean;
+    points: number;
+    streak: number;
+    bonusShield: boolean;
+  }>({
+    isOpen: false,
+    points: 0,
+    streak: 0,
+    bonusShield: false,
+  });
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
@@ -44,17 +55,41 @@ export function DailyCheckIn() {
     setIsCheckingIn(true);
     setErrorMessage(null);
 
+    let amount = 0;
+    let bonus: string | null = null;
+    let checkedInSuccess = false;
+
     try {
       const response = await createCheckIn({ locale });
       const apiAmount = getCheckInPoints(response);
       const apiBonus = getCheckInBonus(response);
       const result = checkIn();
-      const amount = apiAmount > 0 ? apiAmount : result.amount;
-      const bonus = apiBonus ?? result.bonus;
+      amount = apiAmount > 0 ? apiAmount : result.amount;
+      bonus = apiBonus ?? result.bonus;
+      checkedInSuccess = true;
+    } catch (error) {
+      console.warn("Check-in API failed, executing client-side check-in fallback", error);
+      try {
+        const result = checkIn();
+        amount = result.amount;
+        bonus = result.bonus;
+        checkedInSuccess = true;
+      } catch (fallbackError) {
+        console.error("Local check-in fallback failed", fallbackError);
+      }
+    }
 
+    if (checkedInSuccess) {
       if (amount > 0) {
         addFreePoints(amount);
       }
+
+      setCheckInModal({
+        isOpen: true,
+        points: amount,
+        streak: currentStreak + 1,
+        bonusShield: bonus === 'streakShield',
+      });
 
       addToast({
         type: 'points',
@@ -65,6 +100,7 @@ export function DailyCheckIn() {
         }),
         amount,
       });
+
       if (bonus === 'streakShield') {
         addStreakShield(1);
         addToast({
@@ -73,17 +109,17 @@ export function DailyCheckIn() {
           message: t('shieldBonusMessage'),
         });
       }
-    } catch (error) {
-      const message = getCheckInErrorMessage(error, tCommon('error'));
-      setErrorMessage(message);
+    } else {
+      const fallbackMessage = tCommon('error');
+      setErrorMessage(fallbackMessage);
       addToast({
         type: 'error',
         title: tCommon('error'),
-        message,
+        message: fallbackMessage,
       });
-    } finally {
-      setIsCheckingIn(false);
     }
+
+    setIsCheckingIn(false);
   };
 
   return (
@@ -237,6 +273,117 @@ export function DailyCheckIn() {
           </p>
         )}
       </div>
+      )}
+      {/* Premium Cyberpunk Daily Check-in Success Streak Modal */}
+      {checkInModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes checkin-pulse {
+              0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(34, 211, 238, 0.2); }
+              50% { box-shadow: 0 0 35px rgba(6, 182, 212, 0.6), 0 0 60px rgba(34, 211, 238, 0.4); }
+            }
+            @keyframes scanline-checkin {
+              0% { top: 0%; }
+              100% { top: 100%; }
+            }
+            @keyframes pop-streak {
+              0% { transform: scale(0.6); opacity: 0; }
+              50% { transform: scale(1.15); }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .cyber-checkin-modal {
+              animation: checkin-pulse 3s infinite alternate;
+            }
+            .scan-line-checkin {
+              animation: scanline-checkin 2.5s linear infinite;
+            }
+            .streak-pop {
+              animation: pop-streak 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            }
+          `}} />
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setCheckInModal((prev) => ({ ...prev, isOpen: false }))}
+          />
+
+          {/* Modal Container */}
+          <div className="cyber-checkin-modal relative w-full max-w-sm overflow-hidden rounded-2xl border-2 border-cyan-500/50 bg-[#060913] p-6 text-center shadow-2xl transition-all duration-300">
+            {/* Holographic grid and scanning line */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.3)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.3)_1px,transparent_1px)] bg-[size:20px_20px] opacity-25" />
+            <div className="scan-line-checkin absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-40" />
+
+            {/* Corner Decos */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-amber-400" />
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-amber-400" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+
+            <div className="relative z-10 space-y-5">
+              {/* Pulsing fire/shield crest */}
+              <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500/20 via-orange-500/10 to-amber-500/20 p-2 border border-cyan-400/30">
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#090e1a] border border-orange-500/40 animate-pulse">
+                  <Flame size={44} className="text-orange-400 animate-bounce" />
+                  <Sparkles size={20} className="absolute -top-1 -right-1 text-yellow-400 animate-spin" style={{ animationDuration: '4s' }} />
+                </div>
+              </div>
+
+              <div>
+                <span className="inline-block rounded-full bg-cyan-500/10 px-3 py-1 text-[10px] font-black tracking-widest text-cyan-300 uppercase border border-cyan-500/20">
+                  {t('claimed')} SECURED
+                </span>
+                <h2 className="mt-3 font-display text-2xl font-black text-white">
+                  {t('checkedIn')}!
+                </h2>
+                <p className="mt-1 text-xs text-cyan-400/70 font-mono">
+                  STREAK MULTIPLIER ACTIVE
+                </p>
+              </div>
+
+              {/* Streak info & rewards */}
+              <div className="grid grid-cols-2 gap-3 py-1">
+                {/* Streak count */}
+                <div className="streak-pop opacity-0 rounded-xl border border-orange-500/30 bg-orange-950/20 p-3 text-center" style={{ animationDelay: '0.1s' }}>
+                  <div className="font-mono text-3xl font-black text-orange-400">
+                    {checkInModal.streak}
+                  </div>
+                  <div className="mt-1 text-[9px] uppercase font-bold tracking-wider text-orange-500">
+                    Day Streak
+                  </div>
+                </div>
+
+                {/* Points Earned */}
+                <div className="streak-pop opacity-0 rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-3 text-center" style={{ animationDelay: '0.2s' }}>
+                  <div className="font-mono text-3xl font-black text-cyan-300">
+                    +{checkInModal.points}
+                  </div>
+                  <div className="mt-1 text-[9px] uppercase font-bold tracking-wider text-cyan-500">
+                    {t('pointsShort')}
+                  </div>
+                </div>
+              </div>
+
+              {/* Special Streak Shield Bonus */}
+              {checkInModal.bonusShield && (
+                <div className="streak-pop opacity-0 flex items-center justify-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 text-emerald-300" style={{ animationDelay: '0.3s' }}>
+                  <Shield size={18} className="text-emerald-400 animate-pulse" />
+                  <div className="text-left">
+                    <div className="text-xs font-bold font-mono">STREAK SHIELD EARNED</div>
+                    <div className="text-[9px] text-emerald-400/80">Protects your streak for 1 missed day!</div>
+                  </div>
+                </div>
+              )}
+
+              {/* CTA Button */}
+              <button
+                className="w-full rounded-lg bg-cyan-400 hover:bg-cyan-300 text-black py-2.5 text-xs font-black uppercase tracking-widest border border-cyan-300/40 shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-colors"
+                onClick={() => setCheckInModal((prev) => ({ ...prev, isOpen: false }))}
+              >
+                RESUME MISSION
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Card>
   );

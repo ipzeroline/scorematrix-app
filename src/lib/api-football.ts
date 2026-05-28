@@ -87,6 +87,20 @@ interface SoccerLiveResponse {
   data?: SoccerLiveFixture[];
 }
 
+interface SoccerH2HResponse {
+  data?: {
+    pair_key?: string;
+    team_a_id?: number;
+    team_b_id?: number;
+    fixtures?: unknown[];
+    hydrated_at?: string | null;
+  };
+  fixtures?: ApiFootballFixture[];
+  h2h?: {
+    fixtures?: ApiFootballFixture[];
+  };
+}
+
 interface SoccerLiveFixture {
   provider_id: number;
   league_id: number;
@@ -744,16 +758,28 @@ export async function getApiFootballH2H(
   awayTeam: number,
   limit = 10
 ) {
-  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
-    "/h2h",
-    {
-      home: String(homeTeam),
-      away: String(awayTeam),
-      limit: String(limit),
-    }
+  const payload = await fetchSoccerBackend<SoccerH2HResponse>(
+    `/soccer/h2h/${homeTeam}/${awayTeam}`,
+    {}
   );
 
-  return (payload.h2h?.fixtures ?? []).slice(0, limit);
+  if (payload.data?.fixtures) {
+    return withLeagueLogoFallbacks(
+      payload.data.fixtures
+        .map((fixture) => {
+          const details = normalizeFixtureDetailsPayload({
+            source: "api-football",
+            fetchedAt: payload.data?.hydrated_at ?? undefined,
+            data: fixture,
+          });
+
+          return details.fixture;
+        })
+        .filter(isApiFootballFixture)
+    ).slice(0, limit);
+  }
+
+  return (payload.fixtures ?? payload.h2h?.fixtures ?? []).slice(0, limit);
 }
 
 export function getMockApiFootballFixtures(limit?: number): ApiFootballFixture[] {
@@ -907,6 +933,17 @@ function withLeagueLogoFallbacks(fixtures: ApiFootballFixture[]): ApiFootballFix
       },
     };
   });
+}
+
+function isApiFootballFixture(value: unknown): value is ApiFootballFixture {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      "id" in value &&
+      "home" in value &&
+      "away" in value &&
+      "league" in value
+  );
 }
 
 function getApiSportsLeagueLogoUrl(leagueId?: number | null): string | null {

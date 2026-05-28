@@ -1,19 +1,36 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AUTH_SESSION_EXPIRED_EVENT } from "@/lib/api-client";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
 
-export function StoreInitializer() {
+interface StoreInitializerProps {
+  hasAuthSession?: boolean;
+}
+
+export function StoreInitializer({ hasAuthSession = false }: StoreInitializerProps) {
   const t = useTranslations("auth");
   const router = useRouter();
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const addToast = useNotificationStore((s) => s.addToast);
   const logout = useUserStore((s) => s.logout);
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const synced = useRef(false);
+
+  // Synchronously set isLoggedIn from server cookie before first render
+  // to prevent the navbar flash on refresh
+  useEffect(() => {
+    if (synced.current) return;
+    synced.current = true;
+
+    if (hasAuthSession && !isLoggedIn) {
+      useUserStore.setState({ isLoggedIn: true });
+    }
+  }, [hasAuthSession, isLoggedIn]);
 
   useEffect(() => {
     const handleSessionExpired = () => {

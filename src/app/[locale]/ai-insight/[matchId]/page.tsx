@@ -381,7 +381,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
   const apiCounts = getApiCounts(context);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5">
+    <div className="mx-auto w-full max-w-6xl space-y-5 px-3 sm:px-4 md:px-6">
       <Link
         href={`/${locale}/ai-insight`}
         className="inline-flex items-center gap-2 text-sm font-medium text-gray-400 transition-colors hover:text-cyan-300"
@@ -425,10 +425,10 @@ export default async function AIInsightDetailPage({ params }: Props) {
               </div>
             </div>
 
-            <div className="grid min-w-[240px] grid-cols-[1fr_auto_1fr] items-center gap-3 rounded-xl border border-gray-800 bg-black/25 p-3 text-center">
+            <div className="flex w-full min-w-0 items-center gap-2 rounded-xl border border-gray-800 bg-black/25 p-2.5 text-center sm:gap-3 sm:p-3">
               <TeamBlock team={fixture.home} tone="cyan" />
-              <div>
-                <p className="font-mono text-2xl font-black text-white">
+              <div className="shrink-0">
+                <p className="font-mono text-lg font-black text-white sm:text-2xl">
                   {fixture.score.home === null
                     ? "VS"
                     : `${fixture.score.home} - ${fixture.score.away}`}
@@ -864,11 +864,11 @@ function TeamBlock({
 }) {
   const accent = tone === "cyan" ? "cyan" : "magenta";
   return (
-    <div className="min-w-0">
+    <div className="w-full min-w-0">
       <div className="flex justify-center">
         <ApiTeamLogo name={team.name} logo={team.logo} size="md" accent={accent} />
       </div>
-      <p className={`mt-2 truncate text-xs font-semibold ${tone === "cyan" ? "text-cyan-200" : "text-magenta-200"}`}>
+      <p className={`mt-2 w-full break-words text-center text-[11px] font-semibold leading-tight ${tone === "cyan" ? "text-cyan-200" : "text-magenta-200"}`}>
         {team.name}
       </p>
     </div>
@@ -1252,10 +1252,10 @@ function FormationPitch({
         <ShieldCheck size={14} className="shrink-0 text-emerald-300" aria-hidden="true" />
         <span className="min-w-0 truncate">{title}</span>
       </h3>
-      <div className="relative min-h-[300px] overflow-hidden rounded-xl border border-emerald-500/20 bg-[linear-gradient(90deg,rgba(16,185,129,0.08)_50%,rgba(16,185,129,0.14)_50%),linear-gradient(0deg,transparent_48%,rgba(255,255,255,0.12)_49%,rgba(255,255,255,0.12)_51%,transparent_52%)] bg-[length:40px_40px,100%_100%] sm:min-h-[360px]">
+      <div className="relative min-h-[260px] overflow-hidden rounded-xl border border-emerald-500/20 bg-[linear-gradient(90deg,rgba(16,185,129,0.08)_50%,rgba(16,185,129,0.14)_50%),linear-gradient(0deg,transparent_48%,rgba(255,255,255,0.12)_49%,rgba(255,255,255,0.12)_51%,transparent_52%)] bg-[length:30px_30px,100%_100%] sm:min-h-[320px] sm:bg-[length:40px_40px,100%_100%]">
         <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
-        <div className="absolute inset-x-10 top-4 h-12 rounded-b-xl border-x border-b border-white/10" />
-        <div className="absolute inset-x-10 bottom-4 h-12 rounded-t-xl border-x border-t border-white/10" />
+        <div className="absolute inset-x-6 top-3 h-10 rounded-b-xl border-x border-b border-white/10 sm:inset-x-10 sm:top-4 sm:h-12" />
+        <div className="absolute inset-x-6 bottom-3 h-10 rounded-t-xl border-x border-t border-white/10 sm:inset-x-10 sm:bottom-4 sm:h-12" />
 
         {players.length === 0 ? (
           <div className="absolute inset-4 flex items-center justify-center rounded-lg border border-dashed border-white/10 bg-black/20 px-4 text-center text-xs text-gray-500">
@@ -1270,13 +1270,13 @@ function FormationPitch({
             return (
               <div
                 key={`${player.id}-${player.number}-${player.grid}`}
-                className="absolute w-16 -translate-x-1/2 -translate-y-1/2 text-center sm:w-24"
+                className="absolute max-w-[52px] -translate-x-1/2 -translate-y-1/2 text-center sm:max-w-[80px]"
                 style={{ top: `${top}%`, left: `${left}%` }}
                 title={`${player.number ?? "-"} ${player.name}`}
               >
                 <div
                   className={cn(
-                    "mx-auto flex h-8 w-8 items-center justify-center rounded-full border font-mono text-[11px] font-bold shadow-lg sm:h-9 sm:w-9 sm:text-xs",
+                    "mx-auto flex h-7 w-7 items-center justify-center rounded-full border font-mono text-[10px] font-bold shadow-lg sm:h-8 sm:w-8 sm:text-[11px]",
                     tone === "cyan"
                       ? "border-cyan-300/70 bg-cyan-500 text-black shadow-cyan-500/20"
                       : "border-magenta-300/70 bg-magenta-500 text-black shadow-magenta-500/20"
@@ -1284,7 +1284,7 @@ function FormationPitch({
                 >
                   {player.number ?? "-"}
                 </div>
-                <p className="mt-1 truncate rounded bg-black/55 px-1 text-[9px] font-medium text-white sm:text-[10px]">
+                <p className="mt-0.5 truncate rounded bg-black/65 px-0.5 text-[8px] font-medium text-white sm:text-[10px]">
                   {shortenPlayerName(player.name)}
                 </p>
               </div>
@@ -1314,7 +1314,7 @@ function PlayerRow({
   );
 
   return (
-    <div className="grid grid-cols-[32px_minmax(0,1fr)_38px] items-center gap-2 rounded-md border border-gray-800 bg-[#0a0a0f] px-2 py-2 sm:grid-cols-[36px_minmax(0,1fr)_44px]">
+    <div className="grid grid-cols-[28px_minmax(0,1fr)_34px] items-center gap-1.5 rounded-md border border-gray-800 bg-[#0a0a0f] px-2 py-1.5 sm:grid-cols-[36px_minmax(0,1fr)_44px]">
       <span className="font-mono text-xs font-bold text-white">
         {player.number ?? "-"}
       </span>

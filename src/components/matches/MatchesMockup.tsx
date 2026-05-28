@@ -12,6 +12,7 @@ import { MatchStatus } from "@/types/common";
 import { matches } from "@/data/matches";
 import { teams } from "@/data/teams";
 import { leagues } from "@/data/leagues";
+import { buildPredictMatchHref } from "@/lib/predict-route";
 import { cn, formatTime } from "@/lib/utils";
 
 const featuredMatches = matches
@@ -166,7 +167,14 @@ export function MatchesMockup() {
               <ProgressBar value={87} max={100} color="cyan" size="sm" />
             </div>
 
-            <Link href={`/${locale}/predict/${highlighted.id}`}>
+            <Link
+              href={buildPredictMatchHref(
+                locale,
+                highlighted.id,
+                highlighted.homeTeamId,
+                highlighted.awayTeamId
+              )}
+            >
               <Button className="w-full" variant="gold" size="md">
                 {t("prediction.predictScore")}
               </Button>

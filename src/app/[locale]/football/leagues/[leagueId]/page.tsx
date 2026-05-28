@@ -13,6 +13,7 @@ import {
   getApiFootballStandings,
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug, extractFootballEntityId } from "@/lib/football-slugs";
+import { buildPredictMatchHref } from "@/lib/predict-route";
 import { THAILAND_TIME_ZONE_LABEL, formatDate } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 
@@ -115,7 +116,14 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                 </Link>
                 <div className="flex justify-start md:justify-end">
                   {match.status === MatchStatus.UPCOMING ? (
-                    <Link href={`/${locale}/predict/${buildFixtureSeoSlug(match)}`}>
+                    <Link
+                      href={buildPredictMatchHref(
+                        locale,
+                        buildFixtureSeoSlug(match),
+                        match.home.apiTeamId ?? match.home.id,
+                        match.away.apiTeamId ?? match.away.id
+                      )}
+                    >
                       <Button size="sm" variant="gold">
                         {t("prediction.predictScore")}
                       </Button>

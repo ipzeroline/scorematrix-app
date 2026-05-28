@@ -11,6 +11,7 @@ import {
   Dice5,
   Flame,
   Star,
+  Sparkles,
   Target,
   Trophy,
   Users,
@@ -35,6 +36,7 @@ import {
   DEFAULT_MISSIONS_RESPONSE,
   getMissions,
   mapApiMission,
+  claimMission,
 } from "@/lib/missions-api";
 import type { Mission } from "@/types/mission";
 import { MissionType } from "@/types/common";
@@ -104,6 +106,65 @@ export default function MissionsPage() {
     };
   });
   const now = null;
+
+  const [claimModal, setClaimModal] = useState<{
+    isOpen: boolean;
+    missionTitle: string;
+    points: number;
+    xp: number;
+    credits: number;
+  }>({
+    isOpen: false,
+    missionTitle: "",
+    points: 0,
+    xp: 0,
+    credits: 0,
+  });
+
+  const handleClaimMission = async (missionId: string) => {
+    const mission = [...daily, ...weekly, ...special].find((m) => m.id === missionId);
+    if (!mission) return;
+
+    try {
+      await claimMission(missionId, { locale });
+    } catch (err) {
+      console.warn("Failed to claim mission on backend, fallback to client-side only", err);
+    }
+
+    setClaimed((prev) => ({ ...prev, [missionId]: true }));
+
+    setClaimModal({
+      isOpen: true,
+      missionTitle: mission.title,
+      points: mission.rewardPoints,
+      xp: mission.rewardXP,
+      credits: mission.rewardCredits ?? 0,
+    });
+
+    const store = useUserStore.getState();
+    const nextPoints = store.freePoints + mission.rewardPoints;
+    const nextCredits = store.premiumCredits + (mission.rewardCredits ?? 0);
+    const nextXP = store.xp + mission.rewardXP;
+    const nextLevel = Math.floor(nextXP / 1000) + 1;
+    const nextCompleted = store.missionsCompleted + 1;
+
+    const nextStats = {
+      freePoints: nextPoints,
+      premiumCredits: nextCredits,
+      xp: nextXP,
+      level: nextLevel,
+      missionsCompleted: nextCompleted,
+    };
+
+    useUserStore.setState(nextStats);
+    setHeroStats((prev) => ({
+      ...prev,
+      freePoints: nextPoints,
+      xp: nextXP,
+      level: nextLevel,
+      missionsCompleted: nextCompleted,
+    }));
+  };
 
   useEffect(() => {
     let active = true;
@@ -235,7 +296,7 @@ export default function MissionsPage() {
           now={now}
           loading={loading}
           loadFailed={loadFailed}
-          onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
+          onClaim={handleClaimMission}
         />
       )}
 
@@ -248,7 +309,7 @@ export default function MissionsPage() {
           now={now}
           loading={loading}
           loadFailed={loadFailed}
-          onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
+          onClaim={handleClaimMission}
         />
       )}
 
@@ -261,7 +322,7 @@ export default function MissionsPage() {
           now={now}
           loading={loading}
           loadFailed={loadFailed}
-          onClaim={(id) => setClaimed((prev) => ({ ...prev, [id]: true }))}
+          onClaim={handleClaimMission}
         />
       )}
 
@@ -299,6 +360,133 @@ export default function MissionsPage() {
             })}
           </div>
         </section>
+      )}
+      {/* Premium Cyberpunk Claim Reward Popup Modal */}
+      {claimModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes cyber-pulse {
+              0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(217, 70, 239, 0.2); }
+              50% { box-shadow: 0 0 35px rgba(6, 182, 212, 0.6), 0 0 60px rgba(217, 70, 239, 0.4); }
+            }
+            @keyframes scanline {
+              0% { top: 0%; }
+              100% { top: 100%; }
+            }
+            @keyframes number-pop {
+              0% { transform: scale(0.8); opacity: 0; }
+              50% { transform: scale(1.1); }
+              100% { transform: scale(1); opacity: 1; }
+            }
+            .cyber-modal {
+              animation: cyber-pulse 3s infinite alternate;
+            }
+            .scan-line {
+              animation: scanline 2.5s linear infinite;
+            }
+            .reward-pop {
+              animation: number-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            }
+          `}} />
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity duration-300 animate-fade-in"
+            onClick={() => setClaimModal((prev) => ({ ...prev, isOpen: false }))}
+          />
+
+          {/* Modal Container */}
+          <div className="cyber-modal relative w-full max-w-md overflow-hidden rounded-2xl border-2 border-cyan-500/50 bg-[#060913] p-6 text-center shadow-2xl transition-all duration-300">
+            {/* Holographic grid and scanning line */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.3)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.3)_1px,transparent_1px)] bg-[size:20px_20px] opacity-25" />
+            <div className="scan-line absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-40" />
+            
+            {/* Cyber Corner Decos */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-magenta" />
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-magenta" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+
+            <div className="relative z-10 space-y-6">
+              {/* Spinning/pulsing neon crest */}
+              <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-500/20 via-purple-500/10 to-magenta/20 p-2 border border-cyan-400/30">
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#090e1a] border border-magenta/40 animate-pulse">
+                  <Award size={48} className="text-cyan-300 animate-bounce" />
+                  <Sparkles size={20} className="absolute -top-1 -right-1 text-yellow-400 animate-spin" style={{ animationDuration: '4s' }} />
+                </div>
+              </div>
+
+              <div>
+                <Badge variant="gold" size="md" className="tracking-widest uppercase">
+                  {copy.claimReward} SUCCESS
+                </Badge>
+                <h2 className="mt-3 font-display text-2xl font-black text-white">
+                  {claimModal.missionTitle}
+                </h2>
+                <p className="mt-1.5 text-xs text-cyan-400/70 uppercase tracking-widest font-mono">
+                  TRANSACTION SECURED // INCOMING ASSETS
+                </p>
+              </div>
+
+              {/* Reward Grid */}
+              <div className="grid grid-cols-3 gap-3 py-2">
+                {/* Points */}
+                {claimModal.points > 0 && (
+                  <div className="reward-pop opacity-0 rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-3 text-center transition-all hover:scale-105" style={{ animationDelay: '0.1s' }}>
+                    <div className="font-mono text-2xl font-black text-cyan-300">
+                      +{claimModal.points}
+                    </div>
+                    <div className="mt-1 text-[10px] uppercase font-bold tracking-wider text-cyan-500">
+                      Points
+                    </div>
+                  </div>
+                )}
+                {/* XP */}
+                {claimModal.xp > 0 && (
+                  <div className="reward-pop opacity-0 rounded-xl border border-purple-500/30 bg-purple-950/20 p-3 text-center transition-all hover:scale-105" style={{ animationDelay: '0.2s' }}>
+                    <div className="font-mono text-2xl font-black text-purple-300">
+                      +{claimModal.xp}
+                    </div>
+                    <div className="mt-1 text-[10px] uppercase font-bold tracking-wider text-purple-500">
+                      XP
+                    </div>
+                  </div>
+                )}
+                {/* Credits */}
+                {claimModal.credits > 0 && (
+                  <div className="reward-pop opacity-0 rounded-xl border border-magenta/30 bg-magenta/10 p-3 text-center transition-all hover:scale-105" style={{ animationDelay: '0.3s' }}>
+                    <div className="font-mono text-2xl font-black text-magenta">
+                      +{claimModal.credits}
+                    </div>
+                    <div className="mt-1 text-[10px] uppercase font-bold tracking-wider text-magenta/80">
+                      Credits
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Status Update Details */}
+              <div className="rounded-lg bg-black/40 border border-gray-800/80 p-3 text-xs text-gray-400 space-y-1.5 font-mono">
+                <div className="flex justify-between">
+                  <span>LEVEL STATE:</span>
+                  <span className="text-white font-bold">Lvl {heroStats.level}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>CURRENT BALANCE:</span>
+                  <span className="text-cyan-300 font-bold">{heroStats.freePoints.toLocaleString()} PTS</span>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <Button
+                variant="gold"
+                className="w-full text-sm font-bold tracking-widest py-3 uppercase border border-yellow-400/40 shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                onClick={() => setClaimModal((prev) => ({ ...prev, isOpen: false }))}
+              >
+                DISMISS INTERFACE
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -404,7 +592,7 @@ function MissionPanel({
   const claimedOrApiClaimed = claimed || mission.claimed;
 
   return (
-    <Card className={cn("p-4", complete && !claimedOrApiClaimed && "border-green-500/30")}>
+    <Card className={cn("p-4 transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:border-cyan-500/40", complete && !claimedOrApiClaimed && "border-green-500/30 hover:border-green-400/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)]")}>
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex min-w-0 gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">

@@ -1,4 +1,4 @@
-import { apiGetRaw, type ApiRequestOptions } from "@/lib/api-client";
+import { apiGetRaw, apiPostRaw, type ApiRequestOptions } from "@/lib/api-client";
 import { RewardCategory } from "@/types/common";
 import type { Reward } from "@/types/reward";
 
@@ -164,6 +164,12 @@ export async function getRewards(options?: ApiRequestOptions) {
 
 export async function getReward(rewardId: string | number, options?: ApiRequestOptions) {
   const response = await apiGetRaw<ApiReward>(`/rewards/${encodeURIComponent(String(rewardId))}`, options);
+  return response;
+}
+
+export async function redeemReward(rewardId: string | number, shippingAddress?: string, options?: ApiRequestOptions) {
+  const body = shippingAddress ? { shippingAddress } : {};
+  const response = await apiPostRaw<any>(`/rewards/${encodeURIComponent(String(rewardId))}/redeem`, body, options);
   return response;
 }
 

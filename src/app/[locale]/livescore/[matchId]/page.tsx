@@ -33,6 +33,7 @@ import {
 } from "@/lib/api-football";
 import { isIgnorableFixtureSupplementError } from "@/lib/api-football-fixture-details";
 import { buildFixtureSeoSlug, buildLeagueSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
+import { buildPredictMatchHref } from "@/lib/predict-route";
 import { MatchStatus } from "@/types/common";
 import { cn, formatDate, formatTime } from "@/lib/utils";
 
@@ -178,7 +179,15 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         </div>
         {fixture.status === MatchStatus.UPCOMING && (
           <div className="mt-4 flex justify-center">
-            <Link href={`/${locale}/predict/${buildFixtureSeoSlug(fixture)}`} className="w-full sm:w-auto">
+            <Link
+              href={buildPredictMatchHref(
+                locale,
+                buildFixtureSeoSlug(fixture),
+                fixture.home.apiTeamId ?? fixture.home.id,
+                fixture.away.apiTeamId ?? fixture.away.id
+              )}
+              className="w-full sm:w-auto"
+            >
               <Button variant="gold" size="md" className="w-full sm:w-auto">
                 {t("prediction.predictScore")}
               </Button>

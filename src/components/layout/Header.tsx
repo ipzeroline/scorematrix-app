@@ -38,7 +38,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const walletReady = useClientMounted();
+  const [loadedMemberInfoKey, setLoadedMemberInfoKey] = useState<string | null>(null);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const username = useUserStore((s) => s.username);
   const freePoints = useUserStore((s) => s.freePoints);
@@ -48,6 +48,8 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const rank = useUserStore((s) => s.rank);
   const syncWallet = useUserStore((s) => s.syncWallet);
   const effectiveIsLoggedIn = isLoggedIn || initialHasAuthSession;
+  const memberInfoKey = `${locale}:authenticated`;
+  const memberInfoReady = !effectiveIsLoggedIn || loadedMemberInfoKey === memberInfoKey;
   const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
       .then((response) => {
         if (!active) return;
         const profile = extractCurrentUser(response);
+        if (!profile) return;
         const stats = profile?.stats;
         const nextStats = {
           freePoints: pickNumber(stats?.freePoints, profile?.freePoints),
@@ -67,16 +70,27 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
           level: pickNumber(stats?.level, profile?.level),
           rank: pickString(stats?.rank, profile?.rank),
         };
+        const currentUser = useUserStore.getState();
+        useUserStore.setState({
+          userId: pickStringValue(profile.id, profile.code) ?? currentUser.userId,
+          username:
+            pickStringValue(profile.username, profile.user_name) ??
+            currentUser.username,
+          displayName:
+            pickStringValue(profile.displayName, profile.display_name, profile.name) ??
+            currentUser.displayName,
+        });
         syncWallet(stripUndefined(nextStats));
+        setLoadedMemberInfoKey(memberInfoKey);
       })
       .catch(() => {
-        // Keep the last known navbar values if profile sync fails.
+        // Keep the skeleton in place rather than flashing stale member values.
       });
 
     return () => {
       active = false;
     };
-  }, [effectiveIsLoggedIn, locale, syncWallet]);
+  }, [effectiveIsLoggedIn, locale, memberInfoKey, syncWallet]);
 
   const isActive = (href: string) =>
     pathname.includes(`/${locale}${href}`);
@@ -128,7 +142,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
           rank={rank}
           xp={xp}
           level={level}
-          walletReady={walletReady}
+          memberInfoReady={memberInfoReady}
         />
 
       </div>
@@ -162,14 +176,6 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   );
 }
 
-function useClientMounted() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
-  );
-}
-
 function extractCurrentUser(response: CurrentUserResponse): CurrentUserData | null {
   if (!response || typeof response !== "object") return null;
   if ("user" in response && response.user) return extractCurrentUser(response.user);
@@ -189,6 +195,14 @@ function pickNumber(...values: Array<number | string | null | undefined>) {
 function pickString(...values: Array<string | null | undefined>) {
   const value = values.find((item) => item !== undefined && item !== null && item.trim());
   return value?.trim();
+}
+
+function pickStringValue(...values: Array<string | number | null | undefined>) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number") return String(value);
+  }
+  return undefined;
 }
 
 function stripUndefined<T extends Record<string, unknown>>(value: T) {

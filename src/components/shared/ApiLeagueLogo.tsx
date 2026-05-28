@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState } from "react";
 
 interface ApiLeagueLogoProps {
@@ -26,18 +25,13 @@ export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
       className={`relative flex ${config.outer} shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white p-1`}
     >
       {showImage ? (
-        <span className="relative block h-full w-full">
-          <Image
+          <img
             src={logo ?? ""}
             alt={`${name} logo`}
-            fill
-            sizes={config.image}
-            unoptimized
+            className="h-full w-full object-contain"
             loading="lazy"
-            className="object-contain"
             onError={() => setFailedSrc(logo ?? null)}
           />
-        </span>
       ) : (
         <span className="text-xs font-bold text-gray-700">
           {name.slice(0, 2).toUpperCase()}

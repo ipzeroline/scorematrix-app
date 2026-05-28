@@ -1,4 +1,4 @@
-import { apiGetRaw, type ApiRequestOptions } from "@/lib/api-client";
+import { apiGetRaw, apiPostRaw, type ApiRequestOptions } from "@/lib/api-client";
 import { MissionType } from "@/types/common";
 import type { Mission } from "@/types/mission";
 
@@ -183,6 +183,11 @@ type MissionsApiPayload =
 export async function getMissions(options?: ApiRequestOptions) {
   const response = await apiGetRaw<MissionsApiPayload>("/missions", options);
   return normalizeMissionsResponse(response);
+}
+
+export async function claimMission(missionId: string | number, options?: ApiRequestOptions) {
+  const response = await apiPostRaw<any>(`/missions/${encodeURIComponent(String(missionId))}/claim`, {}, options);
+  return response;
 }
 
 export function normalizeMissionsResponse(

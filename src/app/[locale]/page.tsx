@@ -11,17 +11,18 @@ import { NewsSection } from "@/components/home/NewsSection";
 import { LOCALE_CODES } from "@/i18n";
 import { MatchStatus } from "@/types/common";
 import {
-  loadFixturesForDate,
   loadLiveFixtures,
   pickRandomFixture,
 } from "@/lib/football-page-data";
 import { getLatestArticles } from "@/lib/news-generator";
+import { getApiFootballUpcomingFixtures } from "@/lib/api-football";
 
 type Props = {
   params: Promise<{ locale: string }>;
 };
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export function generateStaticParams() {
   return LOCALE_CODES.map((locale) => ({ locale }));
@@ -154,5 +155,19 @@ export default async function DashboardPage({ params }: Props) {
 }
 
 async function loadHomepageFixtures() {
-  return loadFixturesForDate(16);
+  try {
+    const result = await getApiFootballUpcomingFixtures({ limit: 100, revalidate: 0 });
+    const todayUTC = new Date().toISOString().slice(0, 10);
+    const todayLocal = new Date().toLocaleDateString("en-CA");
+    const todayMatches = result.fixtures.filter((f) => {
+      if (!f.kickoffTime) return false;
+      const matchDateUTC = new Date(f.kickoffTime).toISOString().slice(0, 10);
+      const matchDateLocal = new Date(f.kickoffTime).toLocaleDateString("en-CA");
+      return matchDateUTC === todayUTC || matchDateLocal === todayLocal;
+    });
+    return todayMatches.slice(0, 16);
+  } catch (error) {
+    console.error("Error loading today's fixtures from upcoming list:", error);
+    return [];
+  }
 }

@@ -44,7 +44,8 @@ Main pages:
 - `src/app/[locale]/page.tsx` dashboard/home
 - Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `credits`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
 - Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`
-- Detail routes include `predict/[matchId]`, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
+- Detail routes include `predict/[matchId]` for legacy redirects, `predict/[matchId]/[homeTeamId]/[awayTeamId]` as the canonical predict URL, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
+- Predict links use the route `/predict/{apiFixtureId}/{homeTeamId}/{awayTeamId}` for API fixtures and keep local mock match ids for mock fixtures; older slug URLs such as `/predict/{matchSlug}-{apiFixtureId}/{homeTeamId}/{awayTeamId}` redirect to the canonical id-only route.
 - Admin pages under `src/app/[locale]/(admin)/admin/*`
 - Legal pages under `src/app/[locale]/legal/*`
 
@@ -54,6 +55,7 @@ API routes:
 - `src/app/api/football/fixtures/today/route.ts`: returns today's fixtures from soccer backend `GET /fixtures/today`
 - `src/app/api/football/fixtures/upcoming/route.ts`: returns upcoming fixtures from soccer backend `GET /fixtures/upcoming`
 - `src/app/api/football/teams/route.ts`: proxies favorite-team options from soccer backend `GET /teams`
+- `src/app/api/football/teams/[id]/squad/route.ts`: proxies team squad players from soccer backend `GET /teams/{team_id}/squad`
 - `src/app/api/football/media/[...path]/route.ts`: proxies football media
 - `src/app/api/football/flags/[...path]/route.ts`: proxies flags
 - `src/app/api/news/regenerate/route.ts`: regenerates today news JSON
@@ -109,6 +111,7 @@ Static data:
   - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
   - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
+- Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - `src/app/[locale]/livescore/page.tsx` uses `GET /fixtures/today` through `getApiFootballTodayFixtures` for its initial fixture list with `revalidate: 0` and no limit; the `Livescore` client view displays only fixtures whose normalized status group is `live`.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
@@ -150,9 +153,9 @@ Local API modules:
 - `src/lib/credits-api.ts`: typed wrapper for `GET /credits/packages`; the `/credits` page uses it to load purchasable credit packages and first-purchase bonus data from the scorm API.
 - `src/lib/events-api.ts`: typed wrapper for `GET /events`; the `/events` page maps API event fields into the existing event card grid and active-event highlight UI.
 - `src/lib/leaderboard-api.ts`: typed wrapper for `GET /leaderboard`; the `/leaderboard` page maps API entries, user entry, period, and rewards into the existing ranking UI, and the desktop sidebar leaderboard card loads the top entries from the same endpoint.
-- `src/lib/missions-api.ts`: typed wrapper for `GET /missions`; the `/missions` page maps `daily`, `weekly`, and `special` API missions into the existing mission card UI.
+- `src/lib/missions-api.ts`: typed wrapper for `GET /missions` and `POST /missions/:id/claim`; the `/missions` page maps `daily`, `weekly`, and `special` API missions into the existing mission card UI and supports interactive reward claims with Zustand sync.
 - `src/lib/referrals-api.ts`: typed wrapper for `GET /referrals`; the `/affiliate` page maps referral code, totals, share URL, referral rows, and reward tiers into the existing affiliate dashboard UI. Invite links are normalized client-side to the current origin and locale register route `/{locale}/auth/register?ref=...`.
-- `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards` and `GET /rewards/{id}`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend, and the desktop sidebar rewards card loads active reward highlights from the same catalogue endpoint.
+- `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards`, `GET /rewards/{id}`, and `POST /rewards/:id/redeem`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend and handles point spending, and the desktop sidebar rewards card loads active reward highlights from the same catalogue endpoint.
 - `src/lib/soccer-api.ts`: typed client wrapper for local `/api/football/teams`, which proxies soccer backend `GET /teams`; the local route returns normalized `teams` groups for favorite-team selection while preserving the backend `data` payload.
 - `src/components/auth/FavoriteTeamSelect.tsx`: grouped team selector for registration, grouped by league and showing league/team logos.
 - `src/app/[locale]/(public)/auth/register/page.tsx`: submits to `POST /auth/register` with Register API fields, stores returned access/refresh tokens through `auth-api`, and loads favorite teams from `GET /teams`.

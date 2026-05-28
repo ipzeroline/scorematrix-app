@@ -540,7 +540,9 @@
     "noUpcomingMatches": "No upcoming matches",
     "checkBackLater": "Check back later for matches to predict.",
     "startPredictingHistory": "Start predicting matches to build your history.",
-    "predicted": "Predicted"
+    "predicted": "Predicted",
+    "submittedAt": "ផ្ញើនៅ",
+    "lockedAt": "ចាក់សោនៅ"
   },
   "aiInsight": {
     "title": "វិភាគ AI",
@@ -817,11 +819,12 @@
       "no": "No",
       "cancel": "Cancel",
       "confirm": "Confirm",
+      "clear": "Clear",
       "vs": "VS"
     },
     "basic": {
       "title": "Basic prediction",
-      "subtitle": "Required: result, exact score and winner team.",
+      "subtitle": "Required: predicted home and away score, 0-20.",
       "result": "Result / win / draw",
       "fullScore": "Exact score",
       "winnerTeam": "Winner team",
@@ -855,7 +858,21 @@
     },
     "summary": {
       "title": "Prediction slip",
-      "overUnder": "Over/Under 2.5"
+      "description": "Fields mirror the prediction API payload.",
+      "overUnder": "Over/Under 2.5",
+      "firstScorerName": "First scorer",
+      "halfTime": "Half-time score"
+    },
+    "payload": {
+      "matchId": "លេខសម្គាល់ការប្រកួត",
+      "predictedHomeScore": "ទស្សន៍ទាយគ្រាប់បាល់ម្ចាស់ផ្ទះ",
+      "predictedAwayScore": "ទស្សន៍ទាយគ្រាប់បាល់ក្រុមភ្ញៀវ",
+      "firstScorerPlayerId": "អ្នកស៊ុតបញ្ចូលទីដំបូង",
+      "totalGoals": "គ្រាប់បាល់សរុប",
+      "halfTimeHome": "គ្រាប់បាល់តង់ទី១ម្ចាស់ផ្ទះ",
+      "halfTimeAway": "គ្រាប់បាល់តង់ទី១ក្រុមភ្ញៀវ",
+      "confidenceLevel": "កម្រិតទំនុកចិត្ត",
+      "useBoost": "ប្រើប៊ូស"
     },
     "side": {
       "streak": "Streak",
@@ -866,6 +883,14 @@
       "title": "Predict with AI",
       "description": "AI tip: close to 2-1, over 2.5 total goals, and the home team has a strong chance to score first.",
       "use": "Use AI suggestion"
+    },
+    "boost": {
+      "label": "Use boost",
+      "description": "Apply an available boost to increase possible points for this prediction."
+    },
+    "h2h": {
+      "title": "ប្រវត្តិជួបគ្នា",
+      "empty": "No head-to-head data available yet"
     },
     "submitted": {
       "title": "Prediction submitted!",

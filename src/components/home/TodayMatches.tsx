@@ -244,7 +244,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       {/* Match grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {filtered.map((match) => (
-          <Link key={match.id} href={`/${locale}/livescore/${match.id}`}>
+          <Link key={match.id} href={`/${locale}/matches/detail/${match.id}`}>
             <Card hover className="today-match-card flex h-full flex-col gap-3">
               {/* League & status */}
               <div className="flex items-center justify-between gap-2">
@@ -309,7 +309,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
 
 function mapFixtureToTodayMatch(fixture: ApiFootballFixture, locale: string): TodayMatch {
   return {
-    id: buildFixtureSeoSlug(fixture),
+    id: String(fixture.apiFixtureId ?? fixture.id),
     homeTeam: fixture.home.name,
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,

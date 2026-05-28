@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,12 +9,15 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Tabs } from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import { formatMatchTimeWithZone } from "@/lib/utils";
-import { Brain, ShieldCheck, Trophy, Users, Zap } from "lucide-react";
+import { apiGetRaw } from "@/lib/api-client";
+import { useUserStore } from "@/stores/user-store";
+import { Brain, ShieldCheck, Trophy, Users, Zap, Award, Sparkles, X } from "lucide-react";
 
 interface PredictApiProps {
   fixtures: ApiFootballFixture[];
@@ -29,18 +32,118 @@ export function PredictApi({ fixtures }: PredictApiProps) {
     [fixtures]
   );
 
-  const history = fixtures
-    .filter((match) => match.status === MatchStatus.FINISHED)
-    .slice(0, 3)
-    .map((match, index) => ({
-      id: match.id,
-      home: match.home.name,
-      away: match.away.name,
-      predicted: index % 2 === 0 ? "2-1" : "1-1",
-      actual: `${match.score.home ?? 0}-${match.score.away ?? 0}`,
-      points: index % 2 === 0 ? 10 : 0,
-      result: index % 2 === 0 ? "correct" : "incorrect",
-    }));
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedPrediction, setSelectedPrediction] = useState<any | null>(null);
+  const [loadingPlayer, setLoadingPlayer] = useState(false);
+  const [playerName, setPlayerName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setHistory([]);
+      return;
+    }
+
+    const loadHistory = async () => {
+      setLoadingHistory(true);
+      try {
+        const response = await apiGetRaw<{ data: any[] }>("/predictions");
+        if (response && Array.isArray(response.data)) {
+          const mapped = response.data.map((item) => {
+            const fixture = fixtures.find((f) => String(f.id ?? f.apiFixtureId) === String(item.matchId));
+            
+            const homeName = fixture?.home.name ?? (item.match?.homeTeam?.name ?? (item.match?.home?.name ?? "Home Team"));
+            const awayName = fixture?.away.name ?? (item.match?.awayTeam?.name ?? (item.match?.away?.name ?? "Away Team"));
+
+            const predictedScore = `${item.predictedHomeScore ?? 0}-${item.predictedAwayScore ?? 0}`;
+            const actualScore = item.actualHomeScore !== null && item.actualAwayScore !== null
+              ? `${item.actualHomeScore}-${item.actualAwayScore}`
+              : "-";
+
+            const statusLower = String(item.status ?? "").toLowerCase();
+            let resultType: "correct" | "incorrect" | "pending" | "partial" = "incorrect";
+            if (statusLower === "pending") {
+              resultType = "pending";
+            } else if (statusLower === "correct" || statusLower === "winner") {
+              resultType = "correct";
+            } else if (statusLower === "partial") {
+              resultType = "partial";
+            }
+
+            return {
+              id: item.id,
+              home: homeName,
+              away: awayName,
+              predicted: predictedScore,
+              actual: actualScore,
+              points: item.pointsEarned ?? 0,
+              result: resultType,
+              matchId: item.matchId,
+              confidenceLevel: item.confidenceLevel,
+              boostUsed: item.boostUsed,
+              firstScorerPlayerId: item.firstScorerPlayerId,
+              createdAt: item.createdAt,
+              homeLogo: fixture?.home.logo ?? item.match?.homeTeam?.logo,
+              awayLogo: fixture?.away.logo ?? item.match?.awayTeam?.logo,
+              halfTimeHome: item.halfTimeHome,
+              halfTimeAway: item.halfTimeAway,
+              totalGoals: item.totalGoals,
+              comboMultiplier: item.comboMultiplier,
+              streakNumber: item.streakNumber,
+              lockedAt: item.lockedAt,
+            };
+          });
+
+          setHistory(mapped);
+        }
+      } catch (error) {
+        console.error("Error loading predictions history:", error);
+      } finally {
+        setLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [isLoggedIn, fixtures]);
+
+  useEffect(() => {
+    if (!selectedPrediction || !selectedPrediction.firstScorerPlayerId) {
+      setPlayerName(null);
+      return;
+    }
+
+    const loadPlayerName = async () => {
+      setLoadingPlayer(true);
+      try {
+        const apiBase = process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL || "https://api.scorematrix.live/api/v1";
+        const res = await apiGetRaw<any>(`${apiBase}/soccer/players/${selectedPrediction.firstScorerPlayerId}`);
+        if (res && res.data && res.data.player && res.data.player.name) {
+          setPlayerName(res.data.player.name);
+        } else {
+          setPlayerName(null);
+        }
+      } catch (err) {
+        console.error("Error loading player details:", err);
+        setPlayerName(null);
+      } finally {
+        setLoadingPlayer(false);
+      }
+    };
+
+    loadPlayerName();
+  }, [selectedPrediction]);
+
+  useEffect(() => {
+    if (selectedPrediction) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedPrediction]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -115,14 +218,34 @@ export function PredictApi({ fixtures }: PredictApiProps) {
 
       {tab === "history" && (
         <div className="space-y-2">
-          {history.length === 0 ? (
+          {loadingHistory ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={`history-skeleton-${i}`} className="p-3 relative overflow-hidden bg-black/45 border-gray-900">
+                <div className="absolute inset-0 animate-shimmer opacity-60" />
+                <div className="flex items-center justify-between gap-3 relative z-10">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-48 rounded" />
+                    <Skeleton className="h-3 w-32 rounded" />
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <Skeleton className="h-5 w-16 rounded" />
+                    <Skeleton className="h-3.5 w-12 rounded" />
+                  </div>
+                </div>
+              </Card>
+            ))
+          ) : history.length === 0 ? (
             <EmptyState
               title={t("prediction.noPredictions")}
               description={t("prediction.startPredictingHistory")}
             />
           ) : (
             history.map((h) => (
-              <Card key={h.id} className="p-3">
+              <Card
+                key={h.id}
+                className="p-3 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:border-cyan-500/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] bg-black/35"
+                onClick={() => setSelectedPrediction(h)}
+              >
                 <div className="flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="text-xs text-white truncate">
@@ -134,7 +257,15 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-3">
-                    <Badge variant={h.result === "correct" ? "green" : "red"}>
+                    <Badge variant={
+                      h.result === "correct"
+                        ? "green"
+                        : h.result === "pending"
+                        ? "cyan"
+                        : h.result === "partial"
+                        ? "gold"
+                        : "red"
+                    }>
                       {h.result.toUpperCase()}
                     </Badge>
                     <p className="text-xs font-mono text-green-400 mt-1">
@@ -183,6 +314,214 @@ export function PredictApi({ fixtures }: PredictApiProps) {
           ]}
         />
       </section>
+      {/* Premium Cyberpunk Prediction Slip Modal */}
+      {selectedPrediction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes slip-pulse {
+              0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(217, 70, 239, 0.1); }
+              50% { box-shadow: 0 0 35px rgba(6, 182, 212, 0.5), 0 0 60px rgba(217, 70, 239, 0.3); }
+            }
+            .cyber-slip-modal {
+              animation: slip-pulse 3s infinite alternate;
+            }
+          `}} />
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/85 backdrop-blur-md transition-opacity duration-300"
+            onClick={() => setSelectedPrediction(null)}
+          />
+
+          {/* Modal Container */}
+          <div className="cyber-slip-modal relative w-full max-w-md overflow-hidden rounded-2xl border-2 border-cyan-500/50 bg-[#060913] text-center shadow-2xl transition-all duration-300 flex flex-col max-h-[90vh]">
+            {/* Corner Decos */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400" />
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-magenta" />
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-magenta" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400" />
+
+            {/* Close Button at top-right */}
+            <button
+              onClick={() => setSelectedPrediction(null)}
+              className="absolute top-3 right-3 z-30 p-1.5 rounded-full border border-gray-800 bg-black/40 text-gray-500 hover:text-magenta hover:border-magenta/50 hover:bg-magenta/10 hover:scale-105 transition-all duration-300 shadow-lg cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X size={14} />
+            </button>
+
+            {/* Holographic grid and scanning line */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(18,24,38,0.3)_1px,transparent_1px),linear-gradient(90deg,rgba(18,24,38,0.3)_1px,transparent_1px)] bg-[size:20px_20px] opacity-25" />
+            <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-40 animate-scanline" />
+
+            <div className="relative z-10 space-y-5 overflow-y-auto p-6 scrollbar-thin flex-1">
+              <div className="flex justify-between items-center border-b border-gray-800/80 pb-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-cyan-400 font-mono">
+                  PREDICTION RECEIPT // TICKET #{selectedPrediction.id}
+                </span>
+                <Badge variant={
+                  selectedPrediction.result === "correct"
+                    ? "green"
+                    : selectedPrediction.result === "pending"
+                    ? "cyan"
+                    : selectedPrediction.result === "partial"
+                    ? "gold"
+                    : "red"
+                }>
+                  {selectedPrediction.result.toUpperCase()}
+                </Badge>
+              </div>
+
+              {/* Match Details */}
+              <div className="bg-black/40 border border-gray-800/80 rounded-xl p-4 space-y-4">
+                <div className="grid grid-cols-3 items-center gap-2">
+                  <div className="text-center min-w-0">
+                    {selectedPrediction.homeLogo ? (
+                      <img src={selectedPrediction.homeLogo} alt={selectedPrediction.home} className="mx-auto h-12 w-12 object-contain" />
+                    ) : (
+                      <div className="mx-auto h-12 w-12 rounded-full bg-cyan-500/10 flex items-center justify-center font-bold text-cyan-400 text-xs">HOME</div>
+                    )}
+                    <div className="mt-2 text-xs font-bold text-white truncate">{selectedPrediction.home}</div>
+                  </div>
+
+                  <div className="text-center font-mono shrink-0">
+                    <div className="text-2xl font-black text-cyan-300">
+                      {selectedPrediction.predicted}
+                    </div>
+                    <div className="text-[8px] text-gray-500 uppercase tracking-widest mt-1">
+                      PREDICTED SCORE
+                    </div>
+                  </div>
+
+                  <div className="text-center min-w-0">
+                    {selectedPrediction.awayLogo ? (
+                      <img src={selectedPrediction.awayLogo} alt={selectedPrediction.away} className="mx-auto h-12 w-12 object-contain" />
+                    ) : (
+                      <div className="mx-auto h-12 w-12 rounded-full bg-magenta-500/10 flex items-center justify-center font-bold text-magenta-400 text-xs">AWAY</div>
+                    )}
+                    <div className="mt-2 text-xs font-bold text-white truncate">{selectedPrediction.away}</div>
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-900/60 pt-3 flex justify-between text-xs font-mono">
+                  <span className="text-gray-500">ACTUAL RESULT:</span>
+                  <span className="text-white font-bold">{selectedPrediction.actual}</span>
+                </div>
+              </div>
+
+              {/* Deep Details HUD Grid */}
+              <div className="space-y-4 text-left font-mono text-xs text-gray-400">
+                {/* Section 1: Rewards & Multipliers */}
+                <div className="bg-black/40 border border-cyan-500/10 rounded-xl p-3 space-y-2">
+                  <div className="text-[10px] text-cyan-400/80 font-black uppercase tracking-wider border-b border-gray-900/60 pb-1.5 mb-2">
+                    {t("prediction.yourPrediction").toUpperCase()} // METRICS
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">{t("predictionForm.payload.confidenceLevel").toUpperCase()}</span>
+                      <span className="text-white font-bold uppercase truncate">
+                        {selectedPrediction.confidenceLevel
+                          ? t(`predictionForm.confidence.${selectedPrediction.confidenceLevel}`)
+                          : t("predictionForm.confidence.safe")}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">{t("predictionForm.boost.label").toUpperCase()}</span>
+                      <span className={`font-bold uppercase truncate ${selectedPrediction.boostUsed ? "text-magenta" : "text-gray-600"}`}>
+                        {selectedPrediction.boostUsed ? "ACTIVE (x2)" : "INACTIVE"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">{t("prediction.combo").toUpperCase()}</span>
+                      <span className={`font-bold ${selectedPrediction.comboMultiplier > 1 ? "text-amber-400" : "text-white"}`}>
+                        x{selectedPrediction.comboMultiplier ?? 1}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">{t("prediction.streak").toUpperCase()}</span>
+                      <span className={`font-bold ${selectedPrediction.streakNumber > 0 ? "text-green-400" : "text-white"}`}>
+                        {selectedPrediction.streakNumber ?? 0}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Props Details */}
+                <div className="bg-black/40 border border-magenta/10 rounded-xl p-3 space-y-2">
+                  <div className="text-[10px] text-magenta/80 font-black uppercase tracking-wider border-b border-gray-900/60 pb-1.5 mb-2">
+                    {t("predictionForm.deep.title").toUpperCase()} // DETAILS
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">{t("predictionForm.summary.halfTime").toUpperCase()}</span>
+                      <span className="text-white font-bold">
+                        {selectedPrediction.halfTimeHome !== null && selectedPrediction.halfTimeAway !== null
+                          ? `${selectedPrediction.halfTimeHome} - ${selectedPrediction.halfTimeAway}`
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500">{t("predictionForm.deep.totalGoals").toUpperCase()}</span>
+                      <span className="text-white font-bold">
+                        {selectedPrediction.totalGoals !== null && selectedPrediction.totalGoals !== undefined
+                          ? selectedPrediction.totalGoals
+                          : "-"}
+                      </span>
+                    </div>
+                    <div className="flex flex-col col-span-2">
+                      <span className="text-[10px] text-gray-500">{t("predictionForm.deep.firstScorer").toUpperCase()}</span>
+                      <span className="text-cyan-300 font-bold truncate">
+                        {selectedPrediction.firstScorerPlayerId ? (
+                          loadingPlayer ? (
+                            <span className="animate-pulse text-gray-500">Loading...</span>
+                          ) : playerName ? (
+                            `${playerName} (ID: ${selectedPrediction.firstScorerPlayerId})`
+                          ) : (
+                            `Player ID: ${selectedPrediction.firstScorerPlayerId}`
+                          )
+                        ) : (
+                          t("predictionForm.deep.noGoal")
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Time & Auditing */}
+                <div className="bg-black/20 border border-gray-900/80 rounded-xl p-3 space-y-2 text-[10px] text-gray-500">
+                  <div className="flex justify-between items-center">
+                    <span>{t("prediction.pointsEarned").toUpperCase()}:</span>
+                    <span className="text-green-400 font-bold text-xs">+{selectedPrediction.points} PTS</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-gray-900/40 pt-1.5">
+                    <span>{t("prediction.lockedAt").toUpperCase()}:</span>
+                    <span className="text-gray-400 font-medium">
+                      {selectedPrediction.lockedAt
+                        ? new Date(selectedPrediction.lockedAt.replace(" ", "T")).toLocaleString(locale)
+                        : "-"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>{t("prediction.submittedAt").toUpperCase()}:</span>
+                    <span className="text-gray-400 font-medium">
+                      {selectedPrediction.createdAt
+                        ? new Date(selectedPrediction.createdAt).toLocaleString(locale)
+                        : "-"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                variant="gold"
+                className="w-full text-xs font-black tracking-widest py-2.5 uppercase border border-yellow-400/40"
+                onClick={() => setSelectedPrediction(null)}
+              >
+                CLOSE TICKET
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

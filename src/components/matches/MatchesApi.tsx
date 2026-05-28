@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   memo,
+  useCallback,
   useDeferredValue,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -27,6 +29,7 @@ import { MatchStatus } from "@/types/common";
 import { THAILAND_TIME_ZONE_LABEL, cn, formatDate, formatTime } from "@/lib/utils";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug, buildLeagueSeoSlug } from "@/lib/football-slugs";
+import { buildPredictMatchHref } from "@/lib/predict-route";
 import {
   buildFootballStatusLabels,
   getFixtureStatusGroup,
@@ -36,6 +39,7 @@ import {
 
 interface MatchesApiProps {
   fixtures: ApiFootballFixture[];
+  initialHasAuthSession?: boolean;
 }
 
 const INITIAL_MATCH_RENDER_LIMIT = 80;
@@ -80,10 +84,11 @@ type MatchTableLabels = {
   statusLabels: FootballStatusLabels;
 };
 
-export function MatchesApi({ fixtures }: MatchesApiProps) {
+export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = false }: MatchesApiProps) {
   const locale = useLocale();
   const t = useTranslations();
   const isLoggedIn = useUserStore((state) => state.isLoggedIn);
+  const effectiveIsLoggedIn = isLoggedIn || initialHasAuthSession;
   const [activeLeague, setActiveLeague] = useState("All");
   const [activeStatusTab, setActiveStatusTab] = useState<MatchStatusTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -91,8 +96,32 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
   const [visibleMatchLimit, setVisibleMatchLimit] = useState(
     INITIAL_MATCH_RENDER_LIMIT
   );
+  const [fixtures, setFixtures] = useState(initialFixtures);
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const deferredLeagueQuery = useDeferredValue(leagueQuery);
+
+  useEffect(() => {
+    setFixtures(initialFixtures);
+  }, [initialFixtures]);
+
+  // Auto-refresh fixtures every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/football/fixtures/upcoming");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.fixtures) {
+            setFixtures(data.fixtures);
+          }
+        }
+      } catch {
+        // silent fail
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [locale]);
   const matchStats = useMemo(() => getMatchStats(fixtures), [fixtures]);
   const tableLabels = useMemo(
     () => ({
@@ -405,7 +434,7 @@ export function MatchesApi({ fixtures }: MatchesApiProps) {
                     group={group}
                     locale={locale}
                     labels={tableLabels}
-                    isLoggedIn={isLoggedIn}
+                    isLoggedIn={effectiveIsLoggedIn}
                   />
                 ))}
                 {hasMoreMatches && (
@@ -830,7 +859,16 @@ const MatchRow = memo(function MatchRow({
   labels: MatchTableLabels;
   isLoggedIn: boolean;
 }) {
-  const matchSlug = useMemo(() => buildFixtureSeoSlug(match), [match]);
+  const predictMatchHref = useMemo(
+    () =>
+      buildPredictMatchHref(
+        locale,
+        buildFixtureSeoSlug(match),
+        match.home.apiTeamId ?? match.home.id,
+        match.away.apiTeamId ?? match.away.id
+      ),
+    [locale, match]
+  );
   const matchDetailHref = useMemo(() => buildMatchDetailHref(match, locale), [match, locale]);
   const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
   const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
@@ -887,12 +925,12 @@ const MatchRow = memo(function MatchRow({
       </td>
       <td className="hidden px-4 py-3 text-right sm:table-cell">
         {isLoggedIn && statusGroup === MatchStatus.UPCOMING ? (
-          <a
-            href={`/${locale}/predict/${matchSlug}`}
+          <Link
+            href={predictMatchHref}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400"
           >
             {labels.predictScore}
-          </a>
+          </Link>
         ) : (
           <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
             -
