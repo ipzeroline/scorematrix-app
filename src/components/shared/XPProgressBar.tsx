@@ -4,17 +4,18 @@ import { cn } from "@/lib/utils";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 
 // Approximate XP per level (exponential growth)
-function xpForLevel(level: number): number {
-  return Math.floor(100 * Math.pow(1.5, level - 1));
-}
+const XP_PER_LEVEL = 1000;
 
-function xpRangeForLevel(level: number): { min: number; max: number; currentLevelXP: number } {
-  let total = 0;
-  for (let i = 1; i < level; i++) {
-    total += xpForLevel(i);
-  }
-  const needed = xpForLevel(level);
-  return { min: total, max: total + needed, currentLevelXP: needed };
+function getLinearXpProgress(xp: number, level: number) {
+  const xpForCurrentLevel = (level - 1) * XP_PER_LEVEL;
+  const progressInLevel = xp - xpForCurrentLevel;
+  const xpNeeded = XP_PER_LEVEL - progressInLevel;
+
+  return {
+    progressInLevel: Math.max(0, Math.min(progressInLevel, XP_PER_LEVEL)),
+    currentLevelXP: XP_PER_LEVEL,
+    xpNeeded: Math.max(0, xpNeeded),
+  };
 }
 
 interface XPProgressBarProps {
@@ -28,9 +29,7 @@ export function XPProgressBar({
   level,
   className,
 }: XPProgressBarProps) {
-  const { min, max, currentLevelXP } = xpRangeForLevel(level);
-  const progressInLevel = currentXP - min;
-  const xpNeeded = max - currentXP;
+  const { progressInLevel, currentLevelXP, xpNeeded } = getLinearXpProgress(currentXP, level);
 
   // Level badge colors by range
   const levelBadgeColor = (lvl: number): string => {

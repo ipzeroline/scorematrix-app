@@ -14,8 +14,12 @@ export default async function FootballPlayerPage({ params, searchParams }: Props
   const t = await getTranslations({ locale });
   const { season: seasonParam } = await searchParams;
   const player = Number.parseInt(playerId, 10);
-  const season = Number.parseInt(seasonParam ?? String(new Date().getFullYear()), 10);
-  const profile = await getApiFootballPlayerProfile(player, season);
+  const fallbackSeason = Number.parseInt(
+    seasonParam ?? String(new Date().getFullYear()),
+    10
+  );
+  const profile = await getApiFootballPlayerProfile(player).catch(() => null);
+  const season = profile?.statistics[0]?.league.season ?? fallbackSeason;
 
   if (!profile) {
     return (

@@ -23,9 +23,9 @@ import {
   Users,
   Zap,
 } from "lucide-react";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { cn } from "@/lib/utils";
 import {
-  DEFAULT_LEADERBOARD_RESPONSE,
   getLeaderboard,
   mapApiLeaderboardEntry,
 } from "@/lib/leaderboard-api";
@@ -63,35 +63,30 @@ const SIDEBAR_LINKS = [
   { href: "/news", label: "news", icon: Newspaper },
 ];
 
-const missionColors = [
-  "from-cyan-300 to-blue-300",
-  "from-green-300 to-emerald-300",
-  "from-purple-300 to-fuchsia-300",
-  "from-amber-300 to-orange-300",
-];
+const categoryColors: Record<string, "cyan" | "green" | "gold" | "purple" | "magenta"> = {
+  predict: "cyan",
+  streak: "gold",
+  accuracy: "green",
+  social: "purple",
+  daily_login: "magenta",
+};
 
 function getDefaultSidebarMissions() {
   return [
-    ...DEFAULT_MISSIONS_RESPONSE.daily.map((mission) =>
+    ...(DEFAULT_MISSIONS_RESPONSE?.daily ?? []).map((mission) =>
       mapApiMission(mission, MissionType.DAILY)
     ),
-    ...DEFAULT_MISSIONS_RESPONSE.weekly.map((mission) =>
+    ...(DEFAULT_MISSIONS_RESPONSE?.weekly ?? []).map((mission) =>
       mapApiMission(mission, MissionType.WEEKLY)
     ),
-    ...DEFAULT_MISSIONS_RESPONSE.special.map((mission) =>
+    ...(DEFAULT_MISSIONS_RESPONSE?.special ?? []).map((mission) =>
       mapApiMission(mission, MissionType.SPECIAL)
     ),
   ].slice(0, 4);
 }
 
-function getDefaultSidebarLeaders() {
-  return DEFAULT_LEADERBOARD_RESPONSE.entries
-    .map(mapApiLeaderboardEntry)
-    .slice(0, 10);
-}
-
 function getDefaultSidebarRewards() {
-  return DEFAULT_REWARDS_RESPONSE.data
+  return (DEFAULT_REWARDS_RESPONSE?.data ?? [])
     .map(mapApiReward)
     .filter((reward) => reward.isActive)
     .slice(0, 4);
@@ -102,7 +97,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
-  const [leaders, setLeaders] = useState<LeaderboardEntry[]>(getDefaultSidebarLeaders);
+  const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
   const [missions, setMissions] = useState<Mission[]>(getDefaultSidebarMissions);
   const [rewards, setRewards] = useState<RewardViewItem[]>(getDefaultSidebarRewards);
   const visibleLinks = SIDEBAR_LINKS.filter((link) => !link.authRequired || isLoggedIn);
@@ -115,14 +110,14 @@ export function Sidebar() {
     getLeaderboard({ locale })
       .then((response) => {
         if (!active) return;
-        const nextLeaders = response.entries
+        const nextLeaders = (response?.entries ?? [])
           .map(mapApiLeaderboardEntry)
           .sort((a, b) => a.rank - b.rank)
           .slice(0, 10);
-        setLeaders(nextLeaders.length > 0 ? nextLeaders : getDefaultSidebarLeaders());
+        setLeaders(nextLeaders);
       })
       .catch(() => {
-        if (active) setLeaders(getDefaultSidebarLeaders());
+        if (active) setLeaders([]);
       });
 
     return () => {
@@ -138,7 +133,7 @@ export function Sidebar() {
     getRewards({ locale })
       .then((response) => {
         if (!active) return;
-        const nextRewards = response.data
+        const nextRewards = (response?.data ?? [])
           .map(mapApiReward)
           .filter((reward) => reward.isActive)
           .slice(0, 4);
@@ -162,9 +157,9 @@ export function Sidebar() {
       .then((response) => {
         if (!active) return;
         const nextMissions = [
-          ...response.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)),
-          ...response.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)),
-          ...response.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)),
+          ...(response?.daily ?? []).map((mission) => mapApiMission(mission, MissionType.DAILY)),
+          ...(response?.weekly ?? []).map((mission) => mapApiMission(mission, MissionType.WEEKLY)),
+          ...(response?.special ?? []).map((mission) => mapApiMission(mission, MissionType.SPECIAL)),
         ].slice(0, 4);
         setMissions(nextMissions.length > 0 ? nextMissions : getDefaultSidebarMissions());
       })
@@ -226,7 +221,7 @@ export function Sidebar() {
           <div className="space-y-0.5">
             {leaders.map((user) => (
               <div
-                key={user.rank}
+                key={user.userId}
                 className="grid grid-cols-[18px_minmax(0,1fr)_34px_36px] items-center gap-1.5"
               >
                 <span className="grid h-4 w-4 place-items-center rounded-full bg-amber-300/15 text-[8px] font-bold text-amber-200">
@@ -264,11 +259,11 @@ export function Sidebar() {
 
           <div className="space-y-1.5">
             {missions.map((mission, index) => {
-              const pct = Math.min(100, Math.round((mission.progress / mission.target) * 100));
               const done = mission.completed || mission.claimed || mission.progress >= mission.target;
               const reward = mission.rewardCredits && mission.rewardCredits > 0
                 ? `+${mission.rewardCredits} CR`
                 : `+${mission.rewardXP} XP`;
+              const color = categoryColors[mission.category] ?? "cyan";
 
               return (
                 <div key={mission.id} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
@@ -286,12 +281,13 @@ export function Sidebar() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="h-1 min-w-0 flex-1 overflow-hidden rounded-full bg-white/10">
-                      <div
-                        className={`h-full rounded-full bg-gradient-to-r ${missionColors[index % missionColors.length]}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+                    <ProgressBar
+                      value={mission.progress}
+                      max={mission.target || 1}
+                      color={done ? "green" : color}
+                      size="sm"
+                      className="flex-1 min-w-0"
+                    />
                     <span className="w-7 text-right text-[9px] font-mono text-gray-400">
                       {mission.progress}/{mission.target}
                     </span>

@@ -12,7 +12,6 @@ export { dailyMissions, weeklyMissions } from './missions';
 export { achievementsData } from './achievements';
 export { rewards } from './rewards';
 export { redemptions } from './redemptions';
-export { dailyLeaderboard, weeklyLeaderboard, seasonalLeaderboard } from './leaderboard';
 export { privateLeagues } from './private-leagues';
 export { newsArticles } from './news';
 export { adminStats, adminLogs } from './admin';

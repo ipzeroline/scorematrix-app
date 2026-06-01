@@ -172,22 +172,6 @@ interface SoccerBackendTeamProfile {
   venue: ApiFootballTeamProfile["venue"];
 }
 
-interface SoccerBackendPlayerProfile {
-  id: string;
-  apiPlayerId: number;
-  name: string;
-  firstname: string;
-  lastname: string;
-  age: number | null;
-  birth: ApiFootballPlayerProfile["player"]["birth"];
-  nationality: string | null;
-  height: string | null;
-  weight: string | null;
-  injured: boolean;
-  photo: string | null;
-  statistics: ApiFootballPlayerProfile["statistics"];
-}
-
 export interface ApiFootballLeagueEntry {
   league: {
     id: number;
@@ -743,14 +727,13 @@ export async function getApiFootballTeamProfile(
   };
 }
 
-export async function getApiFootballPlayerProfile(player: number, season: number) {
-  const payload = await fetchSoccerBackend<
-    SoccerBackendResponse<SoccerBackendPlayerProfile | ApiFootballPlayerProfile>
-  >(`/players/${player}`, {
-    season: String(season),
-  });
+export async function getApiFootballPlayerProfile(player: number) {
+  const payload = await fetchSoccerBackend<unknown>(
+    `/players/${player}`,
+    {}
+  );
 
-  return payload.profile ? mapBackendPlayerProfile(payload.profile) : null;
+  return normalizeBackendPlayerProfilePayload(payload);
 }
 
 export async function getApiFootballH2H(
@@ -1125,27 +1108,159 @@ function mapBackendTeamProfile(
   };
 }
 
-function mapBackendPlayerProfile(
-  profile: SoccerBackendPlayerProfile | ApiFootballPlayerProfile
-): ApiFootballPlayerProfile {
-  if ("player" in profile) return profile;
+function normalizeBackendPlayerProfilePayload(
+  payload: unknown
+): ApiFootballPlayerProfile | null {
+  if (!isRecord(payload)) return null;
+
+  if ("player" in payload) {
+    return normalizeApiPlayerProfile(payload);
+  }
+
+  return (
+    normalizeBackendPlayerProfilePayload(payload.profile) ??
+    normalizeBackendPlayerProfilePayload(payload.data) ??
+    normalizeBackendPlayerProfilePayload(payload.result) ??
+    normalizePlainSoccerPlayerProfile(payload)
+  );
+}
+
+function normalizeApiPlayerProfile(profile: Record<string, unknown>) {
+  const player = isRecord(profile.player) ? profile.player : {};
 
   return {
-    player: {
-      id: profile.apiPlayerId,
-      name: profile.name,
-      firstname: profile.firstname,
-      lastname: profile.lastname,
-      age: profile.age,
-      birth: profile.birth,
-      nationality: profile.nationality,
-      height: profile.height,
-      weight: profile.weight,
-      injured: profile.injured,
-      photo: profile.photo,
-    },
-    statistics: profile.statistics,
+    player: normalizePlayerIdentity(player),
+    statistics: normalizePlayerStatistics(profile.statistics),
   };
+}
+
+function normalizePlainSoccerPlayerProfile(
+  profile: Record<string, unknown>
+): ApiFootballPlayerProfile | null {
+  const id = profile.apiPlayerId ?? profile.api_player_id ?? profile.provider_id ?? profile.id;
+  const name = profile.name;
+  if (!id && !name) return null;
+
+  return {
+    player: normalizePlayerIdentity(profile),
+    statistics: normalizePlayerStatistics(profile.statistics),
+  };
+}
+
+function normalizePlayerIdentity(player: Record<string, unknown>) {
+  return {
+    id: toNumber(
+      player.id ?? player.apiPlayerId ?? player.api_player_id ?? player.provider_id,
+      0
+    ),
+    name: toStringValue(player.name),
+    firstname: toStringValue(player.firstname ?? player.first_name),
+    lastname: toStringValue(player.lastname ?? player.last_name),
+    age: toNullableNumber(player.age),
+    birth: normalizePlayerBirth(player.birth),
+    nationality: toNullableString(player.nationality),
+    height: toNullableString(player.height),
+    weight: toNullableString(player.weight),
+    injured: Boolean(player.injured),
+    photo: toNullableString(player.photo ?? player.image ?? player.avatar),
+  };
+}
+
+function normalizePlayerBirth(birth: unknown) {
+  const value = isRecord(birth) ? birth : {};
+
+  return {
+    date: toNullableString(value.date),
+    place: toNullableString(value.place),
+    country: toNullableString(value.country),
+  };
+}
+
+function normalizePlayerStatistics(statistics: unknown) {
+  if (!Array.isArray(statistics)) return [];
+
+  return statistics.map((statistic) => {
+    const stat = isRecord(statistic) ? statistic : {};
+    const team = isRecord(stat.team) ? stat.team : {};
+    const league = isRecord(stat.league) ? stat.league : {};
+    const games = isRecord(stat.games) ? stat.games : {};
+    const goals = isRecord(stat.goals) ? stat.goals : {};
+    const shots = isRecord(stat.shots) ? stat.shots : {};
+    const passes = isRecord(stat.passes) ? stat.passes : {};
+    const tackles = isRecord(stat.tackles) ? stat.tackles : {};
+    const cards = isRecord(stat.cards) ? stat.cards : {};
+
+    return {
+      team: {
+        id: toNumber(team.id ?? team.provider_id, 0),
+        name: toStringValue(team.name),
+        logo: toNullableString(team.logo),
+      },
+      league: {
+        id: toNumber(league.id ?? league.provider_id, 0),
+        name: toStringValue(league.name),
+        country: toStringValue(league.country),
+        logo: toNullableString(league.logo),
+        season: toNumber(league.season, new Date().getFullYear()),
+      },
+      games: {
+        appearences: toNullableNumber(games.appearences ?? games.appearances),
+        lineups: toNullableNumber(games.lineups),
+        minutes: toNullableNumber(games.minutes),
+        position: toNullableString(games.position),
+        rating: toNullableString(games.rating),
+      },
+      goals: {
+        total: toNullableNumber(goals.total),
+        assists: toNullableNumber(goals.assists),
+      },
+      shots: {
+        total: toNullableNumber(shots.total),
+        on: toNullableNumber(shots.on),
+      },
+      passes: {
+        total: toNullableNumber(passes.total),
+        key: toNullableNumber(passes.key),
+        accuracy:
+          passes.accuracy === null || passes.accuracy === undefined
+            ? null
+            : typeof passes.accuracy === "number"
+              ? passes.accuracy
+              : String(passes.accuracy),
+      },
+      tackles: {
+        total: toNullableNumber(tackles.total),
+        interceptions: toNullableNumber(tackles.interceptions),
+      },
+      cards: {
+        yellow: toNullableNumber(cards.yellow),
+        red: toNullableNumber(cards.red),
+      },
+    };
+  });
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toNullableString(value: unknown) {
+  if (value === null || value === undefined) return null;
+  return String(value);
+}
+
+function toStringValue(value: unknown) {
+  return toNullableString(value) ?? "";
+}
+
+function toNullableNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
+function toNumber(value: unknown, fallback: number) {
+  return toNullableNumber(value) ?? fallback;
 }
 
 function hasBackendErrors(errors: unknown): boolean {

@@ -414,6 +414,23 @@ export function getMemberProfile(options?: ApiRequestOptions) {
   return apiGet<MemberProfileData>("/member/profile", options);
 }
 
+export function extractCurrentUser(response: CurrentUserResponse): CurrentUserData | null {
+  if (!response) return null;
+  if ("user" in response && response.user) {
+    return extractCurrentUser(response.user);
+  }
+  if ("member" in response && response.member) {
+    return extractCurrentUser(response.member);
+  }
+  if ("profile" in response && response.profile) {
+    return extractCurrentUser(response.profile);
+  }
+  if ("data" in response && response.data) {
+    return extractCurrentUser(response.data);
+  }
+  return response as CurrentUserData;
+}
+
 export async function getCurrentUser(options?: ApiRequestOptions) {
   const response = await apiGetRaw<CurrentUserResponse>("/users/me", options);
   return normalizeCurrentUserResponse(response);

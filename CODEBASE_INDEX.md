@@ -93,7 +93,7 @@ Static data:
 
 - `src/data/index.ts` re-exports most mock datasets
 - Football basics: `teams.ts`, `leagues.ts`, `players.ts`, `matches.ts`, `match-events.ts`, `match-stats.ts`, `lineups.ts`
-- Product/game loops: `predictions.ts`, `missions.ts`, `achievements.ts`, `rewards.ts`, `redemptions.ts`, `leaderboard.ts`, `private-leagues.ts`
+- Product/game loops: `predictions.ts`, `missions.ts`, `achievements.ts`, `rewards.ts`, `redemptions.ts`, `private-leagues.ts`
 - Page copy: `leaderboard-page-content.ts`, `leagues-page-content.ts`, `ai-insight-page-content.ts`, `mission-page-content.ts`, `legal-documents.ts`, `legal-info-pages.ts`
 - News JSON is date/locale based under `src/data/news/YYYY-MM-DD/{locale}.json`
 - World Cup data: `src/data/world-cup-2026.ts`
@@ -102,7 +102,7 @@ Static data:
 
 - `src/lib/api-football.ts`
   - Base URL: required `API_FOOTBALL_BASE_URL` from root `.env`
-  - Exports fetchers for fixtures, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, live fixtures from `GET /live`, fixture details, leagues, standings, schedules, team profiles, player profiles, and H2H
+  - Exports fetchers for fixtures, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, live fixtures from `GET /live`, fixture details, leagues, standings, schedules, team profiles, player profiles from `GET /soccer/players/{id}`, and H2H
   - League listing maps `GET /leagues` / `v1/soccer/leagues` responses from `data[]` with `provider_id`, `current_season`, `sort_order`, `logo`, and country fields into `ApiFootballLeagueEntry`
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
@@ -149,10 +149,11 @@ Local API modules:
 - `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, auth token/refresh-token cookie helpers, locale headers, 401 refresh-and-retry via `POST /auth/refresh`, and `ApiClientError`. Auth token cookie name is `scorematrix-auth-token`; refresh token cookie name is `scorematrix-refresh-token`; legacy local/session storage token is migrated then cleared. If refresh fails, it clears auth cookies and dispatches a client session-expired event.
 - `src/lib/auth-guard.ts`: shared auth route guard. Protected routes include leaderboard, missions, events, rewards, stats, affiliate, leagues, profile, wallet, settings, and notifications.
 - `src/lib/auth-api.ts`: typed wrappers for auth/member endpoints from the API reference. `GET/PATCH /users/me` responses are normalized from production snake_case stats/preferences into the camelCase fields used by the UI.
-- `src/lib/checkins-api.ts`: typed wrapper for `POST /checkins`; the homepage `DailyCheckIn` button submits to the backend before updating local streak/points and shows backend error messages through toast and inline copy.
+- `src/lib/checkins-api.ts`: typed wrapper for `GET /checkins/rewards` and `POST /checkins`; the homepage `DailyCheckIn` loads the daily reward schedule from the backend, submits check-ins before updating local streak/points, and shows backend error messages through toast and inline copy.
+- `src/lib/achievements-api.ts`: typed wrapper for `GET /achievements`; the `/missions` achievements tab maps unlocked and locked API achievements into the existing mission dashboard card grid.
 - `src/lib/credits-api.ts`: typed wrapper for `GET /credits/packages`; the `/credits` page uses it to load purchasable credit packages and first-purchase bonus data from the scorm API.
 - `src/lib/events-api.ts`: typed wrapper for `GET /events`; the `/events` page maps API event fields into the existing event card grid and active-event highlight UI.
-- `src/lib/leaderboard-api.ts`: typed wrapper for `GET /leaderboard`; the `/leaderboard` page maps API entries, user entry, period, and rewards into the existing ranking UI, and the desktop sidebar leaderboard card loads the top entries from the same endpoint.
+- `src/lib/leaderboard-api.ts`: typed wrapper for `GET /leaderboard`; the `/leaderboard` page, homepage leaderboard preview, and desktop sidebar leaderboard card all load ranking data from this endpoint only, with no mock fallback.
 - `src/lib/missions-api.ts`: typed wrapper for `GET /missions` and `POST /missions/:id/claim`; the `/missions` page maps `daily`, `weekly`, and `special` API missions into the existing mission card UI and supports interactive reward claims with Zustand sync.
 - `src/lib/referrals-api.ts`: typed wrapper for `GET /referrals`; the `/affiliate` page maps referral code, totals, share URL, referral rows, and reward tiers into the existing affiliate dashboard UI. Invite links are normalized client-side to the current origin and locale register route `/{locale}/auth/register?ref=...`.
 - `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards`, `GET /rewards/{id}`, and `POST /rewards/:id/redeem`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend and handles point spending, and the desktop sidebar rewards card loads active reward highlights from the same catalogue endpoint.

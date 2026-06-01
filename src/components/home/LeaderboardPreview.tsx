@@ -1,56 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Crown, Medal as MedalIcon, Trophy, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-
-interface LeaderboardUser {
-  rank: number;
-  username: string;
-  avatar: string | null;
-  points: number;
-  accuracy: number;
-}
-
-const topUsers: LeaderboardUser[] = [
-  {
-    rank: 1,
-    username: "CipherAce",
-    avatar: null,
-    points: 12450,
-    accuracy: 78.3,
-  },
-  {
-    rank: 2,
-    username: "PhantomStriker",
-    avatar: null,
-    points: 11920,
-    accuracy: 75.1,
-  },
-  {
-    rank: 3,
-    username: "NeonPred",
-    avatar: null,
-    points: 10870,
-    accuracy: 74.8,
-  },
-  {
-    rank: 4,
-    username: "GridironWiz",
-    avatar: null,
-    points: 10300,
-    accuracy: 72.4,
-  },
-  {
-    rank: 5,
-    username: "ScoreHunter",
-    avatar: null,
-    points: 9810,
-    accuracy: 71.9,
-  },
-];
+import { getLeaderboard, mapApiLeaderboardEntry } from "@/lib/leaderboard-api";
+import type { LeaderboardEntry } from "@/types/leaderboard";
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) {
@@ -94,6 +51,33 @@ function Medal({ rank }: { rank: number }) {
 export function LeaderboardPreview() {
   const locale = useLocale();
   const t = useTranslations();
+  const [topUsers, setTopUsers] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    getLeaderboard({ locale })
+      .then((response) => {
+        if (!active) return;
+        const users = response.entries
+          .map(mapApiLeaderboardEntry)
+          .sort((a, b) => a.rank - b.rank)
+          .slice(0, 5);
+
+        setTopUsers(users);
+      })
+      .catch(() => {
+        if (active) setTopUsers([]);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [locale]);
 
   return (
     <Card className="leaderboard-preview-card relative flex h-full flex-col overflow-hidden border-amber-500/20 !bg-[#151107]">
@@ -128,7 +112,19 @@ export function LeaderboardPreview() {
 
       {/* Table rows */}
       <div className="flex flex-col gap-1 flex-1">
-        {topUsers.map((user) => (
+        {loading ? (
+          Array.from({ length: 5 }).map((_, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[32px_1fr_72px_56px] gap-2 items-center px-1 py-2"
+            >
+              <span className="h-6 w-6 animate-pulse rounded-full bg-amber-300/15" />
+              <span className="h-6 animate-pulse rounded bg-white/[0.06]" />
+              <span className="ml-auto h-4 w-14 animate-pulse rounded bg-white/[0.05]" />
+              <span className="ml-auto h-4 w-10 animate-pulse rounded bg-white/[0.05]" />
+            </div>
+          ))
+        ) : topUsers.map((user) => (
           <div
             key={user.rank}
             className="leaderboard-preview-row grid grid-cols-[32px_1fr_72px_56px] gap-2 items-center px-1 py-2 rounded-lg transition-colors cursor-pointer"

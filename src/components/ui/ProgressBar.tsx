@@ -40,7 +40,9 @@ export function ProgressBar({
   showLabel,
   className,
 }: ProgressBarProps) {
-  const pct = Math.min(Math.round((value / max) * 100), 100);
+  const safeValue = Number.isFinite(value) ? Math.max(value, 0) : 0;
+  const safeMax = Number.isFinite(max) && max > 0 ? max : 1;
+  const pct = Math.min(Math.round((safeValue / safeMax) * 100), 100);
 
   return (
     <div className={cn("w-full", className)}>
@@ -48,7 +50,7 @@ export function ProgressBar({
         <div className="flex justify-between text-xs mb-1">
           <span className="text-gray-400">{pct}%</span>
           <span className="text-gray-500">
-            {value}/{max}
+            {safeValue}/{safeMax}
           </span>
         </div>
       )}

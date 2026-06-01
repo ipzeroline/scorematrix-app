@@ -14,18 +14,40 @@ export type ApiMission = {
   id: string;
   title: string;
   description: string;
-  requirementType: MissionRequirementType;
-  requirementCount: number;
-  rewardPoints: number;
-  rewardXp: number;
-  rewardCredits: number;
+  requirementType?: MissionRequirementType;
+  requirement_type?: MissionRequirementType;
+  requirementCount?: number;
+  requirement_count?: number;
+  rewardPoints?: number;
+  reward_points?: number;
+  rewardXp?: number;
+  reward_xp?: number;
+  rewardCredits?: number;
+  reward_credits?: number;
   icon: string;
   userProgress?: {
     progress?: number;
+    current?: number;
+    required?: number;
     completed?: boolean;
     claimed?: boolean;
   } | null;
-  expiresAt: string;
+  user_progress?: {
+    progress?: number;
+    current?: number;
+    required?: number;
+    completed?: boolean;
+    claimed?: boolean;
+  } | null;
+  progress?: number | {
+    progress?: number;
+    current?: number;
+    required?: number;
+  };
+  completed?: boolean;
+  claimed?: boolean;
+  expiresAt?: string;
+  expires_at?: string;
 };
 
 export type MissionsResponse = {
@@ -186,7 +208,11 @@ export async function getMissions(options?: ApiRequestOptions) {
 }
 
 export async function claimMission(missionId: string | number, options?: ApiRequestOptions) {
-  const response = await apiPostRaw<any>(`/missions/${encodeURIComponent(String(missionId))}/claim`, {}, options);
+  const response = await apiPostRaw<unknown>(
+    `/missions/${encodeURIComponent(String(missionId))}/claim`,
+    {},
+    options
+  );
   return response;
 }
 
@@ -216,27 +242,62 @@ export function mapApiMission(
   mission: ApiMission,
   type: MissionType
 ): Mission {
-  const progress = Number(mission.userProgress?.progress ?? 0);
-  const target = Number(mission.requirementCount ?? 0);
-  const completed = Boolean(mission.userProgress?.completed) || progress >= target;
+  const userProgress = mission.userProgress ?? mission.user_progress ?? null;
+  const progressSource = isRecord(mission.progress) ? mission.progress : null;
+  const progress = toNumber(
+    userProgress?.progress ??
+      userProgress?.current ??
+      progressSource?.progress ??
+      progressSource?.current ??
+      mission.progress,
+    0
+  );
+  const target = toNumber(
+    userProgress?.required ??
+      progressSource?.required ??
+      mission.requirementCount ??
+      mission.requirement_count,
+    0
+  );
+  const completed =
+    Boolean(userProgress?.completed ?? mission.completed) ||
+    (target > 0 && progress >= target);
 
   return {
-    id: mission.id,
+    id: String(mission.id),
     title: mission.title,
     description: mission.description,
     type,
-    category: mapRequirementCategory(mission.requirementType),
+    category: mapRequirementCategory(
+      mission.requirementType ?? mission.requirement_type ?? "predictions"
+    ),
     icon: mission.icon,
     target,
     progress,
-    rewardPoints: Number(mission.rewardPoints ?? 0),
-    rewardXP: Number(mission.rewardXp ?? 0),
-    rewardCredits: Number(mission.rewardCredits ?? 0),
+    rewardPoints: toNumber(mission.rewardPoints ?? mission.reward_points, 0),
+    rewardXP: toNumber(mission.rewardXp ?? mission.reward_xp, 0),
+    rewardCredits: toPositiveNumber(
+      mission.rewardCredits ?? mission.reward_credits
+    ),
     completed,
-    claimed: Boolean(mission.userProgress?.claimed),
-    expiresAt: mission.expiresAt,
-    resetAt: mission.expiresAt,
+    claimed: Boolean(userProgress?.claimed ?? mission.claimed),
+    expiresAt: mission.expiresAt ?? mission.expires_at ?? "",
+    resetAt: mission.expiresAt ?? mission.expires_at ?? "",
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toNumber(value: unknown, fallback: number) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function toPositiveNumber(value: unknown) {
+  const numberValue = toNumber(value, 0);
+  return numberValue > 0 ? numberValue : undefined;
 }
 
 function mapRequirementCategory(

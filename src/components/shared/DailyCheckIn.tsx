@@ -1,24 +1,35 @@
 'use client';
-import { useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/Card';
 import { useCheckinStore } from '@/stores/checkin-store';
 import { useUserStore } from '@/stores/user-store';
 import { useNotificationStore } from '@/stores/notification-store';
-import { ApiClientError } from '@/lib/api-client';
-import { createCheckIn, getCheckInBonus, getCheckInPoints } from '@/lib/checkins-api';
+import {
+  createCheckIn,
+  getCheckInBonus,
+  getCheckInPoints,
+  getCheckInRewards,
+  type CheckInRewardDay,
+  type CheckInRewardsResponse,
+} from '@/lib/checkins-api';
 import { cn } from '@/lib/utils';
 import { Check, Gift, Shield, Sparkles, Flame } from 'lucide-react';
-import { DAILY_CHECKIN_REWARDS } from '@/data/checkin-rewards';
 
 const dayLabelKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const emptySubscribe = () => () => {};
+const placeholderDays = Array.from({ length: 7 }, (_, index) => index);
 
-export function DailyCheckIn() {
+interface DailyCheckInProps {
+  initialHasAuthSession?: boolean;
+}
+
+export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProps) {
   const t = useTranslations('checkin');
   const tCommon = useTranslations('common');
   const locale = useLocale();
-  const { hasCheckedInToday, currentStreak, weeklyChecked, checkIn, getNextReward, getStreakProgress } = useCheckinStore();
+  const { hasCheckedInToday, currentStreak, checkIn, getNextReward, getStreakProgress } = useCheckinStore();
+  const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const addFreePoints = useUserStore((s) => s.addFreePoints);
   const addStreakShield = useUserStore((s) => s.addStreakShield);
   const addToast = useNotificationStore((s) => s.addToast);
@@ -35,19 +46,53 @@ export function DailyCheckIn() {
     streak: 0,
     bonusShield: false,
   });
+  const [rewardSchedule, setRewardSchedule] = useState<CheckInRewardsResponse | null>(null);
+  const [rewardsLoading, setRewardsLoading] = useState(true);
+  const [rewardsError, setRewardsError] = useState<string | null>(null);
   const isMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false
   );
-  const [todayIndex] = useState(() => {
-    const day = new Date().getDay();
-    return day === 0 ? 6 : day - 1;
-  });
 
   const streakProgress = getStreakProgress();
   const nextReward = getNextReward();
-  const daysToBonus = Math.max(streakProgress.target - streakProgress.current, 0);
+  const effectiveIsLoggedIn = isLoggedIn || initialHasAuthSession;
+  const activeReward = getActiveReward(rewardSchedule);
+  const activeRewardPoints = activeReward ? getRewardPoints(activeReward) : nextReward.baseAmount;
+  const hasClaimedToday = rewardSchedule?.checkedInToday ?? hasCheckedInToday;
+  const canClaimToday = rewardSchedule
+    ? rewardSchedule.canCheckIn && !rewardSchedule.checkedInToday
+    : !hasCheckedInToday;
+  const daysToBonus = getDaysToBonus(rewardSchedule) ?? Math.max(streakProgress.target - streakProgress.current, 0);
+
+  const loadRewards = useCallback(async () => {
+    setRewardsLoading(true);
+    setRewardsError(null);
+
+    try {
+      const rewards = await getCheckInRewards({ locale, cache: 'no-store' });
+      setRewardSchedule(rewards);
+    } catch (error) {
+      console.error('Failed to load check-in rewards', error);
+      setRewardsError(tCommon('error'));
+    } finally {
+      setRewardsLoading(false);
+    }
+  }, [locale, tCommon]);
+
+  useEffect(() => {
+    if (!effectiveIsLoggedIn || !isMounted) return;
+    const timeoutId = window.setTimeout(() => {
+      void loadRewards();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [effectiveIsLoggedIn, isMounted, loadRewards]);
+
+  if (!effectiveIsLoggedIn) {
+    return null;
+  }
 
   const handleCheckIn = async () => {
     if (isCheckingIn) return;
@@ -64,15 +109,17 @@ export function DailyCheckIn() {
       const apiAmount = getCheckInPoints(response);
       const apiBonus = getCheckInBonus(response);
       const result = checkIn();
-      amount = apiAmount > 0 ? apiAmount : result.amount;
-      bonus = apiBonus ?? result.bonus;
+      const scheduledAmount = activeReward ? getRewardPoints(activeReward) : 0;
+      amount = apiAmount > 0 ? apiAmount : scheduledAmount > 0 ? scheduledAmount : result.amount;
+      bonus = apiBonus ?? activeReward?.bonusType ?? result.bonus;
       checkedInSuccess = true;
     } catch (error) {
       console.warn("Check-in API failed, executing client-side check-in fallback", error);
       try {
         const result = checkIn();
-        amount = result.amount;
-        bonus = result.bonus;
+        const scheduledAmount = activeReward ? getRewardPoints(activeReward) : 0;
+        amount = scheduledAmount > 0 ? scheduledAmount : result.amount;
+        bonus = activeReward?.bonusType ?? result.bonus;
         checkedInSuccess = true;
       } catch (fallbackError) {
         console.error("Local check-in fallback failed", fallbackError);
@@ -83,6 +130,21 @@ export function DailyCheckIn() {
       if (amount > 0) {
         addFreePoints(amount);
       }
+
+      setRewardSchedule((current) =>
+        current
+          ? {
+              ...current,
+              checkedInToday: true,
+              canCheckIn: false,
+              days: current.days.map((day) =>
+                day.isNext
+                  ? { ...day, isCompleted: true, isNext: false }
+                  : day
+              ),
+            }
+          : current
+      );
 
       setCheckInModal({
         isOpen: true,
@@ -109,6 +171,8 @@ export function DailyCheckIn() {
           message: t('shieldBonusMessage'),
         });
       }
+
+      void loadRewards();
     } else {
       const fallbackMessage = tCommon('error');
       setErrorMessage(fallbackMessage);
@@ -145,16 +209,16 @@ export function DailyCheckIn() {
             </div>
           </div>
           <div className="grid grid-cols-7 gap-1.5">
-            {DAILY_CHECKIN_REWARDS.map((reward, i) => (
+            {placeholderDays.map((i) => (
               <div
-                key={reward.day}
+                key={i}
                 className="daily-checkin-day relative flex h-11 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border border-cyan-950/70 bg-black/20 px-1"
               >
                 <span className="text-[10px] font-black uppercase leading-none tracking-wide text-cyan-100/70">
                   {t(`days.${dayLabelKeys[i]}`)}
                 </span>
                 <span className="font-mono text-xs font-black leading-none text-cyan-800">
-                  +{reward.baseAmount}
+                  +--
                 </span>
               </div>
             ))}
@@ -179,72 +243,90 @@ export function DailyCheckIn() {
               <span className="font-mono font-black text-cyan-200">{currentStreak}</span>
               <span>{t('streak')}</span>
               <span className="text-cyan-700">|</span>
-              <span className="text-amber-200">+{nextReward.baseAmount} {t('pointsShort')}</span>
+              <span className="text-amber-200">
+                {rewardsLoading && !rewardSchedule ? '+--' : `+${activeRewardPoints}`} {t('pointsShort')}
+              </span>
             </p>
           </div>
         </div>
 
         <div className="min-w-0">
           <div className="grid grid-cols-7 gap-1.5">
-            {DAILY_CHECKIN_REWARDS.map((reward, i) => {
-              const isToday = i === todayIndex;
-              const isChecked = weeklyChecked[i];
-              const isPast = i < todayIndex;
+            {rewardSchedule?.days.length ? (
+              rewardSchedule.days.map((reward, i) => {
+                const isToday = reward.isNext || reward.day === rewardSchedule.today.day;
+                const isChecked = reward.isCompleted;
+                const isPast = !isChecked && !reward.isNext && reward.day < rewardSchedule.nextDay;
 
-              return (
-                <div
-                  key={reward.day}
-                  className={cn(
-                    'daily-checkin-day relative flex h-11 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-1 transition-colors',
-                    isChecked && 'border-emerald-400/45 bg-emerald-400/[0.12]',
-                    isToday && !isChecked && 'daily-checkin-today border-cyan-300/70 bg-cyan-400/[0.14]',
-                    !isChecked && !isToday && 'border-cyan-700/35 bg-cyan-950/20',
-                    isPast && !isChecked && 'border-cyan-900/45 bg-cyan-950/10 opacity-55'
-                  )}
-                >
-                  {isToday && <span className="absolute inset-x-2 top-1 h-px bg-cyan-200/60" />}
-                  <span className={cn(
-                    'text-[11px] font-black uppercase leading-none tracking-wide',
-                    isChecked
-                      ? 'text-emerald-200'
-                      : isToday
-                        ? 'text-cyan-50'
-                        : isPast
-                          ? 'text-cyan-200/45'
-                          : 'text-cyan-100/75'
-                  )}>
-                    {t(`days.${dayLabelKeys[i]}`)}
-                  </span>
-                  <span className={cn(
-                    'font-mono text-sm font-black leading-none',
-                    isChecked
-                      ? 'text-emerald-300'
-                      : isToday
-                        ? 'text-amber-200 text-glow-cyan'
-                        : isPast
-                          ? 'text-cyan-300/40'
-                          : 'text-cyan-200/80'
-                  )}>
-                  {isChecked ? (
-                      <Check size={14} className="text-emerald-300" />
-                    ) : (
-                      `+${reward.baseAmount}`
+                return (
+                  <div
+                    key={`${reward.day}-${reward.dayName}`}
+                    className={cn(
+                      'daily-checkin-day relative flex h-11 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-1 transition-colors',
+                      isChecked && 'border-emerald-400/45 bg-emerald-400/[0.12]',
+                      isToday && !isChecked && 'daily-checkin-today border-cyan-300/70 bg-cyan-400/[0.14]',
+                      !isChecked && !isToday && 'border-cyan-700/35 bg-cyan-950/20',
+                      isPast && !isChecked && 'border-cyan-900/45 bg-cyan-950/10 opacity-55'
                     )}
-                  </span>
-                  {reward.bonus && (
-                    <Shield size={11} className={cn(
+                  >
+                    {isToday && <span className="absolute inset-x-2 top-1 h-px bg-cyan-200/60" />}
+                    <span className={cn(
+                      'max-w-full truncate text-[10px] font-black uppercase leading-none tracking-wide',
+                      isChecked
+                        ? 'text-emerald-200'
+                        : isToday
+                          ? 'text-cyan-50'
+                          : isPast
+                            ? 'text-cyan-200/45'
+                            : 'text-cyan-100/75'
+                    )}>
+                      {reward.dayName || t(`days.${dayLabelKeys[i]}`)}
+                    </span>
+                    <span className={cn(
+                      'font-mono text-sm font-black leading-none',
                       isChecked
                         ? 'text-emerald-300'
                         : isToday
-                          ? 'text-amber-200/90'
+                          ? 'text-amber-200 text-glow-cyan'
                           : isPast
-                            ? 'text-cyan-300/35'
-                            : 'text-cyan-200/65'
-                    )} />
-                  )}
+                            ? 'text-cyan-300/40'
+                            : 'text-cyan-200/80'
+                    )}>
+                    {isChecked ? (
+                        <Check size={14} className="text-emerald-300" />
+                      ) : (
+                        `+${getRewardPoints(reward)}`
+                      )}
+                    </span>
+                    {(reward.bonusType || reward.bonusPoints > 0) && (
+                      <Shield size={11} className={cn(
+                        isChecked
+                          ? 'text-emerald-300'
+                          : isToday
+                            ? 'text-amber-200/90'
+                            : isPast
+                              ? 'text-cyan-300/35'
+                              : 'text-cyan-200/65'
+                      )} />
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              placeholderDays.map((i) => (
+                <div
+                  key={i}
+                  className="daily-checkin-day relative flex h-11 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border border-cyan-700/35 bg-cyan-950/20 px-1"
+                >
+                  <span className="max-w-full truncate text-[10px] font-black uppercase leading-none tracking-wide text-cyan-100/50">
+                    {t(`days.${dayLabelKeys[i]}`)}
+                  </span>
+                  <span className="font-mono text-sm font-black leading-none text-cyan-300/40">
+                    +--
+                  </span>
                 </div>
-              );
-            })}
+              ))
+            )}
           </div>
         </div>
 
@@ -253,23 +335,23 @@ export function DailyCheckIn() {
             <Shield size={13} className="text-emerald-300" />
             {daysToBonus} {t('bonusIn')}
           </span>
-          {hasCheckedInToday ? (
+          {hasClaimedToday ? (
             <span className="daily-checkin-claimed flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-green-400/35 bg-green-400/12 px-3 py-2 text-xs font-black text-green-300 md:flex-none">
               <Check size={14} /> {t('checkedIn')}
             </span>
           ) : (
             <button
               onClick={handleCheckIn}
-              disabled={isCheckingIn}
-              className="daily-checkin-button flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-cyan-400 px-4 py-2 text-xs font-black text-black transition-colors hover:bg-cyan-300 md:flex-none"
+              disabled={isCheckingIn || rewardsLoading || !canClaimToday}
+              className="daily-checkin-button flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md bg-cyan-400 px-4 py-2 text-xs font-black text-black transition-colors hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-60 md:flex-none"
             >
               <Gift size={14} /> {isCheckingIn ? tCommon('loading') : t('claimReward')}
             </button>
           )}
         </div>
-        {errorMessage && (
+        {(errorMessage || rewardsError) && (
           <p className="md:col-span-3 rounded-md border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs text-red-200">
-            {errorMessage}
+            {errorMessage ?? rewardsError}
           </p>
         )}
       </div>
@@ -389,14 +471,30 @@ export function DailyCheckIn() {
   );
 }
 
-function getCheckInErrorMessage(error: unknown, fallback: string) {
-  if (error instanceof ApiClientError) {
-    return error.message || fallback;
-  }
+function getRewardPoints(reward: CheckInRewardDay) {
+  return Number(reward.points ?? 0) + Number(reward.bonusPoints ?? 0);
+}
 
-  if (error instanceof Error) {
-    return error.message || fallback;
-  }
+function getActiveReward(schedule: CheckInRewardsResponse | null) {
+  if (!schedule?.days.length) return null;
+  return (
+    schedule.days.find((day) => day.isNext) ??
+    schedule.days.find((day) => day.day === schedule.nextDay) ??
+    schedule.days.find((day) => day.day === schedule.today.day) ??
+    null
+  );
+}
 
-  return fallback;
+function getDaysToBonus(schedule: CheckInRewardsResponse | null) {
+  if (!schedule?.days.length) return null;
+
+  const activeIndex = schedule.days.findIndex((day) => day.isNext);
+  const bonusIndex = schedule.days.findIndex(
+    (day, index) =>
+      index >= Math.max(activeIndex, 0) &&
+      (Boolean(day.bonusType) || Number(day.bonusPoints ?? 0) > 0)
+  );
+
+  if (activeIndex < 0 || bonusIndex < 0) return null;
+  return Math.max(bonusIndex - activeIndex, 0);
 }

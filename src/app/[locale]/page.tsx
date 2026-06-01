@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Sparkles } from "lucide-react";
 import { HeroBanner } from "@/components/home/HeroBanner";
@@ -16,6 +17,10 @@ import {
 } from "@/lib/football-page-data";
 import { getLatestArticles } from "@/lib/news-generator";
 import { getApiFootballUpcomingFixtures } from "@/lib/api-football";
+import {
+  AUTH_TOKEN_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from "@/lib/auth-guard";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -61,11 +66,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("dashboard");
-  const [homepageFixtures, liveFixtures, latestArticles] = await Promise.all([
+  const [homepageFixtures, liveFixtures, latestArticles, cookieStore] = await Promise.all([
     loadHomepageFixtures(),
     loadLiveFixtures(),
     getLatestArticles(locale, 6),
+    cookies(),
   ]);
+  const initialHasAuthSession =
+    Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
+    Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
   const aiFixture =
     pickRandomFixture(homepageFixtures.filter((fixture) => fixture.status === MatchStatus.UPCOMING)) ??
     pickRandomFixture(homepageFixtures) ??
@@ -79,9 +88,7 @@ export default async function DashboardPage({ params }: Props) {
       </section>
 
       {/* Daily Check-in */}
-      <section>
-        <DailyCheckIn />
-      </section>
+      <DailyCheckIn initialHasAuthSession={initialHasAuthSession} />
 
       <WorldFootballFeature />
 

@@ -22,7 +22,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Tabs } from "@/components/ui/Tabs";
 import {
-  DEFAULT_LEADERBOARD_RESPONSE,
   getLeaderboard,
   mapApiLeaderboardEntry,
   type LeaderboardResponse,
@@ -39,6 +38,8 @@ type LeaderboardViewData = {
   rewards: LeaderboardReward[];
 };
 
+const EMPTY_LEADERBOARD_ENTRIES: LeaderboardEntry[] = [];
+
 function rankTone(rank: number) {
   if (rank === 1) return "border-amber-500/30 bg-amber-500/15 text-amber-300";
   if (rank === 2) return "border-gray-400/30 bg-gray-400/10 text-gray-200";
@@ -53,6 +54,96 @@ function RankBadge({ rank }: { rank: number }) {
     >
       {rank}
     </span>
+  );
+}
+
+function CurrentUserCardSkeleton() {
+  return (
+    <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4 lg:w-80">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="h-6 w-24 animate-pulse rounded-full bg-white/[0.06]" />
+        <div className="h-6 w-16 animate-pulse rounded-full bg-white/[0.06]" />
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-white/[0.06]" />
+        <div className="h-10 w-10 animate-pulse rounded-full bg-white/[0.06]" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-3 w-32 animate-pulse rounded bg-white/[0.06]" />
+          <div className="h-3 w-16 animate-pulse rounded bg-white/[0.04]" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-3 w-14 animate-pulse rounded bg-white/[0.06]" />
+          <div className="h-3 w-10 animate-pulse rounded bg-white/[0.04]" />
+        </div>
+      </div>
+      <div className="mt-4 h-16 animate-pulse rounded-lg border border-gray-800 bg-[#0a0a0f]" />
+    </div>
+  );
+}
+
+function StatCardSkeleton() {
+  return (
+    <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="h-3 w-24 animate-pulse rounded bg-white/[0.05]" />
+        <div className="h-4 w-4 animate-pulse rounded bg-white/[0.06]" />
+      </div>
+      <div className="mt-3 h-6 w-20 animate-pulse rounded bg-white/[0.07]" />
+    </div>
+  );
+}
+
+function TopThreeSkeleton() {
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-3">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-white/[0.06]" />
+        <div className="h-10 w-10 animate-pulse rounded-full bg-white/[0.06]" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-3 w-36 animate-pulse rounded bg-white/[0.07]" />
+          <div className="h-3 w-24 animate-pulse rounded bg-white/[0.04]" />
+        </div>
+        <div className="space-y-2">
+          <div className="h-5 w-16 animate-pulse rounded bg-white/[0.07]" />
+          <div className="h-3 w-10 animate-pulse rounded bg-white/[0.04]" />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function LeaderboardTableSkeleton() {
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="overflow-x-auto">
+        <div className="w-full min-w-[720px]">
+          <div className="grid grid-cols-[90px_1fr_110px_130px_130px_100px] border-b border-gray-800 bg-[#0a0a0f] px-4 py-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-3 w-16 animate-pulse rounded bg-white/[0.05]"
+              />
+            ))}
+          </div>
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="grid grid-cols-[90px_1fr_110px_130px_130px_100px] items-center border-b border-gray-800/50 px-4 py-3 last:border-0"
+            >
+              <div className="h-8 w-8 animate-pulse rounded-full bg-white/[0.06]" />
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 animate-pulse rounded-full bg-white/[0.06]" />
+                <div className="h-3 w-36 animate-pulse rounded bg-white/[0.07]" />
+              </div>
+              <div className="ml-auto h-3 w-8 animate-pulse rounded bg-white/[0.05]" />
+              <div className="ml-auto h-3 w-16 animate-pulse rounded bg-white/[0.05]" />
+              <div className="ml-auto h-3 w-20 animate-pulse rounded bg-white/[0.05]" />
+              <div className="ml-auto h-3 w-8 animate-pulse rounded bg-white/[0.05]" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
   );
 }
 
@@ -79,23 +170,28 @@ function formatRankRange(rankRange: [number, number]) {
 export default function LeaderboardPage() {
   const { locale } = useParams<{ locale: string }>();
   const copy = getLeaderboardPageCopy(locale);
-  const [period, setPeriod] = useState<PeriodKey>("weekly");
+  const [period, setPeriod] = useState<PeriodKey>("daily");
   const userId = useUserStore((state) => state.userId);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardViewData>(() =>
-    toLeaderboardViewData(DEFAULT_LEADERBOARD_RESPONSE)
-  );
+  const [leaderboard, setLeaderboard] = useState<LeaderboardViewData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     let isActive = true;
 
     getLeaderboard({ locale })
       .then((response) => {
-        if (isActive) setLeaderboard(toLeaderboardViewData(response));
+        if (!isActive) return;
+        setLeaderboard(toLeaderboardViewData(response));
+        setLoadFailed(false);
       })
       .catch(() => {
-        if (isActive) {
-          setLeaderboard(toLeaderboardViewData(DEFAULT_LEADERBOARD_RESPONSE));
-        }
+        if (!isActive) return;
+        setLeaderboard(null);
+        setLoadFailed(true);
+      })
+      .finally(() => {
+        if (isActive) setLoading(false);
       });
 
     return () => {
@@ -103,10 +199,13 @@ export default function LeaderboardPage() {
     };
   }, [locale]);
 
-  const entries = leaderboard.entries;
+  const entries = useMemo(
+    () => leaderboard?.entries ?? EMPTY_LEADERBOARD_ENTRIES,
+    [leaderboard]
+  );
   const topThree = entries.slice(0, 3);
   const currentUser =
-    leaderboard.userEntry ??
+    leaderboard?.userEntry ??
     (userId ? entries.find((entry) => entry.userId === userId) : undefined);
   const nextRankEntry =
     currentUser && currentUser.rank > 1
@@ -141,6 +240,7 @@ export default function LeaderboardPage() {
       count: entries.length,
     },
   ];
+  const showLoadingState = loading && leaderboard === null;
 
   const stats = [
     {
@@ -189,7 +289,9 @@ export default function LeaderboardPage() {
             <p className="text-xs leading-5 text-gray-500">{copy.notice}</p>
           </div>
 
-          {currentUser && (
+          {showLoadingState ? (
+            <CurrentUserCardSkeleton />
+          ) : currentUser && (
             <div className="rounded-lg border border-cyan-500/25 bg-cyan-500/5 p-4 lg:w-80">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <Badge variant="cyan">{copy.labels.currentPosition}</Badge>
@@ -238,24 +340,28 @@ export default function LeaderboardPage() {
         </div>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
+          {showLoadingState
+            ? Array.from({ length: 4 }).map((_, index) => (
+                <StatCardSkeleton key={index} />
+              ))
+            : stats.map((stat) => {
+                const Icon = stat.icon;
 
-            return (
-              <div
-                key={stat.label}
-                className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                  <Icon size={16} className={stat.tone} />
-                </div>
-                <p className="mt-2 text-xl font-semibold text-white">
-                  {stat.value}
-                </p>
-              </div>
-            );
-          })}
+                return (
+                  <div
+                    key={stat.label}
+                    className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs text-gray-500">{stat.label}</p>
+                      <Icon size={16} className={stat.tone} />
+                    </div>
+                    <p className="mt-2 text-xl font-semibold text-white">
+                      {stat.value}
+                    </p>
+                  </div>
+                );
+              })}
         </div>
       </section>
 
@@ -276,46 +382,52 @@ export default function LeaderboardPage() {
             </div>
 
             <div className="space-y-3">
-              {topThree.map((entry) => (
-                <Card
-                  key={leaderboardRowKey(entry)}
-                  neon={entry.rank === 1 ? "gold" : "cyan"}
-                  className="p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <RankBadge rank={entry.rank} />
-                    <Avatar
-                      src={entry.avatar}
-                      fallback={entry.username}
-                      size="md"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        {entry.rank === 1 ? (
-                          <Trophy size={15} className="text-amber-300" />
-                        ) : (
-                          <Medal size={15} className="text-gray-400" />
-                        )}
-                        <p className="truncate text-sm font-semibold text-white">
-                          {entry.username}
+              {showLoadingState ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TopThreeSkeleton key={index} />
+                ))
+              ) : (
+                topThree.map((entry) => (
+                  <Card
+                    key={leaderboardRowKey(entry)}
+                    neon={entry.rank === 1 ? "gold" : "cyan"}
+                    className="p-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <RankBadge rank={entry.rank} />
+                      <Avatar
+                        src={entry.avatar}
+                        fallback={entry.username}
+                        size="md"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          {entry.rank === 1 ? (
+                            <Trophy size={15} className="text-amber-300" />
+                          ) : (
+                            <Medal size={15} className="text-gray-400" />
+                          )}
+                          <p className="truncate text-sm font-semibold text-white">
+                            {entry.username}
+                          </p>
+                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          {copy.labels.level} {entry.level} · {entry.accuracy}%{" "}
+                          {copy.labels.accuracy}
                         </p>
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {copy.labels.level} {entry.level} · {entry.accuracy}%{" "}
-                        {copy.labels.accuracy}
-                      </p>
+                      <div className="text-right">
+                        <p className="font-mono text-lg font-semibold text-green-300">
+                          {entry.points.toLocaleString()}
+                        </p>
+                        <p className="text-[11px] text-gray-500">
+                          {copy.labels.points}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-mono text-lg font-semibold text-green-300">
-                        {entry.points.toLocaleString()}
-                      </p>
-                      <p className="text-[11px] text-gray-500">
-                        {copy.labels.points}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
 
             <div className="rounded-xl border border-gray-800 bg-[#12121a] p-4">
@@ -325,29 +437,36 @@ export default function LeaderboardPage() {
                   <p className="text-sm font-semibold text-white">
                     {copy.labels.rewardsHint}
                   </p>
-                  {leaderboard.rewards.length > 0 && (
-                    <div className="mt-3 grid gap-2">
-                      {leaderboard.rewards.slice(0, 4).map((reward) => (
-                        <div
-                          key={formatRankRange(reward.rankRange)}
-                          className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3 py-2"
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="font-mono text-xs font-semibold text-amber-300">
-                              {formatRankRange(reward.rankRange)}
-                            </span>
-                            <span className="text-right text-xs text-gray-400">
-                              +{reward.reward.freePoints.toLocaleString()}{" "}
-                              {copy.labels.points}
-                              {reward.reward.premiumCredits
-                                ? ` / +${reward.reward.premiumCredits.toLocaleString()} ${copy.labels.credits}`
-                                : ""}
-                            </span>
+                  {!showLoadingState &&
+                    leaderboard &&
+                    leaderboard.rewards.length > 0 && (
+                      <div className="mt-3 grid gap-2">
+                        {leaderboard.rewards.slice(0, 4).map((reward) => (
+                          <div
+                            key={formatRankRange(reward.rankRange)}
+                            className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3 py-2"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <span className="font-mono text-xs font-semibold text-amber-300">
+                                {formatRankRange(reward.rankRange)}
+                              </span>
+                              <span className="text-right text-xs text-gray-400">
+                                +{reward.reward.freePoints.toLocaleString()}{" "}
+                                {copy.labels.points}
+                                {reward.reward.premiumCredits
+                                  ? ` / +${reward.reward.premiumCredits.toLocaleString()} ${copy.labels.credits}`
+                                  : ""}
+                              </span>
+                            </div>
+                            {reward.reward.badge && (
+                              <p className="mt-1 truncate text-[11px] text-gray-500">
+                                {reward.reward.badge}
+                              </p>
+                            )}
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                        ))}
+                      </div>
+                    )}
                   <Link
                     href={`/${locale}/missions`}
                     className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-cyan-300 hover:text-cyan-200"
@@ -370,7 +489,15 @@ export default function LeaderboardPage() {
               </span>
             </div>
 
-            {entries.length === 0 ? (
+            {showLoadingState ? (
+              <LeaderboardTableSkeleton />
+            ) : loadFailed ? (
+              <EmptyState
+                title={copy.empty.title}
+                description={copy.empty.description}
+                icon={<Trophy size={44} />}
+              />
+            ) : entries.length === 0 ? (
               <EmptyState
                 title={copy.empty.title}
                 description={copy.empty.description}

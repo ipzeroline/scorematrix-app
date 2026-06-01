@@ -7,6 +7,7 @@ import {
   Calendar,
   CalendarCheck,
   CalendarClock,
+  Coins,
   CheckCircle2,
   Dice5,
   Flame,
@@ -23,12 +24,16 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Tabs } from "@/components/ui/Tabs";
 import { PointsBadge } from "@/components/shared/PointsBadge";
+import { XPProgressBar } from "@/components/shared/XPProgressBar";
+import { getMissionPageCopy } from "@/data/mission-page-content";
 import {
-  achievementItems,
-  getMissionPageCopy,
-} from "@/data/mission-page-content";
+  getAchievements,
+  type AchievementsResponse,
+  type ApiAchievement,
+} from "@/lib/achievements-api";
 import {
   getCurrentUser,
+  extractCurrentUser,
   type CurrentUserData,
   type CurrentUserResponse,
 } from "@/lib/auth-api";
@@ -65,12 +70,51 @@ const missionIconMap = {
   zap: Zap,
 };
 
+function formatTimeLeft(ms: number): string {
+  if (ms <= 0) {
+    return "0s";
+  }
+
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (days > 0) {
+    return `${days}d ${hours}h`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+}
+
 type HeroStats = {
   freePoints: number;
   xp: number;
   level: number;
   streak: number;
   missionsCompleted: number;
+};
+
+const INITIAL_HERO_STATS: HeroStats = {
+  freePoints: 0,
+  xp: 0,
+  level: 1,
+  streak: 0,
+  missionsCompleted: 0,
+};
+
+const INITIAL_ACHIEVEMENTS: AchievementsResponse = {
+  unlocked: [],
+  locked: [],
+  hidden: [],
+  totalUnlocked: 0,
+  totalAvailable: 0,
 };
 
 export default function MissionsPage() {
@@ -95,17 +139,19 @@ export default function MissionsPage() {
   );
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
-  const [heroStats, setHeroStats] = useState<HeroStats>(() => {
-    const user = useUserStore.getState();
-    return {
-      freePoints: user.freePoints,
-      xp: user.xp,
-      level: user.level,
-      streak: user.streak,
-      missionsCompleted: user.missionsCompleted,
-    };
-  });
-  const now = null;
+  const [heroStats, setHeroStats] = useState<HeroStats>(INITIAL_HERO_STATS);
+  const [achievements, setAchievements] =
+    useState<AchievementsResponse>(INITIAL_ACHIEVEMENTS);
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
+  const [achievementsLoadFailed, setAchievementsLoadFailed] = useState(false);
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [claimModal, setClaimModal] = useState<{
     isOpen: boolean;
@@ -120,6 +166,10 @@ export default function MissionsPage() {
     xp: 0,
     credits: 0,
   });
+
+  function getPositiveRewardCredits(mission: Mission): number {
+    return Math.max(0, mission.rewardCredits ?? 0);
+  }
 
   const handleClaimMission = async (missionId: string) => {
     const mission = [...daily, ...weekly, ...special].find((m) => m.id === missionId);
@@ -138,12 +188,12 @@ export default function MissionsPage() {
       missionTitle: mission.title,
       points: mission.rewardPoints,
       xp: mission.rewardXP,
-      credits: mission.rewardCredits ?? 0,
+      credits: getPositiveRewardCredits(mission),
     });
 
     const store = useUserStore.getState();
     const nextPoints = store.freePoints + mission.rewardPoints;
-    const nextCredits = store.premiumCredits + (mission.rewardCredits ?? 0);
+    const nextCredits = store.premiumCredits + getPositiveRewardCredits(mission);
     const nextXP = store.xp + mission.rewardXP;
     const nextLevel = Math.floor(nextXP / 1000) + 1;
     const nextCompleted = store.missionsCompleted + 1;
@@ -234,23 +284,48 @@ export default function MissionsPage() {
     };
   }, [locale]);
 
+  useEffect(() => {
+    let active = true;
+    const timeoutId = window.setTimeout(() => {
+      getAchievements({ locale })
+        .then((response) => {
+          if (!active) return;
+          setAchievements(response);
+          setAchievementsLoadFailed(false);
+        })
+        .catch(() => {
+          if (!active) return;
+          setAchievements(INITIAL_ACHIEVEMENTS);
+          setAchievementsLoadFailed(true);
+        })
+        .finally(() => {
+          if (active) setAchievementsLoading(false);
+        });
+    }, 0);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timeoutId);
+    };
+  }, [locale]);
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-8">
       <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b1018] p-5 md:p-6">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(34,211,238,0.14),transparent_30%),radial-gradient(circle_at_82%_22%,rgba(168,85,247,0.12),transparent_28%)]" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <Badge variant="purple" size="md">
-              {copy.levelLine
-                .replace("{level}", heroStats.level.toLocaleString())
-                .replace("{xp}", heroStats.xp.toLocaleString())}
-            </Badge>
-            <h1 className="mt-3 font-display text-3xl font-black text-white md:text-4xl">
+          <div className="flex-1">
+            <h1 className="font-display text-3xl font-black text-white md:text-4xl">
               {copy.title}
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
               {copy.subtitle}
             </p>
+            <XPProgressBar
+              currentXP={heroStats.xp}
+              level={heroStats.level}
+              className="mt-4 max-w-md"
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-2 lg:w-[430px]">
@@ -281,7 +356,7 @@ export default function MissionsPage() {
           { key: "daily", label: copy.daily, count: daily.length },
           { key: "weekly", label: copy.weekly, count: weekly.length },
           { key: "special", label: copy.special, count: special.length },
-          { key: "achievements", label: copy.achievements, count: achievementItems.length },
+          { key: "achievements", label: copy.achievements, count: achievements.totalAvailable },
         ]}
         activeTab={tab}
         onChange={(key) => setTab(key as TabKey)}
@@ -331,34 +406,24 @@ export default function MissionsPage() {
           <p className="mb-4 text-sm leading-6 text-gray-500">
             {copy.achievementsIntro}
           </p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {achievementItems.map((achievement) => {
-              const item = copy.achievementsList[achievement.id as keyof typeof copy.achievementsList];
-              return (
+          {achievementsLoading && (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
                 <Card
-                  key={achievement.id}
-                  className={cn(
-                    "p-4 text-center",
-                    !achievement.unlocked && "opacity-55"
-                  )}
-                >
-                  <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 font-mono text-sm font-black text-cyan-200">
-                    {achievement.icon}
-                  </div>
-                  <h3 className="text-sm font-bold text-white">{item.name}</h3>
-                  <p className="mt-2 text-xs leading-5 text-gray-500">
-                    {item.desc}
-                  </p>
-                  <Badge
-                    variant={achievement.unlocked ? "green" : "default"}
-                    className="mt-3"
-                  >
-                    {achievement.unlocked ? copy.unlocked : copy.locked}
-                  </Badge>
-                </Card>
-              );
-            })}
-          </div>
+                  key={index}
+                  className="h-48 animate-pulse border-gray-800 bg-white/[0.03]"
+                />
+              ))}
+            </div>
+          )}
+          {!achievementsLoading && achievementsLoadFailed && (
+            <Card className="border-red-500/30 bg-red-500/5 p-5">
+              <p className="text-sm text-red-200">{copy.loadFailed}</p>
+            </Card>
+          )}
+          {!achievementsLoading && !achievementsLoadFailed && (
+            <AchievementGrid achievements={achievements} copy={copy} />
+          )}
         </section>
       )}
       {/* Premium Cyberpunk Claim Reward Popup Modal */}
@@ -492,6 +557,201 @@ export default function MissionsPage() {
   );
 }
 
+function AchievementGrid({
+  achievements,
+  copy,
+}: {
+  achievements: AchievementsResponse;
+  copy: ReturnType<typeof getMissionPageCopy>;
+}) {
+  const items = [
+    ...achievements.unlocked.map((achievement) => ({
+      ...achievement,
+      unlocked: true,
+    })),
+    ...achievements.locked.map((achievement) => ({
+      ...achievement,
+      unlocked: false,
+    })),
+  ];
+
+  if (items.length === 0) {
+    return (
+      <Card className="p-5">
+        <p className="text-sm text-gray-400">{copy.noMissions}</p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="green">
+          {copy.unlocked} {achievements.totalUnlocked.toLocaleString()}
+        </Badge>
+        <Badge variant="default">
+          {copy.locked}{" "}
+          {Math.max(
+            achievements.totalAvailable - achievements.totalUnlocked,
+            0
+          ).toLocaleString()}
+        </Badge>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {items.map((achievement) => (
+          <AchievementCard
+            key={achievement.id}
+            achievement={achievement}
+            copy={copy}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AchievementCard({
+  achievement,
+  copy,
+}: {
+  achievement: ApiAchievement & { unlocked: boolean };
+  copy: ReturnType<typeof getMissionPageCopy>;
+}) {
+  const current = Math.max(Number(achievement.progress.current ?? 0), 0);
+  const required = Math.max(Number(achievement.progress.required ?? 0), 0);
+  const progress = required > 0 ? Math.min(current, required) : 0;
+  const statusVariant = achievement.unlocked ? "green" : "default";
+  const tierVariant = getAchievementTierVariant(achievement.tier);
+
+  return (
+    <Card
+      className={cn(
+        "flex min-h-52 flex-col p-4",
+        !achievement.unlocked && "opacity-80"
+      )}
+    >
+      <div className="mb-3 flex items-start gap-3">
+        <AchievementIcon achievement={achievement} />
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            <Badge variant={statusVariant}>
+              {achievement.unlocked ? copy.unlocked : copy.locked}
+            </Badge>
+            <Badge variant={tierVariant}>{achievement.tier}</Badge>
+          </div>
+          <h3 className="truncate text-sm font-bold text-white">
+            {achievement.name}
+          </h3>
+          <p className="mt-1 text-xs leading-5 text-gray-500">
+            {achievement.description}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-auto space-y-3">
+        <div>
+          <div className="mb-1 flex justify-between text-[10px]">
+            <span className="text-gray-500">{copy.progress}</span>
+            <span className="font-mono text-gray-400">
+              {current.toLocaleString()}/{required.toLocaleString()}
+            </span>
+          </div>
+          <ProgressBar
+            value={progress}
+            max={required || 1}
+            color={achievement.unlocked ? "green" : getAchievementProgressColor(tierVariant)}
+            size="sm"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-gray-800/70 pt-3">
+          {achievement.rewardPoints > 0 && (
+            <PointsBadge
+              type="free"
+              amount={achievement.rewardPoints}
+              size="sm"
+              showLabel
+            />
+          )}
+          {achievement.rewardXp > 0 && (
+            <span className="font-mono text-xs font-bold text-purple-300">
+              +{achievement.rewardXp.toLocaleString()} {copy.xp}
+            </span>
+          )}
+          <span className="ml-auto rounded-full border border-gray-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-normal text-gray-400">
+            {achievement.category}
+          </span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function AchievementIcon({
+  achievement,
+}: {
+  achievement: ApiAchievement & { unlocked: boolean };
+}) {
+  if (achievement.badgeIconUrl) {
+    return (
+      <span
+        aria-hidden="true"
+        className="h-12 w-12 shrink-0 rounded-xl border border-cyan-400/20 bg-cyan-400/10 bg-contain bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${achievement.badgeIconUrl})` }}
+      />
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "grid h-12 w-12 shrink-0 place-items-center rounded-xl border font-mono text-xs font-black",
+        achievement.unlocked
+          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
+          : "border-cyan-400/20 bg-cyan-400/10 text-cyan-200"
+      )}
+    >
+      {getAchievementInitials(achievement.name)}
+    </span>
+  );
+}
+
+function getAchievementInitials(name: string) {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "SM";
+  if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+  return words
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getAchievementTierVariant(
+  tier: string
+): "cyan" | "green" | "gold" | "purple" | "magenta" | "default" {
+  switch (tier.toLowerCase()) {
+    case "bronze":
+      return "magenta";
+    case "silver":
+      return "cyan";
+    case "gold":
+      return "gold";
+    case "platinum":
+      return "purple";
+    default:
+      return "default";
+  }
+}
+
+function getAchievementProgressColor(
+  tierVariant: ReturnType<typeof getAchievementTierVariant>
+): "cyan" | "green" | "gold" | "purple" | "magenta" {
+  return tierVariant === "default" ? "cyan" : tierVariant;
+}
+
 function HeroStat({
   icon: Icon,
   label,
@@ -585,168 +845,127 @@ function MissionPanel({
   now: number | null;
   onClaim: (id: string) => void;
 }) {
-  const progress = Math.min(mission.progress, mission.target);
-  const complete = mission.completed || progress >= mission.target;
-  const progressColor = complete ? "green" : categoryColors[mission.category] ?? "cyan";
-  const missionIcon = getMissionIcon(mission.icon);
-  const claimedOrApiClaimed = claimed || mission.claimed;
+  const isCompleted = mission.completed;
+  const isClaimed = mission.claimed || claimed;
+  const canClaim = isCompleted && !isClaimed;
+
+  const color = categoryColors[mission.category] ?? "cyan";
+  const Icon = missionIconMap[mission.icon as keyof typeof missionIconMap] ?? Target;
+
+  const expiryDate = mission.expiresAt ? new Date(mission.expiresAt).getTime() : 0;
+  const timeLeft = now && expiryDate > 0 ? expiryDate - now : 0;
+
+  const progressPercent =
+    mission.target > 0
+      ? Math.min(100, Math.floor((mission.progress / mission.target) * 100))
+      : mission.completed
+      ? 100
+      : 0;
+
+  const getIconContainerClass = (category: string): string => {
+    switch (category) {
+      case "predict":
+        return "border-cyan-400/20 bg-cyan-400/10 text-cyan-300";
+      case "streak":
+        return "border-amber-400/20 bg-amber-400/10 text-amber-300";
+      case "accuracy":
+        return "border-green-400/20 bg-green-400/10 text-green-300";
+      case "social":
+        return "border-purple-400/20 bg-purple-400/10 text-purple-300";
+      case "daily_login":
+        return "border-pink-400/20 bg-pink-400/10 text-pink-300";
+      default:
+        return "border-gray-700 bg-gray-800 text-gray-300";
+    }
+  };
 
   return (
-    <Card className={cn("p-4 transition-all duration-300 hover:scale-[1.015] hover:shadow-[0_0_15px_rgba(6,182,212,0.1)] hover:border-cyan-500/40", complete && !claimedOrApiClaimed && "border-green-500/30 hover:border-green-400/50 hover:shadow-[0_0_15px_rgba(34,197,94,0.15)]")}>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex min-w-0 gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
-            {missionIcon}
+    <Card
+      className={cn(
+        "flex min-h-44 flex-col p-4 transition-opacity",
+        isClaimed && "opacity-60"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "grid h-12 w-12 shrink-0 place-items-center rounded-xl border",
+            getIconContainerClass(mission.category)
+          )}
+        >
+          <Icon size={24} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+            <Badge variant={color}>{copy.categories[mission.category] ?? mission.category}</Badge>
+            {timeLeft > 0 && (
+              <div className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-gray-500">
+                <CalendarClock size={12} />
+                <span>
+                  {copy.resetsIn.replace("{time}", formatTimeLeft(timeLeft))}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="min-w-0">
-            <div className="mb-2 flex flex-wrap items-center gap-2">
-              <Badge variant={getMissionTypeBadge(mission.type)}>
-                {getMissionTypeLabel(mission.type, copy)}
-              </Badge>
-              <Badge variant={categoryColors[mission.category] ?? "cyan"}>
-                {copy.categories[mission.category]}
-              </Badge>
+          <h3 className="truncate text-sm font-bold text-white">{mission.title}</h3>
+          <p className="mt-1 text-xs leading-5 text-gray-400">{mission.description}</p>
+        </div>
+      </div>
+
+      <div className="mt-auto space-y-3 pt-3">
+        <div>
+          <div className="mb-1 flex justify-between text-[10px]">
+            <span className="font-semibold uppercase tracking-wider text-gray-500">{copy.progress}</span>
+            <div className="flex items-baseline gap-1.5 font-mono">
+              <span className="font-semibold text-gray-300">
+                {mission.progress.toLocaleString()}/{mission.target.toLocaleString()}
+              </span>
+              <span className="text-xs font-bold text-cyan-300">({progressPercent}%)</span>
             </div>
-            <h3 className="truncate text-sm font-bold text-white">{mission.title}</h3>
+          </div>
+          <ProgressBar
+            value={mission.progress}
+            max={mission.target || 1}
+            color={color}
+            size="sm"
+          />
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-gray-800/70 pt-3">
+          {mission.rewardPoints > 0 && (
+            <PointsBadge type="free" amount={mission.rewardPoints} size="sm" showLabel />
+          )}
+          {mission.rewardXP > 0 && (
+            <Badge variant="purple">+{mission.rewardXP.toLocaleString()} {copy.xp}</Badge>
+          )}
+          {mission.rewardCredits !== undefined && mission.rewardCredits > 0 && (
+            <Badge variant="magenta">+{mission.rewardCredits.toLocaleString()} CR</Badge>
+          )}
+          <div className="ml-auto">
+            {canClaim ? (
+              <Button variant="gold" size="sm" onClick={() => onClaim(mission.id)}>{copy.claim}</Button>
+            ) : isClaimed ? (
+              <Button variant="outline" size="sm" disabled className="cursor-default">
+                <CheckCircle2 size={14} className="mr-1.5" />{copy.claimed}
+              </Button>
+            ) : (
+              <span className="text-xs font-medium text-gray-500">{copy.inProgress}</span>
+            )}
           </div>
         </div>
-        <StatusBadge complete={complete} claimed={claimedOrApiClaimed} copy={copy} />
-      </div>
-
-      <p className="mb-3 text-xs leading-5 text-gray-400">{mission.description}</p>
-
-      <div className="mb-3">
-        <div className="mb-1 flex justify-between text-[10px]">
-          <span className="text-gray-500">{copy.progress}</span>
-          <span className="font-mono text-gray-400">
-            {progress}/{mission.target}
-          </span>
-        </div>
-        <ProgressBar value={progress} max={mission.target} color={progressColor} size="sm" />
-      </div>
-
-      <div className="flex items-center gap-2">
-        <PointsBadge type="free" amount={mission.rewardPoints} size="sm" showLabel />
-        <span className="font-mono text-xs font-bold text-purple-300">
-          +{mission.rewardXP} {copy.xp}
-        </span>
-        {mission.rewardCredits && mission.rewardCredits > 0 && (
-          <PointsBadge
-            type="premium"
-            amount={mission.rewardCredits}
-            size="sm"
-            showLabel
-          />
-        )}
-      </div>
-
-      <div className="mt-3 flex items-center justify-between border-t border-gray-800/70 pt-3">
-        <span className="flex items-center gap-1 text-[10px] text-gray-500">
-          <CalendarClock size={12} />
-          {copy.resetsIn.replace("{time}", getTimeUntilReset(mission.resetAt, copy, now))}
-        </span>
-        {complete && !claimedOrApiClaimed ? (
-          <Button variant="gold" size="sm" onClick={() => onClaim(mission.id)}>
-            <Award size={14} />
-            {copy.claimReward}
-          </Button>
-        ) : claimedOrApiClaimed ? (
-          <span className="flex items-center gap-1 text-xs font-semibold text-green-300">
-            <CheckCircle2 size={14} />
-            {copy.claimed}
-          </span>
-        ) : (
-          <span className="flex items-center gap-1 text-[10px] text-gray-500">
-            <Zap size={12} />
-            {copy.keepGoing}
-          </span>
-        )}
       </div>
     </Card>
   );
 }
 
-function StatusBadge({
-  complete,
-  claimed,
-  copy,
-}: {
-  complete: boolean;
-  claimed: boolean;
-  copy: ReturnType<typeof getMissionPageCopy>;
-}) {
-  if (claimed) return <Badge variant="green">{copy.claimed}</Badge>;
-  if (complete) return <Badge variant="gold">{copy.ready}</Badge>;
-  return <Badge variant="default">{copy.inProgress}</Badge>;
-}
-
-function getMissionTypeLabel(
-  type: MissionType,
-  copy: ReturnType<typeof getMissionPageCopy>
-) {
-  if (type === MissionType.WEEKLY) return copy.weekly;
-  if (type === MissionType.SPECIAL) return copy.special;
-  return copy.daily;
-}
-
-function getMissionTypeBadge(
-  type: MissionType
-): "cyan" | "purple" | "gold" {
-  if (type === MissionType.WEEKLY) return "purple";
-  if (type === MissionType.SPECIAL) return "gold";
-  return "cyan";
-}
-
-function getMissionIcon(icon?: string) {
-  const Icon = icon ? missionIconMap[icon as keyof typeof missionIconMap] : undefined;
-  const MissionIcon = Icon ?? Zap;
-  return <MissionIcon size={18} />;
-}
-
-function extractCurrentUser(response: CurrentUserResponse): CurrentUserData | null {
-  if (!isRecord(response)) return null;
-  if (isCurrentUserData(response)) return response;
-  if (isRecord(response.user)) return extractCurrentUser(response.user);
-  if (isRecord(response.member)) return extractCurrentUser(response.member);
-  if (isRecord(response.profile)) return extractCurrentUser(response.profile);
-  if (isRecord(response.data)) return extractCurrentUser(response.data);
-  return null;
-}
-
-function isCurrentUserData(value: Record<string, unknown>): value is CurrentUserData {
-  return (
-    "stats" in value ||
-    "username" in value ||
-    "user_name" in value ||
-    "displayName" in value ||
-    "display_name" in value
-  );
-}
-
 function pickNumber(...values: unknown[]) {
   for (const value of values) {
-    if (value === null || value === undefined || value === "") continue;
-    const number = typeof value === "number" ? value : Number(value);
-    if (Number.isFinite(number)) return number;
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
   }
   return undefined;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function getTimeUntilReset(
-  resetAt: string,
-  copy: ReturnType<typeof getMissionPageCopy>,
-  now: number | null
-) {
-  if (now === null) return "--";
-  const diff = new Date(resetAt).getTime() - now;
-  if (diff <= 0) return copy.resetting;
-  const hours = Math.floor(diff / 3600000);
-  const minutes = Math.floor((diff % 3600000) / 60000);
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m`;
-  return copy.resetSoon;
 }

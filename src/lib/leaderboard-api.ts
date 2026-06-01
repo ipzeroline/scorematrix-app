@@ -25,153 +25,34 @@ export type LeaderboardResponse = {
 type LeaderboardApiPayload =
   | LeaderboardResponse
   | {
-      data?: LeaderboardResponse;
-      leaderboard?: LeaderboardResponse;
+      data?: unknown;
+      leaderboard?: unknown;
+      payload?: unknown;
+      result?: unknown;
     };
 
-export const DEFAULT_LEADERBOARD_RESPONSE: LeaderboardResponse = {
+export const EMPTY_LEADERBOARD_RESPONSE: LeaderboardResponse = {
   period: {
-    start: "2026-05-25T00:00:00+07:00",
-    end: "2026-05-25T02:25:13+07:00",
+    start: "",
+    end: "",
   },
-  entries: [
-    {
-      rank: 1,
-      userId: "213",
-      username: null,
-      avatarUrl: null,
-      points: 5,
-      accuracy: 0,
-      streak: 1,
-      level: 1,
-    },
-    {
-      rank: 2,
-      userId: "a1daad25-ed00-4723-b075-38d732da075f",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 3,
-      userId: "a1dab8bc-9682-4fe3-8a6e-211c57b62809",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 4,
-      userId: "a1dab993-c3e6-4ed6-b08d-33a5c4f46a68",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 5,
-      userId: "a1dab9e3-cf0a-4ed3-b7d5-4b3aebdef2f7",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 6,
-      userId: "210",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 7,
-      userId: "211",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 8,
-      userId: "212",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-    {
-      rank: 9,
-      userId: "a1db1838-af86-48f4-95fe-0c513789ee6f",
-      username: null,
-      avatarUrl: null,
-      points: 0,
-      accuracy: 0,
-      streak: 0,
-      level: 1,
-    },
-  ],
+  entries: [],
   userEntry: null,
-  rewards: [
-    {
-      rankRange: [1, 1],
-      reward: {
-        freePoints: 5000,
-        premiumCredits: 200,
-        badge: "weekly-champion",
-      },
-    },
-    {
-      rankRange: [2, 3],
-      reward: {
-        freePoints: 2000,
-        premiumCredits: 100,
-      },
-    },
-    {
-      rankRange: [4, 10],
-      reward: {
-        freePoints: 1000,
-      },
-    },
-    {
-      rankRange: [11, 50],
-      reward: {
-        freePoints: 300,
-      },
-    },
-  ],
+  rewards: [],
 };
 
 export async function getLeaderboard(options?: ApiRequestOptions) {
-  const response = await apiGetRaw<LeaderboardApiPayload>("/leaderboard", options);
+  const response = await apiGetRaw<LeaderboardApiPayload>("/leaderboard", {
+    cache: "no-store",
+    ...options,
+  });
   return normalizeLeaderboardResponse(response);
 }
 
 export function normalizeLeaderboardResponse(
   response: LeaderboardApiPayload
 ): LeaderboardResponse {
-  if ("entries" in response && Array.isArray(response.entries)) return response;
-  if ("data" in response && response.data?.entries) return response.data;
-  if ("leaderboard" in response && response.leaderboard?.entries) {
-    return response.leaderboard;
-  }
-  return DEFAULT_LEADERBOARD_RESPONSE;
+  return normalizeLeaderboardPayload(response) ?? EMPTY_LEADERBOARD_RESPONSE;
 }
 
 export function mapApiLeaderboardEntry(entry: ApiLeaderboardEntry): LeaderboardEntry {
@@ -185,6 +66,92 @@ export function mapApiLeaderboardEntry(entry: ApiLeaderboardEntry): LeaderboardE
     streak: Number(entry.streak ?? 0),
     level: Number(entry.level ?? 1),
   };
+}
+
+function normalizeLeaderboardPayload(payload: unknown): LeaderboardResponse | null {
+  if (Array.isArray(payload)) {
+    return {
+      ...EMPTY_LEADERBOARD_RESPONSE,
+      entries: payload.map(normalizeApiLeaderboardEntry),
+    };
+  }
+
+  if (!isRecord(payload)) return null;
+
+  const entries = payload.entries ?? payload.rankings ?? payload.users;
+
+  if (Array.isArray(entries)) {
+    return {
+      period: normalizePeriod(payload.period),
+      entries: entries.map(normalizeApiLeaderboardEntry),
+      userEntry: normalizeNullableLeaderboardEntry(
+        payload.userEntry ?? payload.user_entry ?? payload.currentUser
+      ),
+      rewards: normalizeLeaderboardRewards(payload.rewards),
+    };
+  }
+
+  return (
+    normalizeLeaderboardPayload(payload.data) ??
+    normalizeLeaderboardPayload(payload.leaderboard) ??
+    normalizeLeaderboardPayload(payload.payload) ??
+    normalizeLeaderboardPayload(payload.result)
+  );
+}
+
+function normalizeApiLeaderboardEntry(entry: unknown): ApiLeaderboardEntry {
+  const value = isRecord(entry) ? entry : {};
+  const userId = value.userId ?? value.user_id ?? value.id ?? "";
+
+  return {
+    rank: toNumber(value.rank, 0),
+    userId: String(userId),
+    username: toNullableString(
+      value.username ?? value.displayName ?? value.display_name ?? value.name
+    ),
+    avatarUrl: toNullableString(value.avatarUrl ?? value.avatar_url ?? value.avatar),
+    points: toNumber(value.points ?? value.score, 0),
+    accuracy: toNumber(value.accuracy, 0),
+    streak: toNumber(value.streak ?? value.current_streak, 0),
+    level: toNumber(value.level, 1),
+  };
+}
+
+function normalizeNullableLeaderboardEntry(entry: unknown) {
+  if (!entry) return null;
+  return normalizeApiLeaderboardEntry(entry);
+}
+
+function normalizePeriod(period: unknown) {
+  const value = isRecord(period) ? period : {};
+
+  return {
+    start: toStringValue(value.start ?? value.startDate ?? value.start_date),
+    end: toStringValue(value.end ?? value.endDate ?? value.end_date),
+  };
+}
+
+function normalizeLeaderboardRewards(rewards: unknown): LeaderboardReward[] {
+  return Array.isArray(rewards) ? (rewards as LeaderboardReward[]) : [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function toNullableString(value: unknown) {
+  if (value === null || value === undefined) return null;
+  return String(value);
+}
+
+function toStringValue(value: unknown) {
+  if (value === null || value === undefined) return "";
+  return String(value);
+}
+
+function toNumber(value: unknown, fallback: number) {
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : fallback;
 }
 
 function fallbackUsername(userId: string) {
