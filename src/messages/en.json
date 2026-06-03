@@ -873,7 +873,8 @@
       "halfTimeHome": "Half-time Home Score",
       "halfTimeAway": "Half-time Away Score",
       "confidenceLevel": "Confidence Level",
-      "useBoost": "Use Boost"
+      "useBoost": "Use Boost",
+      "pointsWagered": "Points Wagered"
     },
     "side": {
       "streak": "Streak",

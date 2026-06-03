@@ -873,7 +873,8 @@
       "halfTimeHome": "สกอร์ครึ่งแรกเจ้าบ้าน",
       "halfTimeAway": "สกอร์ครึ่งแรกทีมเยือน",
       "confidenceLevel": "ระดับความมั่นใจ",
-      "useBoost": "ใช้บูสต์"
+      "useBoost": "ใช้บูสต์",
+      "pointsWagered": "แต้มที่ใช้ทาย"
     },
     "side": {
       "streak": "สตรีค",

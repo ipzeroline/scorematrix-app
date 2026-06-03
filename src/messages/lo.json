@@ -873,7 +873,8 @@
       "halfTimeHome": "ສະກໍເຄິ່ງທຳອິດເຈົ້າບ້ាន",
       "halfTimeAway": "ສະກໍເຄິ່ງທຳອິດທີມຢືນ",
       "confidenceLevel": "ລະດັບຄວາມໝັ້ນໃຈ",
-      "useBoost": "ໃຊ້ບູສ໌"
+      "useBoost": "ໃຊ້ບູສ໌",
+      "pointsWagered": "ຄະແນນທີ່ໃຊ້ທາຍ"
     },
     "side": {
       "streak": "Streak",

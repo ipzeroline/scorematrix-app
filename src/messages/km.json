@@ -872,7 +872,8 @@
       "halfTimeHome": "គ្រាប់បាល់តង់ទី១ម្ចាស់ផ្ទះ",
       "halfTimeAway": "គ្រាប់បាល់តង់ទី១ក្រុមភ្ញៀវ",
       "confidenceLevel": "កម្រិតទំនុកចិត្ត",
-      "useBoost": "ប្រើប៊ូស"
+      "useBoost": "ប្រើប៊ូស",
+      "pointsWagered": "ពិន្ទុដែលប្រើទស្សន៍ទាយ"
     },
     "side": {
       "streak": "Streak",

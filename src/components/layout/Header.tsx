@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,6 +13,7 @@ import {
   type CurrentUserData,
   type CurrentUserResponse,
 } from "@/lib/auth-api";
+import { MEMBER_WALLET_REFRESH_EVENT } from "@/lib/member-refresh-event";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
 
@@ -52,45 +53,64 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const memberInfoReady = !effectiveIsLoggedIn || loadedMemberInfoKey === memberInfoKey;
   const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
 
-  useEffect(() => {
-    if (!effectiveIsLoggedIn) return;
+  const refreshMemberInfo = useCallback(
+    async () => {
+      if (!effectiveIsLoggedIn) return;
 
+      const response = await getCurrentUser({ locale });
+      const profile = extractCurrentUser(response);
+      if (!profile) return;
+      const stats = profile?.stats;
+      const nextStats = {
+        freePoints: pickNumber(stats?.freePoints, profile?.freePoints),
+        premiumCredits: pickNumber(stats?.premiumCredits, profile?.premiumCredits),
+        xp: pickNumber(stats?.xp, profile?.xp),
+        level: pickNumber(stats?.level, profile?.level),
+        rank: pickString(stats?.rank, profile?.rank),
+      };
+      const currentUser = useUserStore.getState();
+      useUserStore.setState({
+        userId: pickStringValue(profile.id, profile.code) ?? currentUser.userId,
+        username:
+          pickStringValue(profile.username, profile.user_name) ??
+          currentUser.username,
+        displayName:
+          pickStringValue(profile.displayName, profile.display_name, profile.name) ??
+          currentUser.displayName,
+      });
+      syncWallet(stripUndefined(nextStats));
+      setLoadedMemberInfoKey(memberInfoKey);
+    },
+    [effectiveIsLoggedIn, locale, memberInfoKey, syncWallet]
+  );
+
+  useEffect(() => {
     let active = true;
 
-    getCurrentUser({ locale })
-      .then((response) => {
+    queueMicrotask(() => {
+      if (!active) return;
+      refreshMemberInfo().catch(() => {
         if (!active) return;
-        const profile = extractCurrentUser(response);
-        if (!profile) return;
-        const stats = profile?.stats;
-        const nextStats = {
-          freePoints: pickNumber(stats?.freePoints, profile?.freePoints),
-          premiumCredits: pickNumber(stats?.premiumCredits, profile?.premiumCredits),
-          xp: pickNumber(stats?.xp, profile?.xp),
-          level: pickNumber(stats?.level, profile?.level),
-          rank: pickString(stats?.rank, profile?.rank),
-        };
-        const currentUser = useUserStore.getState();
-        useUserStore.setState({
-          userId: pickStringValue(profile.id, profile.code) ?? currentUser.userId,
-          username:
-            pickStringValue(profile.username, profile.user_name) ??
-            currentUser.username,
-          displayName:
-            pickStringValue(profile.displayName, profile.display_name, profile.name) ??
-            currentUser.displayName,
-        });
-        syncWallet(stripUndefined(nextStats));
-        setLoadedMemberInfoKey(memberInfoKey);
-      })
-      .catch(() => {
         // Keep the skeleton in place rather than flashing stale member values.
       });
+    });
 
     return () => {
       active = false;
     };
-  }, [effectiveIsLoggedIn, locale, memberInfoKey, syncWallet]);
+  }, [refreshMemberInfo]);
+
+  useEffect(() => {
+    const handleWalletRefresh = () => {
+      void refreshMemberInfo();
+    };
+
+    window.addEventListener(MEMBER_WALLET_REFRESH_EVENT, handleWalletRefresh);
+
+    return () => {
+      window.removeEventListener(MEMBER_WALLET_REFRESH_EVENT, handleWalletRefresh);
+    };
+  }, [refreshMemberInfo]);
 
   const isActive = (href: string) =>
     pathname.includes(`/${locale}${href}`);

@@ -20,6 +20,7 @@ export function StoreInitializer({ hasAuthSession = false }: StoreInitializerPro
   const logout = useUserStore((s) => s.logout);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const synced = useRef(false);
+  const sessionExpiredRedirectTimer = useRef<number | null>(null);
 
   // Synchronously set isLoggedIn from server cookie before first render
   // to prevent the navbar flash on refresh
@@ -34,6 +35,10 @@ export function StoreInitializer({ hasAuthSession = false }: StoreInitializerPro
 
   useEffect(() => {
     const handleSessionExpired = () => {
+      if (sessionExpiredRedirectTimer.current !== null) {
+        window.clearTimeout(sessionExpiredRedirectTimer.current);
+      }
+
       logout();
       addToast({
         type: "warning",
@@ -47,13 +52,18 @@ export function StoreInitializer({ hasAuthSession = false }: StoreInitializerPro
       const nextPath = currentPath.startsWith(`/${locale}`)
         ? currentPath
         : `/${locale}`;
-      router.replace(`/${locale}/auth/login?next=${encodeURIComponent(nextPath)}`);
+      sessionExpiredRedirectTimer.current = window.setTimeout(() => {
+        router.replace(`/${locale}/auth/login?next=${encodeURIComponent(nextPath)}`);
+      }, 3000);
     };
 
     window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
 
     return () => {
       window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+      if (sessionExpiredRedirectTimer.current !== null) {
+        window.clearTimeout(sessionExpiredRedirectTimer.current);
+      }
     };
   }, [addToast, locale, logout, pathname, router, t]);
 

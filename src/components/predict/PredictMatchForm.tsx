@@ -29,7 +29,8 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { useNotificationStore } from "@/stores/notification-store";
 import { cn, formatDateTime, formatMatchTimeWithZone } from "@/lib/utils";
 import { useTranslations } from "next-intl";
-import { apiPostRaw } from "@/lib/api-client";
+import { apiPostRaw, isAuthSessionExpiredError } from "@/lib/api-client";
+import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
 import { useUserStore } from "@/stores/user-store";
 
 type ConfidenceLevel = "safe" | "confident" | "bold";
@@ -103,6 +104,7 @@ export function PredictMatchForm({
   const t = useTranslations("predictionForm");
   const router = useRouter();
   const addToast = useNotificationStore((s) => s.addToast);
+  const freePoints = useUserStore((s) => s.freePoints);
 
   // Core prediction states
   const [homeScore, setHomeScore] = useState<number | null>(0);
@@ -111,6 +113,7 @@ export function PredictMatchForm({
   const [totalGoals, setTotalGoals] = useState<number | null>(null);
   const [halfHomeScore, setHalfHomeScore] = useState<number | null>(null);
   const [halfAwayScore, setHalfAwayScore] = useState<number | null>(null);
+  const [pointsWagered, setPointsWagered] = useState(10);
   const [confidence, setConfidence] = useState<ConfidenceLevel>("safe");
   const [useBoost, setUseBoost] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -279,13 +282,15 @@ export function PredictMatchForm({
   const isLocked = countdownInfo.isLocked;
 
   const canSubmit =
-    !isLocked && homeScore !== null && awayScore !== null;
+    !isLocked && homeScore !== null && awayScore !== null && pointsWagered > 0;
   
   const confidenceOptions = [
     { value: "safe", label: t("confidence.safe") },
     { value: "confident", label: t("confidence.confident") },
     { value: "bold", label: t("confidence.bold") },
   ];
+  const confidenceMultiplier = getConfidenceMultiplier(confidence);
+  const effectivePointsWagered = Math.round(pointsWagered * confidenceMultiplier);
   const selectedFirstScorer = findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, firstScorerPlayerId);
   
   const payload = {
@@ -298,6 +303,7 @@ export function PredictMatchForm({
     halfTimeAway: halfAwayScore,
     confidenceLevel: confidence,
     useBoost,
+    pointsWagered: effectivePointsWagered,
   };
 
   const confirmSubmit = async () => {
@@ -305,6 +311,7 @@ export function PredictMatchForm({
 
     try {
       await apiPostRaw("/predictions", payload);
+      dispatchMemberWalletRefresh();
 
       addToast({
         type: "success",
@@ -318,6 +325,7 @@ export function PredictMatchForm({
       setSubmitted(true);
       setTimeout(() => router.push(`/${locale}/predict`), 1600);
     } catch (error) {
+      if (isAuthSessionExpiredError(error)) return;
       const apiError = error as { status?: number; code?: string; message?: string };
       const status = apiError.status ?? 0;
       const code = apiError.code ?? "";
@@ -650,6 +658,52 @@ export function PredictMatchForm({
             </div>
           </PredictionSection>
 
+          <Card className="relative overflow-hidden border border-amber-500/20 bg-gradient-to-br from-[#140f06] to-[#07080b] p-4 sm:p-5">
+            <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-amber-400/5 blur-2xl" />
+            <div className="relative grid gap-4 sm:grid-cols-[minmax(0,1fr)_190px] sm:items-end">
+              <div className="min-w-0">
+                <label
+                  htmlFor="pointsWagered"
+                  className="block text-xs font-black uppercase tracking-wider text-amber-300"
+                >
+                  {t("payload.pointsWagered")}
+                </label>
+                <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                  {locale === "th"
+                    ? "แต้มฐานจะถูกคูณด้วยระดับความมั่นใจก่อนส่งคำทาย"
+                    : "Base points are multiplied by confidence before submission."}
+                </p>
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center rounded-xl border border-amber-500/30 bg-black/45 px-3 py-2 shadow-[inset_0_0_14px_rgba(245,158,11,0.06)] focus-within:border-amber-300/70">
+                  <input
+                    id="pointsWagered"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step={1}
+                    value={pointsWagered}
+                    onChange={(event) => {
+                      const nextValue = Number(event.target.value);
+                      setPointsWagered(Number.isFinite(nextValue) ? Math.max(0, Math.floor(nextValue)) : 0);
+                    }}
+                    disabled={isLocked}
+                    className="min-w-0 flex-1 bg-transparent font-mono text-2xl font-black text-white outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <span className="shrink-0 text-xs font-bold uppercase text-amber-300">
+                    {locale === "th" ? "แต้ม" : "pts"}
+                  </span>
+                </div>
+                <p className="mt-1.5 text-right text-[10px] font-semibold text-gray-500">
+                  {t("side.balance")}: {freePoints.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
+                </p>
+              </div>
+            </div>
+            <div className="relative mt-4 rounded-lg border border-amber-500/15 bg-black/30 px-3 py-2 text-right font-mono text-xs font-bold text-amber-200">
+              {pointsWagered.toLocaleString()} x {confidenceMultiplier.toFixed(1)} = {effectivePointsWagered.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
+            </div>
+          </Card>
+
           {/* Section 2: Confidence Tactical Cards */}
           <PredictionSection
             icon={Medal}
@@ -712,6 +766,7 @@ export function PredictMatchForm({
                   label="halfTimeAway" 
                   value={formatNullableNumber(payload.halfTimeAway)} 
                 />
+                <SummaryRow label="pointsWagered" value={String(payload.pointsWagered)} mono />
                 <SummaryRow label="confidenceLevel" value={payload.confidenceLevel} mono />
                 <SummaryRow label="useBoost" value={payload.useBoost ? "true" : "false"} />
               </div>
@@ -909,6 +964,18 @@ export function PredictMatchForm({
                   {halfHomeScore !== null ? halfHomeScore : "-"}
                   {" : "}
                   {halfAwayScore !== null ? halfAwayScore : "-"}
+                </span>
+              </div>
+            </div>
+
+            {/* Points wagered */}
+            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3.5 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300/80 shrink-0">
+                  {t("payload.pointsWagered")}
+                </p>
+                <span className="text-xs font-black font-mono text-amber-200 text-right">
+                  {effectivePointsWagered.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
                 </span>
               </div>
             </div>
@@ -1338,6 +1405,18 @@ function BoostToggle({
   );
 }
 
+function getConfidenceMultiplier(confidence: ConfidenceLevel) {
+  switch (confidence) {
+    case "bold":
+      return 2;
+    case "confident":
+      return 1.5;
+    case "safe":
+    default:
+      return 1;
+  }
+}
+
 // ----------------------------------------------------
 // Payload and general helper previews
 // ----------------------------------------------------
@@ -1354,6 +1433,7 @@ function PayloadPreview({
     halfTimeAway: number | null;
     confidenceLevel: ConfidenceLevel;
     useBoost: boolean;
+    pointsWagered: number;
   };
 }) {
   return (
@@ -1847,6 +1927,7 @@ function JSONPayloadView({
     halfTimeAway: number | null;
     confidenceLevel: ConfidenceLevel;
     useBoost: boolean;
+    pointsWagered: number;
   };
 }) {
   const entries = Object.entries(payload);

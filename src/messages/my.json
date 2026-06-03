@@ -873,7 +873,8 @@
       "halfTimeHome": "ပထမပိုင်း အိမ်ကွင်းဂိုး",
       "halfTimeAway": "ပထမပိုင်း အဝေးကွင်းဂိုး",
       "confidenceLevel": "ယုံကြည်မှုအဆင့်",
-      "useBoost": "မြှင့်တင်မှု သုံးပါ"
+      "useBoost": "မြှင့်တင်မှု သုံးပါ",
+      "pointsWagered": "ခန့်မှန်းရန် သုံးမည့်အမှတ်"
     },
     "side": {
       "streak": "Streak",

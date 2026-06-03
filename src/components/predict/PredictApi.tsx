@@ -14,14 +14,30 @@ import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
+import { buildPredictMatchHref } from "@/lib/predict-route";
 import { formatMatchTimeWithZone } from "@/lib/utils";
-import { apiGetRaw } from "@/lib/api-client";
+import { apiGetRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { useUserStore } from "@/stores/user-store";
 import { Brain, ShieldCheck, Trophy, Users, Zap, Award, Sparkles, X } from "lucide-react";
 
 interface PredictApiProps {
   fixtures: ApiFootballFixture[];
 }
+
+type PlayerProfileResponse = {
+  data?: {
+    name?: unknown;
+    player?: {
+      name?: unknown;
+    };
+  };
+  player?: {
+    name?: unknown;
+  };
+  profile?: unknown;
+  result?: unknown;
+  name?: unknown;
+};
 
 export function PredictApi({ fixtures }: PredictApiProps) {
   const t = useTranslations();
@@ -82,7 +98,13 @@ export function PredictApi({ fixtures }: PredictApiProps) {
               matchId: item.matchId,
               confidenceLevel: item.confidenceLevel,
               boostUsed: item.boostUsed,
-              firstScorerPlayerId: item.firstScorerPlayerId,
+              firstScorerPlayerId:
+                item.firstScorerPlayerId ?? item.first_scorer_player_id,
+              firstScorerPlayerName:
+                item.firstScorerPlayerName ??
+                item.first_scorer_player_name ??
+                item.firstScorer?.name ??
+                item.first_scorer?.name,
               createdAt: item.createdAt,
               homeLogo: fixture?.home.logo ?? item.match?.homeTeam?.logo,
               awayLogo: fixture?.away.logo ?? item.match?.awayTeam?.logo,
@@ -91,6 +113,7 @@ export function PredictApi({ fixtures }: PredictApiProps) {
               totalGoals: item.totalGoals,
               comboMultiplier: item.comboMultiplier,
               streakNumber: item.streakNumber,
+              pointsWagered: item.pointsWagered ?? item.points_wagered ?? 0,
               lockedAt: item.lockedAt,
             };
           });
@@ -98,6 +121,7 @@ export function PredictApi({ fixtures }: PredictApiProps) {
           setHistory(mapped);
         }
       } catch (error) {
+        if (isAuthSessionExpiredError(error)) return;
         console.error("Error loading predictions history:", error);
       } finally {
         setLoadingHistory(false);
@@ -110,28 +134,60 @@ export function PredictApi({ fixtures }: PredictApiProps) {
   useEffect(() => {
     if (!selectedPrediction || !selectedPrediction.firstScorerPlayerId) {
       setPlayerName(null);
+      setLoadingPlayer(false);
       return;
     }
 
+    if (selectedPrediction.firstScorerPlayerName) {
+      setPlayerName(String(selectedPrediction.firstScorerPlayerName));
+      setLoadingPlayer(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
     const loadPlayerName = async () => {
       setLoadingPlayer(true);
+      setPlayerName(null);
+
       try {
         const apiBase = process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL || "https://api.scorematrix.live/api/v1";
-        const res = await apiGetRaw<any>(`${apiBase}/soccer/players/${selectedPrediction.firstScorerPlayerId}`);
-        if (res && res.data && res.data.player && res.data.player.name) {
-          setPlayerName(res.data.player.name);
+        const response = await fetch(
+          `${apiBase.replace(/\/$/, "")}/soccer/players/${encodeURIComponent(String(selectedPrediction.firstScorerPlayerId))}`,
+          {
+            headers: { Accept: "application/json" },
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok) {
+          setPlayerName(null);
+          return;
+        }
+
+        const payload = (await response.json()) as PlayerProfileResponse;
+        const name = getPlayerNameFromProfilePayload(payload);
+        if (name) {
+          setPlayerName(name);
         } else {
           setPlayerName(null);
         }
       } catch (err) {
-        console.error("Error loading player details:", err);
-        setPlayerName(null);
+        if ((err as { name?: string }).name !== "AbortError") {
+          setPlayerName(null);
+        }
       } finally {
-        setLoadingPlayer(false);
+        if (!controller.signal.aborted) {
+          setLoadingPlayer(false);
+        }
       }
     };
 
     loadPlayerName();
+
+    return () => {
+      controller.abort();
+    };
   }, [selectedPrediction]);
 
   useEffect(() => {
@@ -204,7 +260,14 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                       />
                     </div>
                   </div>
-                  <Link href={`/${locale}/predict/${buildFixtureSeoSlug(match)}`}>
+                  <Link
+                    href={buildPredictMatchHref(
+                      locale,
+                      buildFixtureSeoSlug(match),
+                      match.home.apiTeamId ?? match.home.id,
+                      match.away.apiTeamId ?? match.away.id
+                    )}
+                  >
                     <Button size="sm" neon>
                       {t("prediction.predictScore")}
                     </Button>
@@ -442,6 +505,12 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                         {selectedPrediction.streakNumber ?? 0}
                       </span>
                     </div>
+                    <div className="flex flex-col col-span-2">
+                      <span className="text-[10px] text-gray-500">{t("predictionForm.payload.pointsWagered").toUpperCase()}</span>
+                      <span className="text-amber-300 font-bold">
+                        {Number(selectedPrediction.pointsWagered ?? 0).toLocaleString()} PTS
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -474,9 +543,9 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                           loadingPlayer ? (
                             <span className="animate-pulse text-gray-500">Loading...</span>
                           ) : playerName ? (
-                            `${playerName} (ID: ${selectedPrediction.firstScorerPlayerId})`
+                            playerName
                           ) : (
-                            `Player ID: ${selectedPrediction.firstScorerPlayerId}`
+                            "-"
                           )
                         ) : (
                           t("predictionForm.deep.noGoal")
@@ -524,6 +593,32 @@ export function PredictApi({ fixtures }: PredictApiProps) {
       )}
     </div>
   );
+}
+
+function getPlayerNameFromProfilePayload(payload: unknown): string | null {
+  if (!isRecord(payload)) return null;
+
+  const directName = toNonEmptyString(payload.name);
+  if (directName) return directName;
+
+  const playerName = isRecord(payload.player)
+    ? toNonEmptyString(payload.player.name)
+    : null;
+  if (playerName) return playerName;
+
+  return (
+    getPlayerNameFromProfilePayload(payload.data) ??
+    getPlayerNameFromProfilePayload(payload.profile) ??
+    getPlayerNameFromProfilePayload(payload.result)
+  );
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function toNonEmptyString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 function InfoPanel({

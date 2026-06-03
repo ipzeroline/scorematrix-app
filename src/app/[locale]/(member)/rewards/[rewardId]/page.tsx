@@ -14,6 +14,7 @@ import {
   type RewardViewItem,
   redeemReward,
 } from "@/lib/rewards-api";
+import { isAuthSessionExpiredError } from "@/lib/api-client";
 import { useUserStore } from "@/stores/user-store";
 import { useNotificationStore } from "@/stores/notification-store";
 
@@ -52,7 +53,8 @@ export default function RewardDetailPage() {
           });
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        if (isAuthSessionExpiredError(error)) return;
         if (isActive) {
           const fallbackReward = DEFAULT_REWARDS_RESPONSE.data.find(
             (item) => String(item.id) === rewardId
@@ -108,7 +110,11 @@ export default function RewardDetailPage() {
           message: t("rewards.insufficientPoints") || "Insufficient points!",
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (isAuthSessionExpiredError(err)) {
+        setIsRedeeming(false);
+        return;
+      }
       console.error("Redemption error:", err);
       let success = false;
       if (reward.isFreeOnly) {
@@ -127,7 +133,7 @@ export default function RewardDetailPage() {
         addToast({
           type: "error",
           title: t("common.error"),
-          message: err?.message || "Failed to redeem reward.",
+          message: getErrorMessage(err) || "Failed to redeem reward.",
         });
       }
     } finally {
@@ -330,4 +336,8 @@ export default function RewardDetailPage() {
       </Modal>
     </div>
   );
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "";
 }

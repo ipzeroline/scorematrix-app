@@ -28,6 +28,7 @@ export type ApiRequestOptions = {
   cache?: RequestCache;
   next?: NextFetchRequestConfig;
   formData?: boolean;
+  authRefreshAttempted?: boolean;
 };
 
 type AuthRefreshData = {
@@ -53,6 +54,19 @@ export class ApiClientError extends Error {
     this.code = code;
     this.payload = payload;
   }
+}
+
+export function isAuthSessionExpiredError(error: unknown) {
+  if (error instanceof ApiClientError) {
+    return (
+      normalizeAuthErrorValue(error.code) === "token_expired" ||
+      isAuthExpiredPayload(error.payload) ||
+      normalizeAuthErrorValue(error.message)?.includes("token_expired") === true ||
+      normalizeAuthErrorValue(error.message)?.includes("token_expire") === true
+    );
+  }
+
+  return isAuthExpiredPayload(error);
 }
 
 const API_BASE_URL = normalizeApiBaseUrl(requiredEnv(
@@ -189,15 +203,27 @@ export async function apiRequest<T, B = unknown>(
   const response = await fetchApi(method, path, body, options);
 
   const payload = await parseApiResponse(response);
-  if (shouldRefreshAuth(path, response, options)) {
+  if (shouldRefreshAuth(path, response, options, payload)) {
     const token = await refreshAccessToken(options);
     if (token) {
       return apiRequest<T, B>(method, path, body, {
         ...options,
         token,
+        authRefreshAttempted: true,
         headers: withoutAuthorization(options.headers),
       });
     }
+  }
+
+  if (shouldExpireAuthSession(path, response, options, payload)) {
+    expireAuthSession();
+    const failure = toApiFailure(payload);
+    throw new ApiClientError(
+      failure?.message ?? response.statusText,
+      response.status,
+      failure?.code,
+      payload
+    );
   }
 
   if (!response.ok || !isApiSuccess<T>(payload)) {
@@ -222,15 +248,27 @@ export async function apiRawRequest<T, B = unknown>(
   const response = await fetchApi(method, path, body, options);
 
   const payload = await parseApiResponse(response);
-  if (shouldRefreshAuth(path, response, options)) {
+  if (shouldRefreshAuth(path, response, options, payload)) {
     const token = await refreshAccessToken(options);
     if (token) {
       return apiRawRequest<T, B>(method, path, body, {
         ...options,
         token,
+        authRefreshAttempted: true,
         headers: withoutAuthorization(options.headers),
       });
     }
+  }
+
+  if (shouldExpireAuthSession(path, response, options, payload)) {
+    expireAuthSession();
+    const failure = toApiFailure(payload);
+    throw new ApiClientError(
+      failure?.message ?? response.statusText,
+      response.status,
+      failure?.code,
+      payload
+    );
   }
 
   if (!response.ok) {
@@ -350,16 +388,58 @@ function buildApiHeaders(options: ApiRequestOptions, hasBody: boolean) {
 function shouldRefreshAuth(
   path: string,
   response: Response,
-  options: ApiRequestOptions
+  options: ApiRequestOptions,
+  payload: unknown
 ) {
   return (
-    response.status === 401 &&
-    !options.token &&
-    !path.startsWith("/auth/login") &&
-    !path.startsWith("/auth/register") &&
-    !path.startsWith("/auth/refresh") &&
+    !options.authRefreshAttempted &&
+    !isExplicitTokenExpiredPayload(payload) &&
+    isRefreshableAuthFailure(path, response, options, payload) &&
     Boolean(getStoredRefreshToken())
   );
+}
+
+function shouldExpireAuthSession(
+  path: string,
+  response: Response,
+  options: ApiRequestOptions,
+  payload: unknown
+) {
+  return (
+    isRefreshableAuthFailure(path, response, options, payload) &&
+    (isExplicitTokenExpiredPayload(payload) ||
+      options.authRefreshAttempted ||
+      !getStoredRefreshToken())
+  );
+}
+
+function isRefreshableAuthFailure(
+  path: string,
+  response: Response,
+  options: ApiRequestOptions,
+  payload: unknown
+) {
+  return (
+    isAuthRequestUsingStoredToken(options) &&
+    isAuthenticatedPath(path) &&
+    isAuthExpiredResponse(response, payload)
+  );
+}
+
+function isAuthRequestUsingStoredToken(options: ApiRequestOptions) {
+  return options.token === undefined || options.authRefreshAttempted === true;
+}
+
+function isAuthenticatedPath(path: string) {
+  return (
+    !path.startsWith("/auth/login") &&
+    !path.startsWith("/auth/register") &&
+    !path.startsWith("/auth/refresh")
+  );
+}
+
+function isAuthExpiredResponse(response: Response, payload: unknown) {
+  return response.status === 401 || isAuthExpiredPayload(payload);
 }
 
 async function refreshAccessToken(options: ApiRequestOptions) {
@@ -473,4 +553,54 @@ function toApiFailure(payload: unknown): ApiFailure | undefined {
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value : undefined;
+}
+
+function isAuthExpiredPayload(payload: unknown) {
+  const failure = toApiFailure(payload);
+  const values = [
+    failure?.code,
+    failure?.error_code,
+    failure?.message,
+    getNestedString(payload, ["error", "code"]),
+    getNestedString(payload, ["error", "error_code"]),
+    getNestedString(payload, ["error", "message"]),
+  ];
+
+  return values.some((value) => {
+    const normalized = value?.toLowerCase().replace(/[\s-]+/g, "_");
+    return (
+      normalized === "token_expired" ||
+      normalized === "jwt_expired" ||
+      normalized === "access_token_expired" ||
+      normalized === "expired_token" ||
+      normalized === "token_expired_error" ||
+      normalized?.includes("token_expired") ||
+      normalized?.includes("token_expire") ||
+      normalized?.includes("token_is_expired")
+    );
+  });
+}
+
+function isExplicitTokenExpiredPayload(payload: unknown) {
+  const failure = toApiFailure(payload);
+  return normalizeAuthErrorValue(failure?.code) === "token_expired";
+}
+
+function normalizeAuthErrorValue(value: unknown) {
+  return typeof value === "string"
+    ? value.toLowerCase().replace(/[\s-]+/g, "_")
+    : undefined;
+}
+
+function getNestedString(payload: unknown, path: string[]) {
+  let current = payload;
+
+  for (const key of path) {
+    if (typeof current !== "object" || current === null || !(key in current)) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[key];
+  }
+
+  return stringValue(current);
 }

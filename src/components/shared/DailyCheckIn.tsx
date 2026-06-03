@@ -13,6 +13,7 @@ import {
   type CheckInRewardDay,
   type CheckInRewardsResponse,
 } from '@/lib/checkins-api';
+import { isAuthSessionExpiredError } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { Check, Gift, Shield, Sparkles, Flame } from 'lucide-react';
 
@@ -74,6 +75,7 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
       const rewards = await getCheckInRewards({ locale, cache: 'no-store' });
       setRewardSchedule(rewards);
     } catch (error) {
+      if (isAuthSessionExpiredError(error)) return;
       console.error('Failed to load check-in rewards', error);
       setRewardsError(tCommon('error'));
     } finally {
@@ -114,6 +116,10 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
       bonus = apiBonus ?? activeReward?.bonusType ?? result.bonus;
       checkedInSuccess = true;
     } catch (error) {
+      if (isAuthSessionExpiredError(error)) {
+        setIsCheckingIn(false);
+        return;
+      }
       console.warn("Check-in API failed, executing client-side check-in fallback", error);
       try {
         const result = checkIn();

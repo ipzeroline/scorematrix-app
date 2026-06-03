@@ -872,7 +872,8 @@
       "halfTimeHome": "半场主队比分",
       "halfTimeAway": "半场客队比分",
       "confidenceLevel": "信心指数",
-      "useBoost": "使用加倍"
+      "useBoost": "使用加倍",
+      "pointsWagered": "预测使用积分"
     },
     "side": {
       "streak": "连中",
