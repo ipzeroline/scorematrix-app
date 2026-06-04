@@ -104,6 +104,18 @@ interface SoccerH2HResponse {
 interface SoccerLiveFixture {
   provider_id: number;
   league_id: number;
+  league_name?: string | null;
+  league?: {
+    id?: number | null;
+    provider_id?: number | null;
+    name?: string | null;
+    country?: string | null;
+    logo?: string | null;
+    flag?: string | null;
+    country_flag?: string | null;
+    season?: number | null;
+    round?: string | null;
+  } | null;
   season: number | null;
   status: {
     short: string;
@@ -851,6 +863,8 @@ function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
       : isMatchStatus(normalizedStatus)
         ? normalizedStatus
         : MatchStatus.UPCOMING;
+  const leagueId = fixture.league?.id ?? fixture.league?.provider_id ?? fixture.league_id;
+  const leagueName = fixture.league?.name ?? fixture.league_name ?? `League ${leagueId}`;
 
   return {
     id: `api-football-${fixture.provider_id}`,
@@ -863,14 +877,14 @@ function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
       second: null,
     },
     league: {
-      id: `api-league-${fixture.league_id}`,
-      apiLeagueId: fixture.league_id,
-      name: `League ${fixture.league_id}`,
-      country: "",
-      logo: getApiSportsLeagueLogoUrl(fixture.league_id),
-      flag: null,
+      id: `api-league-${leagueId}`,
+      apiLeagueId: leagueId,
+      name: leagueName,
+      country: fixture.league?.country ?? "",
+      logo: fixture.league?.logo ?? getApiSportsLeagueLogoUrl(leagueId),
+      flag: fixture.league?.flag ?? fixture.league?.country_flag ?? null,
       season: fixture.season,
-      round: fixture.status.long,
+      round: fixture.league?.round ?? fixture.status.long,
     },
     home: {
       id: `api-team-${fixture.teams.home.id}`,

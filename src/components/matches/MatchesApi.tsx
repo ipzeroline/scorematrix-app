@@ -205,6 +205,7 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
     [displayedLeagueGroups]
   );
   const hasMoreMatches = displayedMatchCount < activeMatchCount;
+  const boardTitle = displayedLeagueGroups[0]?.league.name ?? t("matches.boardTitle");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
@@ -325,7 +326,7 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
           <div className="flex items-center gap-2">
             <Sparkles size={14} className="text-cyan-400" />
             <h2 className="text-sm font-semibold text-white">
-              {t("matches.boardTitle")}
+              {boardTitle}
             </h2>
           </div>
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center">

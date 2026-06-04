@@ -159,7 +159,7 @@ const allMatches: TodayMatch[] = [
   },
 ];
 
-const leagues = ["All", "Premier", "La Liga", "Bundesliga", "Serie A", "Ligue 1"];
+const leagues = ["Premier", "La Liga", "Bundesliga", "Serie A", "Ligue 1"];
 
 interface TodayMatchesProps {
   fixtures?: ApiFootballFixture[];
@@ -225,7 +225,7 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
         {leagueTabs.map((league) => (
           <button
-            key={league.name}
+            key={`league-tab-${league.name}`}
             onClick={() => setActiveTab(league.name)}
             className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200 ${
               activeTab === league.name
