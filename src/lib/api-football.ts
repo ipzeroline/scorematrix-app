@@ -754,7 +754,7 @@ export async function getApiFootballH2H(
   limit = 10
 ) {
   const payload = await fetchSoccerBackend<SoccerH2HResponse>(
-    `/soccer/h2h/${homeTeam}/${awayTeam}`,
+    `/h2h/${homeTeam}/${awayTeam}`,
     {}
   );
 
