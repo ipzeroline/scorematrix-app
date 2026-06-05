@@ -111,6 +111,7 @@ Static data:
   - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
   - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
+- `src/app/[locale]/page.tsx` loads homepage live match highlights from `GET /live` with `revalidate: 0` and today's match list from `GET /fixtures/today` with `revalidate: 0`, keeping the homepage aligned with the livescore feed instead of filtering the upcoming feed locally.
 - Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - Predict detail form sends `pointsWagered` as the base wager multiplied by confidence (`safe` x1.0, `confident` x1.5, `bold` x2.0).
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.

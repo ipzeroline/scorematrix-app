@@ -8,7 +8,6 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types";
 import type { ApiFootballFixture } from "@/lib/api-football";
-import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 
 interface LiveMatch {
   id: string;
@@ -149,7 +148,7 @@ export function LiveMatchHighlights({
           {displayMatches.map((match) => (
             <Link
               key={match.id}
-              href={`/${locale}/livescore/${match.id}`}
+              href={`/${locale}/livescore/match/${match.id}`}
             >
               <Card neon="green" hover className="cyber-live-card relative overflow-hidden border-green-400/45 bg-[#07140f]">
                   <div className="cyber-live-card-scan absolute inset-0" />
@@ -207,7 +206,7 @@ export function LiveMatchHighlights({
 
 function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
   return {
-    id: buildFixtureSeoSlug(fixture),
+    id: String(fixture.apiFixtureId ?? fixture.id),
     homeTeam: fixture.home.name,
     homeCrest: fixture.home.logo ?? "",
     awayTeam: fixture.away.name,

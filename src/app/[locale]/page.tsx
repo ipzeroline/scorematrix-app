@@ -16,7 +16,7 @@ import {
   pickRandomFixture,
 } from "@/lib/football-page-data";
 import { getLatestArticles } from "@/lib/news-generator";
-import { getApiFootballUpcomingFixtures } from "@/lib/api-football";
+import { getApiFootballTodayFixtures } from "@/lib/api-football";
 import {
   AUTH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
@@ -68,7 +68,7 @@ export default async function DashboardPage({ params }: Props) {
   const t = await getTranslations("dashboard");
   const [homepageFixtures, liveFixtures, latestArticles, cookieStore] = await Promise.all([
     loadHomepageFixtures(),
-    loadLiveFixtures(),
+    loadLiveFixtures(24, 0),
     getLatestArticles(locale, 6),
     cookies(),
   ]);
@@ -163,18 +163,10 @@ export default async function DashboardPage({ params }: Props) {
 
 async function loadHomepageFixtures() {
   try {
-    const result = await getApiFootballUpcomingFixtures({ limit: 100, revalidate: 0 });
-    const todayUTC = new Date().toISOString().slice(0, 10);
-    const todayLocal = new Date().toLocaleDateString("en-CA");
-    const todayMatches = result.fixtures.filter((f) => {
-      if (!f.kickoffTime) return false;
-      const matchDateUTC = new Date(f.kickoffTime).toISOString().slice(0, 10);
-      const matchDateLocal = new Date(f.kickoffTime).toLocaleDateString("en-CA");
-      return matchDateUTC === todayUTC || matchDateLocal === todayLocal;
-    });
-    return todayMatches.slice(0, 16);
+    const result = await getApiFootballTodayFixtures({ limit: 16, revalidate: 0 });
+    return result.fixtures;
   } catch (error) {
-    console.error("Error loading today's fixtures from upcoming list:", error);
+    console.error("Error loading today's fixtures:", error);
     return [];
   }
 }
