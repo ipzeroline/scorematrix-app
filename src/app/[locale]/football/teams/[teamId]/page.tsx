@@ -1,6 +1,15 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { Building2, MapPin, Shield } from "lucide-react";
+import {
+  Building2,
+  CalendarDays,
+  Flag,
+  Layers,
+  MapPin,
+  MapPinned,
+  Shield,
+  Users,
+} from "lucide-react";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -56,10 +65,52 @@ export default async function FootballTeamPage({ params, searchParams }: Props) 
         </div>
       </Card>
 
-      <section className="grid gap-4 md:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Info icon={Shield} label={t("football.code")} value={profile.team.code ?? "N/A"} />
+        <Info icon={Flag} label={t("football.country")} value={profile.team.country || "N/A"} />
+        <Info
+          icon={CalendarDays}
+          label={t("football.foundedYear")}
+          value={profile.team.founded ? String(profile.team.founded) : "N/A"}
+        />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+        <Card className="p-4">
+          <h2 className="mb-4 text-sm font-semibold text-white">{t("football.teamProfile")}</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Detail label={t("football.name")} value={profile.team.name} />
+            <Detail label={t("football.code")} value={profile.team.code ?? "N/A"} />
+            <Detail label={t("football.country")} value={profile.team.country || "N/A"} />
+            <Detail
+              label={t("football.foundedYear")}
+              value={profile.team.founded ? String(profile.team.founded) : "N/A"}
+            />
+            <Detail
+              label={t("football.teamType")}
+              value={profile.team.national ? t("football.nationalTeam") : t("football.club")}
+            />
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <h2 className="mb-4 text-sm font-semibold text-white">{t("football.venueDetails")}</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Detail label={t("matchDetail.venue")} value={profile.venue.name ?? "N/A"} />
+            <Detail label={t("football.address")} value={profile.venue.address ?? "N/A"} wide />
+            <Detail label={t("football.city")} value={profile.venue.city ?? "N/A"} />
+            <Detail label={t("football.capacity")} value={formatNullableNumber(profile.venue.capacity, locale)} />
+            <Detail label={t("football.surface")} value={profile.venue.surface ?? "N/A"} />
+          </div>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
         <Info icon={Building2} label={t("matchDetail.venue")} value={profile.venue.name ?? "N/A"} />
+        <Info icon={MapPinned} label={t("football.address")} value={profile.venue.address ?? "N/A"} />
         <Info icon={MapPin} label={t("football.city")} value={profile.venue.city ?? "N/A"} />
+        <Info icon={Users} label={t("football.capacity")} value={formatNullableNumber(profile.venue.capacity, locale)} />
+        <Info icon={Layers} label={t("football.surface")} value={profile.venue.surface ?? "N/A"} />
       </section>
 
       {stats ? (
@@ -86,6 +137,10 @@ export default async function FootballTeamPage({ params, searchParams }: Props) 
   );
 }
 
+function formatNullableNumber(value: number | null, locale: string) {
+  return typeof value === "number" ? value.toLocaleString(locale) : "N/A";
+}
+
 function Info({
   icon: Icon,
   label,
@@ -103,6 +158,23 @@ function Info({
         <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
       </div>
     </Card>
+  );
+}
+
+function Detail({
+  label,
+  value,
+  wide = false,
+}: {
+  label: string;
+  value: string;
+  wide?: boolean;
+}) {
+  return (
+    <div className={wide ? "sm:col-span-2" : undefined}>
+      <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
+      <p className="mt-1 break-words text-sm font-semibold text-white">{value}</p>
+    </div>
   );
 }
 

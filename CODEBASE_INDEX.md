@@ -45,6 +45,8 @@ Main pages:
 - Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `credits`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
 - Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`
 - Detail routes include `predict/[matchId]` for legacy redirects, `predict/[matchId]/[homeTeamId]/[awayTeamId]` as the canonical predict URL, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
+- Non-locale team detail URLs at `/football/teams/{teamId}` redirect to the default locale route `/{defaultLocale}/football/teams/{teamId}` while preserving query parameters.
+- Non-locale live-score match URLs at `/livescore/match/{providerId}` redirect to the default locale route `/{defaultLocale}/livescore/match/{providerId}` while preserving query parameters.
 - Predict links use the route `/predict/{apiFixtureId}/{homeTeamId}/{awayTeamId}` for API fixtures and keep local mock match ids for mock fixtures; older slug URLs such as `/predict/{matchSlug}-{apiFixtureId}/{homeTeamId}/{awayTeamId}` redirect to the canonical id-only route.
 - Admin pages under `src/app/[locale]/(admin)/admin/*`
 - Legal pages under `src/app/[locale]/legal/*`
@@ -52,7 +54,8 @@ Main pages:
 API routes:
 
 - `src/app/api/football/fixtures/route.ts`: returns fixtures from soccer backend, cached with short s-maxage
-- `src/app/api/football/fixtures/today/route.ts`: returns today's fixtures from soccer backend `GET /fixtures/today`
+- `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer backend `GET /live` with no-store caching
+- `src/app/api/football/fixtures/today/route.ts`: legacy local route that now returns live fixtures from soccer backend `GET /live`
 - `src/app/api/football/fixtures/upcoming/route.ts`: returns upcoming fixtures from soccer backend `GET /fixtures/upcoming`
 - `src/app/api/football/teams/route.ts`: proxies favorite-team options from soccer backend `GET /teams`
 - `src/app/api/football/teams/[id]/squad/route.ts`: proxies team squad players from soccer backend `GET /teams/{team_id}/squad`
@@ -102,7 +105,7 @@ Static data:
 
 - `src/lib/api-football.ts`
   - Base URL: required `API_FOOTBALL_BASE_URL` from root `.env`
-  - Exports fetchers for fixtures, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, live fixtures from `GET /live`, fixture details, leagues, standings, schedules, team profiles, player profiles from `GET /soccer/players/{id}`, and H2H
+  - Exports fetchers for fixtures, live fixtures from `GET /live`, legacy today's fixtures mapped to the live feed, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
   - League listing maps `GET /leagues` / `v1/soccer/leagues` responses from `data[]` with `provider_id`, `current_season`, `sort_order`, `logo`, and country fields into `ApiFootballLeagueEntry`
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
@@ -111,11 +114,11 @@ Static data:
   - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
   - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
-- `src/app/[locale]/page.tsx` loads homepage live match highlights from `GET /live` with `revalidate: 0` and today's match list from `GET /fixtures/today` with `revalidate: 0`, keeping the homepage aligned with the livescore feed instead of filtering the upcoming feed locally.
+- `src/app/[locale]/page.tsx` loads homepage live match highlights and the homepage match list from `GET /live` with `revalidate: 0`.
 - Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - Predict detail form sends `pointsWagered` as the base wager multiplied by confidence (`safe` x1.0, `confident` x1.5, `bold` x2.0).
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.
-- `src/app/[locale]/livescore/page.tsx` uses `GET /fixtures/today` through `getApiFootballTodayFixtures` for its initial fixture list with `revalidate: 0` and no limit; the `Livescore` client view displays only fixtures whose normalized status group is `live`.
+- `src/app/[locale]/livescore/page.tsx` uses `GET /live` through `getApiFootballLiveFixtures` for its initial fixture list with `revalidate: 0` and no limit; the `Livescore` client view refreshes through `/api/football/fixtures/live`.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view

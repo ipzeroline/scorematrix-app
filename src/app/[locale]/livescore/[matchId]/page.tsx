@@ -139,7 +139,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             logo={fixture.home.logo}
             href={
               fixture.home.apiTeamId
-                ? `/${locale}/football/teams/${fixture.home.apiTeamId}?league=${fixture.league.apiLeagueId ?? ""}&season=${season}`
+                ? buildTeamDetailHref(fixture.home.apiTeamId, fixture.league.apiLeagueId, season)
                 : undefined
             }
             accent="cyan"
@@ -170,7 +170,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             logo={fixture.away.logo}
             href={
               fixture.away.apiTeamId
-                ? `/${locale}/football/teams/${fixture.away.apiTeamId}?league=${fixture.league.apiLeagueId ?? ""}&season=${season}`
+                ? buildTeamDetailHref(fixture.away.apiTeamId, fixture.league.apiLeagueId, season)
                 : undefined
             }
             accent="magenta"
@@ -529,6 +529,16 @@ function MatchDetailShell({
       {children}
     </div>
   );
+}
+
+function buildTeamDetailHref(teamId: number, leagueId: number | null, season: number) {
+  const query = new URLSearchParams({ season: String(season) });
+
+  if (leagueId) {
+    query.set("league", String(leagueId));
+  }
+
+  return `/football/teams/${teamId}?${query.toString()}`;
 }
 
 function TeamHeader({

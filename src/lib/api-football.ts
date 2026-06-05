@@ -184,6 +184,25 @@ interface SoccerBackendTeamProfile {
   venue: ApiFootballTeamProfile["venue"];
 }
 
+interface SoccerApiTeamProfile {
+  provider_id: number;
+  name: string;
+  code?: string | null;
+  country?: string | null;
+  founded?: number | null;
+  national?: boolean | null;
+  logo?: string | null;
+  venue?: {
+    id?: number | null;
+    name?: string | null;
+    address?: string | null;
+    city?: string | null;
+    capacity?: number | null;
+    surface?: string | null;
+    image?: string | null;
+  } | null;
+}
+
 export interface ApiFootballLeagueEntry {
   league: {
     id: number;
@@ -546,34 +565,10 @@ export async function getApiFootballFixtures(
 export async function getApiFootballTodayFixtures(
   options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
 ): Promise<GetFixturesResult> {
-  const query: Record<string, string> = {};
-  if (typeof options.limit === "number") query.limit = String(options.limit);
-
-  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
-    "/fixtures/today",
-    query,
-    { revalidate: options.revalidate ?? 10 }
-  );
-  const mappedFixtures = withLeagueLogoFallbacks(
-    payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
-  );
-  const fixtures =
-    typeof options.limit === "number"
-      ? mappedFixtures.slice(0, options.limit)
-      : mappedFixtures;
-
-  return {
-    source: payload.source ?? "api-football",
-    fetchedAt:
-      payload.fetchedAt ?? payload.data?.[0]?.last_synced_at ?? new Date().toISOString(),
-    query,
-    count: fixtures.length,
-    fixtures,
-    rateLimit: payload.rateLimit ?? {
-      requestsRemaining: null,
-      requestsLimit: null,
-    },
-  };
+  return getApiFootballLiveFixtures({
+    limit: options.limit,
+    revalidate: options.revalidate ?? 10,
+  });
 }
 
 export async function getApiFootballUpcomingFixtures(
@@ -729,14 +724,9 @@ export async function getApiFootballTeamProfile(
   const query: Record<string, string> = {};
   if (league) query.league = String(league);
   if (season) query.season = String(season);
-  const payload = await fetchSoccerBackend<
-    SoccerBackendResponse<SoccerBackendTeamProfile | ApiFootballTeamProfile>
-  >(`/teams/${team}`, query);
+  const payload = await fetchTeamProfilePayload(team, query);
 
-  return {
-    profile: payload.profile ? mapBackendTeamProfile(payload.profile) : null,
-    stats: payload.stats ?? null,
-  };
+  return normalizeBackendTeamProfilePayload(payload);
 }
 
 export async function getApiFootballPlayerProfile(player: number) {
@@ -1004,6 +994,36 @@ async function fetchSoccerBackend<T>(
   return normalizeSoccerBackendValue(proxyFootballMediaValue(payload));
 }
 
+async function fetchTeamProfilePayload(
+  team: number,
+  query: Record<string, string>
+): Promise<unknown> {
+  try {
+    const payload = await fetchSoccerBackend<unknown>(`/teams/${team}`, query);
+    if (
+      normalizeBackendTeamProfilePayload(payload).profile ||
+      !shouldTrySoccerPrefix()
+    ) {
+      return payload;
+    }
+  } catch (error) {
+    if (!shouldTrySoccerPrefix()) {
+      throw error;
+    }
+  }
+
+  return fetchSoccerBackend<unknown>(`/soccer/teams/${team}`, query);
+}
+
+function shouldTrySoccerPrefix() {
+  try {
+    const url = new URL(API_FOOTBALL_BASE_URL);
+    return !url.pathname.replace(/\/+$/, "").endsWith("/soccer");
+  } catch {
+    return false;
+  }
+}
+
 function normalizeSoccerBackendValue<T>(value: T): T {
   if (typeof value === "string") {
     return value;
@@ -1104,9 +1124,34 @@ function mapSoccerApiLeague(item: SoccerApiLeagueEntry): ApiFootballLeagueEntry 
 }
 
 function mapBackendTeamProfile(
-  profile: SoccerBackendTeamProfile | ApiFootballTeamProfile
+  profile: SoccerBackendTeamProfile | SoccerApiTeamProfile | ApiFootballTeamProfile
 ): ApiFootballTeamProfile {
   if ("team" in profile) return profile;
+
+  if ("provider_id" in profile) {
+    const venue = profile.venue ?? {};
+
+    return {
+      team: {
+        id: profile.provider_id,
+        name: profile.name,
+        code: profile.code ?? null,
+        country: profile.country ?? "",
+        founded: profile.founded ?? null,
+        national: profile.national ?? false,
+        logo: profile.logo ?? null,
+      },
+      venue: {
+        id: venue.id ?? null,
+        name: venue.name ?? null,
+        address: venue.address ?? null,
+        city: venue.city ?? null,
+        capacity: venue.capacity ?? null,
+        surface: venue.surface ?? null,
+        image: venue.image ?? null,
+      },
+    };
+  }
 
   return {
     team: {
@@ -1120,6 +1165,49 @@ function mapBackendTeamProfile(
     },
     venue: profile.venue,
   };
+}
+
+function normalizeBackendTeamProfilePayload(payload: unknown): {
+  profile: ApiFootballTeamProfile | null;
+  stats: ApiFootballTeamSeasonStats | null;
+} {
+  if (!isRecord(payload)) {
+    return { profile: null, stats: null };
+  }
+
+  const profileCandidate = payload.profile ?? payload.data ?? payload.result;
+  const profile = isTeamProfilePayload(profileCandidate)
+    ? mapBackendTeamProfile(profileCandidate)
+    : null;
+
+  return {
+    profile,
+    stats: isApiFootballTeamSeasonStats(payload.stats) ? payload.stats : null,
+  };
+}
+
+function isTeamProfilePayload(
+  value: unknown
+): value is SoccerBackendTeamProfile | SoccerApiTeamProfile | ApiFootballTeamProfile {
+  if (!isRecord(value)) return false;
+
+  if ("team" in value) {
+    return isRecord(value.team);
+  }
+
+  return (
+    (typeof value.provider_id === "number" || typeof value.apiTeamId === "number") &&
+    typeof value.name === "string"
+  );
+}
+
+function isApiFootballTeamSeasonStats(value: unknown): value is ApiFootballTeamSeasonStats {
+  return (
+    isRecord(value) &&
+    isRecord(value.fixtures) &&
+    isRecord(value.goals) &&
+    isRecord(value.clean_sheet)
+  );
 }
 
 function normalizeBackendPlayerProfilePayload(

@@ -16,7 +16,6 @@ import {
   pickRandomFixture,
 } from "@/lib/football-page-data";
 import { getLatestArticles } from "@/lib/news-generator";
-import { getApiFootballTodayFixtures } from "@/lib/api-football";
 import {
   AUTH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
@@ -66,12 +65,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("dashboard");
-  const [homepageFixtures, liveFixtures, latestArticles, cookieStore] = await Promise.all([
-    loadHomepageFixtures(),
+  const [liveFixtures, latestArticles, cookieStore] = await Promise.all([
     loadLiveFixtures(24, 0),
     getLatestArticles(locale, 6),
     cookies(),
   ]);
+  const homepageFixtures = liveFixtures.slice(0, 16);
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
@@ -159,14 +158,4 @@ export default async function DashboardPage({ params }: Props) {
       </section>
     </div>
   );
-}
-
-async function loadHomepageFixtures() {
-  try {
-    const result = await getApiFootballTodayFixtures({ limit: 16, revalidate: 0 });
-    return result.fixtures;
-  } catch (error) {
-    console.error("Error loading today's fixtures:", error);
-    return [];
-  }
 }

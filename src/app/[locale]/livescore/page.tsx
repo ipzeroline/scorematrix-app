@@ -1,7 +1,7 @@
 import { Livescore, type FixturesPayload } from "@/components/livescore/Livescore";
 import {
   ApiFootballError,
-  getApiFootballTodayFixtures,
+  getApiFootballLiveFixtures,
   getMockApiFootballFixtures,
 } from "@/lib/api-football";
 
@@ -18,7 +18,7 @@ export default async function LivescorePage({ params }: Props) {
 
 async function loadInitialFixtures(): Promise<FixturesPayload> {
   try {
-    return await getApiFootballTodayFixtures({ revalidate: 0 });
+    return await getApiFootballLiveFixtures({ revalidate: 0 });
   } catch (error) {
     const apiError =
       error instanceof ApiFootballError

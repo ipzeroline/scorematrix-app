@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Activity, RefreshCw, Search } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
@@ -21,7 +20,6 @@ import {
 } from "@/lib/football-status";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import {
-  THAILAND_TIME_ZONE_LABEL,
   cn,
   formatDate,
   formatTime,
@@ -58,7 +56,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
     setError(null);
 
     try {
-      const response = await fetch("/api/football/fixtures/today", {
+      const response = await fetch("/api/football/fixtures/live", {
         cache: "no-store",
       });
       const data = (await response.json()) as FixturesPayload;
@@ -111,15 +109,6 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             </span>
             <span className="min-w-0 truncate">{t("livescore.title")}</span>
           </h1>
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-            <Badge variant={payload.source === "api-football" ? "green" : "gold"}>
-              {payload.source === "api-football" ? "Live API" : "Fallback"}
-            </Badge>
-            <span>Synced {formatTime(payload.fetchedAt)} {THAILAND_TIME_ZONE_LABEL}</span>
-            {payload.rateLimit.requestsRemaining && (
-              <span>{payload.rateLimit.requestsRemaining} requests left</span>
-            )}
-          </div>
         </div>
         <Button
           size="sm"
