@@ -5,7 +5,7 @@ import {
   REFRESH_SESSION_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "@/lib/auth-guard";
-import { getAuthApiUrl } from "@/lib/backend-api-urls";
+import { getDataApiUrl } from "@/lib/backend-api-urls";
 
 const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60;
 
@@ -15,7 +15,7 @@ export type AuthTokens = {
 };
 
 export function getBackendApiUrl(path: string) {
-  return getAuthApiUrl(path);
+  return getDataApiUrl(path);
 }
 
 export function isSameOriginMutation(request: Request) {
