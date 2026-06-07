@@ -138,8 +138,8 @@ interface SoccerLiveFixture {
   };
   starts_at: string;
   is_live: boolean;
-  is_terminal: boolean;
-  last_synced_at: string | null;
+  is_terminal?: boolean;
+  last_synced_at?: string | null;
 }
 
 interface SoccerLiveTeam {
@@ -581,6 +581,110 @@ interface SoccerAIInsightsResponse {
   data?: Partial<GetAIInsightsResult>;
 }
 
+export type ApiFootballInsightComparison = Record<
+  string,
+  { home: number | null; away: number | null }
+>;
+
+export type ApiFootballTeamFormProfile = {
+  played?: number | null;
+  form?: string | null;
+  att?: number | null;
+  def?: number | null;
+  goals?: {
+    for?: {
+      total?: number | null;
+      average?: number | null;
+      minute?: Record<string, { total?: number | null; percentage?: string | null }>;
+      under_over?: Record<string, { over?: number | null; under?: number | null }>;
+    };
+    against?: {
+      total?: number | null;
+      average?: number | null;
+      minute?: Record<string, { total?: number | null; percentage?: string | null }>;
+      under_over?: Record<string, { over?: number | null; under?: number | null }>;
+    };
+  };
+  league?: {
+    form?: string | null;
+    fixtures?: {
+      played?: { home?: number | null; away?: number | null; total?: number | null };
+      wins?: { home?: number | null; away?: number | null; total?: number | null };
+      draws?: { home?: number | null; away?: number | null; total?: number | null };
+      loses?: { home?: number | null; away?: number | null; total?: number | null };
+    };
+    goals?: {
+      for?: {
+        total?: { home?: number | null; away?: number | null; total?: number | null };
+        average?: { home?: number | null; away?: number | null; total?: number | null };
+        minute?: Record<string, { total?: number | null; percentage?: string | null }>;
+        under_over?: Record<string, { over?: number | null; under?: number | null }>;
+      };
+      against?: {
+        total?: { home?: number | null; away?: number | null; total?: number | null };
+        average?: { home?: number | null; away?: number | null; total?: number | null };
+        minute?: Record<string, { total?: number | null; percentage?: string | null }>;
+        under_over?: Record<string, { over?: number | null; under?: number | null }>;
+      };
+    };
+    biggest?: {
+      streak?: { wins?: number | null; draws?: number | null; loses?: number | null };
+      goals?: {
+        for?: { home?: number | null; away?: number | null };
+        against?: { home?: number | null; away?: number | null };
+      };
+    };
+    clean_sheet?: { home?: number | null; away?: number | null; total?: number | null };
+    failed_to_score?: { home?: number | null; away?: number | null; total?: number | null };
+    penalty?: {
+      scored?: { total?: number | null; percentage?: string | null };
+      missed?: { total?: number | null; percentage?: string | null };
+      total?: number | null;
+    };
+  };
+};
+
+export interface ApiFootballAIInsightDetail {
+  id: string;
+  matchId: string;
+  confidenceScore: number | null;
+  homeWinProbability: number | null;
+  drawProbability: number | null;
+  awayWinProbability: number | null;
+  heatMeter: number | null;
+  homeAdvantageFactor: number | null;
+  comparison: ApiFootballInsightComparison;
+  formComparison: {
+    homeFormIndex: number | null;
+    awayFormIndex: number | null;
+    homeLastFive: ApiFootballTeamFormProfile | null;
+    awayLastFive: ApiFootballTeamFormProfile | null;
+  };
+  injuryImpact: {
+    homeImpact: number | null;
+    awayImpact: number | null;
+    homeInjuries: string[];
+    awayInjuries: string[];
+  } | null;
+  upsetAlert: boolean;
+  upsetDescription: string | null;
+  communitySentiment: ApiFootballAIInsight["communitySentiment"];
+  keyFactors: string[];
+  generatedAt: string;
+  apiAdvice: string | null;
+  apiUnderOver: string | null;
+  apiWinOrDraw: boolean | null;
+  apiWinner: { id: number | null; name: string | null; comment: string | null } | null;
+  apiPredictedGoals: { home: number | string | null; away: number | string | null } | null;
+  fixture: ApiFootballFixture;
+}
+
+interface SoccerAIInsightDetailResponse {
+  data?: Omit<ApiFootballAIInsightDetail, "fixture"> & {
+    fixture?: SoccerLiveFixture | ApiFootballFixture | null;
+  };
+}
+
 export class ApiFootballError extends Error {
   constructor(
     message: string,
@@ -640,12 +744,53 @@ export async function getApiFootballAIInsights(): Promise<GetAIInsightsResult> {
   };
 }
 
+export async function getApiFootballAIInsightDetail(
+  fixtureId: number
+): Promise<ApiFootballAIInsightDetail> {
+  const payload = await fetchSoccerBackend<SoccerAIInsightDetailResponse>(
+    `/ai-insights/${fixtureId}`,
+    {}
+  );
+
+  if (!payload.data?.fixture) {
+    throw new ApiFootballError("AI insight detail not found", 404);
+  }
+
+  return {
+    ...payload.data,
+    fixture: mapInsightFixture(payload.data.fixture),
+  };
+}
+
 export async function getApiFootballTodayFixtures(
   options: Pick<GetFixturesOptions, "limit"> = {}
 ): Promise<GetFixturesResult> {
-  return getApiFootballLiveFixtures({
-    limit: options.limit,
-  });
+  const query: Record<string, string> = {};
+  if (typeof options.limit === "number") query.limit = String(options.limit);
+
+  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
+    "/fixtures/today",
+    query
+  );
+  const mappedFixtures = withLeagueLogoFallbacks(
+    payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
+  );
+  const fixtures =
+    typeof options.limit === "number"
+      ? mappedFixtures.slice(0, options.limit)
+      : mappedFixtures;
+
+  return {
+    source: payload.source ?? "api-football",
+    fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
+    query,
+    count: fixtures.length,
+    fixtures,
+    rateLimit: payload.rateLimit ?? {
+      requestsRemaining: null,
+      requestsLimit: null,
+    },
+  };
 }
 
 export async function getApiFootballUpcomingFixtures(
@@ -988,6 +1133,16 @@ function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
     kickoffTime: fixture.starts_at,
     venue: "",
   };
+}
+
+function mapInsightFixture(
+  fixture: SoccerLiveFixture | ApiFootballFixture
+): ApiFootballFixture {
+  if (isApiFootballFixture(fixture)) {
+    return fixture;
+  }
+
+  return mapLiveFixture(fixture);
 }
 
 function withLeagueLogoFallbacks(fixtures: ApiFootballFixture[]): ApiFootballFixture[] {

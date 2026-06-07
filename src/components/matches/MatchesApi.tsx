@@ -102,7 +102,7 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
   useEffect(() => {
     async function refreshFixtures() {
       try {
-        const res = await fetch("/api/football/fixtures/upcoming", {
+        const res = await fetch("/api/football/fixtures/today", {
           cache: "no-store",
         });
         if (res.ok) {

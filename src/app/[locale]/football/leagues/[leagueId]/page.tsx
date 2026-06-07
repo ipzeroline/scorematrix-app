@@ -17,7 +17,7 @@ import {
 import { buildFixtureSeoSlug, extractFootballEntityId } from "@/lib/football-slugs";
 import { buildFootballStatusLabels, getFixtureStatusLabel } from "@/lib/football-status";
 import { buildPredictMatchHref } from "@/lib/predict-route";
-import { THAILAND_TIME_ZONE_LABEL, formatDate } from "@/lib/utils";
+import { THAILAND_TIME_ZONE_ABBR, THAILAND_TIME_ZONE_LABEL, formatDate, formatTime } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 
 type Props = {
@@ -89,43 +89,56 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
         </div>
       </Card>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <section className="grid gap-5">
         <Card className="overflow-hidden p-0">
-          <div className="flex items-center gap-2 border-b border-gray-800 px-4 py-3">
-            <CalendarDays size={14} className="text-cyan-400" />
-            <h2 className="text-sm font-semibold text-white">{t("football.leagueSchedule")}</h2>
+          <div className="flex flex-col gap-2 border-b border-gray-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarDays size={14} className="text-cyan-400" />
+              <h2 className="text-sm font-semibold text-white">{t("football.leagueSchedule")}</h2>
+            </div>
+            <span className="font-mono text-xs text-gray-500">
+              {t("dashboard.matchCount", { count: latestSchedule.length })}
+            </span>
           </div>
           <div className="divide-y divide-gray-800/70">
             {latestSchedule.map((match) => (
               <div
                 key={match.id}
-                className="grid gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03] md:grid-cols-[92px_minmax(0,1fr)_120px_120px]"
+                className="grid gap-4 px-4 py-4 transition-colors hover:bg-white/[0.03] md:grid-cols-[190px_minmax(0,1fr)_140px]"
               >
                 <Link
                   href={buildMatchDetailHref(match, locale)}
                   className="contents"
                 >
-                  <span className="font-mono text-xs text-gray-500">
-                    {formatDate(match.kickoffTime)}
-                  </span>
-                  <div className="grid grid-cols-[1fr_76px_1fr] items-center gap-2">
+                  <div className="flex items-center justify-between gap-3 md:justify-start">
+                    <p className="text-xs font-medium text-gray-300">
+                      {formatDate(match.kickoffTime, locale)}
+                    </p>
+                    <p className="font-mono text-xs text-cyan-300">
+                      {formatTime(match.kickoffTime, locale)}{" "}
+                      <span className="text-[10px] text-gray-600">
+                        {THAILAND_TIME_ZONE_ABBR}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] items-center gap-3">
                     <TeamName name={match.home.name} logo={match.home.logo} align="right" />
-                    <span className="text-center font-mono text-sm font-bold text-white">
+                    <span className="rounded-lg border border-gray-800 bg-black/25 px-2 py-2 text-center font-mono text-sm font-bold text-white">
                       {match.score.home !== null
                         ? `${match.score.home} - ${match.score.away}`
                         : t("common.vs")}
                     </span>
                     <TeamName name={match.away.name} logo={match.away.logo} />
                   </div>
-                  <div className="flex justify-start md:justify-end">
+                  <div className="flex justify-center md:justify-end">
                     <StatusBadge
                       status={match.status}
                       label={getFixtureStatusLabel(match, statusLabels)}
                     />
                   </div>
                 </Link>
-                <div className="flex justify-start md:justify-end">
-                  {match.status === MatchStatus.UPCOMING ? (
+                {match.status === MatchStatus.UPCOMING && (
+                  <div className="flex justify-center md:col-span-3">
                     <Link
                       href={buildPredictMatchHref(
                         locale,
@@ -138,24 +151,25 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                         {t("prediction.predictScore")}
                       </Button>
                     </Link>
-                  ) : (
-                    <span className="inline-flex min-w-20 justify-center rounded-lg border border-gray-800 bg-black/20 px-3 py-1.5 text-xs text-gray-600">
-                      -
-                    </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </Card>
 
         <Card className="overflow-hidden p-0">
-          <div className="flex items-center gap-2 border-b border-gray-800 px-4 py-3">
-            <Table2 size={14} className="text-cyan-400" />
-            <h2 className="text-sm font-semibold text-white">{t("football.standings")}</h2>
+          <div className="flex flex-col gap-2 border-b border-gray-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <Table2 size={14} className="text-cyan-400" />
+              <h2 className="text-sm font-semibold text-white">{t("football.standings")}</h2>
+            </div>
+            <span className="font-mono text-xs text-gray-500">
+              {t("football.teamCount", { count: standings?.standings[0]?.length ?? 0 })}
+            </span>
           </div>
           <div className="overflow-x-auto">
-            {(standings?.standings[0]?.length ?? 0) > 0 ? <table className="w-full min-w-[400px] text-sm">
+            {(standings?.standings[0]?.length ?? 0) > 0 ? <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-[10px] uppercase tracking-wider text-gray-500">
                   <th className="px-3 py-2 text-left">#</th>

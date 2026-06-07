@@ -7,12 +7,15 @@ import { useTranslations } from "next-intl";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Tabs } from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { buildFootballStatusLabels, getFixtureStatusLabel } from "@/lib/football-status";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import { buildPredictMatchHref } from "@/lib/predict-route";
 import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
@@ -22,6 +25,7 @@ import { Brain, ShieldCheck, Trophy, Users, Zap, Award, Sparkles, X } from "luci
 
 interface PredictApiProps {
   fixtures: ApiFootballFixture[];
+  currentTime: number;
 }
 
 type PlayerProfileResponse = {
@@ -39,14 +43,16 @@ type PlayerProfileResponse = {
   name?: unknown;
 };
 
-export function PredictApi({ fixtures }: PredictApiProps) {
+export function PredictApi({ fixtures, currentTime }: PredictApiProps) {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
   const [tab, setTab] = useState("upcoming");
   const matches = useMemo(
-    () => fixtures.filter((match) => match.status === MatchStatus.UPCOMING),
-    [fixtures]
+    () => fixtures.filter((match) => isPredictableFixture(match, currentTime)),
+    [fixtures, currentTime]
   );
+  const leagueGroups = useMemo(() => groupPredictFixturesByLeague(matches), [matches]);
+  const statusLabels = useMemo(() => buildFootballStatusLabels(t), [t]);
 
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const [history, setHistory] = useState<any[]>([]);
@@ -232,51 +238,90 @@ export function PredictApi({ fixtures }: PredictApiProps) {
               description={t("prediction.checkBackLater")}
             />
           ) : (
-            matches.map((match) => (
-              <Card key={match.id} neon="cyan" hover>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-gray-500 mb-1">
-                      {match.league.name}
-                    </p>
-                    <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-3">
-                      <TeamPick
-                        name={match.home.name}
-                        logo={match.home.logo}
-                        accent="cyan"
+            leagueGroups.map((group) => (
+              <section
+                key={group.key}
+                className="overflow-hidden rounded-lg border border-gray-800 bg-[#101018]"
+              >
+                <div className="border-b border-gray-800 bg-[#141421] px-3 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <ApiLeagueLogo
+                        name={group.league.name}
+                        logo={group.league.logo}
+                        size="sm"
                       />
-                      <div className="min-w-[76px] shrink-0 text-center">
-                        <p className="text-lg font-bold font-mono text-white">
-                          {t("common.vs")}
-                        </p>
-                        <p className="mt-0.5 whitespace-nowrap text-[9px] text-gray-500">
-                          {formatDate(match.kickoffTime, locale)}
-                        </p>
-                        <p className="whitespace-nowrap text-[9px] text-gray-500">
-                          {formatMatchTimeWithZone(match.kickoffTime, locale)}
+                      <div className="min-w-0">
+                        <h2 className="truncate text-sm font-bold text-white">
+                          {group.league.name}
+                        </h2>
+                        <p className="truncate text-[11px] text-gray-500">
+                          {[group.league.country, group.league.round]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </p>
                       </div>
-                      <TeamPick
-                        name={match.away.name}
-                        logo={match.away.logo}
-                        accent="magenta"
-                      />
                     </div>
+                    <Badge variant="cyan" className="shrink-0">
+                      {group.matches.length} {t("matches.metricMatches")}
+                    </Badge>
                   </div>
-                  <Link
-                    href={buildPredictMatchHref(
-                      locale,
-                      buildFixtureSeoSlug(match),
-                      match.home.apiTeamId ?? match.home.id,
-                      match.away.apiTeamId ?? match.away.id
-                    )}
-                  >
-                    <Button size="sm" neon>
-                      {t("prediction.predictScore")}
-                    </Button>
-                  </Link>
                 </div>
-              </Card>
+
+                <div className="space-y-3 p-3">
+                  {group.matches.map((match) => (
+                    <Card key={match.id} neon="cyan" hover>
+                      <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+                        <div className="flex-1 min-w-0">
+                          <div className="mb-2 flex items-center justify-end">
+                            <StatusBadge
+                              status={match.status}
+                              label={getFixtureStatusLabel(match, statusLabels)}
+                              className="px-2 py-0.5 text-[10px]"
+                            />
+                          </div>
+                          <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-3">
+                            <TeamPick
+                              name={match.home.name}
+                              logo={match.home.logo}
+                              accent="cyan"
+                            />
+                            <div className="min-w-[76px] shrink-0 text-center">
+                              <p className="text-lg font-bold font-mono text-white">
+                                {t("common.vs")}
+                              </p>
+                              <p className="mt-0.5 whitespace-nowrap text-[9px] text-gray-500">
+                                {formatDate(match.kickoffTime, locale)}
+                              </p>
+                              <p className="whitespace-nowrap text-[9px] text-gray-500">
+                                {formatMatchTimeWithZone(match.kickoffTime, locale)}
+                              </p>
+                            </div>
+                            <TeamPick
+                              name={match.away.name}
+                              logo={match.away.logo}
+                              accent="magenta"
+                            />
+                          </div>
+                        </div>
+                        <Link
+                          className="self-center sm:self-auto sm:shrink-0"
+                          href={buildPredictMatchHref(
+                            locale,
+                            buildFixtureSeoSlug(match),
+                            match.home.apiTeamId ?? match.home.id,
+                            match.away.apiTeamId ?? match.away.id
+                          )}
+                        >
+                          <Button size="sm" neon className="min-w-32">
+                            {t("prediction.predictScore")}
+                          </Button>
+                        </Link>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </section>
             ))
           )}
         </div>
@@ -622,6 +667,43 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function toNonEmptyString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+type PredictLeagueGroup = {
+  key: string;
+  league: ApiFootballFixture["league"];
+  matches: ApiFootballFixture[];
+};
+
+function isPredictableFixture(fixture: ApiFootballFixture, currentTime: number) {
+  const kickoffTime = new Date(fixture.kickoffTime).getTime();
+
+  return (
+    fixture.status === MatchStatus.UPCOMING &&
+    Number.isFinite(kickoffTime) &&
+    kickoffTime > currentTime
+  );
+}
+
+function groupPredictFixturesByLeague(fixtures: ApiFootballFixture[]) {
+  const groups = new Map<string, PredictLeagueGroup>();
+
+  for (const fixture of fixtures) {
+    const key = `${fixture.league.apiLeagueId ?? fixture.league.id}-${fixture.league.season ?? "season"}`;
+    const existing = groups.get(key);
+
+    if (existing) {
+      existing.matches.push(fixture);
+    } else {
+      groups.set(key, {
+        key,
+        league: fixture.league,
+        matches: [fixture],
+      });
+    }
+  }
+
+  return Array.from(groups.values());
 }
 
 function InfoPanel({

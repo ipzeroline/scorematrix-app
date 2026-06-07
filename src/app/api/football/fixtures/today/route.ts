@@ -1,6 +1,6 @@
 import {
   ApiFootballError,
-  getApiFootballLiveFixtures,
+  getApiFootballTodayFixtures,
 } from "@/lib/api-football";
 import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const limit = toPositiveInt(searchParams.get("limit"), 100);
 
   try {
-    const result = await getApiFootballLiveFixtures({
+    const result = await getApiFootballTodayFixtures({
       limit,
     });
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const apiError =
       error instanceof ApiFootballError
         ? error
-        : new ApiFootballError("Unable to fetch live football fixtures", 500);
+        : new ApiFootballError("Unable to fetch today football fixtures", 500);
 
     return Response.json(
       {

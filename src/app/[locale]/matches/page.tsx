@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { MatchesApi } from "@/components/matches/MatchesApi";
-import { loadUpcomingFixtures, sortFixtures } from "@/lib/football-page-data";
+import { loadTodayFixtures, sortFixtures } from "@/lib/football-page-data";
 import {
   AUTH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
@@ -50,7 +50,7 @@ export default async function MatchesPage() {
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
-  const fixtures = sortFixtures(await loadUpcomingFixtures());
+  const fixtures = sortFixtures(await loadTodayFixtures());
 
   return <MatchesApi fixtures={fixtures} initialHasAuthSession={initialHasAuthSession} />;
 }

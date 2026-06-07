@@ -16,8 +16,9 @@ import {
   type ApiFootballAIInsight,
 } from "@/lib/api-football";
 import {
-  loadFixturesForDate,
   loadLiveFixtures,
+  loadTodayFixtures,
+  sortFixtures,
 } from "@/lib/football-page-data";
 import { getLatestArticles } from "@/lib/news-generator";
 import {
@@ -67,12 +68,12 @@ export default async function DashboardPage({ params }: Props) {
   const t = await getTranslations("dashboard");
   const [liveFixtures, todayFixtures, aiInsight, latestArticles, cookieStore] = await Promise.all([
     loadLiveFixtures(24),
-    loadFixturesForDate(50),
+    loadTodayFixtures(),
     loadFeaturedAIInsight(),
     getLatestArticles(locale, 6),
     cookies(),
   ]);
-  const homepageFixtures = todayFixtures.slice(0, 16);
+  const homepageFixtures = sortFixtures(todayFixtures).slice(0, 16);
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);

@@ -6,5 +6,9 @@ export const dynamic = "force-dynamic";
 export default async function PredictPage() {
   const fixtures = await loadUpcomingFixtures();
 
-  return <PredictApi fixtures={fixtures} />;
+  return <PredictApi fixtures={fixtures} currentTime={getCurrentTime()} />;
+}
+
+function getCurrentTime() {
+  return Date.now();
 }

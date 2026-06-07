@@ -58,7 +58,7 @@ API routes:
 - `src/app/api/data/[...path]/route.ts`: same-origin data API BFF; proxies browser data/member requests to `API_DATA_BASE_URL` while preserving bearer and locale headers
 - `src/app/api/football/fixtures/route.ts`: returns uncached fixtures from the soccer backend
 - `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer backend `GET /live` with no-store caching
-- `src/app/api/football/fixtures/today/route.ts`: legacy local route that now returns live fixtures from soccer backend `GET /live`
+- `src/app/api/football/fixtures/today/route.ts`: returns today's fixtures from soccer backend `GET /fixtures/today`
 - `src/app/api/football/fixtures/upcoming/route.ts`: returns upcoming fixtures from soccer backend `GET /fixtures/upcoming`
 - `src/app/api/football/teams/route.ts`: proxies favorite-team options from soccer backend `GET /teams`
 - `src/app/api/football/teams/[id]/squad/route.ts`: proxies team squad players from soccer backend `GET /teams/{team_id}/squad`
@@ -114,16 +114,17 @@ Static data:
 
 - `src/lib/api-football.ts`
   - Base URL: required `API_FOOTBALL_BASE_URL` from root `.env`
-  - Exports fetchers for fixtures, live fixtures from `GET /live`, AI insights from `GET /ai-insights`, legacy today's fixtures mapped to the live feed, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
+  - Exports fetchers for fixtures, live fixtures from `GET /live`, AI insights from `GET /ai-insights`, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
   - League listing maps `GET /leagues` / `v1/soccer/leagues` responses from `data[]` with `provider_id`, `current_season`, `sort_order`, `logo`, and country fields into `ApiFootballLeagueEntry`
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
 - `src/lib/football-page-data.ts`
   - `loadFixturesForDate(limit?)` uses today's Asia/Bangkok date and returns an empty list instead of stale mock fixtures when the API fails
   - `loadLiveFixtures(limit = 24)` uses uncached `GET /live` for homepage live match highlights
+  - `loadTodayFixtures(limit?)` uses uncached `GET /fixtures/today`
   - `loadUpcomingFixtures(limit?)` uses uncached `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
-- `src/app/[locale]/page.tsx` loads live highlights from uncached `GET /live`, the "today matches" list from uncached date-filtered fixtures using the Asia/Bangkok date, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
+- `src/app/[locale]/page.tsx` loads live highlights from uncached `GET /live`, the "today matches" preview from uncached `GET /fixtures/today` sorted with the same `sortFixtures` order as `/matches`, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
 - `src/app/[locale]/ai-insight/page.tsx` maps grouped `live`, `highConfidence`, and `upsetAlert` data from soccer backend `GET /ai-insights`, displays only insights with complete confidence/probability metrics, and distinguishes empty results from API failures.
 - `src/app/[locale]/ai-insight/[matchId]/page.tsx` renders valid fixture detail even when the match is absent from `GET /ai-insights`, uses real model signals when complete, supplements them with fixture detail and H2H API data, and shows an unavailable state instead of generating placeholder metrics.
 - AI insight detail hero reuses the shared `StatusBadge` with the fixture-detail status, matching the match-detail and other football pages.
@@ -135,7 +136,7 @@ Static data:
 - Fixture-detail lineup normalization accepts incomplete payloads and `start_xi` aliases, and always supplies safe `team`, `coach`, `startXI`, and `substitutes` fields before match-detail rendering.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
-- `src/app/[locale]/matches/page.tsx` uses uncached `GET /fixtures/upcoming` data through `loadUpcomingFixtures`; `MatchesApi` refreshes once on mount and includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
+- `src/app/[locale]/matches/page.tsx` uses today's football fixtures through `loadTodayFixtures`; `MatchesApi` refreshes once on mount through `/api/football/fixtures/today` and includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes
 - `src/lib/football-slugs.ts`: builds/extracts SEO slugs for fixtures/leagues/entities
 

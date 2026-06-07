@@ -3,6 +3,7 @@ import {
   type ApiFootballFixture,
   getApiFootballFixtures,
   getApiFootballLiveFixtures,
+  getApiFootballTodayFixtures,
   getApiFootballUpcomingFixtures,
   getMockApiFootballFixtures,
 } from "@/lib/api-football";
@@ -28,6 +29,18 @@ export async function loadLiveFixtures(
 ): Promise<ApiFootballFixture[]> {
   try {
     const result = await getApiFootballLiveFixtures({ limit });
+    return result.fixtures;
+  } catch (error) {
+    logUnexpectedApiError(error);
+    return [];
+  }
+}
+
+export async function loadTodayFixtures(
+  limit?: number
+): Promise<ApiFootballFixture[]> {
+  try {
+    const result = await getApiFootballTodayFixtures({ limit });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
