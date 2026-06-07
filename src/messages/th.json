@@ -109,7 +109,7 @@
     "displayNameMaxLength": "ชื่อแสดงต้องไม่เกิน 100 ตัวอักษร",
     "passwordRequired": "กรุณากรอกรหัสผ่าน",
     "passwordMinLength": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
-    "passwordMaxLength": "รหัสผ่านต้องไม่เกิน 10 ตัวอักษร",
+    "passwordMaxLength": "รหัสผ่านต้องไม่เกิน 100 ตัวอักษร",
     "passwordStrengthHint": "ควรมีตัวพิมพ์ใหญ่และตัวเลข",
     "passwordMismatch": "รหัสผ่านไม่ตรงกัน",
     "bio": "เกี่ยวกับตัว",

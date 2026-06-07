@@ -16,12 +16,12 @@ export function getDataApiUrl(pathname: string) {
   );
 }
 
-export function getAuthApiUrl(pathname: string) {
-  return buildRawApiUrl(
-    requiredEnv(process.env.API_DATA_BASE_URL, "API_DATA_BASE_URL"),
-    pathname
-  );
-}
+// export function getAuthApiUrl(pathname: string) {
+//   return buildRawApiUrl(
+//     requiredEnv(process.env.API_DATA_BASE_URL, "API_DATA_BASE_URL"),
+//     pathname
+//   );
+// }
 
 function buildRawApiUrl(configuredBaseUrl: string, pathname: string) {
   const url = new URL(configuredBaseUrl);

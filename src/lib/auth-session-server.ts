@@ -5,7 +5,7 @@ import {
   REFRESH_SESSION_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "@/lib/auth-guard";
-import { getAuthApiUrl } from "@/lib/backend-api-urls";
+import { getDataApiUrl } from "@/lib/backend-api-urls";
 
 const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60;
 
@@ -15,15 +15,32 @@ export type AuthTokens = {
 };
 
 export function getBackendApiUrl(path: string) {
-  return getAuthApiUrl(path);
+  return getDataApiUrl(path);
 }
 
 export function isSameOriginMutation(request: Request) {
-  const requestOrigin = new URL(request.url).origin;
   const origin = request.headers.get("origin");
   const fetchSite = request.headers.get("sec-fetch-site");
 
-  return fetchSite !== "cross-site" && (!origin || origin === requestOrigin);
+  if (fetchSite === "same-origin") return true;
+  if (fetchSite === "cross-site") return false;
+  if (!origin) return true;
+
+  try {
+    const originUrl = new URL(origin);
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const host = forwardedHost || request.headers.get("host");
+
+    if (!host) {
+      const requestOriginUrl = new URL(request.url);
+      return originUrl.hostname === requestOriginUrl.hostname;
+    }
+
+    const hostName = host.split(":")[0];
+    return originUrl.hostname === hostName;
+  } catch {
+    return false;
+  }
 }
 
 export function backendAuthHeaders(request: Request) {

@@ -109,7 +109,7 @@
     "displayNameMaxLength": "ឈ្មោះបង្ហាញត្រូវមិនលើសពី 100 តួអក្សរ",
     "passwordRequired": "ត្រូវការពាក្យសម្ងាត់",
     "passwordMinLength": "ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោចណាស់ ៨ តួអក្សរ",
-    "passwordMaxLength": "ពាក្យសម្ងាត់ត្រូវមិនលើសពី 10 តួអក្សរ",
+    "passwordMaxLength": "ពាក្យសម្ងាត់ត្រូវមិនលើសពី 100 តួអក្សរ",
     "passwordStrengthHint": "គួរមានអក្សរធំ និងលេខ",
     "passwordMismatch": "ពាក្យសម្ងាត់មិនត្រូវគ្នា",
     "bio": "ជីវប្រវត្តិ",

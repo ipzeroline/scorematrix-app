@@ -109,7 +109,7 @@
     "displayNameMaxLength": "Display name must be at most 100 characters",
     "passwordRequired": "Password is required",
     "passwordMinLength": "Password must be at least 8 characters",
-    "passwordMaxLength": "Password must be at most 10 characters",
+    "passwordMaxLength": "Password must be at most 100 characters",
     "passwordStrengthHint": "Include uppercase and number",
     "passwordMismatch": "Passwords do not match",
     "bio": "Bio",

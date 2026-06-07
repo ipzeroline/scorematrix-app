@@ -109,7 +109,7 @@
     "displayNameMaxLength": "ပြသမည့်အမည်သည် စာလုံး 100 ထက် မကျော်ရပါ",
     "passwordRequired": "စကားဝှက် လိုအပ်ပါသည်",
     "passwordMinLength": "စကားဝှက် အနည်းဆုံး ၈ လုံး လိုအပ်ပါသည်",
-    "passwordMaxLength": "စကားဝှက်သည် စာလုံး 10 ထက် မကျော်ရပါ",
+    "passwordMaxLength": "စကားဝှက်သည် စာလုံး 100 ထက် မကျော်ရပါ",
     "passwordStrengthHint": "စာလုံးအကြီးနှင့် နံပါတ် ထည့်ပါ",
     "passwordMismatch": "စကားဝှက်များ မတူညီပါ",
     "bio": "ကိုယ်ရေးအကျဉ်း",

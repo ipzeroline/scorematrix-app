@@ -109,7 +109,7 @@
     "displayNameMaxLength": "ຊື່ສະແດງຕ້ອງບໍ່ເກີນ 100 ໂຕອັກສອນ",
     "passwordRequired": "ກະລຸນາປ້ອນລະຫັດຜ່ານ",
     "passwordMinLength": "ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 8 ໂຕອັກສອນ",
-    "passwordMaxLength": "ລະຫັດຜ່ານຕ້ອງບໍ່ເກີນ 10 ໂຕອັກສອນ",
+    "passwordMaxLength": "ລະຫັດຜ່ານຕ້ອງບໍ່ເກີນ 100 ໂຕອັກສອນ",
     "passwordStrengthHint": "ຄວນມີຕົວພິມໃຫຍ່ ແລະໂຕເລກ",
     "passwordMismatch": "ລະຫັດຜ່ານບໍ່ຕົງກັນ",
     "bio": "ກ່ຽວກັບ",

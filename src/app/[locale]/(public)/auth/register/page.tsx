@@ -161,7 +161,10 @@ export default function RegisterPage() {
     if (touched.password || form.password) {
       if (!form.password) e.password = t("passwordRequired");
       else if (form.password.length < 8) e.password = t("passwordMinLength");
-      else if (form.password.length > 10) e.password = t("passwordMaxLength");
+      else if (form.password.length > 100) e.password = t("passwordMaxLength");
+      else if (!/[A-Z]/.test(form.password) || !/[0-9]/.test(form.password)) {
+        e.password = t("passwordStrengthHint");
+      }
     }
     if (touched.confirmPassword || form.confirmPassword) {
       if (form.confirmPassword && form.password !== form.confirmPassword) {
