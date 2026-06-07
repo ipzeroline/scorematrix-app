@@ -1,12 +1,9 @@
-const API_FOOTBALL_BASE_URL = requiredEnv(
-  process.env.API_FOOTBALL_BASE_URL,
-  "API_FOOTBALL_BASE_URL"
-);
+import { getFootballApiUrl } from "@/lib/backend-api-urls";
 
 export const revalidate = 300;
 
 export async function GET(request: Request) {
-  const response = await fetch(buildSoccerBackendUrl("/teams"), {
+  const response = await fetch(getFootballApiUrl("/teams"), {
     headers: buildHeaders(request),
     next: { revalidate },
   });
@@ -107,14 +104,6 @@ function normalizeTeamGroup(group: RawTeamGroup | NormalizedTeamGroup): Normaliz
   };
 }
 
-function buildSoccerBackendUrl(pathname: string) {
-  const baseUrl = API_FOOTBALL_BASE_URL.endsWith("/")
-    ? API_FOOTBALL_BASE_URL
-    : `${API_FOOTBALL_BASE_URL}/`;
-
-  return new URL(pathname.replace(/^\/+/, ""), baseUrl);
-}
-
 function buildHeaders(request: Request): HeadersInit {
   const headers = new Headers();
   headers.set("Accept", "application/json");
@@ -131,12 +120,4 @@ function buildHeaders(request: Request): HeadersInit {
   }
 
   return headers;
-}
-
-function requiredEnv(value: string | undefined, name: string) {
-  if (!value) {
-    throw new Error(`${name} is required. Add it to .env.`);
-  }
-
-  return value;
 }

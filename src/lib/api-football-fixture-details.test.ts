@@ -68,8 +68,42 @@ test("normalizes fixture details returned under data", () => {
   assert.equal(fixture.venue, "Estadio Olimpico Universitario, Mexico City");
   assert.equal(result.events.length, 1);
   assert.equal(result.lineups.length, 1);
+  assert.deepEqual(
+    (result.lineups[0] as { startXI: unknown[]; substitutes: unknown[] }).startXI,
+    []
+  );
+  assert.deepEqual(
+    (result.lineups[0] as { startXI: unknown[]; substitutes: unknown[] }).substitutes,
+    []
+  );
   assert.equal(result.statistics.length, 1);
   assert.equal(result.playerStats.length, 1);
+});
+
+test("normalizes snake-case and incomplete lineup payloads", () => {
+  const result = normalizeFixtureDetailsPayload({
+    fixture: { id: "fixture-1" },
+    lineups: [
+      {
+        team: { id: "42", name: "Example FC" },
+        start_xi: [{ player: { id: "7", name: "Player Seven", number: "10" } }],
+      },
+    ],
+  });
+
+  const lineup = result.lineups[0] as {
+    team: { id: number; name: string; logo: string | null };
+    coach: { id: number | null; name: string | null; photo: string | null };
+    startXI: { player: { id: number | null; name: string; number: number | null } }[];
+    substitutes: unknown[];
+  };
+
+  assert.equal(lineup.team.id, 42);
+  assert.equal(lineup.team.logo, null);
+  assert.equal(lineup.coach.name, null);
+  assert.equal(lineup.startXI[0].player.id, 7);
+  assert.equal(lineup.startXI[0].player.number, 10);
+  assert.deepEqual(lineup.substitutes, []);
 });
 
 test("adapts raw fixture detail response to match detail UI fields", () => {

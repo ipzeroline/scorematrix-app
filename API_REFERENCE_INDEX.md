@@ -10,8 +10,8 @@ Last read: 2026-05-24
 
 This API reference covers the production ScoreMatrix SCORM API used by the frontend.
 
-- Base URL: `https://api.scorematrix.live/api/v1/scorm`
-- `src/lib/api-client.ts` appends `/scorm` to `NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL` when the env value is still `https://api.scorematrix.live/api/v1`.
+- Backend base URL is configured by server-only `API_DATA_BASE_URL`.
+- Browser requests use `/api/data/**`; the BFF normalizes `API_DATA_BASE_URL` so the backend URL contains exactly one `/scorm`.
 - All responses include a stable `code` field.
 - Frontend should map `code` values to localized UI messages instead of parsing backend Thai text.
 - Authenticated endpoints use:

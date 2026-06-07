@@ -1083,6 +1083,8 @@ function LineupsPanel({
       ) : (
         lineups.map((lineup, index) => {
           const captainIds = getCaptainPlayerIds(lineup.team.id, playerStats);
+          const startingXI = lineup.startXI ?? [];
+          const substitutes = lineup.substitutes ?? [];
 
           return (
             <Card key={lineup.team.id} className="overflow-hidden p-0">
@@ -1131,7 +1133,7 @@ function LineupsPanel({
                       <span className="min-w-0 truncate">{labels.startingXI}</span>
                     </h3>
                     <div className="grid gap-2">
-                      {lineup.startXI.map(({ player }) => (
+                      {startingXI.map(({ player }) => (
                         <PlayerRow
                           key={`${player.id}-${player.number}`}
                           player={player}
@@ -1149,7 +1151,7 @@ function LineupsPanel({
                       <span className="min-w-0 truncate">{labels.substitutes}</span>
                     </h3>
                     <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
-                      {lineup.substitutes.map(({ player }) => (
+                      {substitutes.map(({ player }) => (
                         <PlayerRow
                           key={`${player.id}-${player.number}`}
                           player={player}
@@ -1184,7 +1186,7 @@ function FormationPitch({
   captainIds: Set<number>;
   captainLabel: string;
 }) {
-  const players = lineup.startXI
+  const players = (lineup.startXI ?? [])
     .map(({ player }) => ({
       ...player,
       gridPosition: parseGridPosition(player.grid),

@@ -73,10 +73,7 @@ export function isAuthSessionExpiredError(error: unknown) {
   return isAuthExpiredPayload(error);
 }
 
-const API_BASE_URL = normalizeApiBaseUrl(requiredEnv(
-  process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL,
-  "NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL"
-));
+const API_BASE_URL = "/api/data";
 
 const LEGACY_AUTH_TOKEN_STORAGE_KEY = "scorematrix-auth-token";
 const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
@@ -304,19 +301,6 @@ async function fetchApi<B>(
 function buildApiUrl(path: string) {
   if (/^https?:\/\//i.test(path)) return path;
   return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
-function normalizeApiBaseUrl(value: string) {
-  const baseUrl = value.replace(/\/$/, "");
-  return baseUrl.endsWith("/scorm") ? baseUrl : `${baseUrl}/scorm`;
-}
-
-function requiredEnv(value: string | undefined, name: string) {
-  if (!value) {
-    throw new Error(`${name} is required. Add it to .env.`);
-  }
-
-  return value;
 }
 
 function readCookie(name: string) {
@@ -568,9 +552,14 @@ function isAuthExpiredPayload(payload: unknown) {
       normalized === "access_token_expired" ||
       normalized === "expired_token" ||
       normalized === "token_expired_error" ||
+      normalized === "missing_token" ||
+      normalized === "token_missing" ||
+      normalized === "access_token_missing" ||
       normalized?.includes("token_expired") ||
       normalized?.includes("token_expire") ||
-      normalized?.includes("token_is_expired")
+      normalized?.includes("token_is_expired") ||
+      normalized?.includes("missing_access_token") ||
+      normalized?.includes("authorization_header_missing")
     );
   });
 }

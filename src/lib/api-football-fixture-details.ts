@@ -86,7 +86,7 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
       fixture: payload.fixture,
       events: payload.events ?? [],
-      lineups: payload.lineups ?? [],
+      lineups: normalizeLineups(payload.lineups),
       statistics: payload.statistics ?? [],
       playerStats: payload.playerStats ?? payload.players ?? [],
     };
@@ -149,7 +149,7 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       venue: formatVenue(rawFixture.venue),
     },
     events: normalizeEvents(detail.events),
-    lineups: detail.lineups ?? [],
+    lineups: normalizeLineups(detail.lineups),
     statistics: detail.statistics ?? [],
     playerStats: detail.players ?? [],
   };
@@ -228,6 +228,56 @@ function normalizeEvents(events: unknown[] | undefined) {
   });
 }
 
+function normalizeLineups(lineups: unknown[] | undefined) {
+  if (!lineups) return [];
+
+  return lineups
+    .filter(isRecord)
+    .map((lineup) => {
+      const team = isRecord(lineup.team) ? lineup.team : {};
+      const coach = isRecord(lineup.coach) ? lineup.coach : {};
+
+      return {
+        ...lineup,
+        team: {
+          ...team,
+          id: toNumber(team.id) ?? 0,
+          name: toString(team.name) ?? "Unknown Team",
+          logo: toString(team.logo),
+        },
+        coach: {
+          ...coach,
+          id: toNumber(coach.id),
+          name: toString(coach.name),
+          photo: toString(coach.photo),
+        },
+        formation: toString(lineup.formation),
+        startXI: normalizeLineupPlayers(lineup.startXI ?? lineup.start_xi),
+        substitutes: normalizeLineupPlayers(lineup.substitutes),
+      };
+    });
+}
+
+function normalizeLineupPlayers(value: unknown) {
+  if (!Array.isArray(value)) return [];
+
+  return value.filter(isRecord).map((entry) => {
+    const player = isRecord(entry.player) ? entry.player : entry;
+
+    return {
+      ...entry,
+      player: {
+        ...player,
+        id: toNumber(player.id),
+        name: toString(player.name) ?? "Unknown Player",
+        number: toNumber(player.number),
+        pos: toString(player.pos),
+        grid: toString(player.grid),
+      },
+    };
+  });
+}
+
 function normalizeEventType(type: string) {
   switch (type.toLowerCase()) {
     case "subst":
@@ -242,6 +292,23 @@ function normalizeEventType(type: string) {
     default:
       return type;
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function toNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+function toString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value : null;
 }
 
 function formatVenue(venue: NonNullable<NonNullable<RawFixtureDetail["fixture"]>["venue"]> | null | undefined) {

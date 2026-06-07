@@ -8,7 +8,8 @@ Last read: 2026-05-24
 
 This is the newer ScoreMatrix system architecture and API documentation, version 1.0, May 2026.
 
-- Base URL: `https://api.scorematrix.live/api/v1`
+- Data API base URL is configured by `API_DATA_BASE_URL` and normalized to exactly one trailing `/scorm`.
+- Football API base URL is configured by `API_FOOTBALL_BASE_URL` and normalized to exactly one trailing `/soccer`.
 - Backend: Node.js 22, Express 5 or Fastify, PostgreSQL 16, Redis 7, Meilisearch
 - Frontend target: Next.js 16, React 19, Zustand, Tailwind CSS v4, `next-intl`
 - API style: REST JSON, bearer JWT for authenticated user/admin endpoints
@@ -29,8 +30,8 @@ Important: this newer architecture differs from the older `API_REFERENCE_INDEX.m
 
 ScoreMatrix is documented as a separated frontend/backend architecture:
 
-- Browser frontend calls the backend REST API over HTTPS.
-- Next.js API routes remain useful as the football data proxy layer under `/api/football/*`.
+- Browser frontend calls data endpoints through the Next.js BFF under `/api/data/*`.
+- Next.js API routes proxy football data under `/api/football/*`.
 - Backend service stack includes REST route handlers, service layer, repository/DB access, Redis for sessions/rate limits/leaderboard cache, and Meilisearch for search.
 - Football data is proxied from external football APIs, including `api.scorematrix.live` and API-Football.
 - S3-compatible storage, such as MinIO or R2, is intended for avatars, reward images, and badges.

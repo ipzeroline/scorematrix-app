@@ -55,18 +55,24 @@ Main pages:
 API routes:
 
 - `src/app/api/auth/{login,register,refresh,logout}/route.ts`: same-origin auth BFF routes; proxy auth calls to the scorm backend, keep refresh tokens in rotating HttpOnly cookies, strip refresh tokens from browser-visible JSON, and clear server-managed refresh sessions on failure/logout
+- `src/app/api/data/[...path]/route.ts`: same-origin data API BFF; proxies browser data/member requests to `API_DATA_BASE_URL` while preserving bearer and locale headers
 - `src/app/api/football/fixtures/route.ts`: returns fixtures from soccer backend, cached with short s-maxage
 - `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer backend `GET /live` with no-store caching
 - `src/app/api/football/fixtures/today/route.ts`: legacy local route that now returns live fixtures from soccer backend `GET /live`
 - `src/app/api/football/fixtures/upcoming/route.ts`: returns upcoming fixtures from soccer backend `GET /fixtures/upcoming`
 - `src/app/api/football/teams/route.ts`: proxies favorite-team options from soccer backend `GET /teams`
 - `src/app/api/football/teams/[id]/squad/route.ts`: proxies team squad players from soccer backend `GET /teams/{team_id}/squad`
+- `src/app/api/football/players/[id]/route.ts`: proxies football player profiles from soccer backend `GET /players/{id}`
 - `src/app/api/football/media/[...path]/route.ts`: proxies football media
 - `src/app/api/football/flags/[...path]/route.ts`: proxies flags
 - `src/app/api/news/regenerate/route.ts`: regenerates today news JSON
 
 ## Config
 
+- `.env`
+  - `API_FOOTBALL_BASE_URL`: football backend base; URL normalization guarantees exactly one trailing `/soccer`
+  - `API_DATA_BASE_URL`: data/auth backend base; URL normalization guarantees exactly one trailing `/scorm`
+  - These are the only backend API base URL env variables; browser data requests use same-origin BFF routes.
 - `next.config.ts`
   - Uses `next-intl/plugin` with `./src/i18n/request.ts`
   - Disables `poweredByHeader`
@@ -124,6 +130,7 @@ Static data:
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.
 - `src/app/[locale]/livescore/page.tsx` dynamically uses uncached `GET /live` through `getApiFootballLiveFixtures` for its initial fixture list with no limit; the `Livescore` client view refreshes through `/api/football/fixtures/live` once on mount or when the user presses Sync.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
+- Fixture-detail lineup normalization accepts incomplete payloads and `start_xi` aliases, and always supplies safe `team`, `coach`, `startXI`, and `substitutes` fields before match-detail rendering.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
 - `src/app/[locale]/matches/page.tsx` uses uncached `GET /fixtures/upcoming` data through `loadUpcomingFixtures`; `MatchesApi` refreshes once on mount and includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
@@ -138,7 +145,7 @@ Newest architecture/API source:
 
 - External source: `/Users/mckazine/Desktop/SCOREMATRIX_SYSTEM_ARCHITECTURE.html`
 - Local summary: `SCOREMATRIX_SYSTEM_ARCHITECTURE_INDEX.md`
-- Base URL: `https://api.scorematrix.live/api/v1`
+- Backend URLs are configured only through `API_DATA_BASE_URL` and `API_FOOTBALL_BASE_URL`.
 - API style: REST JSON with `Bearer` JWT for user/admin endpoints; errors are documented as `{ error: { code, message } }`.
 - Key target endpoints: `GET/PATCH /users/me`, `PATCH /users/me/preferences`, `GET /matches`, `GET /matches/live`, `POST/GET /predictions`, `POST /checkins`, `GET /leaderboard`, `GET /events`, `GET /rewards`, `POST /rewards/:id/redeem`, `GET /missions`, `POST /missions/:id/claim`, `GET/PATCH /notifications`, `GET/POST /referrals`, `GET/POST /credits`, `GET /stats/accuracy`, `GET /stats/form`, private leagues, payment webhook, and admin endpoints.
 - Important caveat: this newer architecture differs from the older member API in `API_REFERENCE_INDEX.md`; prefer the new architecture for new feature work unless the task explicitly targets legacy member endpoints.
@@ -148,7 +155,7 @@ Newest architecture/API source:
 - Latest production source: `/Users/mckazine/Desktop/SCOREMATRIX_API_LATEST.html`
 - Legacy source: `/Users/mckazine/Desktop/scorematrix-frontend-api-reference.html`
 - Local summary: `API_REFERENCE_INDEX.md`
-- Base URL: `https://api.scorematrix.live/api/v1/scorm`; `src/lib/api-client.ts` appends `/scorm` to `NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL` when it is not already present.
+- Base URL: configured by server-only `API_DATA_BASE_URL`; shared URL normalization guarantees exactly one `/scorm` segment.
 - Covered endpoints: auth registration/login/logout/password reset and member profile/update/favorite-team/change-password.
 - All responses include stable `code`; use `code` for frontend i18n/error handling instead of parsing backend Thai messages.
 - Authenticated endpoints require `Authorization: Bearer {access_token}`.
@@ -156,7 +163,8 @@ Newest architecture/API source:
 
 Local API modules:
 
-- `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, access-token cookie helpers, locale headers, and expired-token refresh-and-retry through same-origin `POST /api/auth/refresh`. Auth token cookie name is `scorematrix-auth-token` and its persistent cookie cap matches the 15-minute access-token lifetime; the browser-readable `scorematrix-refresh-session` cookie is only a non-secret remember-me marker. Generic 401 and token-expired payloads receive one refresh/retry attempt, allowing legacy refresh cookies to migrate to HttpOnly on their next rotation. If refresh fails, it clears client auth state, asks the auth BFF to clear the HttpOnly refresh cookie, and dispatches a client session-expired event.
+- `src/lib/backend-api-urls.ts`: server-only URL builder for the two backend env variables; strips duplicate leading/trailing namespace segments before producing URLs with exactly one `/soccer` or `/scorm`.
+- `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, access-token cookie helpers, locale headers, and expired-token refresh-and-retry through same-origin `POST /api/auth/refresh`. General data requests use same-origin `/api/data/**`, which proxies to `API_DATA_BASE_URL`. Auth token cookie name is `scorematrix-auth-token` and its persistent cookie cap matches the 15-minute access-token lifetime; the browser-readable `scorematrix-refresh-session` cookie is only a non-secret remember-me marker. Generic 401, token-expired, and missing-token payloads receive one refresh/retry attempt, allowing legacy refresh cookies to migrate to HttpOnly on their next rotation. If refresh fails, it clears client auth state, asks the auth BFF to clear the HttpOnly refresh cookie, and dispatches a client session-expired event.
 - `src/lib/auth-session-server.ts`: server-only auth BFF helpers for scorm backend requests, same-origin mutation checks, refresh-token extraction/redaction, and rotating `scorematrix-refresh-token` HttpOnly/Secure/SameSite=Strict cookie management. Refresh cookies are capped at the backend refresh-token lifetime of one hour.
 - `src/lib/auth-guard.ts`: shared auth route guard. Protected routes include leaderboard, missions, events, rewards, stats, affiliate, leagues, profile, wallet, settings, and notifications.
 - `src/lib/auth-api.ts`: typed wrappers for auth/member endpoints from the API reference. `GET/PATCH /users/me` responses are normalized from production snake_case stats/preferences into the camelCase fields used by the UI.
@@ -178,7 +186,7 @@ Local API modules:
 - `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login after a 3-second delay with `next` set to the current URL.
 - `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
 - `src/app/[locale]/(admin)/admin/layout.tsx`: admin shell and sidebar for the `/admin` section, organized under the `(admin)` route group.
-- `src/app/[locale]/(member)/profile/page.tsx`: profile dashboard UI loads current profile data through `getCurrentUser()` (`GET /scorm/users/me` via the API client base URL), syncs known fields into `useUserStore`, and falls back to the last store values on load failure.
+- `src/app/[locale]/(member)/profile/page.tsx`: profile dashboard UI loads current profile data through `getCurrentUser()` (`GET /api/data/users/me`, proxied to the scorm data backend), syncs known fields into `useUserStore`, and falls back to the last store values on load failure.
 - `src/app/[locale]/(member)/profile/edit/page.tsx`: loads `GET /member/profile`, validates editable API fields, and submits `POST /member/update-profile`.
 - `src/app/[locale]/(public)/auth/forgot-password/page.tsx`: validates email and submits `POST /auth/forgot-password`; success copy follows the API's anti-enumeration behavior.
 - `src/proxy.ts`: redirects unauthenticated access to protected member routes to `/{locale}/auth/login?next=...` only when both access and refresh token cookies are missing.

@@ -2,13 +2,10 @@ import { matches } from "@/data/matches";
 import { leagues } from "@/data/leagues";
 import { teams } from "@/data/teams";
 import { normalizeFixtureDetailsPayload } from "@/lib/api-football-fixture-details";
+import { getFootballApiUrl } from "@/lib/backend-api-urls";
 import { proxyFootballMediaValue } from "@/lib/football-media";
 import { MatchStatus } from "@/types/common";
 
-const API_FOOTBALL_BASE_URL = requiredEnv(
-  process.env.API_FOOTBALL_BASE_URL,
-  "API_FOOTBALL_BASE_URL"
-);
 const API_SPORTS_LEAGUE_LOGO_BASE_URL = "https://media.api-sports.io/football/leagues";
 
 export type ApiFootballSource = "api-football" | "mock";
@@ -1020,23 +1017,12 @@ function isMatchStatus(status: string): status is MatchStatus {
   return Object.values(MatchStatus).includes(status as MatchStatus);
 }
 
-function requiredEnv(value: string | undefined, name: string) {
-  if (!value) {
-    throw new Error(`${name} is required. Add it to .env.`);
-  }
-
-  return value;
-}
-
 async function fetchSoccerBackend<T>(
   pathname: string,
   query: Record<string, string>,
   options: { revalidate?: number } = {}
 ): Promise<T> {
-  const baseUrl = API_FOOTBALL_BASE_URL.endsWith("/")
-    ? API_FOOTBALL_BASE_URL
-    : `${API_FOOTBALL_BASE_URL}/`;
-  const url = new URL(pathname.replace(/^\/+/, ""), baseUrl);
+  const url = getFootballApiUrl(pathname);
   Object.entries(query).forEach(([key, value]) => {
     url.searchParams.set(key, value);
   });
@@ -1075,30 +1061,7 @@ async function fetchTeamProfilePayload(
   team: number,
   query: Record<string, string>
 ): Promise<unknown> {
-  try {
-    const payload = await fetchSoccerBackend<unknown>(`/teams/${team}`, query);
-    if (
-      normalizeBackendTeamProfilePayload(payload).profile ||
-      !shouldTrySoccerPrefix()
-    ) {
-      return payload;
-    }
-  } catch (error) {
-    if (!shouldTrySoccerPrefix()) {
-      throw error;
-    }
-  }
-
-  return fetchSoccerBackend<unknown>(`/soccer/teams/${team}`, query);
-}
-
-function shouldTrySoccerPrefix() {
-  try {
-    const url = new URL(API_FOOTBALL_BASE_URL);
-    return !url.pathname.replace(/\/+$/, "").endsWith("/soccer");
-  } catch {
-    return false;
-  }
+  return fetchSoccerBackend<unknown>(`/teams/${team}`, query);
 }
 
 function normalizeSoccerBackendValue<T>(value: T): T {

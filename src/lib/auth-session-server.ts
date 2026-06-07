@@ -5,6 +5,7 @@ import {
   REFRESH_SESSION_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "@/lib/auth-guard";
+import { getDataApiUrl } from "@/lib/backend-api-urls";
 
 const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60;
 
@@ -14,14 +15,7 @@ export type AuthTokens = {
 };
 
 export function getBackendApiUrl(path: string) {
-  const configuredBaseUrl = process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL;
-  if (!configuredBaseUrl) {
-    throw new Error("NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL is required. Add it to .env.");
-  }
-
-  const baseUrl = configuredBaseUrl.replace(/\/$/, "");
-  const scormBaseUrl = baseUrl.endsWith("/scorm") ? baseUrl : `${baseUrl}/scorm`;
-  return `${scormBaseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+  return getDataApiUrl(path);
 }
 
 export function isSameOriginMutation(request: Request) {

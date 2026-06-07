@@ -151,9 +151,8 @@ export function PredictApi({ fixtures }: PredictApiProps) {
       setPlayerName(null);
 
       try {
-        const apiBase = process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL || "https://api.scorematrix.live/api/v1";
         const response = await fetch(
-          `${apiBase.replace(/\/$/, "")}/soccer/players/${encodeURIComponent(String(selectedPrediction.firstScorerPlayerId))}`,
+          `/api/football/players/${encodeURIComponent(String(selectedPrediction.firstScorerPlayerId))}`,
           {
             headers: { Accept: "application/json" },
             signal: controller.signal,
