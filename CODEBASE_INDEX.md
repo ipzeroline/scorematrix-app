@@ -45,6 +45,7 @@ Main pages:
 - Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `credits`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
 - Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`
 - Detail routes include `predict/[matchId]` for legacy redirects, `predict/[matchId]/[homeTeamId]/[awayTeamId]` as the canonical predict URL, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
+- `src/app/[locale]/(member)/leagues/[id]/page.tsx` renders private-league details and standings from `GET /leagues/{id}` without exposing backend league, owner, or member IDs.
 - Non-locale team detail URLs at `/football/teams/{teamId}` redirect to the default locale route `/{defaultLocale}/football/teams/{teamId}` while preserving query parameters.
 - Non-locale live-score match URLs at `/livescore/match/{providerId}` redirect to the default locale route `/{defaultLocale}/livescore/match/{providerId}` while preserving query parameters.
 - Predict links use the route `/predict/{apiFixtureId}/{homeTeamId}/{awayTeamId}` for API fixtures and keep local mock match ids for mock fixtures; older slug URLs such as `/predict/{matchSlug}-{apiFixtureId}/{homeTeamId}/{awayTeamId}` redirect to the canonical id-only route.
@@ -53,6 +54,7 @@ Main pages:
 
 API routes:
 
+- `src/app/api/auth/{login,register,refresh,logout}/route.ts`: same-origin auth BFF routes; proxy auth calls to the scorm backend, keep refresh tokens in rotating HttpOnly cookies, strip refresh tokens from browser-visible JSON, and clear server-managed refresh sessions on failure/logout
 - `src/app/api/football/fixtures/route.ts`: returns fixtures from soccer backend, cached with short s-maxage
 - `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer backend `GET /live` with no-store caching
 - `src/app/api/football/fixtures/today/route.ts`: legacy local route that now returns live fixtures from soccer backend `GET /live`
@@ -97,7 +99,7 @@ Static data:
 - `src/data/index.ts` re-exports most mock datasets
 - Football basics: `teams.ts`, `leagues.ts`, `players.ts`, `matches.ts`, `match-events.ts`, `match-stats.ts`, `lineups.ts`
 - Product/game loops: `predictions.ts`, `missions.ts`, `achievements.ts`, `rewards.ts`, `redemptions.ts`, `private-leagues.ts`
-- Page copy: `leaderboard-page-content.ts`, `leagues-page-content.ts`, `ai-insight-page-content.ts`, `mission-page-content.ts`, `legal-documents.ts`, `legal-info-pages.ts`
+- Page copy: `leaderboard-page-content.ts`, `ai-insight-page-content.ts`, `mission-page-content.ts`, `legal-documents.ts`, `legal-info-pages.ts`; League page copy lives in the `leagues` namespace of `src/messages/*.json`.
 - News JSON is date/locale based under `src/data/news/YYYY-MM-DD/{locale}.json`
 - World Cup data: `src/data/world-cup-2026.ts`
 
@@ -105,24 +107,26 @@ Static data:
 
 - `src/lib/api-football.ts`
   - Base URL: required `API_FOOTBALL_BASE_URL` from root `.env`
-  - Exports fetchers for fixtures, live fixtures from `GET /live`, legacy today's fixtures mapped to the live feed, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
+  - Exports fetchers for fixtures, live fixtures from `GET /live`, AI insights from `GET /ai-insights`, legacy today's fixtures mapped to the live feed, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
   - League listing maps `GET /leagues` / `v1/soccer/leagues` responses from `data[]` with `provider_id`, `current_season`, `sort_order`, `logo`, and country fields into `ApiFootballLeagueEntry`
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
 - `src/lib/football-page-data.ts`
-  - `loadFixturesForDate(limit?, revalidate = 60)`
+  - `loadFixturesForDate(limit?, revalidate = 60)` uses today's Asia/Bangkok date and returns an empty list instead of stale mock fixtures when the API fails
   - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
   - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
-- `src/app/[locale]/page.tsx` loads homepage live match highlights and the homepage match list from `GET /live` with `revalidate: 0`.
+- `src/app/[locale]/page.tsx` loads live highlights from uncached `GET /live`, the "today matches" list from uncached date-filtered fixtures using the Asia/Bangkok date, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
+- `src/app/[locale]/ai-insight/page.tsx` maps grouped `live`, `highConfidence`, and `upsetAlert` data from soccer backend `GET /ai-insights`, displays only insights with complete confidence/probability metrics, and distinguishes empty results from API failures.
+- `src/app/[locale]/ai-insight/[matchId]/page.tsx` requires a complete insight from `GET /ai-insights`, uses real model signals, supplements them with fixture detail and H2H API data, and hides unavailable sections instead of generating placeholder metrics.
 - Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - Predict detail form sends `pointsWagered` as the base wager multiplied by confidence (`safe` x1.0, `confident` x1.5, `bold` x2.0).
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.
-- `src/app/[locale]/livescore/page.tsx` uses `GET /live` through `getApiFootballLiveFixtures` for its initial fixture list with `revalidate: 0` and no limit; the `Livescore` client view refreshes through `/api/football/fixtures/live`.
+- `src/app/[locale]/livescore/page.tsx` dynamically uses uncached `GET /live` through `getApiFootballLiveFixtures` for its initial fixture list with no limit; the `Livescore` client view refreshes through `/api/football/fixtures/live` once on mount or when the user presses Sync.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
-- `src/app/[locale]/matches/page.tsx` uses `GET /fixtures/upcoming` through `loadUpcomingFixtures`; `MatchesApi` includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
+- `src/app/[locale]/matches/page.tsx` uses uncached `GET /fixtures/upcoming` data through `loadUpcomingFixtures`; `MatchesApi` refreshes once on mount and includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes
 - `src/lib/football-slugs.ts`: builds/extracts SEO slugs for fixtures/leagues/entities
 
@@ -152,7 +156,8 @@ Newest architecture/API source:
 
 Local API modules:
 
-- `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, auth token/refresh-token cookie helpers, locale headers, expired-token refresh-and-retry via `POST /auth/refresh` for generic 401s/auth-expired payloads, explicit `TOKEN_EXPIRED` session expiry, `isAuthSessionExpiredError`, and `ApiClientError`. Auth token cookie name is `scorematrix-auth-token`; refresh token cookie name is `scorematrix-refresh-token`; legacy local/session storage token is migrated then cleared. If refresh fails or `TOKEN_EXPIRED` is returned, it clears auth cookies and dispatches a client session-expired event; client data loaders should suppress/log-skip this specific error because `StoreInitializer` owns the user-facing toast and delayed login redirect.
+- `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, access-token cookie helpers, locale headers, and expired-token refresh-and-retry through same-origin `POST /api/auth/refresh`. Auth token cookie name is `scorematrix-auth-token` and its persistent cookie cap matches the 15-minute access-token lifetime; the browser-readable `scorematrix-refresh-session` cookie is only a non-secret remember-me marker. Generic 401 and token-expired payloads receive one refresh/retry attempt, allowing legacy refresh cookies to migrate to HttpOnly on their next rotation. If refresh fails, it clears client auth state, asks the auth BFF to clear the HttpOnly refresh cookie, and dispatches a client session-expired event.
+- `src/lib/auth-session-server.ts`: server-only auth BFF helpers for scorm backend requests, same-origin mutation checks, refresh-token extraction/redaction, and rotating `scorematrix-refresh-token` HttpOnly/Secure/SameSite=Strict cookie management. Refresh cookies are capped at the backend refresh-token lifetime of one hour.
 - `src/lib/auth-guard.ts`: shared auth route guard. Protected routes include leaderboard, missions, events, rewards, stats, affiliate, leagues, profile, wallet, settings, and notifications.
 - `src/lib/auth-api.ts`: typed wrappers for auth/member endpoints from the API reference. `GET/PATCH /users/me` responses are normalized from production snake_case stats/preferences into the camelCase fields used by the UI.
 - `src/lib/checkins-api.ts`: typed wrapper for `GET /checkins/rewards` and `POST /checkins`; the homepage `DailyCheckIn` loads the daily reward schedule from the backend, submits check-ins before updating local streak/points, and shows backend error messages through toast and inline copy.
@@ -161,14 +166,15 @@ Local API modules:
 - `src/lib/events-api.ts`: typed wrapper for `GET /events`; the `/events` page maps API event fields into the existing event card grid and active-event highlight UI.
 - `src/lib/leaderboard-api.ts`: typed wrapper for `GET /leaderboard`; the `/leaderboard` page, homepage leaderboard preview, and desktop sidebar leaderboard card all load ranking data from this endpoint only, with no mock fallback.
 - `src/lib/missions-api.ts`: typed wrapper for `GET /missions` and `POST /missions/:id/claim`; the `/missions` page maps `daily`, `weekly`, and `special` API missions into the existing mission card UI and supports interactive reward claims with Zustand sync.
+- `src/lib/leagues-api.ts`: typed wrappers for `GET /leagues`, `GET /leagues/:id`, `POST /leagues`, and `POST /leagues/:id/join`; entry-fee aliases are normalized, full leagues cannot be joined, league lists avoid exposing backend user IDs, and private invite codes render only when the detail response confirms the viewer is the owner.
 - `src/lib/referrals-api.ts`: typed wrapper for `GET /referrals`; the `/affiliate` page maps referral code, totals, share URL, referral rows, and reward tiers into the existing affiliate dashboard UI. Invite links are normalized client-side to the current origin and locale register route `/{locale}/auth/register?ref=...`.
 - `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards`, `GET /rewards/{id}`, and `POST /rewards/:id/redeem`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend and handles point spending, and the desktop sidebar rewards card loads active reward highlights from the same catalogue endpoint.
 - `src/lib/stats-api.ts`: typed wrapper for `GET /stats/accuracy`; the `/stats` dashboard maps API `overall`, `trend`, and `leagueBreakdown` data into the existing summary cards and charts.
 - `src/lib/soccer-api.ts`: typed client wrapper for local `/api/football/teams`, which proxies soccer backend `GET /teams`; the local route returns normalized `teams` groups for favorite-team selection while preserving the backend `data` payload.
 - `src/components/auth/FavoriteTeamSelect.tsx`: grouped team selector for registration, grouped by league and showing league/team logos.
-- `src/app/[locale]/(public)/auth/register/page.tsx`: submits to `POST /auth/register` with Register API fields, stores returned access/refresh tokens through `auth-api`, and loads favorite teams from `GET /teams`.
-- `src/app/[locale]/(public)/auth/login/page.tsx`: submits to `POST /auth/login`, stores returned access/refresh tokens through `auth-api`, updates `useUserStore`, then redirects to locale home or `next` target.
-- `src/components/layout/UserMenu.tsx`: profile dropdown logout calls `POST /auth/logout`, clears auth token and user store, then redirects to locale home.
+- `src/app/[locale]/(public)/auth/register/page.tsx`: submits through same-origin `POST /api/auth/register`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, and the page loads favorite teams from `GET /teams`.
+- `src/app/[locale]/(public)/auth/login/page.tsx`: submits through same-origin `POST /api/auth/login`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, then the page updates `useUserStore` and redirects to locale home or `next` target.
+- `src/components/layout/UserMenu.tsx`: profile dropdown logout calls same-origin `POST /api/auth/logout`, which forwards backend logout and clears the HttpOnly refresh session; the client then clears its access token/user store and redirects to locale home.
 - `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login after a 3-second delay with `next` set to the current URL.
 - `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
 - `src/app/[locale]/(admin)/admin/layout.tsx`: admin shell and sidebar for the `/admin` section, organized under the `(admin)` route group.

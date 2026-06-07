@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Activity, RefreshCw, Search } from "lucide-react";
@@ -51,9 +51,11 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadFixtures() {
-    setIsLoading(true);
-    setError(null);
+  const loadFixtures = useCallback(async (showLoading = true) => {
+    if (showLoading) {
+      setIsLoading(true);
+      setError(null);
+    }
 
     try {
       const response = await fetch("/api/football/fixtures/live", {
@@ -69,9 +71,17 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load fixtures");
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    const initialRefresh = setTimeout(() => void loadFixtures(false), 0);
+
+    return () => {
+      clearTimeout(initialRefresh);
+    };
+  }, [loadFixtures, locale]);
 
   const apiMatches = payload.fixtures;
   const liveMatches = useMemo(
@@ -113,7 +123,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
         <Button
           size="sm"
           variant="outline"
-          onClick={loadFixtures}
+          onClick={() => void loadFixtures()}
           disabled={isLoading}
           className="w-fit"
         >

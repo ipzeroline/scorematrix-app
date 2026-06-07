@@ -519,6 +519,63 @@ export interface GetFixtureDetailsResult {
   playerStats: ApiFootballPlayerStats[];
 }
 
+export type ApiFootballAIInsightGroup = "live" | "highConfidence" | "upsetAlert";
+
+export interface ApiFootballAIInsight {
+  provider_id: number;
+  status: {
+    short: string;
+    long: string;
+    elapsed: number | null;
+  };
+  goals: {
+    home: number | null;
+    away: number | null;
+  };
+  teams: {
+    home: SoccerLiveTeam;
+    away: SoccerLiveTeam;
+  };
+  starts_at: string;
+  is_live: boolean;
+  confidenceScore: number | null;
+  homeWinProbability: number | null;
+  drawProbability: number | null;
+  awayWinProbability: number | null;
+  heatMeter: number | null;
+  upsetAlert: boolean;
+  communitySentiment: {
+    homePercentage: number;
+    drawPercentage: number;
+    awayPercentage: number;
+    totalVotes: number;
+  } | null;
+  keyFactors: string[];
+  apiAdvice: string | null;
+  apiWinner: {
+    id: number;
+    name: string;
+    comment: string | null;
+  } | null;
+  generatedAt: string | null;
+  league: {
+    id: number;
+    name: string;
+    country_flag: string | null;
+    logo: string | null;
+  };
+}
+
+export interface GetAIInsightsResult {
+  live: ApiFootballAIInsight[];
+  highConfidence: ApiFootballAIInsight[];
+  upsetAlert: ApiFootballAIInsight[];
+}
+
+interface SoccerAIInsightsResponse {
+  data?: Partial<GetAIInsightsResult>;
+}
+
 export class ApiFootballError extends Error {
   constructor(
     message: string,
@@ -559,6 +616,26 @@ export async function getApiFootballFixtures(
       requestsRemaining: null,
       requestsLimit: null,
     },
+  };
+}
+
+export async function getApiFootballAIInsights(
+  revalidate = 60
+): Promise<GetAIInsightsResult> {
+  const payload = await fetchSoccerBackend<SoccerAIInsightsResponse>(
+    "/ai-insights",
+    {},
+    { revalidate }
+  );
+
+  return {
+    live: Array.isArray(payload.data?.live) ? payload.data.live : [],
+    highConfidence: Array.isArray(payload.data?.highConfidence)
+      ? payload.data.highConfidence
+      : [],
+    upsetAlert: Array.isArray(payload.data?.upsetAlert)
+      ? payload.data.upsetAlert
+      : [],
   };
 }
 

@@ -4,8 +4,9 @@ import {
   apiPatchRaw,
   apiPost,
   apiPostFormRaw,
-  apiPostRaw,
+  ApiClientError,
   clearStoredAuthToken,
+  getStoredAuthToken,
   setStoredAuthTokens,
   type ApiSuccess,
   type ApiRequestOptions,
@@ -317,8 +318,8 @@ export async function registerApp(
   body: RegisterAppRequest,
   options: ApiRequestOptions & { remember?: boolean; persistToken?: boolean } = {}
 ) {
-  const response = await apiPostRaw<RegisterAppData | ApiSuccess<RegisterAppData>, RegisterAppRequest>(
-    "/auth/register",
+  const response = await localAuthPost<RegisterAppData | ApiSuccess<RegisterAppData>, RegisterAppRequest>(
+    "/api/auth/register",
     body,
     withBodyLocale(body, options)
   );
@@ -327,7 +328,6 @@ export async function registerApp(
   if (options.persistToken !== false && tokens?.accessToken) {
     setStoredAuthTokens(
       tokens.accessToken,
-      tokens.refreshToken,
       options.remember ?? true
     );
   }
@@ -339,13 +339,12 @@ export async function login(
   body: LoginRequest,
   options: ApiRequestOptions & { remember?: boolean; persistToken?: boolean } = {}
 ) {
-  const response = await apiPost<LoginData, LoginRequest>(
-    "/auth/login",
+  const response = await localAuthPost<ApiSuccess<LoginData>, LoginRequest>(
+    "/api/auth/login",
     body,
     options
   );
   const token = response.data?.access_token ?? response.data?.tokens?.accessToken;
-  const refreshToken = response.data?.tokens?.refreshToken;
   if (response.data?.user) {
     response.data.user = normalizeCurrentUserData(response.data.user) as NonNullable<LoginData["user"]>;
   }
@@ -357,7 +356,6 @@ export async function login(
   if (options.persistToken !== false) {
     setStoredAuthTokens(
       token,
-      refreshToken,
       options.remember ?? body.rememberMe ?? true
     );
   }
@@ -389,7 +387,11 @@ export function resetPassword(
 
 export async function logout(options?: ApiRequestOptions) {
   try {
-    return await apiPost<undefined>("/auth/logout", undefined, options);
+    return await localAuthPost<ApiSuccess<undefined>, undefined>(
+      "/api/auth/logout",
+      undefined,
+      options
+    );
   } finally {
     clearStoredAuthToken();
   }
@@ -620,4 +622,46 @@ function booleanValue(value: boolean | number | null | undefined) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+async function localAuthPost<T, B>(
+  path: string,
+  body?: B,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  const headers = new Headers(options.headers);
+  const locale = options.locale ?? "th";
+  const token = options.token === undefined ? getStoredAuthToken() : options.token;
+
+  headers.set("Accept", "application/json");
+  headers.set("Accept-Language", locale);
+  headers.set("Content-Language", locale);
+  headers.set("X-Locale", locale);
+  headers.set("X-App-Locale", locale);
+  if (body !== undefined) headers.set("Content-Type", "application/json");
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(path, {
+    method: "POST",
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
+    signal: options.signal,
+    cache: "no-store",
+  });
+  const text = await response.text();
+  const payload = text ? JSON.parse(text) : undefined;
+
+  if (!response.ok) {
+    const failure = payload as { message?: string; code?: string } | undefined;
+    throw new ApiClientError(
+      failure?.message ?? response.statusText,
+      response.status,
+      failure?.code,
+      payload
+    );
+  }
+
+  return payload as T;
 }

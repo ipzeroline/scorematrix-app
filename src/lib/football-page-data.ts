@@ -6,20 +6,21 @@ import {
   getApiFootballUpcomingFixtures,
   getMockApiFootballFixtures,
 } from "@/lib/api-football";
+import { getThailandDateKey } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 
 export async function loadFixturesForDate(
   limit?: number,
   revalidate = 60
 ): Promise<ApiFootballFixture[]> {
-  const date = new Date().toISOString().slice(0, 10);
+  const date = getThailandDateKey();
 
   try {
     const result = await getApiFootballFixtures({ date, limit, revalidate });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
-    return getMockApiFootballFixtures(limit);
+    return [];
   }
 }
 

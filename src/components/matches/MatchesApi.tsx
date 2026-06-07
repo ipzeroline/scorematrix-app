@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   memo,
-  useCallback,
   useDeferredValue,
   useEffect,
   useMemo,
@@ -101,14 +100,11 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
   const deferredLeagueQuery = useDeferredValue(leagueQuery);
 
   useEffect(() => {
-    setFixtures(initialFixtures);
-  }, [initialFixtures]);
-
-  // Auto-refresh fixtures every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(async () => {
+    async function refreshFixtures() {
       try {
-        const res = await fetch("/api/football/fixtures/upcoming");
+        const res = await fetch("/api/football/fixtures/upcoming", {
+          cache: "no-store",
+        });
         if (res.ok) {
           const data = await res.json();
           if (data?.fixtures) {
@@ -118,9 +114,9 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
       } catch {
         // silent fail
       }
-    }, 30000);
+    }
 
-    return () => clearInterval(interval);
+    void refreshFixtures();
   }, [locale]);
   const matchStats = useMemo(() => getMatchStats(fixtures), [fixtures]);
   const tableLabels = useMemo(

@@ -1,13 +1,10 @@
 import {
   ApiFootballError,
-  getApiFootballFixtureDetails,
-  getApiFootballFixtures,
-  getApiFootballH2H,
-  type ApiFootballFixture,
-  type ApiFootballTeamStatistics,
-  type GetFixtureDetailsResult,
+  getApiFootballAIInsights,
+  type ApiFootballAIInsight,
+  type ApiFootballAIInsightGroup,
+  type GetAIInsightsResult,
 } from "@/lib/api-football";
-import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import { MatchStatus } from "@/types/common";
 import { AIInsightListClient, type AIInsightListItem } from "./AIInsightListClient";
 
@@ -15,264 +12,147 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+const GROUPS: ApiFootballAIInsightGroup[] = [
+  "live",
+  "highConfidence",
+  "upsetAlert",
+];
+
 export default async function AIInsightPage({ params }: Props) {
   const { locale } = await params;
-  const fixtures = await loadApiFixtures();
-  const fetchedAt = new Date().toISOString();
-  const apiInsights = await Promise.all(
-    fixtures.map((fixture) => buildInsightItem(fixture, fetchedAt))
-  );
-  const insights = sortByDataCompleteness(apiInsights)
-    .filter(isPlayableInsight)
-    .slice(0, 24);
+  const { response, failed } = await loadAIInsights();
+  const insights = mapAIInsights(response)
+    .filter(hasCompleteAIProbabilities)
+    .sort((a, b) => (b.confidenceScore ?? 0) - (a.confidenceScore ?? 0));
 
   return (
     <AIInsightListClient
       locale={locale}
       insights={insights}
-      source={fixtures.length > 0 ? "api" : "empty"}
+      source={failed ? "error" : insights.length > 0 ? "api" : "empty"}
     />
   );
 }
 
-async function loadApiFixtures() {
+async function loadAIInsights(): Promise<{
+  response: GetAIInsightsResult;
+  failed: boolean;
+}> {
   try {
-    const live = await getApiFootballFixtures({ live: true, limit: 24 });
-    const fixtures = live.fixtures.filter(isAnalyzableFixture);
-
-    for (const offset of [0, -1, -2, -3, 1, 2, 3, 4, 5, 6, 7]) {
-      if (fixtures.length >= 36) break;
-      const date = dateFromToday(offset);
-      const byDate = await getApiFootballFixtures({ date, limit: 24 });
-      fixtures.push(...byDate.fixtures.filter(isAnalyzableFixture));
-    }
-
-    return dedupeFixtures(fixtures).slice(0, 36);
+    return { response: await getApiFootballAIInsights(60), failed: false };
   } catch (error) {
-    if (error instanceof ApiFootballError) return [];
+    if (error instanceof ApiFootballError) {
+      return {
+        response: { live: [], highConfidence: [], upsetAlert: [] },
+        failed: true,
+      };
+    }
     throw error;
   }
 }
 
-function isAnalyzableFixture(fixture: ApiFootballFixture) {
-  return (
-    fixture.status === MatchStatus.LIVE ||
-    fixture.status === MatchStatus.UPCOMING
-  );
+function hasCompleteAIProbabilities(insight: AIInsightListItem): boolean {
+  return [
+    insight.confidenceScore,
+    insight.homeWinProbability,
+    insight.drawProbability,
+    insight.awayWinProbability,
+  ].every((value) => typeof value === "number");
 }
 
-function isPlayableInsight(insight: AIInsightListItem) {
-  return (
-    insight.status === MatchStatus.LIVE ||
-    insight.status === MatchStatus.UPCOMING
-  );
-}
+function mapAIInsights(response: GetAIInsightsResult) {
+  const insights = new Map<number, AIInsightListItem>();
 
-function dedupeFixtures(fixtures: ApiFootballFixture[]) {
-  const seen = new Set<string>();
-  return fixtures.filter((fixture) => {
-    const key = fixture.apiFixtureId ? String(fixture.apiFixtureId) : fixture.id;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  GROUPS.forEach((group) => {
+    response[group].forEach((insight) => {
+      const existing = insights.get(insight.provider_id);
+      if (existing) {
+        if (!existing.categories.includes(group)) existing.categories.push(group);
+        return;
+      }
+      insights.set(insight.provider_id, mapAIInsight(insight, group));
+    });
   });
+
+  return [...insights.values()];
 }
 
-function dateFromToday(offset: number) {
-  const date = new Date();
-  date.setDate(date.getDate() + offset);
-  return date.toISOString().slice(0, 10);
-}
-
-async function buildInsightItem(fixture: ApiFootballFixture, fetchedAt: string): Promise<AIInsightListItem> {
-  const details = await loadFixtureDetails(fixture);
-  const detailFixture = details?.fixture ?? fixture;
-  const h2h = await loadH2H(detailFixture);
-  const probabilities = probabilityFromApiStatistics(detailFixture, details?.statistics ?? []);
-  const heatMeter = heatFromApiData(detailFixture, details);
-  const confidenceScore =
-    probabilities && details?.statistics.length
-      ? Math.min(95, Math.max(50, Math.abs(probabilities.home - probabilities.away) + 55))
-      : null;
-  const homeLastFive = resultSequenceFromH2H(h2h, detailFixture.home.name);
-  const awayLastFive = resultSequenceFromH2H(h2h, detailFixture.away.name);
+function mapAIInsight(
+  insight: ApiFootballAIInsight,
+  group: ApiFootballAIInsightGroup
+): AIInsightListItem {
+  const probabilities = [
+    insight.homeWinProbability,
+    insight.drawProbability,
+    insight.awayWinProbability,
+  ].filter((value) => typeof value === "number").length;
 
   return {
-    id: `api-insight-${detailFixture.apiFixtureId ?? detailFixture.id}`,
+    id: `api-insight-${insight.provider_id}`,
     dataSource: "api",
-    matchId: buildFixtureSeoSlug(detailFixture),
-    status: detailFixture.status,
+    categories: [group],
+    matchId: String(insight.provider_id),
+    status: mapStatus(insight),
     league: {
-      id: detailFixture.league.id,
-      name: detailFixture.league.name,
-      logo: detailFixture.league.logo,
-      round: detailFixture.league.round,
+      id: String(insight.league.id),
+      name: insight.league.name,
+      logo: insight.league.logo,
+      round: insight.status.long,
     },
     homeTeam: {
-      id: detailFixture.home.id,
-      name: detailFixture.home.name,
-      shortName: shortName(detailFixture.home.name),
-      logo: detailFixture.home.logo,
+      id: String(insight.teams.home.id),
+      name: insight.teams.home.name,
+      shortName: shortName(insight.teams.home.name),
+      logo: insight.teams.home.logo,
     },
     awayTeam: {
-      id: detailFixture.away.id,
-      name: detailFixture.away.name,
-      shortName: shortName(detailFixture.away.name),
-      logo: detailFixture.away.logo,
+      id: String(insight.teams.away.id),
+      name: insight.teams.away.name,
+      shortName: shortName(insight.teams.away.name),
+      logo: insight.teams.away.logo,
     },
-    score: detailFixture.score,
-    kickoffTime: detailFixture.kickoffTime,
-    confidenceScore,
-    heatMeter,
-    homeWinProbability: probabilities?.home ?? null,
-    drawProbability: probabilities?.draw ?? null,
-    awayWinProbability: probabilities?.away ?? null,
+    score: {
+      home: insight.goals.home,
+      away: insight.goals.away,
+    },
+    kickoffTime: insight.starts_at,
+    confidenceScore: insight.confidenceScore,
+    heatMeter: insight.heatMeter,
+    homeWinProbability: insight.homeWinProbability,
+    drawProbability: insight.drawProbability,
+    awayWinProbability: insight.awayWinProbability,
     formComparison: {
-      homeLastFive,
-      awayLastFive,
+      homeLastFive: [],
+      awayLastFive: [],
     },
-    keyFactors: [
-      `${detailFixture.league.name} - ${detailFixture.league.round}`,
-      details
-        ? `${details.events.length} events, ${details.statistics.length} team statistic groups, ${details.lineups.length} lineups`
-        : "Fixture detail endpoint has no extra data yet",
-      `${h2h.length} real H2H fixtures from API`,
-    ].filter(Boolean),
+    keyFactors: insight.keyFactors,
     apiSummary: {
-      events: details?.events.length ?? 0,
-      statistics: details?.statistics.reduce((total, team) => total + team.statistics.length, 0) ?? 0,
-      lineups: details?.lineups.length ?? 0,
-      playerStats: details?.playerStats.reduce((total, team) => total + team.players.length, 0) ?? 0,
-      h2h: h2h.length,
+      probabilities,
+      communityVotes: insight.communitySentiment?.totalVotes ?? 0,
+      keyFactors: insight.keyFactors.length,
+      advice: insight.apiAdvice ? 1 : 0,
+      winner: insight.apiWinner ? 1 : 0,
     },
-    upsetAlert: probabilities ? Math.abs(probabilities.home - probabilities.away) <= 8 : false,
-    generatedAt: fetchedAt,
+    apiAdvice: insight.apiAdvice,
+    apiWinner: insight.apiWinner?.name ?? null,
+    upsetAlert: insight.upsetAlert,
+    generatedAt: insight.generatedAt ?? insight.starts_at,
   };
 }
 
-function sortByDataCompleteness(insights: AIInsightListItem[]) {
-  return [...insights].sort((a, b) => {
-    const scoreDiff = dataCompletenessScore(b) - dataCompletenessScore(a);
-    if (scoreDiff !== 0) return scoreDiff;
+function mapStatus(insight: ApiFootballAIInsight): MatchStatus {
+  if (insight.is_live) return MatchStatus.LIVE;
 
-    const confidenceDiff = (b.confidenceScore ?? 0) - (a.confidenceScore ?? 0);
-    if (confidenceDiff !== 0) return confidenceDiff;
-
-    return new Date(b.kickoffTime).getTime() - new Date(a.kickoffTime).getTime();
-  });
-}
-
-function dataCompletenessScore(insight: AIInsightListItem) {
-  const coverage =
-    Math.min(insight.apiSummary.events, 6) * 3 +
-    Math.min(insight.apiSummary.statistics, 16) * 2 +
-    Math.min(insight.apiSummary.lineups, 2) * 10 +
-    Math.min(insight.apiSummary.playerStats, 22) +
-    Math.min(insight.apiSummary.h2h, 5) * 4;
-  const modelSignals =
-    (typeof insight.confidenceScore === "number" ? 12 : 0) +
-    (typeof insight.heatMeter === "number" ? 8 : 0) +
-    (insight.homeWinProbability !== null &&
-    insight.drawProbability !== null &&
-    insight.awayWinProbability !== null
-      ? 15
-      : 0) +
-    (insight.keyFactors.length >= 3 ? 8 : 0);
-
-  return coverage + modelSignals;
-}
-
-async function loadFixtureDetails(fixture: ApiFootballFixture) {
-  if (!fixture.apiFixtureId) return null;
-  try {
-    return await getApiFootballFixtureDetails(fixture.apiFixtureId);
-  } catch (error) {
-    if (error instanceof ApiFootballError) return null;
-    throw error;
+  const status = insight.status.short.trim().toUpperCase();
+  if (["LIVE", "1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"].includes(status)) {
+    return MatchStatus.LIVE;
   }
-}
-
-async function loadH2H(fixture: ApiFootballFixture) {
-  if (!fixture.home.apiTeamId || !fixture.away.apiTeamId) return [];
-  try {
-    return await getApiFootballH2H(fixture.home.apiTeamId, fixture.away.apiTeamId, 5);
-  } catch (error) {
-    if (error instanceof ApiFootballError) return [];
-    throw error;
+  if (["FT", "AET", "PEN", "AWD", "WO"].includes(status)) {
+    return MatchStatus.FINISHED;
   }
-}
-
-function probabilityFromApiStatistics(
-  fixture: ApiFootballFixture,
-  statistics: ApiFootballTeamStatistics[]
-) {
-  const home = statistics.find((item) => item.team.id === fixture.home.apiTeamId) ?? statistics[0];
-  const away = statistics.find((item) => item.team.id === fixture.away.apiTeamId) ?? statistics[1];
-  if (!home || !away) return null;
-
-  const homeSignal = teamSignal(home);
-  const awaySignal = teamSignal(away);
-  if (homeSignal + awaySignal === 0) return null;
-
-  const rawHome = Math.round((homeSignal / (homeSignal + awaySignal)) * 80);
-  const rawAway = Math.round((awaySignal / (homeSignal + awaySignal)) * 80);
-  return normalizeProbabilities(rawHome, 20, rawAway);
-}
-
-function teamSignal(stats: ApiFootballTeamStatistics) {
-  return (
-    statNumber(stats, "Shots on Goal") * 3 +
-    statNumber(stats, "Total Shots") * 1.5 +
-    statNumber(stats, "Ball Possession") * 0.35 +
-    statNumber(stats, "Corner Kicks") * 1.2
-  );
-}
-
-function normalizeProbabilities(home: number, draw: number, away: number) {
-  const total = home + draw + away;
-  const normalizedHome = Math.round((home / total) * 100);
-  const normalizedAway = Math.round((away / total) * 100);
-  return {
-    home: normalizedHome,
-    draw: Math.max(0, 100 - normalizedHome - normalizedAway),
-    away: normalizedAway,
-  };
-}
-
-function heatFromApiData(fixture: ApiFootballFixture, details: GetFixtureDetailsResult | null) {
-  if (!details) return null;
-  const totalShots = details.statistics.reduce(
-    (total, team) => total + statNumber(team, "Total Shots"),
-    0
-  );
-  const goals = (fixture.score.home ?? 0) + (fixture.score.away ?? 0);
-  const heat = details.events.length * 0.35 + totalShots * 0.12 + goals * 1.4;
-  return Math.min(10, Math.max(1, Math.round(heat * 10) / 10));
-}
-
-function statNumber(stats: ApiFootballTeamStatistics | undefined, type: string) {
-  const value = stats?.statistics.find((item) => item.type === type)?.value;
-  if (typeof value === "number") return value;
-  if (typeof value === "string") return Number.parseFloat(value.replace("%", "")) || 0;
-  return 0;
-}
-
-function resultSequenceFromH2H(fixtures: ApiFootballFixture[], teamName: string): Array<"W" | "D" | "L"> {
-  const sequence = fixtures.slice(0, 5).map((fixture): "W" | "D" | "L" => {
-    if (fixture.score.home === null || fixture.score.away === null) return "D";
-    const isHome = fixture.home.name === teamName;
-    const own = isHome ? fixture.score.home : fixture.score.away;
-    const other = isHome ? fixture.score.away : fixture.score.home;
-    if (own > other) return "W";
-    if (own < other) return "L";
-    return "D";
-  });
-
-  if (sequence.length === 0) {
-    return ["D", "D", "D", "D", "D"];
-  }
-
-  return [...sequence, "D", "D", "D", "D", "D"].slice(0, 5) as Array<"W" | "D" | "L">;
+  if (status === "PST") return MatchStatus.POSTPONED;
+  if (["CANC", "ABD"].includes(status)) return MatchStatus.CANCELLED;
+  return MatchStatus.UPCOMING;
 }
 
 function shortName(name: string) {

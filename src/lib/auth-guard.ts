@@ -2,6 +2,7 @@ import { LOCALE_CODES, type LocaleCode } from "@/i18n";
 
 export const AUTH_TOKEN_COOKIE_NAME = "scorematrix-auth-token";
 export const REFRESH_TOKEN_COOKIE_NAME = "scorematrix-refresh-token";
+export const REFRESH_SESSION_COOKIE_NAME = "scorematrix-refresh-session";
 
 const PROTECTED_ROUTE_PREFIXES = [
   "/leaderboard",

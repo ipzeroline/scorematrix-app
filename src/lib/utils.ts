@@ -6,6 +6,15 @@ export const THAILAND_TIME_ZONE = "Asia/Bangkok";
 export const THAILAND_TIME_ZONE_ABBR = "UTC+7";
 export const THAILAND_TIME_ZONE_LABEL = "Asia/Bangkok (UTC+7)";
 
+export function getThailandDateKey(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: THAILAND_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 export function formatDate(date: string | Date, locale = "en-US"): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleDateString(locale, {

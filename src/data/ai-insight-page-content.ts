@@ -54,6 +54,10 @@ export type AIInsightPageCopy = {
     title: string;
     description: string;
   };
+  error: {
+    title: string;
+    description: string;
+  };
   methodology: Array<{
     title: string;
     description: string;
@@ -112,8 +116,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
     },
     empty: {
       title: "ไม่พบอินไซต์",
-      description: "ลองเปลี่ยนตัวกรองเพื่อดูแมตช์อื่น",
+      description: "ยังไม่มีบทวิเคราะห์ AI ที่มีข้อมูลครบถ้วน",
     },
+    error: { title: "โหลด AI Insight ไม่สำเร็จ", description: "ระบบไม่สามารถเชื่อมต่อข้อมูล AI ได้ในขณะนี้" },
     methodology: [
       {
         title: "รวมหลายสัญญาณ",
@@ -180,8 +185,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
     },
     empty: {
       title: "No insights found",
-      description: "Try a different filter to see more matches.",
+      description: "No AI analyses with complete data are available yet.",
     },
+    error: { title: "Unable to load AI Insight", description: "The AI data service is currently unavailable." },
     methodology: [
       {
         title: "Blends multiple signals",
@@ -236,6 +242,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
     },
     sections: { modelSummary: "ພາບລວມໂມເດວ", matchInsights: "ອິນໄຊຕ໌ແມຕຊ໌", methodology: "AI ອ່ານເກມແນວໃດ" },
     empty: { title: "ບໍ່ພົບອິນໄຊຕ໌", description: "ລອງປ່ຽນຕົວກອງເພື່ອເບິ່ງແມຕຊ໌ອື່ນ" },
+    error: { title: "ໂຫຼດ AI Insight ບໍ່ສຳເລັດ", description: "ບໍລິການຂໍ້ມູນ AI ບໍ່ພ້ອມໃຊ້ງານ" },
     methodology: [
       { title: "ລວມຫຼາຍສັນຍານ", description: "ຟອມຫຼ້າສຸດ ສະຖິຕິພົບກັນ ຄວາມພ້ອມນັກເຕະ ແລະຄວາມໄດ້ປຽບສະໜາມ" },
       { title: "ແຍກຄວາມໝັ້ນໃຈແລະຄວາມສ່ຽງ", description: "ແມຕຊ໌ທີ່ສູສີຈະມີ heat ແລະ upset alert ຊັດເຈນ" },
@@ -281,6 +288,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
     },
     sections: { modelSummary: "မော်ဒယ်အကျဉ်းချုပ်", matchInsights: "ပွဲအင်ဆိုက်များ", methodology: "AI သည်ပွဲကိုဘယ်လိုဖတ်သလဲ" },
     empty: { title: "အင်ဆိုက်မတွေ့ပါ", description: "အခြားပွဲများကြည့်ရန် filter ပြောင်းပါ။" },
+    error: { title: "AI Insight ကိုဖွင့်မရပါ", description: "AI ဒေတာဝန်ဆောင်မှုကို လောလောဆယ်အသုံးမပြုနိုင်ပါ။" },
     methodology: [
       { title: "အချက်အလက်များစွာပေါင်းစပ်", description: "နောက်ဆုံးဖောင်မ်၊ ထိပ်တိုက်မှတ်တမ်း၊ ကစားသမားအခြေအနေနှင့် အိမ်ကွင်းအားသာချက်ကို တွက်ချက်သည်။" },
       { title: "ယုံကြည်မှုနှင့်အန္တရာယ်ခွဲခြား", description: "နီးစပ်သောပွဲများတွင် heat နှင့် upset warning ကို ပိုမိုထင်ရှားစေသည်။" },
@@ -326,6 +334,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
     },
     sections: { modelSummary: "សង្ខេបម៉ូដែល", matchInsights: "អ៊ីនសាយការប្រកួត", methodology: "AI អានការប្រកួតយ៉ាងដូចម្តេច" },
     empty: { title: "រកមិនឃើញអ៊ីនសាយ", description: "សូមប្តូរតម្រងដើម្បីមើលការប្រកួតផ្សេងទៀត។" },
+    error: { title: "មិនអាចផ្ទុក AI Insight", description: "សេវាទិន្នន័យ AI មិនអាចប្រើបាននៅពេលនេះ។" },
     methodology: [
       { title: "រួមបញ្ចូលសញ្ញាច្រើន", description: "ទម្រង់ថ្មីៗ ប្រវត្តិជួបគ្នា ស្ថានភាពកីឡាករ និងអត្ថប្រយោជន៍ដីផ្ទះត្រូវបានថ្លឹងថ្លែង។" },
       { title: "បំបែកទំនុកចិត្តនិងហានិភ័យ", description: "ការប្រកួតដែលស្មើសាច់គ្នានឹងបង្ហាញ heat និង upset alert ឲ្យច្បាស់។" },
@@ -371,6 +380,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
     },
     sections: { modelSummary: "模型概览", matchInsights: "比赛分析", methodology: "AI 如何解读比赛" },
     empty: { title: "未找到分析", description: "请尝试切换筛选条件查看更多比赛。" },
+    error: { title: "无法加载 AI Insight", description: "AI 数据服务当前不可用。" },
     methodology: [
       { title: "融合多种信号", description: "近期状态、交锋历史、球员可用性和主场优势会被综合加权。" },
       { title: "区分信心与风险", description: "走势接近或变量较多的比赛会显示更高热度和爆冷提醒。" },

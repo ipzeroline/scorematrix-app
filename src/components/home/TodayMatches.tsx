@@ -10,7 +10,6 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import type { ApiFootballFixture } from "@/lib/api-football";
-import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import {
   buildFootballStatusLabels,
   getFixtureStatusGroup,
@@ -44,123 +43,6 @@ interface LeagueTab {
   logo: string | null;
 }
 
-const allMatches: TodayMatch[] = [
-  {
-    id: "tm-1",
-    homeTeam: "London United",
-    homeCrest: "",
-    awayTeam: "Mersey City",
-    awayCrest: "",
-    kickoffTime: "20:00",
-    league: "Premier",
-    leagueLogo: null,
-    leagueEmoji: "🇬🇧",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-2",
-    homeTeam: "Real Catalonia",
-    homeCrest: "",
-    awayTeam: "Atletico Madrid B",
-    awayCrest: "",
-    kickoffTime: "21:00",
-    league: "La Liga",
-    leagueLogo: null,
-    leagueEmoji: "🇪🇸",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-3",
-    homeTeam: "FC Bayern Stadt",
-    homeCrest: "",
-    awayTeam: "Dortmund 09",
-    awayCrest: "",
-    kickoffTime: "18:30",
-    league: "Bundesliga",
-    leagueLogo: null,
-    leagueEmoji: "🇩🇪",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-4",
-    homeTeam: "AC Milano Rosso",
-    homeCrest: "",
-    awayTeam: "Juventus Torino",
-    awayCrest: "",
-    kickoffTime: "20:45",
-    league: "Serie A",
-    leagueLogo: null,
-    leagueEmoji: "🇮🇹",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-5",
-    homeTeam: "Paris Saint-Germain B",
-    homeCrest: "",
-    awayTeam: "Olympique Lyon",
-    awayCrest: "",
-    kickoffTime: "21:00",
-    league: "Ligue 1",
-    leagueLogo: null,
-    leagueEmoji: "🇫🇷",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-6",
-    homeTeam: "Manchester Reds",
-    homeCrest: "",
-    awayTeam: "Chelsea Blues",
-    awayCrest: "",
-    kickoffTime: "17:30",
-    league: "Premier",
-    leagueLogo: null,
-    leagueEmoji: "🇬🇧",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-7",
-    homeTeam: "Sevilla FC",
-    homeCrest: "",
-    awayTeam: "Valencia CF",
-    awayCrest: "",
-    kickoffTime: "19:00",
-    league: "La Liga",
-    leagueLogo: null,
-    leagueEmoji: "🇪🇸",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-  {
-    id: "tm-8",
-    homeTeam: "RB Leipzig B",
-    homeCrest: "",
-    awayTeam: "Bayer Leverkusen",
-    awayCrest: "",
-    kickoffTime: "15:30",
-    league: "Bundesliga",
-    leagueLogo: null,
-    leagueEmoji: "🇩🇪",
-    status: MatchStatus.UPCOMING,
-    statusShort: "NS",
-    score: { home: null, away: null },
-  },
-];
-
-const leagues = ["Premier", "La Liga", "Bundesliga", "Serie A", "Ligue 1"];
-
 interface TodayMatchesProps {
   fixtures?: ApiFootballFixture[];
 }
@@ -176,22 +58,8 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
     statusShort: fixture.statusShort,
     statusLabel: getFixtureStatusLabel(fixture, statusLabels),
   }));
-  const matches =
-    apiMatches.length > 0
-      ? apiMatches
-      : allMatches.map((match) => ({
-          ...match,
-          kickoffDate: t("common.today"),
-          kickoffTime: `${match.kickoffTime} UTC+7`,
-          statusLabel: getFixtureStatusLabel(match, statusLabels),
-        }));
-  const leagueTabs =
-    apiMatches.length > 0
-      ? buildLeagueTabs(apiMatches)
-      : [
-          { name: "All", logo: null },
-          ...leagues.map((league) => ({ name: league, logo: null })),
-        ];
+  const matches = apiMatches;
+  const leagueTabs = buildLeagueTabs(apiMatches);
 
   const filtered =
     activeTab === "All"
@@ -242,8 +110,13 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       </div>
 
       {/* Match grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {filtered.map((match) => (
+      {filtered.length === 0 ? (
+        <Card className="border-gray-800/80 p-5 text-sm text-gray-400">
+          {t("livescore.noMatches")}
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {filtered.map((match) => (
           <Link key={match.id} href={`/${locale}/matches/detail/${match.id}`}>
             <Card hover className="today-match-card flex h-full flex-col gap-3">
               {/* League & status */}
@@ -301,8 +174,9 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
               </div>
             </Card>
           </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

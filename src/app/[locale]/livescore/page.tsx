@@ -5,6 +5,8 @@ import {
   getMockApiFootballFixtures,
 } from "@/lib/api-football";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ locale: string }>;
 };

@@ -10,10 +10,14 @@ import { TodayMatches } from "@/components/home/TodayMatches";
 import { AIMatchOfTheDay } from "@/components/home/AIMatchOfTheDay";
 import { NewsSection } from "@/components/home/NewsSection";
 import { LOCALE_CODES } from "@/i18n";
-import { MatchStatus } from "@/types/common";
 import {
+  ApiFootballError,
+  getApiFootballAIInsights,
+  type ApiFootballAIInsight,
+} from "@/lib/api-football";
+import {
+  loadFixturesForDate,
   loadLiveFixtures,
-  pickRandomFixture,
 } from "@/lib/football-page-data";
 import { getLatestArticles } from "@/lib/news-generator";
 import {
@@ -65,20 +69,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("dashboard");
-  const [liveFixtures, latestArticles, cookieStore] = await Promise.all([
+  const [liveFixtures, todayFixtures, aiInsight, latestArticles, cookieStore] = await Promise.all([
     loadLiveFixtures(24, 0),
+    loadFixturesForDate(50, 0),
+    loadFeaturedAIInsight(),
     getLatestArticles(locale, 6),
     cookies(),
   ]);
-  const homepageFixtures = liveFixtures.slice(0, 16);
+  const homepageFixtures = todayFixtures.slice(0, 16);
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
-  const aiFixture =
-    pickRandomFixture(homepageFixtures.filter((fixture) => fixture.status === MatchStatus.UPCOMING)) ??
-    pickRandomFixture(homepageFixtures) ??
-    pickRandomFixture(liveFixtures);
-
   return (
     <div className="flex flex-col gap-8 pb-8">
       {/* Hero Banner */}
@@ -102,28 +103,30 @@ export default async function DashboardPage({ params }: Props) {
       </section>
 
       {/* AI Match of the Day */}
-      <section>
-        <div className="ai-section-heading relative mb-4 overflow-hidden rounded-xl border border-magenta-500/20 bg-[#120d1a] px-4 py-3">
-          <div className="ai-section-heading-wave absolute inset-0" />
-          <div className="relative flex items-center gap-3">
-            <span className="ai-section-heading-node grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-magenta-400/40 bg-magenta-500/10 text-magenta-200">
-              <Sparkles
-                size={20}
-                strokeWidth={2.3}
-                className="drop-shadow-[0_0_8px_rgba(217,70,239,0.85)]"
-                aria-hidden="true"
-              />
-            </span>
-            <h2
-              className="font-display text-xl font-bold tracking-normal text-white text-glow-magenta"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              {t("aiMatchOfTheDay")}
-            </h2>
+      {aiInsight && (
+        <section>
+          <div className="ai-section-heading relative mb-4 overflow-hidden rounded-xl border border-magenta-500/20 bg-[#120d1a] px-4 py-3">
+            <div className="ai-section-heading-wave absolute inset-0" />
+            <div className="relative flex items-center gap-3">
+              <span className="ai-section-heading-node grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-magenta-400/40 bg-magenta-500/10 text-magenta-200">
+                <Sparkles
+                  size={20}
+                  strokeWidth={2.3}
+                  className="drop-shadow-[0_0_8px_rgba(217,70,239,0.85)]"
+                  aria-hidden="true"
+                />
+              </span>
+              <h2
+                className="font-display text-xl font-bold tracking-normal text-white text-glow-magenta"
+                style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+              >
+                {t("aiMatchOfTheDay")}
+              </h2>
+            </div>
           </div>
-        </div>
-        <AIMatchOfTheDay fixture={aiFixture} />
-      </section>
+          <AIMatchOfTheDay insight={aiInsight} />
+        </section>
+      )}
 
       {/* News Section */}
       <section>
@@ -158,4 +161,30 @@ export default async function DashboardPage({ params }: Props) {
       </section>
     </div>
   );
+}
+
+async function loadFeaturedAIInsight(): Promise<ApiFootballAIInsight | null> {
+  try {
+    const insights = await getApiFootballAIInsights(0);
+    const candidates =
+      insights.highConfidence.length > 0
+        ? insights.highConfidence
+        : insights.live;
+
+    return candidates
+      .filter(hasCompleteAIProbabilities)
+      .sort((a, b) => (b.confidenceScore ?? 0) - (a.confidenceScore ?? 0))[0] ?? null;
+  } catch (error) {
+    if (error instanceof ApiFootballError) return null;
+    throw error;
+  }
+}
+
+function hasCompleteAIProbabilities(insight: ApiFootballAIInsight): boolean {
+  return [
+    insight.confidenceScore,
+    insight.homeWinProbability,
+    insight.drawProbability,
+    insight.awayWinProbability,
+  ].every((value) => typeof value === "number");
 }

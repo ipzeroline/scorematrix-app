@@ -1,4 +1,8 @@
 import { DEFAULT_LOCALE, LOCALE_CODES, type LocaleCode } from "@/i18n";
+import {
+  AUTH_TOKEN_COOKIE_NAME,
+  REFRESH_SESSION_COOKIE_NAME,
+} from "@/lib/auth-guard";
 
 export type ApiResponse<T = unknown> = ApiSuccess<T> | ApiFailure;
 
@@ -74,11 +78,8 @@ const API_BASE_URL = normalizeApiBaseUrl(requiredEnv(
   "NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL"
 ));
 
-const AUTH_TOKEN_COOKIE_NAME = "scorematrix-auth-token";
-const REFRESH_TOKEN_COOKIE_NAME = "scorematrix-refresh-token";
 const LEGACY_AUTH_TOKEN_STORAGE_KEY = "scorematrix-auth-token";
-const REMEMBERED_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
-const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
 
 export const AUTH_SESSION_EXPIRED_EVENT = "scorematrix:auth-session-expired";
 
@@ -108,35 +109,30 @@ export function getStoredAuthToken() {
   return legacyToken;
 }
 
-export function getStoredRefreshToken() {
+export function getStoredRefreshSession() {
   if (typeof window === "undefined") return null;
-  return readCookie(REFRESH_TOKEN_COOKIE_NAME);
+  return readCookie(REFRESH_SESSION_COOKIE_NAME);
 }
 
 export function setStoredAuthToken(token: string, remember = true) {
   if (typeof window === "undefined") return;
-  const maxAge = remember ? REMEMBERED_TOKEN_MAX_AGE_SECONDS : undefined;
+  const maxAge = remember ? ACCESS_TOKEN_MAX_AGE_SECONDS : undefined;
   writeCookie(AUTH_TOKEN_COOKIE_NAME, token, maxAge);
   clearLegacyStoredAuthToken();
 }
 
 export function setStoredAuthTokens(
   accessToken: string,
-  refreshToken?: string | null,
   remember = true
 ) {
   authSessionExpiredDispatched = false;
   setStoredAuthToken(accessToken, remember);
-  if (!refreshToken || typeof window === "undefined") return;
-
-  const maxAge = remember ? REFRESH_TOKEN_MAX_AGE_SECONDS : undefined;
-  writeCookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, maxAge);
 }
 
 export function clearStoredAuthToken() {
   if (typeof window === "undefined") return;
   deleteCookie(AUTH_TOKEN_COOKIE_NAME);
-  deleteCookie(REFRESH_TOKEN_COOKIE_NAME);
+  deleteCookie(REFRESH_SESSION_COOKIE_NAME);
   clearLegacyStoredAuthToken();
 }
 
@@ -393,9 +389,7 @@ function shouldRefreshAuth(
 ) {
   return (
     !options.authRefreshAttempted &&
-    !isExplicitTokenExpiredPayload(payload) &&
-    isRefreshableAuthFailure(path, response, options, payload) &&
-    Boolean(getStoredRefreshToken())
+    isRefreshableAuthFailure(path, response, options, payload)
   );
 }
 
@@ -407,9 +401,7 @@ function shouldExpireAuthSession(
 ) {
   return (
     isRefreshableAuthFailure(path, response, options, payload) &&
-    (isExplicitTokenExpiredPayload(payload) ||
-      options.authRefreshAttempted ||
-      !getStoredRefreshToken())
+    options.authRefreshAttempted === true
   );
 }
 
@@ -453,15 +445,18 @@ async function refreshAccessToken(options: ApiRequestOptions) {
 }
 
 async function requestRefreshedAccessToken(options: ApiRequestOptions) {
-  const refreshToken = getStoredRefreshToken();
-  if (!refreshToken) return null;
-
-  const response = await fetchApi(
-    "POST",
-    "/auth/refresh",
-    { refreshToken },
-    { locale: options.locale, token: null }
-  );
+  const locale = normalizeLocale(options.locale);
+  const response = await fetch("/api/auth/refresh", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Accept-Language": locale,
+      "Content-Language": locale,
+      "X-Locale": locale,
+      "X-App-Locale": locale,
+    },
+    cache: "no-store",
+  });
   const payload = await parseApiResponse(response);
 
   if (!response.ok || !isApiSuccess<AuthRefreshData>(payload)) {
@@ -470,20 +465,19 @@ async function requestRefreshedAccessToken(options: ApiRequestOptions) {
   }
 
   const accessToken = payload.data?.accessToken ?? payload.data?.tokens?.accessToken;
-  const nextRefreshToken =
-    payload.data?.refreshToken ?? payload.data?.tokens?.refreshToken ?? refreshToken;
 
   if (!accessToken) {
     expireAuthSession();
     return null;
   }
 
-  setStoredAuthTokens(accessToken, nextRefreshToken);
+  setStoredAuthTokens(accessToken, getStoredRefreshSession() === "persistent");
   return accessToken;
 }
 
 function expireAuthSession() {
   clearStoredAuthToken();
+  void fetch("/api/auth/logout", { method: "POST", cache: "no-store" }).catch(() => {});
 
   if (typeof window === "undefined" || authSessionExpiredDispatched) return;
 
@@ -579,11 +573,6 @@ function isAuthExpiredPayload(payload: unknown) {
       normalized?.includes("token_is_expired")
     );
   });
-}
-
-function isExplicitTokenExpiredPayload(payload: unknown) {
-  const failure = toApiFailure(payload);
-  return normalizeAuthErrorValue(failure?.code) === "token_expired";
 }
 
 function normalizeAuthErrorValue(value: unknown) {

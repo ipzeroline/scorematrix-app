@@ -1,0 +1,122 @@
+import "server-only";
+
+import { cookies } from "next/headers";
+import {
+  REFRESH_SESSION_COOKIE_NAME,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from "@/lib/auth-guard";
+
+const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60;
+
+export type AuthTokens = {
+  accessToken?: string;
+  refreshToken?: string;
+};
+
+export function getBackendApiUrl(path: string) {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL;
+  if (!configuredBaseUrl) {
+    throw new Error("NEXT_PUBLIC_SCOREMATRIX_API_BASE_URL is required. Add it to .env.");
+  }
+
+  const baseUrl = configuredBaseUrl.replace(/\/$/, "");
+  const scormBaseUrl = baseUrl.endsWith("/scorm") ? baseUrl : `${baseUrl}/scorm`;
+  return `${scormBaseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+export function isSameOriginMutation(request: Request) {
+  const requestOrigin = new URL(request.url).origin;
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+
+  return fetchSite !== "cross-site" && (!origin || origin === requestOrigin);
+}
+
+export function backendAuthHeaders(request: Request) {
+  const headers = new Headers({
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  });
+
+  for (const name of [
+    "accept-language",
+    "content-language",
+    "x-locale",
+    "x-app-locale",
+    "authorization",
+  ]) {
+    const value = request.headers.get(name);
+    if (value) headers.set(name, value);
+  }
+
+  return headers;
+}
+
+export function extractAuthTokens(payload: unknown): AuthTokens {
+  if (!isRecord(payload) || !isRecord(payload.data)) return {};
+
+  const data = payload.data;
+  const tokens = isRecord(data.tokens) ? data.tokens : undefined;
+
+  return {
+    accessToken: stringValue(data.accessToken) ?? stringValue(tokens?.accessToken),
+    refreshToken: stringValue(data.refreshToken) ?? stringValue(tokens?.refreshToken),
+  };
+}
+
+export function stripRefreshToken(payload: unknown) {
+  if (!isRecord(payload)) return payload;
+
+  const sanitized = structuredClone(payload);
+  if (!isRecord(sanitized.data)) return sanitized;
+
+  delete sanitized.data.refreshToken;
+  if (isRecord(sanitized.data.tokens)) {
+    delete sanitized.data.tokens.refreshToken;
+  }
+
+  return sanitized;
+}
+
+export async function getRefreshToken() {
+  return (await cookies()).get(REFRESH_TOKEN_COOKIE_NAME)?.value ?? null;
+}
+
+export async function getRememberedAuthSession() {
+  return (await cookies()).get(REFRESH_SESSION_COOKIE_NAME)?.value === "persistent";
+}
+
+export async function setRefreshSession(refreshToken: string, remember: boolean) {
+  const cookieStore = await cookies();
+  const sharedOptions = {
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict" as const,
+    maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
+  };
+
+  cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {
+    ...sharedOptions,
+    httpOnly: true,
+    priority: "high",
+  });
+  cookieStore.set(
+    REFRESH_SESSION_COOKIE_NAME,
+    remember ? "persistent" : "session",
+    sharedOptions
+  );
+}
+
+export async function clearRefreshSession() {
+  const cookieStore = await cookies();
+  cookieStore.delete(REFRESH_TOKEN_COOKIE_NAME);
+  cookieStore.delete(REFRESH_SESSION_COOKIE_NAME);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" ? value : undefined;
+}

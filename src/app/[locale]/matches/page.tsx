@@ -50,7 +50,7 @@ export default async function MatchesPage() {
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
-  const fixtures = sortFixtures(await loadUpcomingFixtures());
+  const fixtures = sortFixtures(await loadUpcomingFixtures(undefined, 0));
 
   return <MatchesApi fixtures={fixtures} initialHasAuthSession={initialHasAuthSession} />;
 }

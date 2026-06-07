@@ -31,6 +31,7 @@ type MatchResult = "W" | "D" | "L";
 export type AIInsightListItem = {
   id: string;
   dataSource: "api" | "sample";
+  categories: Array<"live" | "highConfidence" | "upsetAlert">;
   matchId: string;
   status: MatchStatus;
   league: {
@@ -67,12 +68,14 @@ export type AIInsightListItem = {
   };
   keyFactors: string[];
   apiSummary: {
-    events: number;
-    statistics: number;
-    lineups: number;
-    playerStats: number;
-    h2h: number;
+    probabilities: number;
+    communityVotes: number;
+    keyFactors: number;
+    advice: number;
+    winner: number;
   };
+  apiAdvice: string | null;
+  apiWinner: string | null;
   upsetAlert: boolean;
   generatedAt: string;
 };
@@ -104,16 +107,16 @@ export function AIInsightListClient({
 }: {
   locale: string;
   insights: AIInsightListItem[];
-  source: "api" | "mixed" | "sample" | "empty";
+  source: "api" | "empty" | "error";
 }) {
   const copy = getAIInsightPageCopy(locale);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
 
   const filteredInsights = insights.filter((insight) => {
-    if (activeFilter === "live") return insight.status === MatchStatus.LIVE;
+    if (activeFilter === "live") return insight.categories.includes("live");
     if (activeFilter === "upcoming") return insight.status === MatchStatus.UPCOMING;
-    if (activeFilter === "highConfidence") return (insight.confidenceScore ?? 0) >= 75;
-    if (activeFilter === "upset") return insight.upsetAlert;
+    if (activeFilter === "highConfidence") return insight.categories.includes("highConfidence");
+    if (activeFilter === "upset") return insight.categories.includes("upsetAlert");
     return true;
   });
 
@@ -130,14 +133,8 @@ export function AIInsightListClient({
         )
       : null;
   const upsetCount = insights.filter((insight) => insight.upsetAlert).length;
-  const apiDataPoints = insights.reduce(
-    (sum, insight) =>
-      sum +
-      insight.apiSummary.events +
-      insight.apiSummary.statistics +
-      insight.apiSummary.lineups +
-      insight.apiSummary.playerStats +
-      insight.apiSummary.h2h,
+  const communityVotes = insights.reduce(
+    (sum, insight) => sum + insight.apiSummary.communityVotes,
     0
   );
   const featuredInsight = insights[0];
@@ -170,8 +167,8 @@ export function AIInsightListClient({
       tone: "text-red-300",
     },
     {
-      label: "Data coverage",
-      value: apiDataPoints.toLocaleString(localeMap[locale] ?? "th-TH"),
+      label: copy.stats.communityVotes,
+      value: communityVotes.toLocaleString(localeMap[locale] ?? "th-TH"),
       icon: Users,
       tone: "text-purple-300",
     },
@@ -204,7 +201,7 @@ export function AIInsightListClient({
             </div>
             <p className="text-xs leading-5 text-gray-500">
               {copy.disclaimer}
-              {source === "api" || source === "mixed" ? " Live API data." : ""}
+              {source === "api" ? " Live API data." : ""}
             </p>
           </div>
 
@@ -285,8 +282,8 @@ export function AIInsightListClient({
 
         {filteredInsights.length === 0 ? (
           <EmptyState
-            title={copy.empty.title}
-            description={copy.empty.description}
+            title={source === "error" ? copy.error.title : copy.empty.title}
+            description={source === "error" ? copy.error.description : copy.empty.description}
             icon={<Brain size={44} />}
           />
         ) : (
@@ -358,8 +355,8 @@ export function AIInsightListClient({
                     />
                   </div>
 
-                  <div className="grid gap-3 lg:grid-cols-[1fr_0.95fr]">
-                    <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
+                  <div className="grid gap-3">
+                    {hasFormData(insight) && <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <p className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300">
                           <Activity size={13} className="text-green-300" />
@@ -382,30 +379,29 @@ export function AIInsightListClient({
                         results={insight.formComparison.awayLastFive}
                         tone="magenta"
                       />
-                    </div>
+                    </div>}
 
                     <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <p className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-300">
                           <BarChart3 size={13} className="text-purple-300" />
-                          Data coverage
+                          API signals
                         </p>
                         <Badge variant={insight.dataSource === "api" ? "green" : "gold"}>
                           {insight.dataSource === "api" ? "API" : "Sample"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <ApiDataCell label="Events" value={insight.apiSummary.events} />
-                        <ApiDataCell label="Stats" value={insight.apiSummary.statistics} />
-                        <ApiDataCell label="Lineups" value={insight.apiSummary.lineups} />
-                        <ApiDataCell label="Players" value={insight.apiSummary.playerStats} />
-                        <ApiDataCell label="H2H" value={insight.apiSummary.h2h} />
+                        <ApiDataCell label="Probabilities" value={insight.apiSummary.probabilities} />
+                        <ApiDataCell label="Factors" value={insight.apiSummary.keyFactors} />
+                        <ApiDataCell label="Advice" value={insight.apiSummary.advice} />
+                        <ApiDataCell label="Winner" value={insight.apiSummary.winner} />
                       </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-3 lg:grid-cols-[1fr_0.8fr]">
-                    <div>
+                  {(insight.keyFactors.length > 0 || insight.apiAdvice || insight.apiWinner) && <div className="grid gap-3 lg:grid-cols-[1fr_0.8fr]">
+                    {insight.keyFactors.length > 0 && <div>
                       <p className="mb-2 text-xs font-medium text-gray-300">
                         {copy.labels.keyFactors}
                       </p>
@@ -420,20 +416,19 @@ export function AIInsightListClient({
                           </li>
                         ))}
                       </ul>
-                    </div>
+                    </div>}
                     <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
                       <p className="text-xs font-medium text-gray-300">
                         Data readiness
                       </p>
                       <p className="mt-2 text-xs text-gray-500">
-                        {insight.homeWinProbability === null
-                          ? "No fixture statistics yet. Waiting for richer match data."
-                          : insight.dataSource === "api"
-                            ? "Probabilities are calculated from live fixture statistics where available."
-                            : "Sample match includes full events, stats, lineup, form, and H2H data."}
+                        {insight.apiAdvice ??
+                          (insight.apiWinner
+                            ? `API winner: ${insight.apiWinner}`
+                            : "The API has not generated model advice for this match yet.")}
                       </p>
                     </div>
-                  </div>
+                  </div>}
 
                   <div className="flex flex-col gap-2 border-t border-gray-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-gray-500">
@@ -588,6 +583,13 @@ function formatMetric(value: number | null, suffix: string) {
 
 function formatDateTime(value: string, locale: string) {
   return formatMatchDateTimeWithZone(value, localeMap[locale] ?? "th-TH");
+}
+
+function hasFormData(insight: AIInsightListItem): boolean {
+  return (
+    insight.formComparison.homeLastFive.length > 0 ||
+    insight.formComparison.awayLastFive.length > 0
+  );
 }
 
 function formTone(result: MatchResult) {

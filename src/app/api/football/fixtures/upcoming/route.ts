@@ -3,7 +3,8 @@ import {
   getApiFootballUpcomingFixtures,
 } from "@/lib/api-football";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,12 +13,12 @@ export async function GET(request: Request) {
   try {
     const result = await getApiFootballUpcomingFixtures({
       limit,
-      revalidate: 60,
+      revalidate: 0,
     });
 
     return Response.json(result, {
       headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
       },
     });
   } catch (error) {
