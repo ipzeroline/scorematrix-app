@@ -8,11 +8,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import {
+  ApiFootballError,
+  type ApiFootballFixture,
   getApiFootballLeagueSchedule,
   getApiFootballLeagues,
   getApiFootballStandings,
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug, extractFootballEntityId } from "@/lib/football-slugs";
+import { buildFootballStatusLabels, getFixtureStatusLabel } from "@/lib/football-status";
 import { buildPredictMatchHref } from "@/lib/predict-route";
 import { THAILAND_TIME_ZONE_LABEL, formatDate } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
@@ -25,6 +28,7 @@ type Props = {
 export default async function FootballLeaguePage({ params, searchParams }: Props) {
   const { locale, leagueId } = await params;
   const t = await getTranslations({ locale });
+  const statusLabels = buildFootballStatusLabels(t);
   const { season: seasonParam } = await searchParams;
   const league = extractFootballEntityId(leagueId);
   const season = parseSeason(seasonParam);
@@ -45,10 +49,13 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
   }
 
   const [leagueInfo, standings, schedule] = await Promise.all([
-    getApiFootballLeagues({ id: league }),
-    getApiFootballStandings(league, season),
-    getApiFootballLeagueSchedule(league, season, 120),
+    loadOptional(() => getApiFootballLeagues({ id: league }), []),
+    loadOptional(() => getApiFootballStandings(league, season), null),
+    loadOptional(() => getApiFootballLeagueSchedule(league, season, 120), []),
   ]);
+  const latestSchedule = [...schedule].sort(
+    (a, b) => new Date(b.kickoffTime).getTime() - new Date(a.kickoffTime).getTime()
+  );
   const info = leagueInfo[0];
 
   return (
@@ -71,7 +78,7 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="cyan" size="md">
-            {t("dashboard.matchCount", { count: schedule.length })}
+            {t("dashboard.matchCount", { count: latestSchedule.length })}
           </Badge>
           <Badge variant="green" size="md">
             {t("football.teamCount", { count: standings?.standings[0]?.length ?? 0 })}
@@ -89,13 +96,13 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
             <h2 className="text-sm font-semibold text-white">{t("football.leagueSchedule")}</h2>
           </div>
           <div className="divide-y divide-gray-800/70">
-            {schedule.map((match) => (
+            {latestSchedule.map((match) => (
               <div
                 key={match.id}
                 className="grid gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03] md:grid-cols-[92px_minmax(0,1fr)_120px_120px]"
               >
                 <Link
-                  href={`/${locale}/livescore/${buildFixtureSeoSlug(match)}`}
+                  href={buildMatchDetailHref(match, locale)}
                   className="contents"
                 >
                   <span className="font-mono text-xs text-gray-500">
@@ -111,7 +118,10 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                     <TeamName name={match.away.name} logo={match.away.logo} />
                   </div>
                   <div className="flex justify-start md:justify-end">
-                    <StatusBadge status={match.status} />
+                    <StatusBadge
+                      status={match.status}
+                      label={getFixtureStatusLabel(match, statusLabels)}
+                    />
                   </div>
                 </Link>
                 <div className="flex justify-start md:justify-end">
@@ -145,7 +155,7 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
             <h2 className="text-sm font-semibold text-white">{t("football.standings")}</h2>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[400px] text-sm">
+            {(standings?.standings[0]?.length ?? 0) > 0 ? <table className="w-full min-w-[400px] text-sm">
               <thead>
                 <tr className="border-b border-gray-800 text-[10px] uppercase tracking-wider text-gray-500">
                   <th className="px-3 py-2 text-left">#</th>
@@ -184,12 +194,32 @@ export default async function FootballLeaguePage({ params, searchParams }: Props
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table> : (
+              <p className="p-6 text-center text-sm text-gray-500">
+                {t("leagues.noStandings")}
+              </p>
+            )}
           </div>
         </Card>
       </section>
     </div>
   );
+}
+
+function buildMatchDetailHref(
+  match: ApiFootballFixture,
+  locale: string
+) {
+  return `/${locale}/matches/detail/${match.apiFixtureId ?? buildFixtureSeoSlug(match)}`;
+}
+
+async function loadOptional<T>(loader: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await loader();
+  } catch (error) {
+    if (error instanceof ApiFootballError) return fallback;
+    throw error;
+  }
 }
 
 function parseSeason(value?: string) {

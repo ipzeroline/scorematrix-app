@@ -84,6 +84,15 @@ interface SoccerLiveResponse {
   data?: SoccerLiveFixture[];
 }
 
+interface SoccerStandingsResponse {
+  data?: {
+    league_id?: number;
+    season?: number;
+    standings?: ApiFootballStanding[];
+  };
+  league?: ApiFootballStandingLeague;
+}
+
 interface SoccerH2HResponse {
   data?: {
     pair_key?: string;
@@ -758,7 +767,7 @@ export async function getApiFootballLeagues(options: {
 }
 
 export async function getApiFootballStandings(league: number, season: number) {
-  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
+  const payload = await fetchSoccerBackend<SoccerStandingsResponse>(
     "/standings",
     {
       league: String(league),
@@ -766,7 +775,18 @@ export async function getApiFootballStandings(league: number, season: number) {
     }
   );
 
-  return payload.league ?? null;
+  if (payload.league) return payload.league;
+  if (!payload.data?.standings) return null;
+
+  return {
+    id: payload.data.league_id ?? league,
+    name: "",
+    country: "",
+    logo: null,
+    flag: null,
+    season: payload.data.season ?? season,
+    standings: [payload.data.standings],
+  };
 }
 
 export async function getApiFootballLeagueSchedule(
@@ -912,12 +932,12 @@ function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> 
 
 function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
   const normalizedStatus = normalizeMatchStatus(fixture.status.short);
-  const status = fixture.is_live
-    ? MatchStatus.LIVE
-    : fixture.is_terminal
-      ? MatchStatus.FINISHED
-      : isMatchStatus(normalizedStatus)
-        ? normalizedStatus
+  const status = isMatchStatus(normalizedStatus)
+    ? normalizedStatus
+    : fixture.is_live
+      ? MatchStatus.LIVE
+      : fixture.is_terminal
+        ? MatchStatus.FINISHED
         : MatchStatus.UPCOMING;
   const leagueId = fixture.league?.id ?? fixture.league?.provider_id ?? fixture.league_id;
   const leagueName = fixture.league?.name ?? fixture.league_name ?? `League ${leagueId}`;

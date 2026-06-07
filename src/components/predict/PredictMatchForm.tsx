@@ -27,7 +27,7 @@ import { PointsBadge } from "@/components/shared/PointsBadge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { useNotificationStore } from "@/stores/notification-store";
-import { cn, formatDateTime, formatMatchTimeWithZone } from "@/lib/utils";
+import { cn, formatDate, formatDateTime, formatMatchTimeWithZone } from "@/lib/utils";
 import { useTranslations } from "next-intl";
 import { apiPostRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
@@ -462,7 +462,10 @@ export function PredictMatchForm({
             {/* Centered VS Block */}
             <div className="flex flex-col items-center justify-center bg-black/50 px-4 py-2.5 rounded-xl border border-gray-800/80 shadow-2xl shrink-0 min-w-[90px] sm:min-w-[110px]">
               <span className="font-mono text-base sm:text-lg font-black text-cyan-400 tracking-wider">VS</span>
-              <span className="text-[9px] font-extrabold uppercase text-gray-400 font-mono tracking-widest mt-1 whitespace-nowrap">
+              <span className="mt-1 whitespace-nowrap text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
+                {formatDate(match.kickoffTime, locale)}
+              </span>
+              <span className="whitespace-nowrap font-mono text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
                 {formatMatchTimeWithZone(match.kickoffTime, locale)}
               </span>
             </div>

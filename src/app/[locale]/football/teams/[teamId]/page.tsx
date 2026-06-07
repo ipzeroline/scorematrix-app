@@ -1,15 +1,11 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import {
-  Building2,
   CalendarDays,
   Flag,
-  Layers,
-  MapPin,
-  MapPinned,
   Shield,
-  Users,
 } from "lucide-react";
+import { HistoryBackButton } from "@/components/shared/HistoryBackButton";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
@@ -36,6 +32,8 @@ export default async function FootballTeamPage({ params, searchParams }: Props) 
 
   return (
     <div className="mx-auto max-w-5xl space-y-5 pb-8">
+      <HistoryBackButton label={t("common.back")} fallbackHref={`/${locale}/football/leagues`} />
+
       <Card neon="cyan" className="overflow-hidden p-0">
         {profile.venue.image && (
           <div className="relative h-48 w-full overflow-hidden border-b border-gray-800">
@@ -103,14 +101,6 @@ export default async function FootballTeamPage({ params, searchParams }: Props) 
             <Detail label={t("football.surface")} value={profile.venue.surface ?? "N/A"} />
           </div>
         </Card>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Info icon={Building2} label={t("matchDetail.venue")} value={profile.venue.name ?? "N/A"} />
-        <Info icon={MapPinned} label={t("football.address")} value={profile.venue.address ?? "N/A"} />
-        <Info icon={MapPin} label={t("football.city")} value={profile.venue.city ?? "N/A"} />
-        <Info icon={Users} label={t("football.capacity")} value={formatNullableNumber(profile.venue.capacity, locale)} />
-        <Info icon={Layers} label={t("football.surface")} value={profile.venue.surface ?? "N/A"} />
       </section>
 
       {stats ? (

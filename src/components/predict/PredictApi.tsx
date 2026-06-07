@@ -15,7 +15,7 @@ import { MatchStatus } from "@/types/common";
 import type { ApiFootballFixture } from "@/lib/api-football";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import { buildPredictMatchHref } from "@/lib/predict-route";
-import { formatMatchTimeWithZone } from "@/lib/utils";
+import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 import { apiGetRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { useUserStore } from "@/stores/user-store";
 import { Brain, ShieldCheck, Trophy, Users, Zap, Award, Sparkles, X } from "lucide-react";
@@ -249,8 +249,11 @@ export function PredictApi({ fixtures }: PredictApiProps) {
                         <p className="text-lg font-bold font-mono text-white">
                           {t("common.vs")}
                         </p>
-                        <p className="whitespace-nowrap text-[10px] text-gray-500">
-                          {formatKickoff(match.kickoffTime)}
+                        <p className="mt-0.5 whitespace-nowrap text-[9px] text-gray-500">
+                          {formatDate(match.kickoffTime, locale)}
+                        </p>
+                        <p className="whitespace-nowrap text-[9px] text-gray-500">
+                          {formatMatchTimeWithZone(match.kickoffTime, locale)}
                         </p>
                       </div>
                       <TeamPick
@@ -665,8 +668,4 @@ function TeamPick({
       <p className="text-xs text-white truncate">{name}</p>
     </div>
   );
-}
-
-function formatKickoff(value: string) {
-  return formatMatchTimeWithZone(value);
 }

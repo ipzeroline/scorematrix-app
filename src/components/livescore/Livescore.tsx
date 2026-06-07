@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Activity, RefreshCw, Search } from "lucide-react";
+import { Activity, ChevronRight, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
@@ -120,16 +120,22 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             <span className="min-w-0 truncate">{t("livescore.title")}</span>
           </h1>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => void loadFixtures()}
-          disabled={isLoading}
-          className="w-fit"
-        >
-          <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-          Sync
-        </Button>
+        <div className="flex items-center justify-end gap-2">
+          <div className="inline-flex items-center gap-2 rounded-full border border-green-400/20 bg-green-400/[0.06] px-2.5 py-1 text-[11px] font-semibold text-green-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+            {t("dashboard.matchCount", { count: liveMatches.length })}
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void loadFixtures()}
+            disabled={isLoading}
+            className="w-fit"
+          >
+            <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+            Sync
+          </Button>
+        </div>
       </div>
 
       {payload.warning && (
@@ -172,7 +178,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
       {isLoading ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, index) => (
-            <Card key={index} className="h-[132px] animate-pulse bg-white/[0.03] sm:h-[74px]" />
+            <Card key={index} className="h-[158px] animate-pulse bg-white/[0.03] sm:h-[74px]" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -216,59 +222,116 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                         <Card
                           hover
                           className={cn(
-                            "overflow-hidden p-0 sm:grid sm:grid-cols-[220px_minmax(0,1fr)_104px] sm:gap-x-3 sm:p-3 lg:grid-cols-[220px_minmax(0,1fr)_116px]",
+                            "group overflow-hidden p-0 transition-transform active:scale-[0.99] sm:active:scale-100",
                             index % 2 === 0 ? "bg-[#12121a]" : "bg-cyan-500/[0.035]"
                           )}
                         >
-                          <div className="flex items-center justify-between gap-2 px-3 py-2.5 sm:col-span-3 sm:px-4 sm:py-3">
-                            <div className="inline-flex items-center gap-2 rounded-md border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5 font-mono text-sm font-bold text-cyan-200 sm:text-[13px]">
-                              <span className="font-medium text-gray-300">
-                                {formatDate(match.kickoffTime, locale)}
-                              </span>
-                              <span className="whitespace-nowrap">
+                          <div className="sm:hidden">
+                            <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] bg-black/20 px-3 py-2">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <span className="relative flex h-2 w-2 shrink-0">
+                                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-50" />
+                                  <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
+                                </span>
+                                <span className="truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-green-300">
+                                  {getFixtureStatusLabel(match, statusLabels)}
+                                </span>
+                              </div>
+                              <span className="shrink-0 font-mono text-[10px] text-gray-500">
                                 {formatTime(match.kickoffTime, locale)}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <StatusBadge
-                                status={match.status}
-                                label={getFixtureStatusLabel(match, statusLabels)}
-                                className="text-center sm:hidden"
-                              />
-                              <div className="hidden sm:block">
-                                <StatusBadge
-                                  status={match.status}
-                                  label={getFixtureStatusLabel(match, statusLabels)}
-                                  className="text-center"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          <div className="min-w-0 px-3 py-3 sm:col-span-2 sm:flex sm:flex-col sm:items-center sm:justify-center sm:px-0 sm:py-0">
-                            <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-2.5 sm:grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] sm:gap-2.5 lg:grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] lg:gap-3">
-                              <TeamInline
+
+                            <div className="relative grid grid-cols-[minmax(0,1fr)_88px_minmax(0,1fr)] items-start gap-2 px-3 py-4">
+                              <MobileScoreboardTeam
                                 name={match.home.name}
                                 logo={match.home.logo}
-                                align="right"
                                 accent="cyan"
                               />
-                              <div className="mx-auto flex min-h-9 w-[68px] shrink-0 flex-col items-center justify-center rounded-lg border border-white/10 bg-black/35 px-2 py-1 text-center font-mono text-base font-bold text-white shadow-[0_0_18px_rgba(34,211,238,0.08)] sm:min-h-10 sm:w-full sm:border-cyan-500/15 sm:bg-black/25 sm:px-2 sm:py-1.5 sm:text-[15px] sm:shadow-[0_0_14px_rgba(34,211,238,0.07)] lg:text-base">
-                                <span className="leading-none">
-                                  {match.score.home !== null
-                                    ? `${match.score.home} - ${match.score.away}`
+                              <div className="relative flex flex-col items-center pt-1">
+                                <span className="font-mono text-[28px] font-black leading-none tracking-tight text-white tabular-nums drop-shadow-[0_0_14px_rgba(34,211,238,0.22)]">
+                                  {match.score.home !== null && match.score.away !== null
+                                    ? `${match.score.home}:${match.score.away}`
                                     : t("common.vs")}
                                 </span>
-                                {match.status === MatchStatus.LIVE && match.elapsed !== null && (
-                                  <span className="mt-0.5 inline-flex items-center justify-center rounded-full border border-green-300/40 bg-green-400/15 px-1.5 py-0.5 text-[10px] font-bold leading-none text-green-200">
-                                    {match.elapsed}&apos;
-                                  </span>
-                                )}
+                                <span className="mt-2 font-mono text-[11px] font-black text-green-300">
+                                  {formatElapsed(match)}
+                                </span>
                               </div>
-                              <TeamInline
+                              <MobileScoreboardTeam
                                 name={match.away.name}
                                 logo={match.away.logo}
                                 accent="magenta"
                               />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3 border-t border-white/[0.06] bg-white/[0.015] px-3 py-2">
+                              <span className="min-w-0 truncate text-[10px] text-gray-500">
+                                {match.league.round || match.venue || match.league.country}
+                              </span>
+                              <span className="inline-flex shrink-0 items-center gap-1 text-[10px] font-semibold text-cyan-300">
+                                {formatDate(match.kickoffTime, locale)}
+                                <ChevronRight size={13} aria-hidden="true" />
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="relative hidden min-h-[82px] grid-cols-[112px_minmax(0,1fr)_100px_minmax(0,1fr)_44px] items-center gap-3 px-4 py-3 sm:grid lg:grid-cols-[128px_minmax(0,1fr)_112px_minmax(0,1fr)_148px] lg:gap-4">
+                            <div className="relative flex min-w-0 flex-col items-start gap-1.5">
+                              <span className="truncate text-[11px] font-semibold text-gray-300">
+                                {formatDate(match.kickoffTime, locale)}
+                              </span>
+                              <span className="whitespace-nowrap font-mono text-[11px] font-semibold text-gray-400">
+                                {formatTime(match.kickoffTime, locale)}
+                              </span>
+                            </div>
+
+                            <DesktopScoreboardTeam
+                              name={match.home.name}
+                              logo={match.home.logo}
+                              accent="cyan"
+                              side="home"
+                            />
+
+                            <div className="relative flex min-h-14 flex-col items-center justify-center rounded-xl border border-white/[0.08] bg-black/35 px-2 transition-colors group-hover:border-white/15">
+                              <span className="font-mono text-xl font-black leading-none tracking-tight text-white tabular-nums drop-shadow-[0_0_14px_rgba(34,211,238,0.18)] lg:text-2xl">
+                                {match.score.home !== null && match.score.away !== null
+                                  ? `${match.score.home}:${match.score.away}`
+                                  : t("common.vs")}
+                              </span>
+                              <span className="mt-1.5 font-mono text-[11px] font-black text-green-300">
+                                {formatElapsed(match)}
+                              </span>
+                            </div>
+
+                            <DesktopScoreboardTeam
+                              name={match.away.name}
+                              logo={match.away.logo}
+                              accent="magenta"
+                              side="away"
+                            />
+
+                            <div className="relative flex min-w-0 items-center justify-end gap-2 lg:justify-between">
+                              <div className="hidden min-w-0 lg:block">
+                                <StatusBadge
+                                  status={match.status}
+                                  label={getFixtureStatusLabel(match, statusLabels)}
+                                  className="max-w-full text-center text-[10px]"
+                                />
+                                <p className="mt-1.5 truncate text-right text-[10px] text-gray-600">
+                                  {match.league.round || match.venue || match.league.country}
+                                </p>
+                              </div>
+                              <div className="lg:hidden">
+                                <StatusBadge
+                                  status={match.status}
+                                  label={getFixtureStatusLabel(match, statusLabels)}
+                                  className="max-w-full px-2 text-center text-[9px]"
+                                />
+                              </div>
+                              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/[0.08] bg-white/[0.025] text-gray-500 transition-colors group-hover:border-cyan-400/20 group-hover:text-cyan-300">
+                                <ChevronRight size={15} aria-hidden="true" />
+                              </span>
                             </div>
                           </div>
                         </Card>
@@ -291,29 +354,61 @@ function buildMatchDetailHref(match: ApiFootballFixture, locale: string): string
     : `/${locale}/livescore/${buildFixtureSeoSlug(match)}`;
 }
 
+function formatElapsed(match: ApiFootballFixture): string {
+  if (match.elapsed === null) return match.statusShort;
+  return `${match.elapsed}${match.statusExtra ? `+${match.statusExtra}` : ""}'`;
+}
 
-function TeamInline({
+
+function DesktopScoreboardTeam({
   name,
   logo,
-  align = "left",
   accent,
+  side,
 }: {
   name: string;
   logo: string | null;
-  align?: "left" | "right";
   accent: "cyan" | "magenta";
+  side: "home" | "away";
 }) {
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col items-center gap-1.5 text-center sm:flex-row sm:gap-2",
-        align === "right"
-          ? "sm:flex-row-reverse sm:justify-start sm:text-left"
-          : "sm:flex-row sm:justify-start sm:text-left"
+        "relative flex min-w-0 items-center gap-3",
+        side === "home" ? "justify-end text-right" : "justify-start text-left"
       )}
     >
-      <ApiTeamLogo name={name} logo={logo} size="sm" accent={accent} />
-      <span className="line-clamp-2 min-w-0 max-w-[140px] break-words text-[13px] font-semibold leading-tight text-white sm:max-w-[168px] sm:text-[13px] lg:max-w-[220px] lg:text-sm">
+      {side === "away" && <ApiTeamLogo name={name} logo={logo} size="md" accent={accent} />}
+      <span className="line-clamp-2 min-w-0 max-w-[180px] break-words text-[13px] font-semibold leading-tight text-white lg:max-w-[230px] lg:text-sm">
+        {name}
+      </span>
+      {side === "home" && <ApiTeamLogo name={name} logo={logo} size="md" accent={accent} />}
+    </div>
+  );
+}
+
+function MobileScoreboardTeam({
+  name,
+  logo,
+  accent,
+}: {
+  name: string;
+  logo: string | null;
+  accent: "cyan" | "magenta";
+}) {
+  return (
+    <div className="relative flex min-w-0 flex-col items-center gap-2 text-center">
+      <div
+        className={cn(
+          "grid h-12 w-12 place-items-center rounded-2xl border bg-black/30 shadow-lg",
+          accent === "cyan"
+            ? "border-cyan-400/20 shadow-cyan-500/10"
+            : "border-magenta-400/20 shadow-magenta-500/10"
+        )}
+      >
+        <ApiTeamLogo name={name} logo={logo} size="md" accent={accent} />
+      </div>
+      <span className="line-clamp-2 min-h-8 max-w-full break-words text-[11px] font-semibold leading-4 text-gray-100">
         {name}
       </span>
     </div>
