@@ -1,11 +1,13 @@
 import { getFootballApiUrl } from "@/lib/backend-api-urls";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   const response = await fetch(getFootballApiUrl("/teams"), {
     headers: buildHeaders(request),
-    next: { revalidate },
+    cache: "no-store",
   });
 
   const payload = await response.json().catch(() => ({
@@ -26,9 +28,7 @@ export async function GET(request: Request) {
   }
 
   return Response.json(normalizeTeamsPayload(payload), {
-    headers: {
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-    },
+    headers: NO_CACHE_HEADERS,
   });
 }
 

@@ -10,13 +10,12 @@ import { getThailandDateKey } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
 
 export async function loadFixturesForDate(
-  limit?: number,
-  revalidate = 60
+  limit?: number
 ): Promise<ApiFootballFixture[]> {
   const date = getThailandDateKey();
 
   try {
-    const result = await getApiFootballFixtures({ date, limit, revalidate });
+    const result = await getApiFootballFixtures({ date, limit });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
@@ -25,11 +24,10 @@ export async function loadFixturesForDate(
 }
 
 export async function loadLiveFixtures(
-  limit = 24,
-  revalidate = 15
+  limit = 24
 ): Promise<ApiFootballFixture[]> {
   try {
-    const result = await getApiFootballLiveFixtures({ limit, revalidate });
+    const result = await getApiFootballLiveFixtures({ limit });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
@@ -38,11 +36,10 @@ export async function loadLiveFixtures(
 }
 
 export async function loadUpcomingFixtures(
-  limit?: number,
-  revalidate = 60
+  limit?: number
 ): Promise<ApiFootballFixture[]> {
   try {
-    const result = await getApiFootballUpcomingFixtures({ limit, revalidate });
+    const result = await getApiFootballUpcomingFixtures({ limit });
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);

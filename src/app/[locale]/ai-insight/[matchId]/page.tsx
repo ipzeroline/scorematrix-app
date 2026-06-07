@@ -21,6 +21,7 @@ import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import { formatMatchDateTimeWithZone } from "@/lib/utils";
 import {
@@ -37,7 +38,6 @@ import {
 } from "@/lib/api-football";
 import { extractApiFixtureId } from "@/lib/football-slugs";
 import { cn } from "@/lib/utils";
-import { MatchStatus } from "@/types/common";
 import type { AIInsight } from "@/types/ai-insight";
 
 type Props = {
@@ -75,9 +75,8 @@ type DetailInsight = Omit<
 
 type DetailContext = {
   kind: "api";
-  status: MatchStatus;
   fixture: ApiFootballFixture;
-  insight: DetailInsight;
+  insight: DetailInsight | null;
   api: {
     events: ApiFootballEvent[];
     statistics: ApiFootballTeamStatistics[];
@@ -271,7 +270,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
 
   const fixture = context.fixture;
   const insight = context.insight;
-  const communitySentiment = insight.communitySentiment;
+  const communitySentiment = insight?.communitySentiment ?? null;
   const apiCounts = getApiCounts(context);
 
   return (
@@ -295,9 +294,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
                     {copy.title}
                   </span>
                 </Badge>
-                <Badge variant={statusVariant(context.status)} size="md">
-                  {statusLabel(context.status, copy)}
-                </Badge>
+                <StatusBadge status={fixture.status} />
               </div>
               <h1 className="mt-3 font-display text-2xl font-bold leading-tight text-white md:text-4xl">
                 {fixture.home.name} vs {fixture.away.name}
@@ -333,48 +330,60 @@ export default async function AIInsightDetailPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-4 p-4 lg:grid-cols-[1.15fr_0.85fr]">
-          <Card className="p-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold text-white">
-                {details.modelSignals}
+        {insight ? (
+          <div className="grid gap-4 p-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <Card className="p-4">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold text-white">
+                  {details.modelSignals}
+                </h2>
+                <span className="text-xs text-gray-500">
+                  {copy.labels.generated}: {formatDateTime(insight.generatedAt, locale)}
+                </span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-4">
+                <SignalTile icon={Gauge} label={copy.labels.confidence} value={formatOptionalMetric(insight.confidenceScore, "%")} tone="text-cyan-300" />
+                <SignalTile icon={Flame} label={copy.labels.heat} value={formatOptionalMetric(insight.heatMeter, "/10")} tone="text-amber-300" />
+                <SignalTile icon={TrendingUp} label={details.formIndex} value={formatFormIndex(insight.formComparison.homeFormIndex, insight.formComparison.awayFormIndex)} tone="text-green-300" />
+                <SignalTile icon={Activity} label={details.homeAdvantage} value={formatOptionalMetric(insight.homeAdvantageFactor === null ? null : Math.round(insight.homeAdvantageFactor * 100), "%")} tone="text-purple-300" />
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <ProbabilityCard label={copy.labels.homeWin} value={insight.homeWinProbability} color="cyan" />
+                <ProbabilityCard label={copy.labels.draw} value={insight.drawProbability} color="purple" />
+                <ProbabilityCard label={copy.labels.awayWin} value={insight.awayWinProbability} color="magenta" />
+              </div>
+            </Card>
+
+            {communitySentiment && <Card className="p-4">
+              <h2 className="mb-3 text-sm font-semibold text-white">
+                {copy.labels.community}
               </h2>
-              <span className="text-xs text-gray-500">
-                {copy.labels.generated}: {formatDateTime(insight.generatedAt, locale)}
-              </span>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-4">
-              <SignalTile icon={Gauge} label={copy.labels.confidence} value={formatOptionalMetric(insight.confidenceScore, "%")} tone="text-cyan-300" />
-              <SignalTile icon={Flame} label={copy.labels.heat} value={formatOptionalMetric(insight.heatMeter, "/10")} tone="text-amber-300" />
-              <SignalTile icon={TrendingUp} label={details.formIndex} value={formatFormIndex(insight.formComparison.homeFormIndex, insight.formComparison.awayFormIndex)} tone="text-green-300" />
-              <SignalTile icon={Activity} label={details.homeAdvantage} value={formatOptionalMetric(insight.homeAdvantageFactor === null ? null : Math.round(insight.homeAdvantageFactor * 100), "%")} tone="text-purple-300" />
-            </div>
-
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <ProbabilityCard label={copy.labels.homeWin} value={insight.homeWinProbability} color="cyan" />
-              <ProbabilityCard label={copy.labels.draw} value={insight.drawProbability} color="purple" />
-              <ProbabilityCard label={copy.labels.awayWin} value={insight.awayWinProbability} color="magenta" />
-            </div>
-          </Card>
-
-          {communitySentiment && <Card className="p-4">
-            <h2 className="mb-3 text-sm font-semibold text-white">
-              {copy.labels.community}
-            </h2>
-            <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-              <Users size={14} className="text-purple-300" />
-              {communitySentiment.totalVotes.toLocaleString(localeMap[locale] ?? "th-TH")} {copy.labels.votes}
-            </div>
-            <div className="space-y-3">
-              <ProbabilityRow label={copy.labels.home} value={communitySentiment.homePercentage} color="cyan" />
-              <ProbabilityRow label={copy.labels.draw} value={communitySentiment.drawPercentage} color="purple" />
-              <ProbabilityRow label={copy.labels.away} value={communitySentiment.awayPercentage} color="magenta" />
-            </div>
-          </Card>}
-        </div>
+              <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
+                <Users size={14} className="text-purple-300" />
+                {communitySentiment.totalVotes.toLocaleString(localeMap[locale] ?? "th-TH")} {copy.labels.votes}
+              </div>
+              <div className="space-y-3">
+                <ProbabilityRow label={copy.labels.home} value={communitySentiment.homePercentage} color="cyan" />
+                <ProbabilityRow label={copy.labels.draw} value={communitySentiment.drawPercentage} color="purple" />
+                <ProbabilityRow label={copy.labels.away} value={communitySentiment.awayPercentage} color="magenta" />
+              </div>
+            </Card>}
+          </div>
+        ) : (
+          <div className="p-4">
+            <Card className="flex items-start gap-3 border-cyan-500/20 bg-cyan-500/5 p-4">
+              <Sparkles size={20} className="mt-0.5 shrink-0 text-cyan-300" />
+              <div>
+                <h2 className="text-sm font-semibold text-white">{copy.empty.title}</h2>
+                <p className="mt-1 text-sm leading-6 text-gray-400">{copy.empty.description}</p>
+              </div>
+            </Card>
+          </div>
+        )}
       </section>
 
-      {insight.upsetAlert && insight.upsetDescription && (
+      {insight?.upsetAlert && insight.upsetDescription && (
         <div className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/5 p-4">
           <AlertTriangle size={20} className="mt-0.5 shrink-0 text-red-400" />
           <div>
@@ -388,7 +397,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
         </div>
       )}
 
-      {hasFormData(insight) && <section>
+      {insight && hasFormData(insight) && <section>
         <Card className="p-4">
           <h2 className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-white">
             <TrendingUp size={15} className="text-cyan-300" />
@@ -401,8 +410,8 @@ export default async function AIInsightDetailPage({ params }: Props) {
         </Card>
       </section>}
 
-      <section className={`grid gap-4 ${insight.keyFactors.length > 0 ? "lg:grid-cols-[1fr_0.9fr]" : ""}`}>
-        {insight.keyFactors.length > 0 && <Card className="p-4">
+      <section className={`grid gap-4 ${insight && insight.keyFactors.length > 0 ? "lg:grid-cols-[1fr_0.9fr]" : ""}`}>
+        {insight && insight.keyFactors.length > 0 && <Card className="p-4">
           <h2 className="mb-3 text-sm font-semibold text-white">
             {copy.labels.keyFactors}
           </h2>
@@ -478,15 +487,13 @@ async function getDetailContext(matchId: string): Promise<DetailContext | null> 
   try {
     const [details, groupedInsights] = await Promise.all([
       getApiFootballFixtureDetails(fixtureId),
-      getApiFootballAIInsights(60),
+      getApiFootballAIInsights(),
     ]);
     const apiInsight = [
       ...groupedInsights.live,
       ...groupedInsights.highConfidence,
       ...groupedInsights.upsetAlert,
     ].find((item) => item.provider_id === fixtureId);
-
-    if (!apiInsight || !hasCompleteAIProbabilities(apiInsight)) return null;
 
     const h2h =
       details.fixture.home.apiTeamId && details.fixture.away.apiTeamId
@@ -495,9 +502,11 @@ async function getDetailContext(matchId: string): Promise<DetailContext | null> 
 
     return {
       kind: "api",
-      status: mapAIInsightStatus(apiInsight),
       fixture: details.fixture,
-      insight: buildApiInsight(apiInsight, details.fixture, h2h),
+      insight:
+        apiInsight && hasCompleteAIProbabilities(apiInsight)
+          ? buildApiInsight(apiInsight, details.fixture, h2h)
+          : null,
       api: {
         events: details.events,
         statistics: details.statistics,
@@ -510,21 +519,6 @@ async function getDetailContext(matchId: string): Promise<DetailContext | null> 
     if (error instanceof ApiFootballError) return null;
     throw error;
   }
-}
-
-function mapAIInsightStatus(insight: ApiFootballAIInsight): MatchStatus {
-  if (insight.is_live) return MatchStatus.LIVE;
-
-  const status = insight.status.short.trim().toUpperCase();
-  if (["LIVE", "1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"].includes(status)) {
-    return MatchStatus.LIVE;
-  }
-  if (["FT", "AET", "PEN", "AWD", "WO"].includes(status)) {
-    return MatchStatus.FINISHED;
-  }
-  if (status === "PST") return MatchStatus.POSTPONED;
-  if (["CANC", "ABD"].includes(status)) return MatchStatus.CANCELLED;
-  return MatchStatus.UPCOMING;
 }
 
 function buildApiInsight(
@@ -599,28 +593,6 @@ function getApiCounts(context: DetailContext) {
     lineups: context.api.lineups.length,
     players: context.api.playerStats.reduce((total, team) => total + team.players.length, 0),
   };
-}
-
-function statusVariant(status: MatchStatus) {
-  const variants: Record<MatchStatus, "cyan" | "green" | "gold" | "red" | "default"> = {
-    [MatchStatus.LIVE]: "green",
-    [MatchStatus.UPCOMING]: "cyan",
-    [MatchStatus.FINISHED]: "default",
-    [MatchStatus.POSTPONED]: "gold",
-    [MatchStatus.CANCELLED]: "red",
-  };
-  return variants[status];
-}
-
-function statusLabel(status: MatchStatus, copy: ReturnType<typeof getAIInsightPageCopy>) {
-  const labels = {
-    [MatchStatus.LIVE]: copy.labels.live,
-    [MatchStatus.UPCOMING]: copy.labels.upcoming,
-    [MatchStatus.FINISHED]: copy.labels.finished,
-    [MatchStatus.POSTPONED]: copy.labels.postponed,
-    [MatchStatus.CANCELLED]: copy.labels.cancelled,
-  };
-  return labels[status];
 }
 
 function formatDateTime(value: string, locale: string) {

@@ -2,6 +2,7 @@ import {
   ApiFootballError,
   getApiFootballUpcomingFixtures,
 } from "@/lib/api-football";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -13,13 +14,10 @@ export async function GET(request: Request) {
   try {
     const result = await getApiFootballUpcomingFixtures({
       limit,
-      revalidate: 0,
     });
 
     return Response.json(result, {
-      headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-      },
+      headers: NO_CACHE_HEADERS,
     });
   } catch (error) {
     const apiError =

@@ -1,5 +1,6 @@
 import { getDataApiUrl } from "@/lib/backend-api-urls";
 import { isSameOriginMutation } from "@/lib/auth-session-server";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -54,8 +55,8 @@ async function proxyDataRequest(request: Request, context: DataProxyContext) {
   return new Response(response.body, {
     status: response.status,
     headers: {
-      "Cache-Control": "no-store",
       "Content-Type": response.headers.get("content-type") ?? "application/json",
+      ...NO_CACHE_HEADERS,
     },
   });
 }

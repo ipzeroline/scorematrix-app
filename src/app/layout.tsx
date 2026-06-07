@@ -4,6 +4,10 @@ import { DEFAULT_LOCALE } from "@/i18n";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "../styles/globals.css";
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export const revalidate = 0;
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],

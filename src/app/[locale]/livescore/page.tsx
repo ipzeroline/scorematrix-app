@@ -20,7 +20,7 @@ export default async function LivescorePage({ params }: Props) {
 
 async function loadInitialFixtures(): Promise<FixturesPayload> {
   try {
-    return await getApiFootballLiveFixtures({ revalidate: 0 });
+    return await getApiFootballLiveFixtures();
   } catch (error) {
     const apiError =
       error instanceof ApiFootballError

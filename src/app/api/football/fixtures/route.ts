@@ -2,8 +2,10 @@ import {
   ApiFootballError,
   getApiFootballFixtures,
 } from "@/lib/api-football";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
-export const revalidate = 10;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,13 +18,10 @@ export async function GET(request: Request) {
       league: searchParams.get("league") ?? undefined,
       season: searchParams.get("season") ?? undefined,
       limit,
-      revalidate: searchParams.get("live") === "true" ? 5 : 10,
     });
 
     return Response.json(result, {
-      headers: {
-        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=30",
-      },
+      headers: NO_CACHE_HEADERS,
     });
   } catch (error) {
     const apiError =

@@ -131,7 +131,9 @@ export function PredictMatchForm({
       const numericId = typeof teamId === "string" ? parseInt(teamId.replace(/\D/g, ""), 10) : teamId;
       if (!numericId || isNaN(numericId)) return null;
 
-      const res = await fetch(`/api/football/teams/${numericId}/squad`);
+      const res = await fetch(`/api/football/teams/${numericId}/squad`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to fetch squad");
       const json = await res.json();
       

@@ -5,9 +5,10 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  generateEtags: false,
   images: {
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 86400,
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -18,17 +19,20 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: "/:all*(svg|jpg|jpeg|png|webp|avif|ico|woff2)",
+        source: "/:path*",
         headers: [
           {
             key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
+            value: "no-store, no-cache, max-age=0, must-revalidate",
           },
-        ],
-      },
-      {
-        source: "/:path*",
-        headers: [
+          {
+            key: "Pragma",
+            value: "no-cache",
+          },
+          {
+            key: "Expires",
+            value: "0",
+          },
           {
             key: "X-DNS-Prefetch-Control",
             value: "on",

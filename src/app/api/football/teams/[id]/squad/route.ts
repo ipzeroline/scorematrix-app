@@ -1,6 +1,8 @@
 import { getFootballApiUrl } from "@/lib/backend-api-urls";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
-export const revalidate = 600; // Squads don't change very often, 10 min cache is great
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   request: Request,
@@ -17,7 +19,7 @@ export async function GET(
 
   const response = await fetch(url.toString(), {
     headers: buildHeaders(request),
-    next: { revalidate },
+    cache: "no-store",
   });
 
   const payload = await response.json().catch(() => ({
@@ -35,9 +37,7 @@ export async function GET(
   }
 
   return Response.json(payload, {
-    headers: {
-      "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
-    },
+    headers: NO_CACHE_HEADERS,
   });
 }
 

@@ -375,7 +375,6 @@ export interface GetFixturesOptions {
   league?: string;
   season?: string;
   limit?: number;
-  revalidate?: number;
 }
 
 export interface GetFixturesResult {
@@ -592,8 +591,7 @@ export async function getApiFootballFixtures(
 
   const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
     "/fixtures",
-    query,
-    { revalidate: options.revalidate ?? (options.live ? 15 : 60) }
+    query
   );
   const mappedFixtures = withLeagueLogoFallbacks(
     payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
@@ -616,13 +614,10 @@ export async function getApiFootballFixtures(
   };
 }
 
-export async function getApiFootballAIInsights(
-  revalidate = 60
-): Promise<GetAIInsightsResult> {
+export async function getApiFootballAIInsights(): Promise<GetAIInsightsResult> {
   const payload = await fetchSoccerBackend<SoccerAIInsightsResponse>(
     "/ai-insights",
-    {},
-    { revalidate }
+    {}
   );
 
   return {
@@ -637,24 +632,22 @@ export async function getApiFootballAIInsights(
 }
 
 export async function getApiFootballTodayFixtures(
-  options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
+  options: Pick<GetFixturesOptions, "limit"> = {}
 ): Promise<GetFixturesResult> {
   return getApiFootballLiveFixtures({
     limit: options.limit,
-    revalidate: options.revalidate ?? 10,
   });
 }
 
 export async function getApiFootballUpcomingFixtures(
-  options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
+  options: Pick<GetFixturesOptions, "limit"> = {}
 ): Promise<GetFixturesResult> {
   const query: Record<string, string> = {};
   if (typeof options.limit === "number") query.limit = String(options.limit);
 
   const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>(
     "/fixtures/upcoming",
-    query,
-    { revalidate: options.revalidate ?? 60 }
+    query
   );
   const mappedFixtures = withLeagueLogoFallbacks(
     payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
@@ -679,12 +672,11 @@ export async function getApiFootballUpcomingFixtures(
 }
 
 export async function getApiFootballLiveFixtures(
-  options: Pick<GetFixturesOptions, "limit" | "revalidate"> = {}
+  options: Pick<GetFixturesOptions, "limit"> = {}
 ): Promise<GetFixturesResult> {
   const payload = await fetchSoccerBackend<SoccerLiveResponse>(
     "/live",
-    {},
-    { revalidate: options.revalidate ?? 15 }
+    {}
   );
   const mappedFixtures = withLeagueLogoFallbacks((payload.data ?? []).map(mapLiveFixture));
   const fixtures =
@@ -1019,8 +1011,7 @@ function isMatchStatus(status: string): status is MatchStatus {
 
 async function fetchSoccerBackend<T>(
   pathname: string,
-  query: Record<string, string>,
-  options: { revalidate?: number } = {}
+  query: Record<string, string>
 ): Promise<T> {
   const url = getFootballApiUrl(pathname);
   Object.entries(query).forEach(([key, value]) => {
@@ -1031,9 +1022,7 @@ async function fetchSoccerBackend<T>(
     headers: {
       Accept: "application/json",
     },
-    ...(typeof options.revalidate === "number"
-      ? { next: { revalidate: options.revalidate } }
-      : { cache: "no-store" as const }),
+    cache: "no-store",
   });
 
   const payload = (await response.json()) as T & {

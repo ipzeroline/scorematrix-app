@@ -39,7 +39,7 @@ async function loadAIInsights(): Promise<{
   failed: boolean;
 }> {
   try {
-    return { response: await getApiFootballAIInsights(60), failed: false };
+    return { response: await getApiFootballAIInsights(), failed: false };
   } catch (error) {
     if (error instanceof ApiFootballError) {
       return {

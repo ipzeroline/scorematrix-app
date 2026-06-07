@@ -32,10 +32,6 @@ type Props = {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export function generateStaticParams() {
-  return LOCALE_CODES.map((locale) => ({ locale }));
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "seo.home" });
@@ -70,8 +66,8 @@ export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("dashboard");
   const [liveFixtures, todayFixtures, aiInsight, latestArticles, cookieStore] = await Promise.all([
-    loadLiveFixtures(24, 0),
-    loadFixturesForDate(50, 0),
+    loadLiveFixtures(24),
+    loadFixturesForDate(50),
     loadFeaturedAIInsight(),
     getLatestArticles(locale, 6),
     cookies(),
@@ -165,7 +161,7 @@ export default async function DashboardPage({ params }: Props) {
 
 async function loadFeaturedAIInsight(): Promise<ApiFootballAIInsight | null> {
   try {
-    const insights = await getApiFootballAIInsights(0);
+    const insights = await getApiFootballAIInsights();
     const candidates =
       insights.highConfidence.length > 0
         ? insights.highConfidence

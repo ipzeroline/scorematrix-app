@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAllNewsStaticParams, getArticleBySlug } from "@/lib/news-generator";
+import { getArticleBySlug } from "@/lib/news-generator";
 import { NewsDetailClient } from "@/components/news/NewsDetailClient";
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
-
-export async function generateStaticParams() {
-  return getAllNewsStaticParams();
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;

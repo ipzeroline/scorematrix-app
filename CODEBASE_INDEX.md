@@ -56,7 +56,7 @@ API routes:
 
 - `src/app/api/auth/{login,register,refresh,logout}/route.ts`: same-origin auth BFF routes; proxy auth calls to the scorm backend, keep refresh tokens in rotating HttpOnly cookies, strip refresh tokens from browser-visible JSON, and clear server-managed refresh sessions on failure/logout
 - `src/app/api/data/[...path]/route.ts`: same-origin data API BFF; proxies browser data/member requests to `API_DATA_BASE_URL` while preserving bearer and locale headers
-- `src/app/api/football/fixtures/route.ts`: returns fixtures from soccer backend, cached with short s-maxage
+- `src/app/api/football/fixtures/route.ts`: returns uncached fixtures from the soccer backend
 - `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer backend `GET /live` with no-store caching
 - `src/app/api/football/fixtures/today/route.ts`: legacy local route that now returns live fixtures from soccer backend `GET /live`
 - `src/app/api/football/fixtures/upcoming/route.ts`: returns upcoming fixtures from soccer backend `GET /fixtures/upcoming`
@@ -76,8 +76,9 @@ API routes:
 - `next.config.ts`
   - Uses `next-intl/plugin` with `./src/i18n/request.ts`
   - Disables `poweredByHeader`
-  - Allows remote images from `https://media.api-sports.io`
-  - Adds long cache headers for static assets and basic security headers
+  - Disables Next.js image optimization caching and allows remote images from `https://media.api-sports.io`
+  - Disables generated ETags and adds project-wide no-cache headers plus basic security headers
+- `src/app/layout.tsx` forces dynamic rendering, `force-no-store` fetch behavior, and zero revalidation for every App Router page.
 - `src/app/layout.tsx`
   - Imports `src/styles/globals.css`
   - Uses `Inter` and `Space_Grotesk` from `next/font/google`
@@ -118,13 +119,14 @@ Static data:
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
 - `src/lib/football-page-data.ts`
-  - `loadFixturesForDate(limit?, revalidate = 60)` uses today's Asia/Bangkok date and returns an empty list instead of stale mock fixtures when the API fails
-  - `loadLiveFixtures(limit = 24, revalidate = 15)` uses `GET /live` for homepage live match highlights
-  - `loadUpcomingFixtures(limit?, revalidate = 60)` uses `GET /fixtures/upcoming`
+  - `loadFixturesForDate(limit?)` uses today's Asia/Bangkok date and returns an empty list instead of stale mock fixtures when the API fails
+  - `loadLiveFixtures(limit = 24)` uses uncached `GET /live` for homepage live match highlights
+  - `loadUpcomingFixtures(limit?)` uses uncached `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
 - `src/app/[locale]/page.tsx` loads live highlights from uncached `GET /live`, the "today matches" list from uncached date-filtered fixtures using the Asia/Bangkok date, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
 - `src/app/[locale]/ai-insight/page.tsx` maps grouped `live`, `highConfidence`, and `upsetAlert` data from soccer backend `GET /ai-insights`, displays only insights with complete confidence/probability metrics, and distinguishes empty results from API failures.
-- `src/app/[locale]/ai-insight/[matchId]/page.tsx` requires a complete insight from `GET /ai-insights`, uses real model signals, supplements them with fixture detail and H2H API data, and hides unavailable sections instead of generating placeholder metrics.
+- `src/app/[locale]/ai-insight/[matchId]/page.tsx` renders valid fixture detail even when the match is absent from `GET /ai-insights`, uses real model signals when complete, supplements them with fixture detail and H2H API data, and shows an unavailable state instead of generating placeholder metrics.
+- AI insight detail hero reuses the shared `StatusBadge` with the fixture-detail status, matching the match-detail and other football pages.
 - Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - Predict detail form sends `pointsWagered` as the base wager multiplied by confidence (`safe` x1.0, `confident` x1.5, `bold` x2.0).
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.
@@ -243,7 +245,7 @@ Add or change a locale page:
 
 1. Add page under `src/app/[locale]/.../page.tsx`
 2. Use `params: Promise<{ locale: string }>` pattern found in existing pages
-3. Use `generateStaticParams()` from `LOCALE_CODES` for static locale pages when appropriate
+3. Keep pages dynamically rendered; project-wide caching and static route generation are disabled.
 4. Use `getTranslations` server-side or `useTranslations` in client components
 5. Update navigation in `Header`, `Sidebar`, and `MobileBottomNav` if the page should be reachable
 

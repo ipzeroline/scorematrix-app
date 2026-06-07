@@ -54,8 +54,7 @@ export async function getSoccerTeamGroups(
   const response = await fetch("/api/football/teams", {
     headers: buildTeamRequestHeaders(options),
     signal: options?.signal,
-    cache: options?.cache,
-    next: options?.next,
+    cache: "no-store",
   });
 
   const payload = (await response.json()) as RawTeamsResponse & {

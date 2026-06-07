@@ -4,8 +4,7 @@ import { loadUpcomingFixtures } from "@/lib/football-page-data";
 export const dynamic = "force-dynamic";
 
 export default async function PredictPage() {
-  const fixtures = await loadUpcomingFixtures(undefined, 0);
+  const fixtures = await loadUpcomingFixtures();
 
   return <PredictApi fixtures={fixtures} />;
 }
-

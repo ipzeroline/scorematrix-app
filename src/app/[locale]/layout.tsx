@@ -14,10 +14,6 @@ import {
 } from "@/lib/auth-guard";
 import { LOCALE_CODES, type LocaleCode } from "@/i18n";
 
-export function generateStaticParams() {
-  return LOCALE_CODES.map((locale) => ({ locale }));
-}
-
 function isLocale(value: string): value is LocaleCode {
   return LOCALE_CODES.includes(value as LocaleCode);
 }

@@ -5,6 +5,8 @@ import { LOCALE_CODES } from "@/i18n";
 import { SITE_URL } from "@/lib/site";
 import type { NewsArticle } from "@/types/news";
 
+export const dynamic = "force-dynamic";
+
 const staticRoutes = [
   "",
   "/livescore",

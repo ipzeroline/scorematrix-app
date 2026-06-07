@@ -2,8 +2,10 @@ import {
   ApiFootballError,
   getApiFootballPlayerProfile,
 } from "@/lib/api-football";
+import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET(
   _request: Request,
@@ -18,9 +20,7 @@ export async function GET(
 
   try {
     return Response.json(await getApiFootballPlayerProfile(playerId), {
-      headers: {
-        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
-      },
+      headers: NO_CACHE_HEADERS,
     });
   } catch (error) {
     const apiError =

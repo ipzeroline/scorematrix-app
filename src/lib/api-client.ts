@@ -293,8 +293,7 @@ async function fetchApi<B>(
           ? (body as BodyInit)
           : JSON.stringify(body),
     signal: options.signal,
-    cache: options.cache,
-    next: options.next,
+    cache: "no-store",
   });
 }
 

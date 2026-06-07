@@ -156,6 +156,7 @@ export function PredictApi({ fixtures }: PredictApiProps) {
           {
             headers: { Accept: "application/json" },
             signal: controller.signal,
+            cache: "no-store",
           }
         );
 
