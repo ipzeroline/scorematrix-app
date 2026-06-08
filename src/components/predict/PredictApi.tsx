@@ -316,6 +316,7 @@ export function PredictApi() {
     if (!selectedPrediction || !selectedPrediction.firstScorerPlayerId) return;
     if (selectedPrediction.firstScorerPlayerName) return;
 
+    const firstScorerPlayerId = selectedPrediction.firstScorerPlayerId;
     const controller = new AbortController();
 
     const loadPlayerName = async () => {
@@ -324,9 +325,7 @@ export function PredictApi() {
 
       try {
         const response = await fetch(
-          `/api/football/players/${encodeURIComponent(
-            selectedPrediction.firstScorerPlayerId
-          )}`,
+          `/api/football/players/${encodeURIComponent(firstScorerPlayerId)}`,
           {
             headers: { Accept: "application/json" },
             signal: controller.signal,

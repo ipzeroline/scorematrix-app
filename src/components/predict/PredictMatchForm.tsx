@@ -1549,7 +1549,13 @@ function buildAiPredictionSuggestion({
     return buildFallbackAiSuggestion(homePlayers, awayPlayers);
   }
 
-  const totals = normalized.reduce(
+  const totals = normalized.reduce<{
+    homeGoals: number;
+    awayGoals: number;
+    homeWins: number;
+    awayWins: number;
+    draws: number;
+  }>(
     (acc, fixture) => {
       acc.homeGoals += fixture.homeGoals;
       acc.awayGoals += fixture.awayGoals;
