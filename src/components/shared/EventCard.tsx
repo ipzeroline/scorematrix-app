@@ -32,6 +32,7 @@ export function EventCard({ event }: { event: SpecialEvent }) {
 
   const isActive = event.status === 'active';
   const isFree = event.entryFee === 0;
+  const isRegistered = Boolean(event.isRegistered);
 
   return (
     <Link href={`/${locale}/events/${event.id}`}>
@@ -42,9 +43,16 @@ export function EventCard({ event }: { event: SpecialEvent }) {
             {TOURNAMENT_ICONS[event.tournamentType] ?? <Calendar size={16} />}
             {t(`tournamentTypes.${event.tournamentType}`)}
           </span>
-          <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-bold border', STATUS_BADGE[event.status])}>
-            {t(`statuses.${event.status}`)}
-          </span>
+          <div className="flex items-center gap-2">
+            {isRegistered && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-400 border-green-500/20">
+                {t('registeredStatus')}
+              </span>
+            )}
+            <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-bold border', STATUS_BADGE[event.status])}>
+              {t(`statuses.${event.status}`)}
+            </span>
+          </div>
         </div>
 
         {/* Name */}
@@ -90,7 +98,7 @@ export function EventCard({ event }: { event: SpecialEvent }) {
             {formatEntryFee(event, t)}
           </span>
           <span className="text-[10px] text-cyan-400 font-medium">
-            {isActive ? t('viewEvent') : t('details')}
+            {isRegistered ? t('registeredStatus') : isActive ? t('viewEvent') : t('details')}
           </span>
         </div>
       </Card>

@@ -33,6 +33,7 @@ import {
   buildFootballStatusLabels,
   getFixtureStatusGroup,
   getFixtureStatusLabel,
+  shouldHideStaleNotStartedFixture,
   type FootballStatusLabels,
 } from "@/lib/football-status";
 
@@ -95,7 +96,9 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
   const [visibleMatchLimit, setVisibleMatchLimit] = useState(
     INITIAL_MATCH_RENDER_LIMIT
   );
-  const [fixtures, setFixtures] = useState(initialFixtures);
+  const [fixtures, setFixtures] = useState(() =>
+    initialFixtures.filter((fixture) => !shouldHideStaleNotStartedFixture(fixture))
+  );
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const deferredLeagueQuery = useDeferredValue(leagueQuery);
 
@@ -108,7 +111,12 @@ export function MatchesApi({ fixtures: initialFixtures, initialHasAuthSession = 
         if (res.ok) {
           const data = await res.json();
           if (data?.fixtures) {
-            setFixtures(data.fixtures);
+            setFixtures(
+              data.fixtures.filter(
+                (fixture: ApiFootballFixture) =>
+                  !shouldHideStaleNotStartedFixture(fixture)
+              )
+            );
           }
         }
       } catch {

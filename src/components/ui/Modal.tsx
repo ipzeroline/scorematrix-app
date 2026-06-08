@@ -48,30 +48,34 @@ export function Modal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div
-        className={cn(
-          "relative w-full rounded-2xl border border-gray-800 bg-[#12121a] p-6 shadow-2xl animate-slide-up",
-          sizeClasses[size],
-          className
-        )}
-      >
-        {title && (
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-white">{title}</h2>
-            <button
-              onClick={onClose}
-              className="p-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-          </div>
-        )}
-        {children}
+      <div className="relative flex min-h-full items-start justify-center p-4 sm:items-center">
+        <div
+          className={cn(
+            "relative my-6 flex max-h-[calc(100vh-3rem)] w-full flex-col overflow-hidden rounded-2xl border border-gray-800 bg-[#12121a] p-6 shadow-2xl animate-slide-up",
+            sizeClasses[size],
+            className
+          )}
+        >
+          {title && (
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="min-w-0 truncate text-lg font-semibold text-white">
+                {title}
+              </h2>
+              <button
+                onClick={onClose}
+                className="shrink-0 rounded-lg p-1 text-gray-400 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          )}
+          <div className="min-h-0 overflow-y-auto pr-1">{children}</div>
+        </div>
       </div>
     </div>
   );

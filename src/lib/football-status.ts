@@ -97,3 +97,17 @@ export function getFixtureStatusLabel(
 
   return labels.statusByGroup[getFixtureStatusGroup(match)] ?? statusShort;
 }
+
+export function shouldHideStaleNotStartedFixture(match: {
+  kickoffTime: string;
+  statusShort?: string | null;
+}) {
+  const statusShort = String(match.statusShort ?? "").trim().toUpperCase();
+
+  if (statusShort !== "NS") {
+    return false;
+  }
+
+  const kickoff = new Date(match.kickoffTime).getTime();
+  return Number.isFinite(kickoff) && kickoff <= Date.now();
+}

@@ -41,9 +41,11 @@ export default function EventsPage() {
     };
   }, [locale]);
 
-  const filtered = filter === 'all'
+  const filtered = (filter === 'all'
     ? events
-    : events.filter((e) => e.status === filter);
+    : events.filter((e) => e.status === filter))
+    .slice()
+    .sort(sortEventsByPriority);
 
   const activeEvent = events.find((e) => e.status === 'active');
 
@@ -99,4 +101,17 @@ export default function EventsPage() {
       )}
     </div>
   );
+}
+
+function sortEventsByPriority(a: SpecialEvent, b: SpecialEvent) {
+  const statusOrder = {
+    active: 0,
+    upcoming: 1,
+    ended: 2,
+  } satisfies Record<SpecialEvent["status"], number>;
+
+  const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+  if (statusDiff !== 0) return statusDiff;
+
+  return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
 }

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { MatchesApi } from "@/components/matches/MatchesApi";
 import { loadTodayFixtures, sortFixtures } from "@/lib/football-page-data";
+import { shouldHideStaleNotStartedFixture } from "@/lib/football-status";
 import {
   AUTH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
@@ -50,7 +51,9 @@ export default async function MatchesPage() {
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
-  const fixtures = sortFixtures(await loadTodayFixtures());
+  const fixtures = sortFixtures(await loadTodayFixtures()).filter(
+    (fixture) => !shouldHideStaleNotStartedFixture(fixture)
+  );
 
   return <MatchesApi fixtures={fixtures} initialHasAuthSession={initialHasAuthSession} />;
 }

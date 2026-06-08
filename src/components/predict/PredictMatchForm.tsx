@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
+import { Tabs } from "@/components/ui/Tabs";
 import { PointsBadge } from "@/components/shared/PointsBadge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
@@ -34,6 +35,14 @@ import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
 import { useUserStore } from "@/stores/user-store";
 
 type ConfidenceLevel = "safe" | "confident" | "bold";
+
+const SCORING_BASE_POINTS = 10;
+const SCORING_BONUS = {
+  exact: 20,
+  goalDiff: 10,
+  result: 0,
+  wrong: 0,
+} as const;
 
 export interface PredictPlayer {
   id: number | null;
@@ -117,6 +126,7 @@ export function PredictMatchForm({
   const [confidence, setConfidence] = useState<ConfidenceLevel>("safe");
   const [useBoost, setUseBoost] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmTab, setConfirmTab] = useState("summary");
   const [submitted, setSubmitted] = useState(false);
 
   // Dynamic squad player states
@@ -292,7 +302,32 @@ export function PredictMatchForm({
     { value: "bold", label: t("confidence.bold") },
   ];
   const confidenceMultiplier = getConfidenceMultiplier(confidence);
+  const boostMultiplier = useBoost ? 2 : 1;
+  const streakPreview = 3;
+  const streakPointsPreview = streakPreview * 2;
   const effectivePointsWagered = Math.round(pointsWagered * confidenceMultiplier);
+  const exactPointsPreview = Math.round(
+    pointsWagered +
+      (SCORING_BASE_POINTS + SCORING_BONUS.exact) *
+        confidenceMultiplier *
+        boostMultiplier +
+      streakPointsPreview
+  );
+  const goalDiffPointsPreview = Math.round(
+    pointsWagered +
+      (SCORING_BASE_POINTS + SCORING_BONUS.goalDiff) *
+        confidenceMultiplier *
+        boostMultiplier +
+      streakPointsPreview
+  );
+  const resultPointsPreview = Math.round(
+    pointsWagered +
+      (SCORING_BASE_POINTS + SCORING_BONUS.result) *
+        confidenceMultiplier *
+        boostMultiplier +
+      streakPointsPreview
+  );
+  const wrongPointsPreview = 0;
   const selectedFirstScorer = findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, firstScorerPlayerId);
   
   const payload = {
@@ -675,8 +710,8 @@ export function PredictMatchForm({
                 </label>
                 <p className="mt-1 text-xs leading-relaxed text-gray-500">
                   {locale === "th"
-                    ? "แต้มฐานจะถูกคูณด้วยระดับความมั่นใจก่อนส่งคำทาย"
-                    : "Base points are multiplied by confidence before submission."}
+                    ? "กำหนด stake สำหรับคำทายนี้ แล้วตรวจสูตรรวม points_earned ด้านล่าง"
+                    : "Set the stake for this prediction, then review the points_earned formula below."}
                 </p>
               </div>
               <div className="min-w-0">
@@ -704,8 +739,91 @@ export function PredictMatchForm({
                 </p>
               </div>
             </div>
-            <div className="relative mt-4 rounded-lg border border-amber-500/15 bg-black/30 px-3 py-2 text-right font-mono text-xs font-bold text-amber-200">
-              {pointsWagered.toLocaleString()} x {confidenceMultiplier.toFixed(1)} = {effectivePointsWagered.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
+            <div className="relative mt-4 space-y-3 rounded-xl border border-amber-500/15 bg-black/30 p-3">
+              <div className="rounded-lg border border-amber-500/15 bg-black/35 px-3 py-2">
+                <p className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+                  {t("formula.payloadPreview")}
+                </p>
+                <p className="mt-1 text-right font-mono text-xs font-bold text-amber-200">
+                  {pointsWagered.toLocaleString()} x {confidenceMultiplier.toFixed(1)} ={" "}
+                  {effectivePointsWagered.toLocaleString()}{" "}
+                  {locale === "th" ? "แต้ม" : "pts"}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-cyan-500/15 bg-[#071018] px-3 py-2.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
+                  {t("formula.pointsEarnedTitle")}
+                </p>
+                <p className="mt-1 break-words font-mono text-xs font-bold text-cyan-100">
+                  {t("formula.pointsEarnedExpression")}
+                </p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                  <FormulaValue
+                    label={t("formula.stake")}
+                    value={`${pointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
+                    tone="text-amber-300"
+                  />
+                  <FormulaValue
+                    label={t("formula.confidence")}
+                    value={`x${confidenceMultiplier.toFixed(1)}`}
+                    tone="text-cyan-300"
+                  />
+                  <FormulaValue
+                    label={t("formula.boost")}
+                    value={`x${boostMultiplier.toFixed(1)}`}
+                    tone={useBoost ? "text-fuchsia-300" : "text-gray-300"}
+                  />
+                  <FormulaValue
+                    label={t("formula.streak")}
+                    value={`${streakPreview} x 2 = ${streakPointsPreview}`}
+                    tone="text-green-300"
+                  />
+                </div>
+                <p className="mt-2 text-[10px] text-gray-500">
+                  {t("formula.streakNote")}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-gray-800/80 bg-black/25 px-3 py-2.5">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-white">
+                    {t("formula.resultTierTitle")}
+                  </p>
+                  <span className="font-mono text-[10px] text-gray-500">
+                    base = {SCORING_BASE_POINTS}
+                  </span>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <TierRow
+                    label={t("formula.tiers.exact")}
+                    description={t("formula.tiers.exactDesc")}
+                    bonus={`+${SCORING_BONUS.exact}`}
+                    tone="text-amber-300"
+                  />
+                  <TierRow
+                    label={t("formula.tiers.goalDiff")}
+                    description={t("formula.tiers.goalDiffDesc")}
+                    bonus={`+${SCORING_BONUS.goalDiff}`}
+                    tone="text-green-300"
+                  />
+                  <TierRow
+                    label={t("formula.tiers.result")}
+                    description={t("formula.tiers.resultDesc")}
+                    bonus={`+${SCORING_BONUS.result}`}
+                    tone="text-cyan-300"
+                  />
+                  <TierRow
+                    label={t("formula.tiers.wrong")}
+                    description={t("formula.tiers.wrongDesc")}
+                    bonus="0"
+                    tone="text-red-300"
+                  />
+                </div>
+                <p className="mt-2 text-[10px] text-red-300/80">
+                  {t("formula.wrongNote")}
+                </p>
+              </div>
             </div>
           </Card>
 
@@ -734,7 +852,16 @@ export function PredictMatchForm({
 
         {/* Right Column (Sidebar Ticket & Actions) */}
         <aside className="space-y-4 min-w-0">
-          
+          {/* Head-to-Head listing */}
+          <H2HPanel
+            h2h={match.h2h ?? []}
+            locale={locale}
+            title={t("h2h.title")}
+            emptyLabel={t("h2h.empty")}
+            vsLabel={t("common.vs")}
+            homeTeamName={match.home.name}
+          />
+
           {/* Physical Football Ticket summary */}
           <Card className="overflow-hidden p-0 border border-gray-800 bg-gradient-to-b from-[#12121a] to-[#0b0b10]">
             <div className="border-b border-gray-800/80 px-4 py-3 bg-black/20 flex items-center justify-between gap-3">
@@ -810,19 +937,26 @@ export function PredictMatchForm({
               className="mt-3.5 w-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-bold hover:bg-cyan-400 hover:text-black cursor-pointer shadow-md transition-all active:scale-[0.98]"
               size="sm"
               onClick={() => {
-                setHomeScore(2);
-                setAwayScore(1);
-                setTotalGoals(3);
-                setHalfHomeScore(1);
-                setHalfAwayScore(0);
-                setConfidence("confident");
+                const aiSuggestion = buildAiPredictionSuggestion({
+                  match,
+                  homePlayers,
+                  awayPlayers,
+                });
+
+                setHomeScore(aiSuggestion.homeScore);
+                setAwayScore(aiSuggestion.awayScore);
+                setHalfHomeScore(aiSuggestion.halfHomeScore);
+                setHalfAwayScore(aiSuggestion.halfAwayScore);
+                setFirstScorerPlayerId(aiSuggestion.firstScorerPlayerId);
+                setConfidence(aiSuggestion.confidence);
+                setUseBoost(false);
                 
                 addToast({
                   type: "success",
                   title: locale === "th" ? "กรอกผลด้วย AI แล้ว" : "Filled with AI",
                   message: locale === "th" 
-                    ? "กรอกค่าทายผลสำเร็จโดยอ้างอิงจากบทวิเคราะห์ AI" 
-                    : "Predictions filled successfully using AI recommendations",
+                    ? aiSuggestion.reasonTh
+                    : aiSuggestion.reasonEn,
                 });
               }}
             >
@@ -830,16 +964,6 @@ export function PredictMatchForm({
               {t("ai.use")}
             </Button>
           </Card>
-
-          {/* Head-to-Head listing */}
-          <H2HPanel
-            h2h={match.h2h ?? []}
-            locale={locale}
-            title={t("h2h.title")}
-            emptyLabel={t("h2h.empty")}
-            vsLabel={t("common.vs")}
-            homeTeamName={match.home.name}
-          />
 
           {/* Form Actions */}
           {submitted ? (
@@ -926,94 +1050,145 @@ export function PredictMatchForm({
             </div>
           </div>
 
-          {/* Detail Rows Grid */}
-          <div className="grid gap-2 sm:grid-cols-2">
-            {/* First Scorer */}
-            <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3.5 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 shrink-0">
-                  {t("deep.firstScorer")}
-                </p>
-                {selectedFirstScorer ? (
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[10px] font-black font-mono text-cyan-300">
-                      {selectedFirstScorer.number ?? "?"}
+          <Tabs
+            tabs={[
+              {
+                key: "summary",
+                label: locale === "th" ? "สรุปก่อนส่ง" : "Submission summary",
+              },
+              {
+                key: "outcomes",
+                label: locale === "th" ? "คะแนนที่เป็นไปได้" : "Possible outcomes",
+              },
+            ]}
+            activeTab={confirmTab}
+            onChange={setConfirmTab}
+          />
+
+          {confirmTab === "summary" ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-gray-800 bg-[#0a0a0f] p-4">
+                <div className="mb-3 flex items-center justify-between gap-3 border-b border-gray-800/70 pb-2">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">
+                    {locale === "th" ? "สรุปก่อนส่ง" : "Submission summary"}
+                  </p>
+                  <Badge variant={useBoost ? "gold" : "default"}>
+                    {useBoost ? t("boost.label") : t("common.no")}
+                  </Badge>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <ConfirmMetric
+                    label={t("basic.fullScore")}
+                    value={`${homeScore ?? "-"} : ${awayScore ?? "-"}`}
+                    tone="text-white"
+                  />
+                  <ConfirmMetric
+                    label={t("confidence.title")}
+                    value={
+                      confidenceOptions.find((option) => option.value === confidence)
+                        ?.label ?? confidence
+                    }
+                    tone="text-cyan-300"
+                  />
+                  <ConfirmMetric
+                    label={t("payload.pointsWagered")}
+                    value={`${effectivePointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
+                    tone="text-amber-300"
+                  />
+                  <ConfirmMetric
+                    label={locale === "th" ? "บูสต์" : "Boost"}
+                    value={
+                      useBoost
+                        ? locale === "th"
+                          ? "ใช้บูสต์"
+                          : "Boost enabled"
+                        : locale === "th"
+                          ? "ไม่ใช้บูสต์"
+                          : "No boost"
+                    }
+                    tone={useBoost ? "text-fuchsia-300" : "text-gray-300"}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <ConfirmDetailCard label={t("deep.firstScorer")}>
+                  {selectedFirstScorer ? (
+                    <span className="inline-flex min-w-0 items-center gap-2">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[10px] font-black font-mono text-cyan-300">
+                        {selectedFirstScorer.number ?? "?"}
+                      </span>
+                      <span className="truncate">{selectedFirstScorer.name}</span>
                     </span>
-                    <span className="text-xs font-semibold text-white truncate text-right">{selectedFirstScorer.name}</span>
-                  </div>
-                ) : (
-                  <span className="text-xs text-gray-600">—</span>
-                )}
-              </div>
-            </div>
-
-            {/* Total Goals */}
-            <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3.5 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 shrink-0">
-                  {t("deep.totalGoals")}
-                </p>
-                <span className="text-xs font-black font-mono text-amber-300 text-right">
-                  {totalGoals !== null ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}` : "-"}
-                </span>
-              </div>
-            </div>
-
-            {/* Half-time Score */}
-            <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3.5 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 shrink-0">
-                  {t("summary.halfTime")}
-                </p>
-                <span className="text-xs font-black font-mono text-white text-right">
-                  {halfHomeScore !== null ? halfHomeScore : "-"}
-                  {" : "}
+                  ) : (
+                    "—"
+                  )}
+                </ConfirmDetailCard>
+                <ConfirmDetailCard label={t("deep.totalGoals")}>
+                  {totalGoals !== null
+                    ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}`
+                    : "-"}
+                </ConfirmDetailCard>
+                <ConfirmDetailCard label={t("summary.halfTime")}>
+                  {halfHomeScore !== null ? halfHomeScore : "-"} :{" "}
                   {halfAwayScore !== null ? halfAwayScore : "-"}
-                </span>
+                </ConfirmDetailCard>
+                <ConfirmDetailCard label={t("formula.streak")}>
+                  {streakPreview} x 2 = {streakPointsPreview}
+                </ConfirmDetailCard>
               </div>
-            </div>
 
-            {/* Points wagered */}
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3.5 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-300/80 shrink-0">
-                  {t("payload.pointsWagered")}
+              <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-300/90">
+                  <AlertTriangle size={13} className="shrink-0" />
+                  {t("confirm.lockNotice")}
                 </p>
-                <span className="text-xs font-black font-mono text-amber-200 text-right">
-                  {effectivePointsWagered.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
-                </span>
-              </div>
-            </div>
-
-            {/* Confidence Level */}
-            <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3.5 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 shrink-0">
-                  {t("confidence.title")}
+                <p className="mt-1 text-xs leading-relaxed text-amber-100/80">
+                  {t("formula.wrongNote")}
                 </p>
-                <span className="text-xs font-black text-white text-right">
-                  {confidenceOptions.find((o) => o.value === confidence)?.label ?? confidence}
-                </span>
               </div>
             </div>
-            
-          </div>
-
-          {/* Boost indicator */}
-          {useBoost && (
-            <div className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-2.5">
-              <Zap size={14} className="shrink-0 text-amber-400" />
-              <span className="text-xs font-semibold text-amber-300">
-                {locale === "th" ? "เปิดใช้บูสต์ — แต้มคูณเพิ่มขึ้น" : "Boost active — increased point multiplier"}
-              </span>
+          ) : (
+            <div className="rounded-xl border border-cyan-500/20 bg-[#071018] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3 border-b border-cyan-500/10 pb-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                  {locale === "th" ? "คะแนนที่เป็นไปได้" : "Possible outcomes"}
+                </p>
+                <span className="font-mono text-[10px] text-gray-500">
+                  base {SCORING_BASE_POINTS} / boost x{boostMultiplier.toFixed(1)}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <OutcomeRow
+                  label={t("formula.tiers.exact")}
+                  description={t("formula.tiers.exactDesc")}
+                  points={exactPointsPreview}
+                  tone="text-amber-300"
+                />
+                <OutcomeRow
+                  label={t("formula.tiers.goalDiff")}
+                  description={t("formula.tiers.goalDiffDesc")}
+                  points={goalDiffPointsPreview}
+                  tone="text-green-300"
+                />
+                <OutcomeRow
+                  label={t("formula.tiers.result")}
+                  description={t("formula.tiers.resultDesc")}
+                  points={resultPointsPreview}
+                  tone="text-cyan-300"
+                />
+                <OutcomeRow
+                  label={t("formula.tiers.wrong")}
+                  description={t("formula.tiers.wrongDesc")}
+                  points={wrongPointsPreview}
+                  tone="text-red-300"
+                />
+              </div>
+              <p className="mt-3 text-[10px] leading-relaxed text-gray-500">
+                {t("formula.pointsEarnedExpression")}
+              </p>
             </div>
           )}
-
-          {/* Warning notice */}
-          <p className="text-center text-[10px] sm:text-xs text-amber-400/80 font-semibold flex items-center justify-center gap-1.5">
-            <AlertTriangle size={13} className="shrink-0" />
-            {t("confirm.lockNotice")}
-          </p>
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-1">
@@ -1175,31 +1350,58 @@ function H2HPanel({
   vsLabel: string;
   homeTeamName: string;
 }) {
+  const [open, setOpen] = useState(false);
+
+  if (h2h.length === 0) {
+    return null;
+  }
+
   return (
-    <Card className="overflow-hidden p-0 border border-gray-800">
-      <div className="border-b border-gray-800 px-4 py-3">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-          <History size={16} className="text-purple-300" />
-          <span className="min-w-0 truncate">{title}</span>
-        </h3>
-      </div>
-      {h2h.length === 0 ? (
-        <div className="px-4 py-5 text-center text-xs text-gray-500">
-          {emptyLabel}
+    <>
+      <Card className="overflow-hidden border border-gray-800 p-0">
+        <div className="border-b border-gray-800 px-4 py-3">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+            <History size={16} className="text-purple-300" />
+            <span className="min-w-0 truncate">{title}</span>
+          </h3>
         </div>
-      ) : (
-        <div className="divide-y divide-gray-800/70">
+        <div className="space-y-3 px-4 py-4">
+          <p className="text-xs leading-relaxed text-gray-500">
+            {locale === "th"
+              ? `มีข้อมูลย้อนหลัง ${h2h.length} นัด กดเพื่อดูรายละเอียดทั้งหมด`
+              : `${h2h.length} previous meetings available. Open to view full details.`}
+          </p>
+          <Button
+            className="w-full justify-center border border-cyan-400/30 bg-cyan-500/15 font-semibold text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.12)] hover:bg-cyan-400 hover:text-black"
+            onClick={() => setOpen(true)}
+            neon
+          >
+            <History size={14} />
+            {locale === "th" ? "ดูสถิติพบกันย้อนหลัง" : title}
+          </Button>
+        </div>
+      </Card>
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={title}
+        size="lg"
+      >
+        <div className="space-y-3">
           {h2h.map((fixture) => {
             const isFinished = fixture.score.home !== null && fixture.score.away !== null;
             let resultDot = null;
+            let resultTone = "border-gray-800/80 bg-[#0a0a0f]";
             if (isFinished) {
               const homeScoreVal = fixture.score.home ?? 0;
               const awayScoreVal = fixture.score.away ?? 0;
-              const isHomeTeamMatches = fixture.home.name.toLowerCase() === homeTeamName.toLowerCase();
-              
+              const isHomeTeamMatches =
+                fixture.home.name.toLowerCase() === homeTeamName.toLowerCase();
+
               let isWin = false;
               let isDraw = false;
-              
+
               if (homeScoreVal === awayScoreVal) {
                 isDraw = true;
               } else if (homeScoreVal > awayScoreVal) {
@@ -1207,43 +1409,78 @@ function H2HPanel({
               } else {
                 isWin = !isHomeTeamMatches;
               }
-              
+
               resultDot = (
-                <span className={cn(
-                  "w-1.5 h-1.5 rounded-full shrink-0",
-                  isDraw ? "bg-gray-500" : isWin ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" : "bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
-                )} />
+                <span
+                  className={cn(
+                    "h-2 w-2 shrink-0 rounded-full",
+                    isDraw
+                      ? "bg-gray-500"
+                      : isWin
+                        ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
+                        : "bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
+                  )}
+                />
               );
+
+              resultTone = isDraw
+                ? "border-gray-700/80 bg-[#0a0a0f]"
+                : isWin
+                  ? "border-emerald-500/20 bg-emerald-500/[0.03]"
+                  : "border-rose-500/20 bg-rose-500/[0.03]";
             }
 
             return (
-              <div key={fixture.id} className="px-4 py-3 hover:bg-white/[0.01] transition-colors">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-1.5">
-                    {resultDot}
-                    <span className="font-mono text-[10px] text-gray-500">
+              <div
+                key={fixture.id}
+                className={cn(
+                  "rounded-xl border p-3 transition-colors hover:bg-white/[0.02]",
+                  resultTone
+                )}
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      {resultDot}
+                      <span className="font-mono text-[10px] text-gray-400">
+                        {fixture.league.name}
+                      </span>
+                    </div>
+                    <p className="mt-1 font-mono text-[10px] text-gray-500">
                       {formatH2HDate(fixture.kickoffTime, locale)}
+                    </p>
+                  </div>
+                  {isFinished ? (
+                    <span className="rounded-full border border-gray-800 bg-black/40 px-2 py-0.5 font-mono text-[10px] text-gray-400">
+                      {fixture.score.home}-{fixture.score.away}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-3">
+                  <H2HTeam
+                    name={fixture.home.name}
+                    logo={fixture.home.logo}
+                    align="right"
+                  />
+                  <div className="rounded-xl border border-gray-800/70 bg-black/40 px-2 py-2 text-center">
+                    <span className="block font-mono text-sm font-black text-white">
+                      {isFinished
+                        ? `${fixture.score.home} - ${fixture.score.away}`
+                        : vsLabel}
+                    </span>
+                    <span className="mt-1 block text-[9px] uppercase tracking-wider text-gray-500">
+                      {isFinished ? "FT" : vsLabel}
                     </span>
                   </div>
-                  <span className="truncate text-right text-[10px] text-gray-500">
-                    {fixture.league.name}
-                  </span>
-                </div>
-                <div className="grid grid-cols-[minmax(0,1fr)_54px_minmax(0,1fr)] items-center gap-2">
-                  <H2HTeam name={fixture.home.name} logo={fixture.home.logo} align="right" />
-                  <span className="text-center font-mono text-xs font-bold text-white bg-black/40 px-2 py-0.5 rounded border border-gray-800/50">
-                    {isFinished
-                      ? `${fixture.score.home} - ${fixture.score.away}`
-                      : vsLabel}
-                  </span>
                   <H2HTeam name={fixture.away.name} logo={fixture.away.logo} />
                 </div>
               </div>
             );
           })}
         </div>
-      )}
-    </Card>
+      </Modal>
+    </>
   );
 }
 
@@ -1257,13 +1494,20 @@ function H2HTeam({
   align?: "left" | "right";
 }) {
   return (
-    <div className={cn("flex min-w-0 items-center gap-2", align === "right" && "justify-end")}>
+    <div
+      className={cn(
+        "flex min-w-0 items-center gap-2",
+        align === "right" && "justify-end"
+      )}
+    >
       {align === "right" && (
-        <span className="truncate text-xs font-semibold text-white">{name}</span>
+        <span className="line-clamp-2 text-right text-xs font-semibold text-white">
+          {name}
+        </span>
       )}
       <ApiTeamLogo name={name} logo={logo} size="sm" accent={align === "right" ? "cyan" : "magenta"} />
       {align === "left" && (
-        <span className="truncate text-xs font-semibold text-white">{name}</span>
+        <span className="line-clamp-2 text-xs font-semibold text-white">{name}</span>
       )}
     </div>
   );
@@ -1278,6 +1522,172 @@ function formatH2HDate(value: string, locale: string) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function buildAiPredictionSuggestion({
+  match,
+  homePlayers,
+  awayPlayers,
+}: {
+  match: PredictMatch;
+  homePlayers: PredictPlayer[];
+  awayPlayers: PredictPlayer[];
+}) {
+  const finishedH2H = (match.h2h ?? []).filter(
+    (fixture) => fixture.score.home !== null && fixture.score.away !== null
+  );
+
+  if (finishedH2H.length === 0) {
+    return buildFallbackAiSuggestion(homePlayers, awayPlayers);
+  }
+
+  const normalized = finishedH2H
+    .map((fixture) => normalizeH2HFixtureForMatch(match, fixture))
+    .filter((fixture): fixture is { homeGoals: number; awayGoals: number } => fixture !== null);
+
+  if (normalized.length === 0) {
+    return buildFallbackAiSuggestion(homePlayers, awayPlayers);
+  }
+
+  const totals = normalized.reduce(
+    (acc, fixture) => {
+      acc.homeGoals += fixture.homeGoals;
+      acc.awayGoals += fixture.awayGoals;
+      if (fixture.homeGoals > fixture.awayGoals) acc.homeWins += 1;
+      else if (fixture.homeGoals < fixture.awayGoals) acc.awayWins += 1;
+      else acc.draws += 1;
+      return acc;
+    },
+    { homeGoals: 0, awayGoals: 0, homeWins: 0, awayWins: 0, draws: 0 }
+  );
+
+  const sampleSize = normalized.length;
+  const avgHomeGoals = totals.homeGoals / sampleSize;
+  const avgAwayGoals = totals.awayGoals / sampleSize;
+  const homeWinRate = totals.homeWins / sampleSize;
+  const awayWinRate = totals.awayWins / sampleSize;
+  const homeEdge = avgHomeGoals - avgAwayGoals + (homeWinRate - awayWinRate) * 1.25;
+
+  let homeScore = clampPredictionScore(avgHomeGoals);
+  let awayScore = clampPredictionScore(avgAwayGoals);
+
+  if (Math.abs(homeEdge) < 0.35) {
+    const drawGoals = clampPredictionScore((avgHomeGoals + avgAwayGoals) / 2);
+    homeScore = drawGoals;
+    awayScore = drawGoals;
+  } else if (homeEdge > 0) {
+    if (homeScore <= awayScore) {
+      homeScore = Math.min(4, awayScore + 1);
+    }
+  } else if (awayScore <= homeScore) {
+    awayScore = Math.min(4, homeScore + 1);
+  }
+
+  if (homeEdge > 0.9) {
+    homeScore = Math.min(4, Math.max(homeScore, awayScore + 1));
+  }
+  if (homeEdge < -0.9) {
+    awayScore = Math.min(4, Math.max(awayScore, homeScore + 1));
+  }
+
+  const totalGoals = homeScore + awayScore;
+  const halfHomeScore = Math.min(homeScore, Math.floor(homeScore / 2) + (homeScore > awayScore ? 1 : 0));
+  const halfAwayScore = Math.min(awayScore, Math.floor(awayScore / 2) + (awayScore > homeScore ? 1 : 0));
+
+  const favoredPlayers = homeScore > awayScore ? homePlayers : awayScore > homeScore ? awayPlayers : homePlayers;
+  const firstScorerPlayerId = totalGoals > 0 ? toPlayerSelectionValue(favoredPlayers[0]) : null;
+
+  const confidence = resolveAiConfidence({
+    sampleSize,
+    homeEdge,
+    drawShare: totals.draws / sampleSize,
+  });
+
+  return {
+    homeScore,
+    awayScore,
+    halfHomeScore,
+    halfAwayScore,
+    firstScorerPlayerId,
+    confidence,
+    reasonTh: `ใช้ H2H ${sampleSize} นัดล่าสุด: เฉลี่ย ${avgHomeGoals.toFixed(1)}-${avgAwayGoals.toFixed(1)} และกรอกคำทายให้อัตโนมัติแล้ว`,
+    reasonEn: `Filled from the last ${sampleSize} H2H matches with an average of ${avgHomeGoals.toFixed(1)}-${avgAwayGoals.toFixed(1)}.`,
+  };
+}
+
+function buildFallbackAiSuggestion(
+  homePlayers: PredictPlayer[],
+  awayPlayers: PredictPlayer[]
+) {
+  const homeScore = 1;
+  const awayScore = 1;
+
+  return {
+    homeScore,
+    awayScore,
+    halfHomeScore: 0,
+    halfAwayScore: 0,
+    firstScorerPlayerId: toPlayerSelectionValue(homePlayers[0] ?? awayPlayers[0] ?? null),
+    confidence: "safe" as ConfidenceLevel,
+    reasonTh: "ยังมีข้อมูลย้อนหลังไม่พอ จึงใช้ค่าเริ่มต้นแบบระมัดระวังและกรอกคำทายให้แล้ว",
+    reasonEn: "Not enough historical data was available, so a conservative default prediction was filled in.",
+  };
+}
+
+function normalizeH2HFixtureForMatch(
+  match: PredictMatch,
+  fixture: PredictH2HFixture
+) {
+  const fixtureHomeGoals = fixture.score.home;
+  const fixtureAwayGoals = fixture.score.away;
+  if (fixtureHomeGoals === null || fixtureAwayGoals === null) return null;
+
+  const currentHome = match.home.name.trim().toLowerCase();
+  const currentAway = match.away.name.trim().toLowerCase();
+  const fixtureHome = fixture.home.name.trim().toLowerCase();
+  const fixtureAway = fixture.away.name.trim().toLowerCase();
+
+  if (fixtureHome === currentHome && fixtureAway === currentAway) {
+    return { homeGoals: fixtureHomeGoals, awayGoals: fixtureAwayGoals };
+  }
+
+  if (fixtureHome === currentAway && fixtureAway === currentHome) {
+    return { homeGoals: fixtureAwayGoals, awayGoals: fixtureHomeGoals };
+  }
+
+  return null;
+}
+
+function clampPredictionScore(value: number) {
+  if (!Number.isFinite(value)) return 1;
+  return Math.max(0, Math.min(4, Math.round(value)));
+}
+
+function toPlayerSelectionValue(player: PredictPlayer | null | undefined) {
+  if (!player) return null;
+  return player.id !== null ? String(player.id) : player.name;
+}
+
+function resolveAiConfidence({
+  sampleSize,
+  homeEdge,
+  drawShare,
+}: {
+  sampleSize: number;
+  homeEdge: number;
+  drawShare: number;
+}) {
+  const strength = Math.abs(homeEdge);
+
+  if (sampleSize >= 4 && strength >= 1.2 && drawShare < 0.4) {
+    return "bold" as ConfidenceLevel;
+  }
+
+  if (sampleSize >= 2 && strength >= 0.55) {
+    return "confident" as ConfidenceLevel;
+  }
+
+  return "safe" as ConfidenceLevel;
 }
 
 // ----------------------------------------------------
@@ -1872,6 +2282,122 @@ function MiniPanel({
       <p className="text-[10px] text-gray-500 font-semibold tracking-wider uppercase leading-none mb-1">{label}</p>
       <p className="font-mono text-base font-black text-white leading-none">{value}</p>
     </Card>
+  );
+}
+
+function FormulaValue({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-800/80 bg-black/30 px-2.5 py-2">
+      <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
+      <p className={cn("mt-1 font-mono text-xs font-black text-white", tone)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ConfirmMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
+      <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
+      <p className={cn("mt-1 font-mono text-sm font-black text-white", tone)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ConfirmDetailCard({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3.5 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+          {label}
+        </p>
+        <div className="min-w-0 text-right text-xs font-semibold text-white">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OutcomeRow({
+  label,
+  description,
+  points,
+  tone,
+}: {
+  label: string;
+  description: string;
+  points: number;
+  tone?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className={cn("text-xs font-black uppercase tracking-wide text-white", tone)}>
+            {label}
+          </p>
+          <p className="mt-1 text-[10px] leading-relaxed text-gray-500">
+            {description}
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-[10px] uppercase tracking-wider text-gray-500">points</p>
+          <p className={cn("font-mono text-sm font-black text-white", tone)}>
+            {points.toLocaleString()}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TierRow({
+  label,
+  description,
+  bonus,
+  tone,
+}: {
+  label: string;
+  description: string;
+  bonus: string;
+  tone?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <p className={cn("text-xs font-black uppercase tracking-wide text-white", tone)}>
+          {label}
+        </p>
+        <span className={cn("font-mono text-xs font-black", tone)}>{bonus}</span>
+      </div>
+      <p className="mt-1 text-[10px] leading-relaxed text-gray-500">{description}</p>
+    </div>
   );
 }
 

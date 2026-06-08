@@ -39,6 +39,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [serverAuthHint, setServerAuthHint] = useState(initialHasAuthSession);
   const [loadedMemberInfoKey, setLoadedMemberInfoKey] = useState<string | null>(null);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const username = useUserStore((s) => s.username);
@@ -48,40 +49,59 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const level = useUserStore((s) => s.level);
   const rank = useUserStore((s) => s.rank);
   const syncWallet = useUserStore((s) => s.syncWallet);
-  const effectiveIsLoggedIn = isLoggedIn || initialHasAuthSession;
+  const effectiveIsLoggedIn = isLoggedIn || serverAuthHint;
   const memberInfoKey = `${locale}:authenticated`;
   const memberInfoReady = !effectiveIsLoggedIn || loadedMemberInfoKey === memberInfoKey;
   const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
 
   const refreshMemberInfo = useCallback(
     async () => {
-      if (!effectiveIsLoggedIn) return;
+      if (!effectiveIsLoggedIn) {
+        setLoadedMemberInfoKey(memberInfoKey);
+        return;
+      }
 
-      const response = await getCurrentUser({ locale });
-      const profile = extractCurrentUser(response);
-      if (!profile) return;
-      const stats = profile?.stats;
-      const nextStats = {
-        freePoints: pickNumber(stats?.freePoints, profile?.freePoints),
-        premiumCredits: pickNumber(stats?.premiumCredits, profile?.premiumCredits),
-        xp: pickNumber(stats?.xp, profile?.xp),
-        level: pickNumber(stats?.level, profile?.level),
-        rank: pickString(stats?.rank, profile?.rank),
-      };
-      const currentUser = useUserStore.getState();
-      useUserStore.setState({
-        userId: pickStringValue(profile.id, profile.code) ?? currentUser.userId,
-        username:
-          pickStringValue(profile.username, profile.user_name) ??
-          currentUser.username,
-        displayName:
-          pickStringValue(profile.displayName, profile.display_name, profile.name) ??
-          currentUser.displayName,
-      });
-      syncWallet(stripUndefined(nextStats));
-      setLoadedMemberInfoKey(memberInfoKey);
+      try {
+        const response = await getCurrentUser({ locale });
+        const profile = extractCurrentUser(response);
+
+        if (!profile) {
+          if (!isLoggedIn) {
+            setServerAuthHint(false);
+          }
+          return;
+        }
+
+        const stats = profile.stats;
+        const nextStats = {
+          freePoints: pickNumber(stats?.freePoints, profile.freePoints),
+          premiumCredits: pickNumber(stats?.premiumCredits, profile.premiumCredits),
+          xp: pickNumber(stats?.xp, profile.xp),
+          level: pickNumber(stats?.level, profile.level),
+          rank: pickString(stats?.rank, profile.rank),
+        };
+        const currentUser = useUserStore.getState();
+        useUserStore.setState({
+          userId: pickStringValue(profile.id, profile.code) ?? currentUser.userId,
+          username:
+            pickStringValue(profile.username, profile.user_name) ??
+            currentUser.username,
+          displayName:
+            pickStringValue(profile.displayName, profile.display_name, profile.name) ??
+            currentUser.displayName,
+        });
+        syncWallet(stripUndefined(nextStats));
+        setServerAuthHint(true);
+      } catch (error) {
+        if (!isLoggedIn) {
+          setServerAuthHint(false);
+        }
+        throw error;
+      } finally {
+        setLoadedMemberInfoKey(memberInfoKey);
+      }
     },
-    [effectiveIsLoggedIn, locale, memberInfoKey, syncWallet]
+    [effectiveIsLoggedIn, isLoggedIn, locale, memberInfoKey, syncWallet]
   );
 
   useEffect(() => {
@@ -91,7 +111,6 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
       if (!active) return;
       refreshMemberInfo().catch(() => {
         if (!active) return;
-        // Keep the skeleton in place rather than flashing stale member values.
       });
     });
 

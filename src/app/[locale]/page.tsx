@@ -20,11 +20,13 @@ import {
   loadTodayFixtures,
   sortFixtures,
 } from "@/lib/football-page-data";
+import { getFixtureStatusGroup } from "@/lib/football-status";
 import { getLatestArticles } from "@/lib/news-generator";
 import {
   AUTH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "@/lib/auth-guard";
+import { MatchStatus } from "@/types/common";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -66,6 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("dashboard");
+  const now = Date.now();
   const [liveFixtures, todayFixtures, aiInsight, latestArticles, cookieStore] = await Promise.all([
     loadLiveFixtures(24),
     loadTodayFixtures(),
@@ -73,7 +76,14 @@ export default async function DashboardPage({ params }: Props) {
     getLatestArticles(locale, 6),
     cookies(),
   ]);
-  const homepageFixtures = sortFixtures(todayFixtures).slice(0, 16);
+  const homepageFixtures = sortFixtures(todayFixtures)
+    .filter((fixture) => {
+      if (getFixtureStatusGroup(fixture) === MatchStatus.LIVE) {
+        return false;
+      }
+
+      return new Date(fixture.kickoffTime).getTime() > now;
+    });
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
     Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
