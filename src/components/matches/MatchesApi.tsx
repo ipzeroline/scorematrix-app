@@ -77,16 +77,21 @@ export function MatchesApi({
   const locale = useLocale();
   const t = useTranslations();
   const isLoggedIn = useUserStore((state) => state.isLoggedIn);
-  const effectiveIsLoggedIn = isLoggedIn || initialHasAuthSession;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const effectiveIsLoggedIn = mounted ? isLoggedIn : initialHasAuthSession;
   const [activeStatusTab, setActiveStatusTab] =
     useState<MatchStatusTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [fixtures, setFixtures] = useState(() =>
-    filterVisibleFixtures(initialFixtures)
-  );
+  const [fixtures, setFixtures] = useState<ApiFootballFixture[]>(initialFixtures);
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   useEffect(() => {
+    setFixtures(filterVisibleFixtures(initialFixtures));
     async function refreshFixtures() {
       try {
         const res = await fetch("/api/football/fixtures/today", {
@@ -156,8 +161,8 @@ export function MatchesApi({
     [statusFilteredFixtures]
   );
   const groupedFixtures = useMemo(
-    () => groupFixturesByDay(sortedFixtures, locale, tableLabels),
-    [sortedFixtures, locale, tableLabels]
+    () => groupFixturesByDay(sortedFixtures, locale, tableLabels, mounted),
+    [sortedFixtures, locale, tableLabels, mounted]
   );
   const activeMatchCount = sortedFixtures.length;
 
@@ -536,17 +541,32 @@ function groupFixturesByDay(
   );
 }
 
-function getDateKey(date: Date) {
+function getDateKeyLocal(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
     date.getDate()
   ).padStart(2, "0")}`;
 }
 
-function formatDateLabel(date: Date, locale: string) {
+function getDateKeyUTC(date: Date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(
+    date.getUTCDate()
+  ).padStart(2, "0")}`;
+}
+
+function formatDateLabelLocal(date: Date, locale: string) {
   return new Intl.DateTimeFormat(locale, {
     weekday: "short",
     day: "numeric",
     month: "short",
+  }).format(date);
+}
+
+function formatDateLabelUTC(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC"
   }).format(date);
 }
 

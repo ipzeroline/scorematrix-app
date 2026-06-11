@@ -225,7 +225,7 @@ export function MatchesMockup() {
                             ? `${match.homeScore} - ${match.awayScore}`
                             : t("common.vs")}
                         </p>
-                        <p className="text-[10px] text-gray-500">
+                        <p suppressHydrationWarning className="text-[10px] text-gray-500">
                           {match.status === MatchStatus.LIVE && match.minute
                             ? `${match.minute}'`
                             : formatTime(match.kickoffTime)}
