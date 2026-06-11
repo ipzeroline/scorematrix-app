@@ -166,6 +166,12 @@ interface SoccerLeaguesResponse {
   leagues?: SoccerBackendLeagueEntry[];
 }
 
+interface SoccerLeagueDetailResponse {
+  data?: SoccerApiLeagueProfile;
+  profile?: SoccerApiLeagueProfile;
+  result?: SoccerApiLeagueProfile;
+}
+
 interface SoccerApiLeagueEntry {
   provider_id: number;
   name: string;
@@ -176,6 +182,31 @@ interface SoccerApiLeagueEntry {
   logo: string | null;
   current_season: number | null;
   sort_order: number | null;
+}
+
+interface SoccerApiLeagueProfile {
+  id?: number;
+  provider_id?: number;
+  name?: string | null;
+  country?: string | null;
+  country_code?: string | null;
+  country_flag?: string | null;
+  type?: string | null;
+  logo?: string | null;
+  current_season?: number | null;
+  season?: number | null;
+  teams?: {
+    count?: number | null;
+    data?: Array<{
+      id?: number | null;
+      provider_id?: number | null;
+      name?: string | null;
+      code?: string | null;
+      country?: string | null;
+      logo?: string | null;
+    }>;
+  } | null;
+  standings?: unknown[];
 }
 
 interface SoccerBackendTeamProfile {
@@ -227,6 +258,33 @@ export interface ApiFootballLeagueEntry {
     end: string;
     current: boolean;
   }[];
+}
+
+export interface ApiFootballLeagueProfile {
+  league: {
+    id: number;
+    name: string;
+    type: string;
+    logo: string | null;
+    currentSeason: number | null;
+    season: number | null;
+  };
+  country: {
+    name: string;
+    code: string | null;
+    flag: string | null;
+  };
+  teams: {
+    count: number;
+    data: {
+      id: number;
+      name: string;
+      code: string | null;
+      country: string;
+      logo: string | null;
+    }[];
+  };
+  standings: ApiFootballStanding[];
 }
 
 export interface ApiFootballStandingLeague {
@@ -285,9 +343,47 @@ export interface ApiFootballTeamProfile {
     surface: string | null;
     image: string | null;
   };
+  leagues: {
+    id: number;
+    name: string;
+    country: string;
+    logo: string | null;
+    season: number | null;
+    statistics: ApiFootballTeamSeasonStats | null;
+  }[];
+  squad: {
+    teamId: number | null;
+    hydratedAt: string | null;
+    team: {
+      id: number;
+      name: string;
+      logo: string | null;
+    } | null;
+    players: {
+      id: number;
+      name: string;
+      age: number | null;
+      number: number | null;
+      position: string | null;
+      photo: string | null;
+    }[];
+  } | null;
 }
 
 export interface ApiFootballTeamSeasonStats {
+  league?: {
+    id: number;
+    name: string;
+    country: string;
+    logo: string | null;
+    flag?: string | null;
+    season: number | null;
+  };
+  team?: {
+    id: number;
+    name: string;
+    logo: string | null;
+  };
   fixtures: {
     played: StatSplit;
     wins: StatSplit;
@@ -307,6 +403,17 @@ export interface ApiFootballTeamSeasonStats {
   clean_sheet: StatSplit;
   failed_to_score: StatSplit;
   form: string | null;
+  biggest?: {
+    streak?: {
+      wins: number | null;
+      draws: number | null;
+      loses: number | null;
+    };
+  };
+  lineups?: {
+    formation: string | null;
+    played: number | null;
+  }[];
 }
 
 interface StatSplit {
@@ -330,9 +437,19 @@ export interface ApiFootballPlayerProfile {
     nationality: string | null;
     height: string | null;
     weight: string | null;
+    number: number | null;
+    position: string | null;
     injured: boolean;
     photo: string | null;
   };
+  teams: {
+    team: {
+      id: number;
+      name: string;
+      logo: string | null;
+    };
+    seasons: number[];
+  }[];
   statistics: {
     team: {
       id: number;
@@ -350,12 +467,21 @@ export interface ApiFootballPlayerProfile {
       appearences: number | null;
       lineups: number | null;
       minutes: number | null;
+      number: number | null;
       position: string | null;
       rating: string | null;
+      captain: boolean;
+    };
+    substitutes: {
+      in: number | null;
+      out: number | null;
+      bench: number | null;
     };
     goals: {
       total: number | null;
+      conceded: number | null;
       assists: number | null;
+      saves: number | null;
     };
     shots: {
       total: number | null;
@@ -368,11 +494,33 @@ export interface ApiFootballPlayerProfile {
     };
     tackles: {
       total: number | null;
+      blocks: number | null;
       interceptions: number | null;
+    };
+    duels: {
+      total: number | null;
+      won: number | null;
+    };
+    dribbles: {
+      attempts: number | null;
+      success: number | null;
+      past: number | null;
+    };
+    fouls: {
+      drawn: number | null;
+      committed: number | null;
     };
     cards: {
       yellow: number | null;
+      yellowred: number | null;
       red: number | null;
+    };
+    penalty: {
+      won: number | null;
+      commited: number | null;
+      scored: number | null;
+      missed: number | null;
+      saved: number | null;
     };
   }[];
 }
@@ -548,6 +696,11 @@ export interface ApiFootballAIInsight {
   drawProbability: number | null;
   awayWinProbability: number | null;
   heatMeter: number | null;
+  favoriteTeam?: "home" | "away" | null;
+  homeStrength?: number | null;
+  awayStrength?: number | null;
+  strengthGap?: number | null;
+  upsetRisk?: number | null;
   upsetAlert: boolean;
   communitySentiment: {
     homePercentage: number;
@@ -605,6 +758,30 @@ export type ApiFootballTeamFormProfile = {
       under_over?: Record<string, { over?: number | null; under?: number | null }>;
     };
   };
+  cards?: {
+    yellow?: Record<string, { total?: number | null; percentage?: string | null }>;
+    red?: Record<string, { total?: number | null; percentage?: string | null }>;
+  };
+  biggest?: {
+    streak?: { wins?: number | null; draws?: number | null; loses?: number | null };
+    wins?: { home?: string | null; away?: string | null };
+    loses?: { home?: string | null; away?: string | null };
+    goals?: {
+      for?: { home?: number | null; away?: number | null };
+      against?: { home?: number | null; away?: number | null };
+    };
+  };
+  clean_sheet?: { home?: number | null; away?: number | null; total?: number | null };
+  failed_to_score?: { home?: number | null; away?: number | null; total?: number | null };
+  penalty?: {
+    scored?: { total?: number | null; percentage?: string | null };
+    missed?: { total?: number | null; percentage?: string | null };
+    total?: number | null;
+  };
+  lineups?: {
+    formation?: string | null;
+    played?: number | null;
+  }[];
   league?: {
     form?: string | null;
     fixtures?: {
@@ -652,6 +829,11 @@ export interface ApiFootballAIInsightDetail {
   drawProbability: number | null;
   awayWinProbability: number | null;
   heatMeter: number | null;
+  favoriteTeam?: "home" | "away" | null;
+  homeStrength?: number | null;
+  awayStrength?: number | null;
+  strengthGap?: number | null;
+  upsetRisk?: number | null;
   homeAdvantageFactor: number | null;
   comparison: ApiFootballInsightComparison;
   formComparison: {
@@ -676,6 +858,26 @@ export interface ApiFootballAIInsightDetail {
   apiWinOrDraw: boolean | null;
   apiWinner: { id: number | null; name: string | null; comment: string | null } | null;
   apiPredictedGoals: { home: number | string | null; away: number | string | null } | null;
+  headToHead?: {
+    fixtureId: number;
+    date: string;
+    league?: {
+      name?: string | null;
+      season?: number | null;
+    } | null;
+    teams: {
+      home: { name: string; winner?: boolean | null };
+      away: { name: string; winner?: boolean | null };
+    };
+    goals: {
+      home: number | null;
+      away: number | null;
+    };
+    score?: {
+      halftime?: string | { home?: number | null; away?: number | null } | null;
+      fulltime?: string | { home?: number | null; away?: number | null } | null;
+    } | null;
+  }[];
   fixture: ApiFootballFixture;
 }
 
@@ -911,6 +1113,15 @@ export async function getApiFootballLeagues(options: {
   return leagues;
 }
 
+export async function getApiFootballLeagueProfile(leagueId: number) {
+  const payload = await fetchSoccerBackend<SoccerLeagueDetailResponse>(
+    `/leagues/${leagueId}`,
+    {}
+  );
+
+  return normalizeLeagueProfilePayload(payload);
+}
+
 export async function getApiFootballStandings(league: number, season: number) {
   const payload = await fetchSoccerBackend<SoccerStandingsResponse>(
     "/standings",
@@ -957,7 +1168,7 @@ export async function getApiFootballTeamProfile(
   if (season) query.season = String(season);
   const payload = await fetchTeamProfilePayload(team, query);
 
-  return normalizeBackendTeamProfilePayload(payload);
+  return normalizeBackendTeamProfilePayload(payload, league, season);
 }
 
 export async function getApiFootballPlayerProfile(player: number) {
@@ -1327,6 +1538,92 @@ function mapSoccerApiLeague(item: SoccerApiLeagueEntry): ApiFootballLeagueEntry 
   };
 }
 
+function normalizeLeagueProfilePayload(payload: unknown): ApiFootballLeagueProfile | null {
+  if (!isRecord(payload)) return null;
+
+  const candidate = isRecord(payload.data)
+    ? payload.data
+    : isRecord(payload.profile)
+      ? payload.profile
+      : isRecord(payload.result)
+        ? payload.result
+        : payload;
+
+  if (!isRecord(candidate)) return null;
+
+  const teams = isRecord(candidate.teams) ? candidate.teams : {};
+  const teamItems = Array.isArray(teams.data) ? teams.data : [];
+  const standings = Array.isArray(candidate.standings)
+    ? candidate.standings
+        .map((entry) => normalizeStandingRow(entry))
+        .filter((entry): entry is ApiFootballStanding => entry !== null)
+    : [];
+
+  return {
+    league: {
+      id: toNumber(candidate.id ?? candidate.provider_id, 0),
+      name: toStringValue(candidate.name),
+      type: toStringValue(candidate.type),
+      logo: toNullableString(candidate.logo),
+      currentSeason: toNullableNumber(candidate.current_season),
+      season: toNullableNumber(candidate.season),
+    },
+    country: {
+      name: toStringValue(candidate.country),
+      code: toNullableString(candidate.country_code),
+      flag: toNullableString(candidate.country_flag),
+    },
+    teams: {
+      count: toNumber(teams.count, teamItems.length),
+      data: teamItems
+        .map((entry) => {
+          const team = isRecord(entry) ? entry : {};
+          return {
+            id: toNumber(team.id ?? team.provider_id, 0),
+            name: toStringValue(team.name),
+            code: toNullableString(team.code),
+            country: toStringValue(team.country),
+            logo: toNullableString(team.logo),
+          };
+        })
+        .filter((team) => team.id > 0 || team.name.length > 0),
+    },
+    standings,
+  };
+}
+
+function normalizeStandingRow(value: unknown): ApiFootballStanding | null {
+  if (!isRecord(value)) return null;
+  const team = isRecord(value.team) ? value.team : {};
+  const all = isRecord(value.all) ? value.all : {};
+  const goals = isRecord(all.goals) ? all.goals : {};
+
+  return {
+    rank: toNumber(value.rank, 0),
+    team: {
+      id: toNumber(team.id ?? team.provider_id, 0),
+      name: toStringValue(team.name),
+      logo: toNullableString(team.logo),
+    },
+    points: toNumber(value.points, 0),
+    goalsDiff: toNumber(value.goalsDiff ?? value.goals_diff, 0),
+    group: toStringValue(value.group),
+    form: toNullableString(value.form),
+    status: toStringValue(value.status),
+    description: toNullableString(value.description),
+    all: {
+      played: toNumber(all.played, 0),
+      win: toNumber(all.win, 0),
+      draw: toNumber(all.draw, 0),
+      lose: toNumber(all.lose, 0),
+      goals: {
+        for: toNumber(goals.for, 0),
+        against: toNumber(goals.against, 0),
+      },
+    },
+  };
+}
+
 function mapBackendTeamProfile(
   profile: SoccerBackendTeamProfile | SoccerApiTeamProfile | ApiFootballTeamProfile
 ): ApiFootballTeamProfile {
@@ -1334,6 +1631,10 @@ function mapBackendTeamProfile(
 
   if ("provider_id" in profile) {
     const venue = profile.venue ?? {};
+    const extendedProfile = profile as SoccerApiTeamProfile & {
+      leagues?: unknown;
+      squad?: unknown;
+    };
 
     return {
       team: {
@@ -1354,6 +1655,8 @@ function mapBackendTeamProfile(
         surface: venue.surface ?? null,
         image: venue.image ?? null,
       },
+      leagues: normalizeTeamLeagues(extendedProfile.leagues),
+      squad: normalizeTeamSquad(extendedProfile.squad),
     };
   }
 
@@ -1368,10 +1671,72 @@ function mapBackendTeamProfile(
       logo: profile.logo,
     },
     venue: profile.venue,
+    leagues: normalizeTeamLeagues((profile as { leagues?: unknown }).leagues),
+    squad: normalizeTeamSquad((profile as { squad?: unknown }).squad),
   };
 }
 
-function normalizeBackendTeamProfilePayload(payload: unknown): {
+function normalizeTeamLeagues(leagues: unknown) {
+  if (!Array.isArray(leagues)) return [];
+
+  return leagues
+    .map((leagueEntry) => {
+      const league = isRecord(leagueEntry) ? leagueEntry : {};
+
+      return {
+        id: toNumber(league.id ?? league.provider_id, 0),
+        name: toStringValue(league.name),
+        country: toStringValue(league.country),
+        logo: toNullableString(league.logo),
+        season: toNullableNumber(league.season),
+        statistics: isApiFootballTeamSeasonStats(league.statistics)
+          ? normalizeTeamSeasonStats(league.statistics)
+          : null,
+      };
+    })
+    .filter((league) => league.id > 0 || league.name.length > 0);
+}
+
+function normalizeTeamSquad(squad: unknown) {
+  if (!isRecord(squad)) return null;
+
+  const team = isRecord(squad.team) ? squad.team : null;
+  const players = Array.isArray(squad.players)
+    ? squad.players
+        .map((entry) => {
+          const player = isRecord(entry) ? entry : {};
+
+          return {
+            id: toNumber(player.id ?? player.provider_id, 0),
+            name: toStringValue(player.name),
+            age: toNullableNumber(player.age),
+            number: toNullableNumber(player.number),
+            position: toNullableString(player.position),
+            photo: toNullableString(player.photo),
+          };
+        })
+        .filter((player) => player.id > 0 || player.name.length > 0)
+    : [];
+
+  return {
+    teamId: toNullableNumber(squad.team_id ?? squad.teamId),
+    hydratedAt: toNullableString(squad.hydrated_at ?? squad.hydratedAt),
+    team: team
+      ? {
+          id: toNumber(team.id ?? team.provider_id, 0),
+          name: toStringValue(team.name),
+          logo: toNullableString(team.logo),
+        }
+      : null,
+    players,
+  };
+}
+
+function normalizeBackendTeamProfilePayload(
+  payload: unknown,
+  league?: number,
+  season?: number
+): {
   profile: ApiFootballTeamProfile | null;
   stats: ApiFootballTeamSeasonStats | null;
 } {
@@ -1383,10 +1748,25 @@ function normalizeBackendTeamProfilePayload(payload: unknown): {
   const profile = isTeamProfilePayload(profileCandidate)
     ? mapBackendTeamProfile(profileCandidate)
     : null;
+  const directStats = isApiFootballTeamSeasonStats(payload.stats)
+    ? normalizeTeamSeasonStats(payload.stats)
+    : null;
+  const matchedLeagueStats =
+    profile?.leagues.find((entry) => {
+      const sameLeague = typeof league === "number" ? entry.id === league : true;
+      const sameSeason = typeof season === "number" ? entry.season === season : true;
+      return sameLeague && sameSeason && entry.statistics;
+    })?.statistics ??
+    profile?.leagues.find((entry) => (typeof season === "number" ? entry.season === season : false))
+      ?.statistics ??
+    profile?.leagues.find((entry) => (typeof league === "number" ? entry.id === league : false))
+      ?.statistics ??
+    profile?.leagues[0]?.statistics ??
+    null;
 
   return {
     profile,
-    stats: isApiFootballTeamSeasonStats(payload.stats) ? payload.stats : null,
+    stats: directStats ?? matchedLeagueStats,
   };
 }
 
@@ -1414,6 +1794,56 @@ function isApiFootballTeamSeasonStats(value: unknown): value is ApiFootballTeamS
   );
 }
 
+function normalizeTeamSeasonStats(value: unknown): ApiFootballTeamSeasonStats | null {
+  if (!isApiFootballTeamSeasonStats(value)) return null;
+
+  const rawValue = value as unknown as Record<string, unknown>;
+  const league = isRecord(rawValue.league) ? rawValue.league : null;
+  const team = isRecord(rawValue.team) ? rawValue.team : null;
+  const biggest = isRecord(rawValue.biggest) ? rawValue.biggest : null;
+  const streak = biggest && isRecord(biggest.streak) ? biggest.streak : null;
+  const lineups = Array.isArray(rawValue.lineups) ? rawValue.lineups : [];
+
+  return {
+    ...value,
+    league: league
+      ? {
+          id: toNumber(league.id ?? league.provider_id, 0),
+          name: toStringValue(league.name),
+          country: toStringValue(league.country),
+          logo: toNullableString(league.logo),
+          flag: toNullableString(league.flag),
+          season: toNullableNumber(league.season),
+        }
+      : undefined,
+    team: team
+      ? {
+          id: toNumber(team.id ?? team.provider_id, 0),
+          name: toStringValue(team.name),
+          logo: toNullableString(team.logo),
+        }
+      : undefined,
+    biggest: biggest
+      ? {
+          streak: streak
+            ? {
+                wins: toNullableNumber(streak.wins),
+                draws: toNullableNumber(streak.draws),
+                loses: toNullableNumber(streak.loses),
+              }
+            : undefined,
+        }
+      : undefined,
+    lineups: lineups.map((entry) => {
+      const lineup = isRecord(entry) ? entry : {};
+      return {
+        formation: toNullableString(lineup.formation),
+        played: toNullableNumber(lineup.played),
+      };
+    }),
+  };
+}
+
 function normalizeBackendPlayerProfilePayload(
   payload: unknown
 ): ApiFootballPlayerProfile | null {
@@ -1436,6 +1866,7 @@ function normalizeApiPlayerProfile(profile: Record<string, unknown>) {
 
   return {
     player: normalizePlayerIdentity(player),
+    teams: normalizePlayerTeams(profile.teams),
     statistics: normalizePlayerStatistics(profile.statistics),
   };
 }
@@ -1449,6 +1880,7 @@ function normalizePlainSoccerPlayerProfile(
 
   return {
     player: normalizePlayerIdentity(profile),
+    teams: normalizePlayerTeams(profile.teams),
     statistics: normalizePlayerStatistics(profile.statistics),
   };
 }
@@ -1467,6 +1899,8 @@ function normalizePlayerIdentity(player: Record<string, unknown>) {
     nationality: toNullableString(player.nationality),
     height: toNullableString(player.height),
     weight: toNullableString(player.weight),
+    number: toNullableNumber(player.number),
+    position: toNullableString(player.position),
     injured: Boolean(player.injured),
     photo: toNullableString(player.photo ?? player.image ?? player.avatar),
   };
@@ -1482,19 +1916,76 @@ function normalizePlayerBirth(birth: unknown) {
   };
 }
 
-function normalizePlayerStatistics(statistics: unknown) {
-  if (!Array.isArray(statistics)) return [];
+function normalizePlayerTeams(teams: unknown) {
+  if (!Array.isArray(teams)) return [];
 
-  return statistics.map((statistic) => {
+  return teams
+    .map((entry) => {
+      const value = isRecord(entry) ? entry : {};
+      const team = isRecord(value.team) ? value.team : {};
+      const seasons = Array.isArray(value.seasons)
+        ? value.seasons
+            .map((season) => toNullableNumber(season))
+            .filter((season): season is number => season !== null)
+        : [];
+
+      return {
+        team: {
+          id: toNumber(team.id ?? team.provider_id, 0),
+          name: toStringValue(team.name),
+          logo: toNullableString(team.logo),
+        },
+        seasons,
+      };
+    })
+    .filter((entry) => entry.team.id > 0 || entry.team.name.length > 0);
+}
+
+function normalizePlayerStatistics(statistics: unknown) {
+  const statisticEntries = Array.isArray(statistics)
+    ? statistics
+    : isRecord(statistics)
+      ? Object.entries(statistics).flatMap(([seasonKey, items]) =>
+          Array.isArray(items)
+            ? items.map((item) =>
+                isRecord(item) && !("league" in item)
+                  ? item
+                  : isRecord(item)
+                    ? {
+                        ...item,
+                        league: {
+                          ...(isRecord(item.league) ? item.league : {}),
+                          season:
+                            isRecord(item.league) &&
+                            item.league.season !== undefined &&
+                            item.league.season !== null
+                              ? item.league.season
+                              : seasonKey,
+                        },
+                      }
+                    : item
+              )
+            : []
+        )
+      : [];
+
+  if (statisticEntries.length === 0) return [];
+
+  return statisticEntries.map((statistic) => {
     const stat = isRecord(statistic) ? statistic : {};
     const team = isRecord(stat.team) ? stat.team : {};
     const league = isRecord(stat.league) ? stat.league : {};
     const games = isRecord(stat.games) ? stat.games : {};
+    const substitutes = isRecord(stat.substitutes) ? stat.substitutes : {};
     const goals = isRecord(stat.goals) ? stat.goals : {};
     const shots = isRecord(stat.shots) ? stat.shots : {};
     const passes = isRecord(stat.passes) ? stat.passes : {};
     const tackles = isRecord(stat.tackles) ? stat.tackles : {};
+    const duels = isRecord(stat.duels) ? stat.duels : {};
+    const dribbles = isRecord(stat.dribbles) ? stat.dribbles : {};
+    const fouls = isRecord(stat.fouls) ? stat.fouls : {};
     const cards = isRecord(stat.cards) ? stat.cards : {};
+    const penalty = isRecord(stat.penalty) ? stat.penalty : {};
 
     return {
       team: {
@@ -1513,12 +2004,21 @@ function normalizePlayerStatistics(statistics: unknown) {
         appearences: toNullableNumber(games.appearences ?? games.appearances),
         lineups: toNullableNumber(games.lineups),
         minutes: toNullableNumber(games.minutes),
+        number: toNullableNumber(games.number),
         position: toNullableString(games.position),
         rating: toNullableString(games.rating),
+        captain: Boolean(games.captain),
+      },
+      substitutes: {
+        in: toNullableNumber(substitutes.in),
+        out: toNullableNumber(substitutes.out),
+        bench: toNullableNumber(substitutes.bench),
       },
       goals: {
         total: toNullableNumber(goals.total),
+        conceded: toNullableNumber(goals.conceded),
         assists: toNullableNumber(goals.assists),
+        saves: toNullableNumber(goals.saves),
       },
       shots: {
         total: toNullableNumber(shots.total),
@@ -1536,11 +2036,33 @@ function normalizePlayerStatistics(statistics: unknown) {
       },
       tackles: {
         total: toNullableNumber(tackles.total),
+        blocks: toNullableNumber(tackles.blocks),
         interceptions: toNullableNumber(tackles.interceptions),
+      },
+      duels: {
+        total: toNullableNumber(duels.total),
+        won: toNullableNumber(duels.won),
+      },
+      dribbles: {
+        attempts: toNullableNumber(dribbles.attempts),
+        success: toNullableNumber(dribbles.success),
+        past: toNullableNumber(dribbles.past),
+      },
+      fouls: {
+        drawn: toNullableNumber(fouls.drawn),
+        committed: toNullableNumber(fouls.committed),
       },
       cards: {
         yellow: toNullableNumber(cards.yellow),
+        yellowred: toNullableNumber(cards.yellowred),
         red: toNullableNumber(cards.red),
+      },
+      penalty: {
+        won: toNullableNumber(penalty.won),
+        commited: toNullableNumber(penalty.commited),
+        scored: toNullableNumber(penalty.scored),
+        missed: toNullableNumber(penalty.missed),
+        saved: toNullableNumber(penalty.saved),
       },
     };
   });

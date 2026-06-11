@@ -50,13 +50,31 @@ export type ApiMission = {
   expires_at?: string;
 };
 
+export type MissionCurrentStats = {
+  missionStreak: number;
+  todayMissionPoints: number;
+  todayCompleted: number;
+  level: number;
+  xp: number;
+};
+
 export type MissionsResponse = {
   daily: ApiMission[];
   weekly: ApiMission[];
   special: ApiMission[];
+  currentStats: MissionCurrentStats;
+};
+
+export const DEFAULT_MISSION_CURRENT_STATS: MissionCurrentStats = {
+  missionStreak: 0,
+  todayMissionPoints: 0,
+  todayCompleted: 0,
+  level: 1,
+  xp: 0,
 };
 
 export const DEFAULT_MISSIONS_RESPONSE: MissionsResponse = {
+  currentStats: { ...DEFAULT_MISSION_CURRENT_STATS },
   daily: [
     {
       id: "bold-win",
@@ -195,11 +213,30 @@ export const DEFAULT_MISSIONS_RESPONSE: MissionsResponse = {
   ],
 };
 
+type ApiCurrentStats = {
+  missionStreak?: number;
+  mission_streak?: number;
+  todayMissionPoints?: number;
+  today_mission_points?: number;
+  todayCompleted?: number;
+  today_completed?: number;
+  level?: number;
+  xp?: number;
+};
+
+type ApiMissionsResponse = {
+  daily?: ApiMission[];
+  weekly?: ApiMission[];
+  special?: ApiMission[];
+  currentStats?: ApiCurrentStats;
+  current_stats?: ApiCurrentStats;
+};
+
 type MissionsApiPayload =
-  | MissionsResponse
+  | ApiMissionsResponse
   | {
-      data?: MissionsResponse;
-      missions?: MissionsResponse;
+      data?: ApiMissionsResponse;
+      missions?: ApiMissionsResponse;
     };
 
 export async function getMissions(options?: ApiRequestOptions) {
@@ -224,6 +261,9 @@ export function normalizeMissionsResponse(
       daily: response.daily,
       weekly: Array.isArray(response.weekly) ? response.weekly : [],
       special: Array.isArray(response.special) ? response.special : [],
+      currentStats: normalizeCurrentStats(
+        response.currentStats ?? response.current_stats
+      ),
     };
   }
 
@@ -236,6 +276,29 @@ export function normalizeMissionsResponse(
   }
 
   return DEFAULT_MISSIONS_RESPONSE;
+}
+
+function normalizeCurrentStats(stats?: ApiCurrentStats): MissionCurrentStats {
+  if (!stats) {
+    return { ...DEFAULT_MISSION_CURRENT_STATS };
+  }
+
+  return {
+    missionStreak: toNumber(
+      stats.missionStreak ?? stats.mission_streak,
+      DEFAULT_MISSION_CURRENT_STATS.missionStreak
+    ),
+    todayMissionPoints: toNumber(
+      stats.todayMissionPoints ?? stats.today_mission_points,
+      DEFAULT_MISSION_CURRENT_STATS.todayMissionPoints
+    ),
+    todayCompleted: toNumber(
+      stats.todayCompleted ?? stats.today_completed,
+      DEFAULT_MISSION_CURRENT_STATS.todayCompleted
+    ),
+    level: toNumber(stats.level, DEFAULT_MISSION_CURRENT_STATS.level),
+    xp: toNumber(stats.xp, DEFAULT_MISSION_CURRENT_STATS.xp),
+  };
 }
 
 export function mapApiMission(

@@ -25,7 +25,6 @@ const NAV_LINKS = [
   { href: "/leaderboard", label: "leaderboard" },
   { href: "/missions", label: "missions", authRequired: true },
   { href: "/rewards", label: "rewards", authRequired: true },
-  { href: "/news", label: "news" },
 ];
 
 const emptySubscribe = () => () => {};
@@ -38,6 +37,11 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [serverAuthHint, setServerAuthHint] = useState(initialHasAuthSession);
   const [loadedMemberInfoKey, setLoadedMemberInfoKey] = useState<string | null>(null);
@@ -49,7 +53,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const level = useUserStore((s) => s.level);
   const rank = useUserStore((s) => s.rank);
   const syncWallet = useUserStore((s) => s.syncWallet);
-  const effectiveIsLoggedIn = isLoggedIn || serverAuthHint;
+  const effectiveIsLoggedIn = serverAuthHint || (isMounted && isLoggedIn);
   const memberInfoKey = `${locale}:authenticated`;
   const memberInfoReady = !effectiveIsLoggedIn || loadedMemberInfoKey === memberInfoKey;
   const visibleNavLinks = NAV_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
@@ -259,7 +263,7 @@ function stripUndefined<T extends Record<string, unknown>>(value: T) {
 function NotificationBell() {
   const { locale } = useParams<{ locale: string }>();
   const [open, setOpen] = useState(false);
-  const isMounted = useSyncExternalStore(
+  const hasMounted = useSyncExternalStore(
     emptySubscribe,
     () => true,
     () => false
@@ -267,8 +271,8 @@ function NotificationBell() {
   const notifications = useNotificationStore((s) => s.notifications);
   const markRead = useNotificationStore((s) => s.markRead);
   const markAllRead = useNotificationStore((s) => s.markAllRead);
-  const unreadCount = isMounted ? notifications.filter((n) => !n.read).length : 0;
-  const recent = isMounted ? notifications.slice(0, 5) : [];
+  const unreadCount = hasMounted ? notifications.filter((n) => !n.read).length : 0;
+  const recent = hasMounted ? notifications.slice(0, 5) : [];
 
   return (
     <div className="relative">
@@ -277,7 +281,7 @@ function NotificationBell() {
         className="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
       >
         <Bell size={18} />
-        {isMounted && unreadCount > 0 && (
+        {hasMounted && unreadCount > 0 && (
           <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>

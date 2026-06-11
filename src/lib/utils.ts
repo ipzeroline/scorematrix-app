@@ -71,6 +71,39 @@ export function timeAgo(date: string | Date): string {
   return `${days}d ago`;
 }
 
+/**
+ * Locale-aware relative time ("2 ชั่วโมงที่แล้ว", "2 hours ago").
+ * Falls back to an absolute date for anything older than ~30 days.
+ */
+export function formatRelativeTime(
+  date: string | Date,
+  locale = "en-US"
+): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(d.getTime())) return "";
+
+  const diffSeconds = Math.round((d.getTime() - Date.now()) / 1000);
+  const absSeconds = Math.abs(diffSeconds);
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+
+  const divisions: [number, Intl.RelativeTimeFormatUnit][] = [
+    [60, "second"],
+    [3600, "minute"],
+    [86400, "hour"],
+    [2592000, "day"],
+  ];
+
+  if (absSeconds < 60) return rtf.format(Math.min(diffSeconds, -1), "second");
+  for (let i = 1; i < divisions.length; i++) {
+    const [limit, unit] = divisions[i];
+    if (absSeconds < limit) {
+      const value = Math.round(diffSeconds / divisions[i - 1][0]);
+      return rtf.format(value, unit);
+    }
+  }
+  return formatDate(d, locale);
+}
+
 export function countdown(date: string | Date): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const diff = d.getTime() - Date.now();

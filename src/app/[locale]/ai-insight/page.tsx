@@ -22,8 +22,7 @@ export default async function AIInsightPage({ params }: Props) {
   const { locale } = await params;
   const { response, failed } = await loadAIInsights();
   const insights = mapAIInsights(response)
-    .filter(hasCompleteAIProbabilities)
-    .sort((a, b) => (b.confidenceScore ?? 0) - (a.confidenceScore ?? 0));
+    .sort((a, b) => sortInsights(a, b));
 
   return (
     <AIInsightListClient
@@ -49,15 +48,6 @@ async function loadAIInsights(): Promise<{
     }
     throw error;
   }
-}
-
-function hasCompleteAIProbabilities(insight: AIInsightListItem): boolean {
-  return [
-    insight.confidenceScore,
-    insight.homeWinProbability,
-    insight.drawProbability,
-    insight.awayWinProbability,
-  ].every((value) => typeof value === "number");
 }
 
 function mapAIInsights(response: GetAIInsightsResult) {
@@ -89,7 +79,6 @@ function mapAIInsight(
 
   return {
     id: `api-insight-${insight.provider_id}`,
-    dataSource: "api",
     categories: [group],
     matchId: String(insight.provider_id),
     status: mapStatus(insight),
@@ -97,7 +86,7 @@ function mapAIInsight(
       id: String(insight.league.id),
       name: insight.league.name,
       logo: insight.league.logo,
-      round: insight.status.long,
+      countryFlag: insight.league.country_flag,
     },
     homeTeam: {
       id: String(insight.teams.home.id),
@@ -116,8 +105,15 @@ function mapAIInsight(
       away: insight.goals.away,
     },
     kickoffTime: insight.starts_at,
+    statusText: insight.status.long,
+    elapsed: insight.status.elapsed,
     confidenceScore: insight.confidenceScore,
     heatMeter: insight.heatMeter,
+    favoriteTeam: insight.favoriteTeam ?? null,
+    homeStrength: insight.homeStrength ?? null,
+    awayStrength: insight.awayStrength ?? null,
+    strengthGap: insight.strengthGap ?? null,
+    upsetRisk: insight.upsetRisk ?? null,
     homeWinProbability: insight.homeWinProbability,
     drawProbability: insight.drawProbability,
     awayWinProbability: insight.awayWinProbability,
@@ -163,4 +159,21 @@ function shortName(name: string) {
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+}
+
+function sortInsights(a: AIInsightListItem, b: AIInsightListItem) {
+  const scoreA = getInsightPriorityScore(a);
+  const scoreB = getInsightPriorityScore(b);
+
+  if (scoreA !== scoreB) return scoreB - scoreA;
+  return new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime();
+}
+
+function getInsightPriorityScore(insight: AIInsightListItem) {
+  let score = 0;
+  if (insight.categories.includes("live")) score += 300;
+  if (insight.categories.includes("highConfidence")) score += 200;
+  if (insight.categories.includes("upsetAlert")) score += 100;
+  if (typeof insight.confidenceScore === "number") score += insight.confidenceScore;
+  return score;
 }

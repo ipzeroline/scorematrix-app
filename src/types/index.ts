@@ -9,6 +9,5 @@ export * from './achievement';
 export * from './leaderboard';
 export * from './ai-insight';
 export * from './news';
-export * from './admin';
 export * from './event';
 export * from './notification';

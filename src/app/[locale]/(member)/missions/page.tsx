@@ -42,6 +42,7 @@ import {
   getMissions,
   mapApiMission,
   claimMission,
+  type MissionCurrentStats,
 } from "@/lib/missions-api";
 import type { Mission } from "@/types/mission";
 import { MissionType } from "@/types/common";
@@ -219,12 +220,23 @@ export default function MissionsPage() {
   useEffect(() => {
     let active = true;
 
+    const applyCurrentStats = (stats: MissionCurrentStats) => {
+      setHeroStats((prev) => ({
+        ...prev,
+        streak: stats.missionStreak,
+        missionsCompleted: stats.todayCompleted,
+        xp: stats.xp,
+        level: stats.level,
+      }));
+    };
+
     getMissions({ locale })
       .then((response) => {
         if (!active) return;
         setDaily(response.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)));
         setWeekly(response.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)));
         setSpecial(response.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)));
+        applyCurrentStats(response.currentStats);
         setLoadFailed(false);
       })
       .catch(() => {
@@ -232,6 +244,7 @@ export default function MissionsPage() {
         setDaily(DEFAULT_MISSIONS_RESPONSE.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)));
         setWeekly(DEFAULT_MISSIONS_RESPONSE.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)));
         setSpecial(DEFAULT_MISSIONS_RESPONSE.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)));
+        applyCurrentStats(DEFAULT_MISSIONS_RESPONSE.currentStats);
         setLoadFailed(false);
       })
       .finally(() => {
@@ -264,19 +277,15 @@ export default function MissionsPage() {
             currentUser.missionsCompleted,
         };
 
-        setHeroStats(nextHeroStats);
+        // Mission-specific stats (streak, completed, xp, level) come from the
+        // missions API `currentStats`; the hero only takes freePoints here.
+        setHeroStats((prev) => ({ ...prev, freePoints: nextHeroStats.freePoints }));
         useUserStore.setState(nextHeroStats);
       })
       .catch(() => {
         if (!active) return;
         const user = useUserStore.getState();
-        setHeroStats({
-          freePoints: user.freePoints,
-          xp: user.xp,
-          level: user.level,
-          streak: user.streak,
-          missionsCompleted: user.missionsCompleted,
-        });
+        setHeroStats((prev) => ({ ...prev, freePoints: user.freePoints }));
       });
 
     return () => {

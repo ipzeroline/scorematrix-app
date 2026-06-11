@@ -8,7 +8,6 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  Shield,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { PointsBadge } from "@/components/shared/PointsBadge";
@@ -28,7 +27,6 @@ interface UserMenuProps {
   xp?: number;
   level?: number;
   memberInfoReady?: boolean;
-  role?: "user" | "admin";
 }
 
 export function UserMenu({
@@ -41,7 +39,6 @@ export function UserMenu({
   xp = 0,
   level = 1,
   memberInfoReady = true,
-  role = "user",
 }: UserMenuProps) {
   const locale = useLocale();
   const t = useTranslations();
@@ -239,15 +236,6 @@ export function UserMenu({
           </span>
         </DropdownItem>
       </Link>
-      {role === "admin" && (
-        <Link href={`/${locale}/admin`}>
-          <DropdownItem>
-            <span className="flex items-center gap-2">
-              <Shield size={14} /> {t("admin.dashboard")}
-            </span>
-          </DropdownItem>
-        </Link>
-      )}
       <div className="border-t border-gray-800 mt-1 pt-1">
         <DropdownItem danger onClick={handleLogout}>
           <span className="flex items-center gap-2">

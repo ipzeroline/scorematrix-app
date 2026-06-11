@@ -8,6 +8,7 @@ import {
   clearStoredAuthToken,
   getStoredAuthToken,
   setStoredAuthTokens,
+  suppressAuthSessionExpired,
   type ApiSuccess,
   type ApiRequestOptions,
 } from "@/lib/api-client";
@@ -248,6 +249,24 @@ export type UpdateCurrentUserRequest = {
   avatarUrl?: string;
 };
 
+export type UpdateUserPreferencesRequest = {
+  publicProfile?: boolean;
+  pushNotifications?: boolean;
+  matchReminder1hr?: boolean;
+  matchReminder30min?: boolean;
+  resultNotification?: boolean;
+  rankChangeAlert?: boolean;
+};
+
+type UserPreferencesPayload = {
+  public_profile?: number;
+  push_notifications?: number;
+  match_reminder_1hr?: number;
+  match_reminder_30min?: number;
+  result_notification?: number;
+  rank_change_alert?: number;
+};
+
 export type UploadProfileAvatarResponse = {
   success?: boolean;
   code?: string;
@@ -386,6 +405,8 @@ export function resetPassword(
 }
 
 export async function logout(options?: ApiRequestOptions) {
+  // Intentional logout: don't let any resulting 401 raise the expiry toast.
+  suppressAuthSessionExpired();
   try {
     return await localAuthPost<ApiSuccess<undefined>, undefined>(
       "/api/auth/logout",
@@ -445,6 +466,26 @@ export async function updateCurrentUser(
   const response = await apiPatchRaw<CurrentUserResponse, UpdateCurrentUserRequest>(
     "/users/me",
     body,
+    options
+  );
+  return normalizeCurrentUserResponse(response);
+}
+
+export async function updateUserPreferences(
+  body: UpdateUserPreferencesRequest,
+  options?: ApiRequestOptions
+) {
+  const payload: UserPreferencesPayload = {};
+  if (body.publicProfile !== undefined) payload.public_profile = body.publicProfile ? 1 : 0;
+  if (body.pushNotifications !== undefined) payload.push_notifications = body.pushNotifications ? 1 : 0;
+  if (body.matchReminder1hr !== undefined) payload.match_reminder_1hr = body.matchReminder1hr ? 1 : 0;
+  if (body.matchReminder30min !== undefined) payload.match_reminder_30min = body.matchReminder30min ? 1 : 0;
+  if (body.resultNotification !== undefined) payload.result_notification = body.resultNotification ? 1 : 0;
+  if (body.rankChangeAlert !== undefined) payload.rank_change_alert = body.rankChangeAlert ? 1 : 0;
+
+  const response = await apiPatchRaw<CurrentUserResponse, UserPreferencesPayload>(
+    "/users/me/preferences",
+    payload,
     options
   );
   return normalizeCurrentUserResponse(response);

@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Tabs } from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Modal } from "@/components/ui/Modal";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
@@ -26,7 +27,6 @@ import {
   Trophy,
   Users,
   X,
-  Zap,
 } from "lucide-react";
 
 type PredictableMatchResponse = {
@@ -218,6 +218,11 @@ export function PredictApi() {
 
   const isLoggedIn = useUserStore((store) => store.isLoggedIn);
 
+  const [showRulesModal, setShowRulesModal] = useState(false);
+  const [scoringRules, setScoringRules] = useState<any | null>(null);
+  const [loadingRules, setLoadingRules] = useState(false);
+  const [rulesRequestFailed, setRulesRequestFailed] = useState(false);
+
   const predictedMatchIds = useMemo(
     () => new Set(history.map((item) => item.matchId)),
     [history]
@@ -378,12 +383,6 @@ export function PredictApi() {
             <h1 className="font-display text-xl font-bold text-white">
               {t("prediction.title")}
             </h1>
-            <div className="flex items-center gap-2">
-              <Zap size={16} className="text-amber-400" />
-              <span className="font-mono text-sm text-amber-400">
-                {t("prediction.streakCount", { count: 3 })}
-              </span>
-            </div>
           </div>
           <p className="text-sm text-gray-500">{t("prediction.checkBackLater")}</p>
         </div>
@@ -395,6 +394,35 @@ export function PredictApi() {
             </Button>
           </Link>
         ) : null}
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start sm:self-auto"
+          onClick={() => {
+            setShowRulesModal(true);
+            if (!scoringRules && !loadingRules) {
+              void (async () => {
+                setLoadingRules(true);
+                setRulesRequestFailed(false);
+                try {
+                  const resp = await apiGetRaw<any>(
+                    "https://api.scorematrix.live/api/v1/scorm/scoring-rules",
+                    { locale }
+                  );
+                  // API returns an object with `data` key
+                  setScoringRules(resp?.data ?? resp);
+                } catch (error) {
+                  console.error("Error loading scoring rules:", error);
+                  setRulesRequestFailed(true);
+                } finally {
+                  setLoadingRules(false);
+                }
+              })();
+            }
+          }}
+        >
+          กติกา
+        </Button>
       </div>
 
       <Tabs
@@ -958,6 +986,119 @@ export function PredictApi() {
           </div>
         </div>
       ) : null}
+      <Modal
+        open={showRulesModal}
+        onClose={() => setShowRulesModal(false)}
+        title="กติกาการให้คะแนน"
+        size="lg"
+      >
+        <div className="space-y-4">
+          {loadingRules ? (
+            <div className="space-y-3">
+              <Skeleton className="h-4 w-48 rounded" />
+              <Skeleton className="h-3 w-full rounded" />
+              <Skeleton className="h-3 w-full rounded" />
+            </div>
+          ) : rulesRequestFailed ? (
+            <div className="text-sm text-rose-300">ไม่สามารถโหลดกติกาได้</div>
+          ) : scoringRules ? (
+            <div className="space-y-4">
+              {/* Result tiers */}
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-white">Result Tiers</h3>
+                <div className="space-y-2">
+                  {Object.entries(scoringRules.resultTiers || {}).map(
+                    ([key, tier]: [string, any]) => (
+                      <div key={key} className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-white truncate">{tier.name}</div>
+                            <div className="mt-1 text-xs text-gray-400 break-words whitespace-normal">{tier.description}</div>
+                          </div>
+                          <div className="text-right text-sm font-mono text-white min-w-[88px]">
+                            <div>Base: {tier.basePoints}</div>
+                            <div>Bonus: {tier.bonusPoints}</div>
+                            <div className="font-semibold">Total: {tier.totalPoints}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Bonuses */}
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-white">Bonuses</h3>
+                <div className="space-y-2">
+                  {Object.entries(scoringRules.bonuses || {}).map(([key, bonus]: [string, any]) => (
+                    <div key={key} className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-white truncate">{bonus.name}</div>
+                        </div>
+                        <div className="text-sm font-mono text-white min-w-[64px]">{bonus.points} pts</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Confidence multipliers */}
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-white">Confidence Multipliers</h3>
+                <div className="space-y-2">
+                  {Object.entries(scoringRules.confidenceMultipliers || {}).map(
+                    ([key, c]: [string, any]) => (
+                      <div key={key} className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-white truncate">{c.name}</div>
+                          </div>
+                          <div className="text-sm font-mono text-white min-w-[48px]">x{c.multiplier}</div>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+
+              {/* Boost / Streak / Formula */}
+              {scoringRules.boost ? (
+                <div className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
+                  <div className="text-sm font-semibold text-white">{scoringRules.boost.name}</div>
+                  <div className="mt-1 text-xs text-gray-400">{scoringRules.boost.description} (x{scoringRules.boost.multiplier})</div>
+                </div>
+              ) : null}
+
+              {scoringRules.streak ? (
+                <div className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
+                  <div className="text-sm font-semibold text-white">{scoringRules.streak.name}</div>
+                  <div className="mt-1 text-xs text-gray-400">{scoringRules.streak.description}</div>
+                  {scoringRules.streak.bonusPerLevel ? (
+                    <div className="mt-2 text-sm font-mono text-white">Bonus per level: {scoringRules.streak.bonusPerLevel}</div>
+                  ) : null}
+                  {scoringRules.streak.formula ? (
+                    <div className="mt-1 text-xs text-gray-400">Formula: {scoringRules.streak.formula}</div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {scoringRules.formula ? (
+                <div className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
+                  <div className="text-sm font-semibold text-white">Formula</div>
+                  <div className="mt-1 text-xs text-gray-400">{scoringRules.formula.description}</div>
+                  {scoringRules.formula.profit ? (
+                    <div className="mt-2 text-sm font-mono text-white">{scoringRules.formula.profit}</div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-300">ไม่มีข้อมูล</div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 }

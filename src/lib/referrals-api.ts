@@ -1,8 +1,5 @@
 import { apiGetRaw, type ApiRequestOptions } from "@/lib/api-client";
 import {
-  affiliateProgram,
-  affiliateReferrals,
-  affiliateTiers,
   type AffiliateReferral,
   type AffiliateTier,
 } from "@/data/affiliates";
@@ -39,7 +36,15 @@ type ReferralsApiPayload =
       referrals?: ReferralsResponse;
     };
 
-export type AffiliateProgramView = typeof affiliateProgram & {
+export type AffiliateProgramView = {
+  code: string;
+  totalClicks: number;
+  totalSignups: number;
+  qualifiedSignups: number;
+  pendingSignups: number;
+  totalPointsEarned: number;
+  totalCreditsEarned: number;
+  conversionRate: number;
   shareUrl: string;
 };
 
@@ -53,13 +58,20 @@ export type AffiliateViewData = {
   tiers: AffiliateTierView[];
 };
 
-export const DEFAULT_REFERRALS_VIEW_DATA: AffiliateViewData = {
+export const EMPTY_REFERRALS_VIEW_DATA: AffiliateViewData = {
   program: {
-    ...affiliateProgram,
-    shareUrl: `/auth/register?ref=${affiliateProgram.code}`,
+    code: "",
+    totalClicks: 0,
+    totalSignups: 0,
+    qualifiedSignups: 0,
+    pendingSignups: 0,
+    totalPointsEarned: 0,
+    totalCreditsEarned: 0,
+    conversionRate: 0,
+    shareUrl: "",
   },
-  referrals: affiliateReferrals,
-  tiers: affiliateTiers,
+  referrals: [],
+  tiers: [],
 };
 
 export async function getReferrals(options?: ApiRequestOptions) {
@@ -73,7 +85,7 @@ export function normalizeReferralsResponse(response: ReferralsApiPayload): Refer
   if ("referrals" in response && response.referrals?.referralCode) {
     return response.referrals;
   }
-  return mapDefaultViewDataToApiResponse(DEFAULT_REFERRALS_VIEW_DATA);
+  throw new Error("Invalid referrals response");
 }
 
 export function mapApiReferrals(response: ReferralsResponse): AffiliateViewData {
@@ -84,7 +96,7 @@ export function mapApiReferrals(response: ReferralsResponse): AffiliateViewData 
 
   return {
     program: {
-      code: response.referralCode || affiliateProgram.code,
+      code: response.referralCode || "",
       totalClicks: 0,
       totalSignups: totalInvited,
       qualifiedSignups: qualified,
@@ -92,7 +104,9 @@ export function mapApiReferrals(response: ReferralsResponse): AffiliateViewData 
       totalPointsEarned: Number(response.totalEarnings ?? 0),
       totalCreditsEarned: 0,
       conversionRate,
-      shareUrl: response.shareUrl || `/auth/register?ref=${response.referralCode}`,
+      shareUrl:
+        response.shareUrl ||
+        (response.referralCode ? `/auth/register?ref=${response.referralCode}` : ""),
     },
     referrals: response.referrals.map(mapApiReferral),
     tiers: response.rewardTiers.map(mapApiReferralTier),
@@ -134,21 +148,4 @@ function mapReferralStatus(status: ApiReferral["status"]): AffiliateReferral["st
 function extractFirstNumber(value: string) {
   const match = value.match(/\d+/);
   return match ? Number(match[0]) : 0;
-}
-
-function mapDefaultViewDataToApiResponse(data: AffiliateViewData): ReferralsResponse {
-  return {
-    referralCode: data.program.code,
-    totalInvited: data.program.totalSignups,
-    qualified: data.program.qualifiedSignups,
-    totalEarnings: data.program.totalPointsEarned,
-    referrals: data.referrals,
-    shareUrl: data.program.shareUrl,
-    rewardTiers: data.tiers.map((tier) => ({
-      count: tier.referrals,
-      reward:
-        tier.rewardLabel ??
-        `${tier.rewardPoints} points${tier.rewardCredits ? ` + ${tier.rewardCredits} credits` : ""}`,
-    })),
-  };
 }

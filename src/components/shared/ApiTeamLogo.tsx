@@ -5,11 +5,12 @@ import { useState } from "react";
 interface ApiTeamLogoProps {
   name: string;
   logo?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   accent?: "cyan" | "magenta" | "gray";
 }
 
 const sizes = {
+  xs: { outer: "h-6 w-6", image: "inset-[2px]", imageSize: "20px" },
   sm: { outer: "h-8 w-8", image: "inset-[3px]", imageSize: "26px" },
   md: { outer: "h-10 w-10", image: "inset-1", imageSize: "32px" },
   lg: { outer: "h-14 w-14", image: "inset-1.5", imageSize: "44px" },

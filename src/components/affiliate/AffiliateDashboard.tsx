@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
-  DEFAULT_REFERRALS_VIEW_DATA,
+  EMPTY_REFERRALS_VIEW_DATA,
   getReferrals,
   mapApiReferrals,
   type AffiliateViewData,
@@ -27,11 +27,13 @@ import { cn } from "@/lib/utils";
 
 export function AffiliateDashboard() {
   const t = useTranslations("affiliate");
+  const tCommon = useTranslations("common");
   const locale = useLocale();
   const [copied, setCopied] = useState(false);
   const [affiliateData, setAffiliateData] = useState<AffiliateViewData>(
-    DEFAULT_REFERRALS_VIEW_DATA
+    EMPTY_REFERRALS_VIEW_DATA
   );
+  const [hasLoadError, setHasLoadError] = useState(false);
   const { program, referrals, tiers } = affiliateData;
   const inviteUrl = useMemo(
     () => buildInviteUrl(program.shareUrl, locale, program.code),
@@ -52,11 +54,13 @@ export function AffiliateDashboard() {
       .then((response) => {
         if (isActive) {
           setAffiliateData(mapApiReferrals(response));
+          setHasLoadError(false);
         }
       })
       .catch(() => {
         if (isActive) {
-          setAffiliateData(DEFAULT_REFERRALS_VIEW_DATA);
+          setAffiliateData(EMPTY_REFERRALS_VIEW_DATA);
+          setHasLoadError(true);
         }
       });
 
@@ -117,18 +121,22 @@ export function AffiliateDashboard() {
             </div>
             <div className="mt-4 rounded-lg border border-gray-800 bg-[#070a10] p-3 sm:p-4">
               <p className="break-all font-mono text-xs leading-5 text-gray-300 sm:text-sm">
-                {inviteUrl}
+                {inviteUrl || "—"}
               </p>
             </div>
             <Button
               type="button"
               onClick={copyInviteLink}
+              disabled={!inviteUrl}
               variant={copied ? "green" : "primary"}
               className="mt-3 w-full"
             >
               {copied ? <CheckCircle2 size={16} /> : <Copy size={16} />}
               {copied ? t("copied") : t("copyLink")}
             </Button>
+            {hasLoadError && (
+              <p className="mt-3 text-xs text-rose-300">{tCommon("error")}</p>
+            )}
           </Card>
         </div>
       </section>
@@ -296,6 +304,8 @@ export function AffiliateDashboard() {
 }
 
 function buildInviteUrl(shareUrl: string, locale: string, code: string) {
+  if (!shareUrl && !code) return "";
+
   const origin =
     typeof window !== "undefined" && window.location.origin
       ? window.location.origin

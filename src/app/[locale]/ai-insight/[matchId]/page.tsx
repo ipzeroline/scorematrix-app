@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  Activity,
   AlertTriangle,
   ArrowLeft,
   BarChart3,
@@ -11,6 +10,7 @@ import {
   Flame,
   Gauge,
   Goal,
+  Home,
   HeartPulse,
   Shield,
   Sparkles,
@@ -61,6 +61,7 @@ type InsightHeadToHeadRecord = {
     name?: string | null;
     country?: string | null;
     round?: string | null;
+    season?: number | null;
   } | null;
   teams: {
     home: { name: string; winner?: boolean | null };
@@ -169,6 +170,9 @@ type LocalizedDetailCopy = {
   confidenceHigh: string;
   confidenceMid: string;
   confidenceLow: string;
+  strengthGap: string;
+  favoriteTeam: string;
+  upsetRisk: string;
   noImpact: string;
   playersOut: string;
   cardsLabel: string;
@@ -193,6 +197,17 @@ type LocalizedDetailCopy = {
   impactMid: string;
   impactHigh: string;
   impactSevere: string;
+  fixtureMeta: string;
+  apiFixtureId: string;
+  apiLeagueId: string;
+  kickoff: string;
+  liveFlag: string;
+  formIndex: string;
+  attack: string;
+  defense: string;
+  recentProfile: string;
+  winnerId: string;
+  season: string;
 };
 
 const localeMap: Record<string, string> = {
@@ -300,6 +315,9 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     confidenceHigh: "AI มั่นใจสูง มีแนวโน้มทีมเต็งชัดเจน",
     confidenceMid: "AI มั่นใจปานกลาง เกมยังเปิดกว้าง",
     confidenceLow: "AI มั่นใจต่ำ ความเสี่ยงพลิกล็อกสูง",
+    strengthGap: "ช่องว่างความแข็งแกร่ง",
+    favoriteTeam: "ทีมเต็ง",
+    upsetRisk: "ความเสี่ยงพลิกล็อก",
     noImpact: "ไม่มีผลกระทบเด่นจากผู้เล่นบาดเจ็บ",
     playersOut: "ผู้เล่นบาดเจ็บ",
     cardsLabel: "ใบเหลือง",
@@ -324,6 +342,17 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     impactMid: "ผลกระทบปานกลาง",
     impactHigh: "ผลกระทบสูง",
     impactSevere: "ผลกระทบรุนแรง",
+    fixtureMeta: "ข้อมูลแมตช์",
+    apiFixtureId: "รหัสแมตช์ API",
+    apiLeagueId: "รหัสลีก API",
+    kickoff: "เวลาเริ่ม",
+    liveFlag: "สถานะสด",
+    formIndex: "ดัชนีฟอร์ม",
+    attack: "เกมรุก",
+    defense: "เกมรับ",
+    recentProfile: "ฟอร์ม 5 นัดล่าสุด",
+    winnerId: "รหัสทีมเต็ง",
+    season: "ฤดูกาล",
   },
   en: {
     back: "Back to AI Insight",
@@ -388,6 +417,9 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     confidenceHigh: "High AI confidence with a clear favorite profile",
     confidenceMid: "Moderate AI confidence with a balanced outlook",
     confidenceLow: "Low AI confidence with elevated upset risk",
+    strengthGap: "Strength gap",
+    favoriteTeam: "Favorite team",
+    upsetRisk: "Upset risk",
     noImpact: "No notable injury impact reported",
     playersOut: "Players out",
     cardsLabel: "Yellow cards",
@@ -412,6 +444,17 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     impactMid: "Medium impact",
     impactHigh: "High impact",
     impactSevere: "Severe impact",
+    fixtureMeta: "Fixture metadata",
+    apiFixtureId: "API fixture ID",
+    apiLeagueId: "API league ID",
+    kickoff: "Kickoff",
+    liveFlag: "Live status",
+    formIndex: "Form index",
+    attack: "Attack",
+    defense: "Defense",
+    recentProfile: "Last five profile",
+    winnerId: "Winner ID",
+    season: "Season",
   },
 };
 
@@ -489,6 +532,8 @@ export default async function AIInsightDetailPage({ params }: Props) {
               name={fixture.home.name}
               logo={fixture.home.logo}
               alignment="left"
+              favorite={insight.favoriteTeam === "home"}
+              favoriteLabel={details.favoriteTeam}
             />
             <div className="flex min-w-[96px] flex-col items-center justify-center gap-1.5 px-1 text-center sm:min-w-[128px] sm:gap-2">
               <div className="font-mono text-[28px] font-black tracking-[0.1em] text-white sm:text-4xl sm:tracking-[0.18em]">
@@ -506,11 +551,13 @@ export default async function AIInsightDetailPage({ params }: Props) {
               name={fixture.away.name}
               logo={fixture.away.logo}
               alignment="right"
+              favorite={insight.favoriteTeam === "away"}
+              favoriteLabel={details.favoriteTeam}
             />
           </div>
         </div>
 
-        <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-3">
+        <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-4">
           <SimpleStatCard
             icon={Gauge}
             label={copy.labels.confidence}
@@ -521,17 +568,28 @@ export default async function AIInsightDetailPage({ params }: Props) {
           <SimpleStatCard
             icon={Flame}
             label={details.heatMeter}
-            value={formatSlashMetric(insight.heatMeter, 10)}
-            note={copy.labels.heat}
+            value={formatHeatMeter(insight.heatMeter)}
+            note={getHeatDescription(insight.heatMeter, copy)}
             tone={heatTone}
           />
           <SimpleStatCard
-            icon={Activity}
+            icon={AlertTriangle}
+            label={details.upsetRisk}
+            value={formatPercent(insight.upsetRisk)}
+            note={insight.upsetAlert ? copy.labels.upsetAlert : details.confidenceHigh}
+            tone={insight.upsetAlert ? "magenta" : "green"}
+          />
+          <SimpleStatCard
+            icon={Home}
             label={details.homeAdvantage}
             value={formatMultiplier(insight.homeAdvantageFactor)}
             note={fixture.home.name}
             tone="blue"
           />
+        </div>
+
+        <div className="border-t border-white/10 px-4 pb-4 sm:px-5 sm:pb-5">
+          <StrengthSummary insight={insight} fixture={fixture} details={details} />
         </div>
       </section>
 
@@ -540,7 +598,10 @@ export default async function AIInsightDetailPage({ params }: Props) {
           <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-300" />
           <div>
             <p className="font-semibold text-amber-200">{copy.labels.upsetAlert}</p>
-            <p className="mt-1 text-amber-50/80">{insight.upsetDescription}</p>
+            <p className="mt-1 text-amber-50/80">
+              {typeof insight.upsetRisk === "number" ? `${Math.round(insight.upsetRisk)}% • ` : ""}
+              {insight.upsetDescription}
+            </p>
           </div>
         </div>
       ) : null}
@@ -583,15 +644,25 @@ export default async function AIInsightDetailPage({ params }: Props) {
           community: details.tabCommunity,
         }}
         summary={
-          <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-            <KeyFactorsPanel factors={insight.keyFactors} copy={copy} />
-            <InjuryImpactCard
-              injuryImpact={insight.injuryImpact}
-              homeName={fixture.home.name}
-              awayName={fixture.away.name}
-              copy={copy}
-              details={details}
-            />
+          <div className="space-y-5">
+            <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+              <FixtureMetaCard fixture={fixture} details={details} locale={locale} />
+              <FormIndexOverview
+                insight={insight}
+                fixture={fixture}
+                details={details}
+              />
+            </div>
+            <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+              <KeyFactorsPanel factors={insight.keyFactors} copy={copy} />
+              <InjuryImpactCard
+                injuryImpact={insight.injuryImpact}
+                homeName={fixture.home.name}
+                awayName={fixture.away.name}
+                copy={copy}
+                details={details}
+              />
+            </div>
           </div>
         }
         model={
@@ -654,8 +725,14 @@ export default async function AIInsightDetailPage({ params }: Props) {
                     title={details.goalsAgainstTiming}
                     homeName={fixture.home.name}
                     awayName={fixture.away.name}
-                    homeMap={insight.formComparison.homeLastFive?.league?.goals?.against?.minute}
-                    awayMap={insight.formComparison.awayLastFive?.league?.goals?.against?.minute}
+                    homeMap={
+                      insight.formComparison.homeLastFive?.goals?.against?.minute ??
+                      insight.formComparison.homeLastFive?.league?.goals?.against?.minute
+                    }
+                    awayMap={
+                      insight.formComparison.awayLastFive?.goals?.against?.minute ??
+                      insight.formComparison.awayLastFive?.league?.goals?.against?.minute
+                    }
                   />
                 </div>
               </Card>
@@ -759,10 +836,14 @@ function TeamHero({
   name,
   logo,
   alignment,
+  favorite = false,
+  favoriteLabel,
 }: {
   name: string;
   logo: string | null;
   alignment: "left" | "right";
+  favorite?: boolean;
+  favoriteLabel: string;
 }) {
   return (
     <div
@@ -788,6 +869,11 @@ function TeamHero({
         <p className="line-clamp-2 text-sm font-bold leading-tight text-white sm:text-lg">
           {name}
         </p>
+        {favorite ? (
+          <span className="mt-1 inline-flex items-center rounded-full border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+            {`★ ${favoriteLabel}`}
+          </span>
+        ) : null}
       </div>
     </div>
   );
@@ -804,13 +890,14 @@ function SimpleStatCard({
   label: string;
   value: string;
   note: string;
-  tone: "green" | "gold" | "red" | "blue";
+  tone: "green" | "gold" | "red" | "blue" | "magenta";
 }) {
   const accent = {
     green: "text-green-300 border-green-400/15 bg-green-400/6",
     gold: "text-amber-300 border-amber-400/15 bg-amber-400/6",
     red: "text-red-300 border-red-400/15 bg-red-400/6",
     blue: "text-cyan-300 border-cyan-400/15 bg-cyan-400/6",
+    magenta: "text-magenta-300 border-magenta-400/15 bg-magenta-400/6",
   } as const;
 
   return (
@@ -825,6 +912,185 @@ function SimpleStatCard({
         </div>
       </div>
       <p className="mt-3 text-sm text-gray-400">{note}</p>
+    </div>
+  );
+}
+
+function StrengthSummary({
+  insight,
+  fixture,
+  details,
+}: {
+  insight: ApiFootballAIInsightDetail;
+  fixture: ApiFootballFixture;
+  details: LocalizedDetailCopy;
+}) {
+  const hasStrength =
+    typeof insight.homeStrength === "number" &&
+    typeof insight.awayStrength === "number";
+
+  if (!hasStrength) return null;
+
+  const homeStrength = clampPercent(insight.homeStrength ?? 0);
+  const awayStrength = clampPercent(insight.awayStrength ?? 0);
+  const favorite =
+    insight.favoriteTeam === "home"
+      ? fixture.home.name
+      : insight.favoriteTeam === "away"
+        ? fixture.away.name
+        : "-";
+
+  return (
+    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+      <p className="text-xs uppercase tracking-[0.24em] text-gray-500">{details.matchupBoard}</p>
+          <p className="mt-1 text-sm text-gray-300">{details.strengthGap}</p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs">
+          <Badge variant="cyan">{`${details.favoriteTeam}: ${favorite}`}</Badge>
+          <Badge variant="purple">{`${details.strengthGap}: ${formatNullableNumber(insight.strengthGap)}`}</Badge>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <StrengthTeamRow label={fixture.home.name} value={homeStrength} color="cyan" />
+        <StrengthTeamRow label={fixture.away.name} value={awayStrength} color="magenta" />
+      </div>
+    </div>
+  );
+}
+
+function FixtureMetaCard({
+  fixture,
+  details,
+  locale,
+}: {
+  fixture: ApiFootballFixture;
+  details: LocalizedDetailCopy;
+  locale: string;
+}) {
+  return (
+    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+      <SectionHeading
+        icon={Clock3}
+        title={details.fixtureMeta}
+        description={details.matchOverview}
+        accent="cyan"
+      />
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <PredictionInfo label={details.apiFixtureId} value={String(fixture.apiFixtureId ?? "-")} />
+        <PredictionInfo label={details.apiLeagueId} value={String(fixture.league.apiLeagueId ?? "-")} />
+        <PredictionInfo label={details.season} value={String(fixture.league.season ?? "-")} />
+        <PredictionInfo label={details.kickoff} value={formatDateTime(fixture.kickoffTime, locale)} />
+        <PredictionInfo
+          label={details.liveFlag}
+          value={formatBoolean(isLiveStatus(fixture.statusShort.toUpperCase(), fixture.elapsed), locale)}
+        />
+        <PredictionInfo label={details.status} value={fixture.statusLong || fixture.statusShort} />
+        <PredictionInfo label={details.round} value={fixture.league.round || "-"} />
+        <PredictionInfo label={details.venue} value={fixture.venue || "-"} />
+        <PredictionInfo label={details.referee} value={fixture.referee || "-"} />
+      </div>
+    </Card>
+  );
+}
+
+function FormIndexOverview({
+  insight,
+  fixture,
+  details,
+}: {
+  insight: ApiFootballAIInsightDetail;
+  fixture: ApiFootballFixture;
+  details: LocalizedDetailCopy;
+}) {
+  return (
+    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(11,19,32,0.96),rgba(7,10,18,0.98))] p-5">
+      <SectionHeading
+        icon={TrendingUp}
+        title={details.formIndex}
+        description={details.recentProfile}
+        accent="green"
+      />
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <RecentProfileOverview
+          name={fixture.home.name}
+          formIndex={insight.formComparison.homeFormIndex}
+          profile={insight.formComparison.homeLastFive}
+          details={details}
+          tone="cyan"
+        />
+        <RecentProfileOverview
+          name={fixture.away.name}
+          formIndex={insight.formComparison.awayFormIndex}
+          profile={insight.formComparison.awayLastFive}
+          details={details}
+          tone="magenta"
+        />
+      </div>
+    </Card>
+  );
+}
+
+function RecentProfileOverview({
+  name,
+  formIndex,
+  profile,
+  details,
+  tone,
+}: {
+  name: string;
+  formIndex: number | null;
+  profile: ApiFootballTeamFormProfile | null;
+  details: LocalizedDetailCopy;
+  tone: "cyan" | "magenta";
+}) {
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
+      <div className="mt-3 grid gap-2 text-sm text-gray-300">
+        <InfoRow label={details.formIndex} value={formatNullableNumber(formIndex)} />
+        <InfoRow label={details.played} value={formatNullableNumber(profile?.played)} />
+        <InfoRow label={details.formSnapshot} value={profile?.form ?? "-"} />
+        <InfoRow label={details.attack} value={formatPercent(profile?.att)} />
+        <InfoRow label={details.defense} value={formatPercent(profile?.def)} />
+        <InfoRow
+          label={details.goalsFor}
+          value={formatTopLevelGoals(profile?.goals?.for, details)}
+        />
+        <InfoRow
+          label={details.goalsAgainst}
+          value={formatTopLevelGoals(profile?.goals?.against, details)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StrengthTeamRow({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number;
+  color: "cyan" | "magenta";
+}) {
+  const tone = color === "cyan" ? "bg-cyan-400" : "bg-magenta-400";
+  const textTone = color === "cyan" ? "text-cyan-300" : "text-magenta-300";
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className={cn("truncate text-sm font-medium", textTone)}>{label}</span>
+        <span className="font-mono text-sm text-white">{value}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-white/8">
+        <div className={cn("h-full rounded-full", tone)} style={{ width: `${value}%` }} />
+      </div>
     </div>
   );
 }
@@ -900,6 +1166,7 @@ function ApiPredictionCard({
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <PredictionInfo label={details.winnerLean} value={insight.apiWinner?.name} />
+          <PredictionInfo label={details.winnerId} value={stringValue(insight.apiWinner?.id)} />
           <PredictionInfo label={details.winnerNote} value={insight.apiWinner?.comment} />
           <PredictionInfo
             label={details.winOrDraw}
@@ -1102,6 +1369,9 @@ function TeamFormCard({
       ) : null}
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <StatChip label={details.formSnapshot} value={profile.form ?? league?.form ?? "-"} />
+        <StatChip label={details.attack} value={formatPercent(profile.att)} />
+        <StatChip label={details.defense} value={formatPercent(profile.def)} />
         <StatChip label={details.played} value={league?.fixtures?.played?.total} />
         <StatChip label={details.wins} value={league?.fixtures?.wins?.total} />
         <StatChip label={details.draws} value={league?.fixtures?.draws?.total} />
@@ -1136,7 +1406,7 @@ function GoalTimingCard({
   profile: ApiFootballTeamFormProfile | null;
   color: "cyan" | "magenta";
 }) {
-  const minuteMap = profile?.league?.goals?.for?.minute;
+  const minuteMap = profile?.goals?.for?.minute ?? profile?.league?.goals?.for?.minute;
   const buckets = minuteBuckets.map((bucket) => ({
     bucket,
     total: minuteMap?.[bucket]?.total ?? 0,
@@ -1301,7 +1571,10 @@ function HeadToHeadCard({
             >
               <div className="flex items-center justify-between gap-3 text-xs text-gray-500">
                 <span>{formatDateTime(match.date, locale)}</span>
-                <span>{match.league?.name}</span>
+                <span>
+                  {match.league?.name}
+                  {match.league?.season ? ` · ${match.league.season}` : ""}
+                </span>
               </div>
               <div className="mt-3 flex items-center justify-between gap-3">
                 <div className="min-w-0 text-sm text-gray-300">
@@ -1422,7 +1695,9 @@ function TrendColumn({
   profile: ApiFootballTeamFormProfile | null;
   tone: "cyan" | "magenta";
 }) {
-  const biggest = profile?.league?.biggest as ExtendedBiggest | undefined;
+  const biggest =
+    (profile?.biggest as ExtendedBiggest | undefined) ??
+    (profile?.league?.biggest as ExtendedBiggest | undefined);
   const streak = biggest?.streak;
   const goals = biggest?.goals;
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
@@ -1518,8 +1793,8 @@ function AdvancedStatsCard({
           details={details}
           homeName={homeName}
           awayName={awayName}
-          homeLeague={homeProfile?.league as ExtendedLeagueData | undefined}
-          awayLeague={awayProfile?.league as ExtendedLeagueData | undefined}
+          homeProfile={homeProfile}
+          awayProfile={awayProfile}
         />
       </div>
     </Card>
@@ -1537,8 +1812,9 @@ function UnderOverSection({
   details: LocalizedDetailCopy;
   tone: "cyan" | "magenta";
 }) {
-  const goalsForUnderOver = profile?.league?.goals?.for?.under_over;
-  const goalsAgainstUnderOver = profile?.league?.goals?.against?.under_over;
+  const goalsForUnderOver = profile?.goals?.for?.under_over ?? profile?.league?.goals?.for?.under_over;
+  const goalsAgainstUnderOver =
+    profile?.goals?.against?.under_over ?? profile?.league?.goals?.against?.under_over;
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
   const ranges = ["0.5", "1.5", "2.5", "3.5", "4.5"] as const;
 
@@ -1608,14 +1884,14 @@ function CardsBreakdownSection({
   details,
   homeName,
   awayName,
-  homeLeague,
-  awayLeague,
+  homeProfile,
+  awayProfile,
 }: {
   details: LocalizedDetailCopy;
   homeName: string;
   awayName: string;
-  homeLeague: ExtendedLeagueData | undefined;
-  awayLeague: ExtendedLeagueData | undefined;
+  homeProfile: ApiFootballTeamFormProfile | null;
+  awayProfile: ApiFootballTeamFormProfile | null;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -1623,15 +1899,15 @@ function CardsBreakdownSection({
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <CardsList
           name={homeName}
-          yellowMap={homeLeague?.cards?.yellow}
-          redMap={homeLeague?.cards?.red}
+          yellowMap={getProfileCards(homeProfile)?.yellow}
+          redMap={getProfileCards(homeProfile)?.red}
           details={details}
           tone="cyan"
         />
         <CardsList
           name={awayName}
-          yellowMap={awayLeague?.cards?.yellow}
-          redMap={awayLeague?.cards?.red}
+          yellowMap={getProfileCards(awayProfile)?.yellow}
+          redMap={getProfileCards(awayProfile)?.red}
           details={details}
           tone="magenta"
         />
@@ -1728,10 +2004,11 @@ function DisciplineColumn({
   tone: "cyan" | "magenta";
 }) {
   const league = profile?.league as ExtendedLeagueData | undefined;
-  const yellowCards = sumMinuteTotals(league?.cards?.yellow);
-  const cleanSheets = league?.clean_sheet?.total;
-  const failedToScore = league?.failed_to_score?.total;
-  const penalties = league?.penalty;
+  const cards = getProfileCards(profile);
+  const yellowCards = sumMinuteTotals(cards?.yellow);
+  const cleanSheets = profile?.clean_sheet?.total ?? league?.clean_sheet?.total;
+  const failedToScore = profile?.failed_to_score?.total ?? league?.failed_to_score?.total;
+  const penalties = profile?.penalty ?? league?.penalty;
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
 
   return (
@@ -1932,6 +2209,10 @@ function formatSlashMetric(value: number | null | undefined, max: number) {
   return typeof value === "number" ? `${trimDecimal(value)}/${max}` : `-/${max}`;
 }
 
+function formatHeatMeter(value: number | null | undefined) {
+  return typeof value === "number" ? `${Math.round(value)}/100` : "-/100";
+}
+
 function formatMultiplier(value: number | null | undefined) {
   return typeof value === "number" ? `x${value.toFixed(2)}` : "-";
 }
@@ -1969,6 +2250,10 @@ function formatNullableNumber(value: number | null | undefined) {
   return typeof value === "number" ? String(value) : "-";
 }
 
+function stringValue(value: string | number | null | undefined) {
+  return value === null || value === undefined ? "-" : String(value);
+}
+
 function formatTotalAndAverage(
   total: number | null | undefined,
   average: number | string | null | undefined,
@@ -1985,6 +2270,18 @@ function formatTotalAndAverage(
   return `${totalLabel} · ${avgLabel} ${details.avgPerMatch}`;
 }
 
+function formatTopLevelGoals(
+  value:
+    | {
+        total?: number | null;
+        average?: number | null;
+      }
+    | undefined,
+  details: LocalizedDetailCopy
+) {
+  return formatTotalAndAverage(value?.total, value?.average, details);
+}
+
 function trimDecimal(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
@@ -1998,9 +2295,19 @@ function getConfidenceTone(score: number | null | undefined) {
 
 function getHeatTone(value: number | null | undefined) {
   if (typeof value !== "number") return "gold" as const;
-  if (value <= 3) return "green" as const;
-  if (value <= 6) return "gold" as const;
+  if (value < 40) return "green" as const;
+  if (value < 70) return "gold" as const;
   return "red" as const;
+}
+
+function getHeatDescription(
+  value: number | null | undefined,
+  copy: ReturnType<typeof getAIInsightPageCopy>
+) {
+  if (typeof value !== "number") return copy.labels.heat;
+  if (value < 40) return copy.labels.heatLow;
+  if (value < 70) return copy.labels.heatMid;
+  return copy.labels.heatHigh;
 }
 
 function getConfidenceDescription(
@@ -2078,14 +2385,6 @@ function getLiveLeader(fixture: ApiFootballFixture, details: LocalizedDetailCopy
   return `${leader} ${details.liveLeads} ${home}-${away}`;
 }
 
-function getStatusBadgeVariant(fixture: ApiFootballFixture) {
-  const short = fixture.statusShort.toUpperCase();
-  if (isLiveStatus(short, fixture.elapsed)) return "red" as const;
-  if (isFinishedStatus(short)) return "green" as const;
-  if (isHoldStatus(short)) return "gold" as const;
-  return "cyan" as const;
-}
-
 function getStatusLabel(
   fixture: ApiFootballFixture,
   copy: ReturnType<typeof getAIInsightPageCopy>,
@@ -2124,6 +2423,10 @@ function sumMinuteTotals(
   return minuteBuckets.reduce((sum, bucket) => sum + (minuteMap[bucket]?.total ?? 0), 0);
 }
 
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
 function isLiveStatus(short: string, elapsed: number | null) {
   if (typeof elapsed === "number" && elapsed > 0) return true;
   return !["NS", "FT", "AET", "PEN", "PST", "CANC", "ABD", "AWD", "WO"].includes(short);
@@ -2139,10 +2442,16 @@ function isHoldStatus(short: string) {
 
 function getProfileLineups(profile: ApiFootballTeamFormProfile | null) {
   const league = profile?.league as ExtendedLeagueData | undefined;
-  return league?.lineups?.filter(
+  const lineups = profile?.lineups ?? league?.lineups;
+  return lineups?.filter(
     (lineup): lineup is Required<Pick<ExtendedLineup, "formation">> & ExtendedLineup =>
       Boolean(lineup?.formation)
   );
+}
+
+function getProfileCards(profile: ApiFootballTeamFormProfile | null) {
+  const league = profile?.league as ExtendedLeagueData | undefined;
+  return profile?.cards ?? league?.cards;
 }
 
 function formatScoreline(

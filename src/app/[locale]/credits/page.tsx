@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useShallow } from "zustand/react/shallow";
 import {
   Brain,
   Check,
@@ -25,6 +26,8 @@ import {
   type CreditPackageApiItem,
 } from "@/lib/credits-api";
 import { cn } from "@/lib/utils";
+import { useUserStore } from "@/stores/user-store";
+import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
 import type { CreditFeature, CreditPackage, FirstPurchaseBonus } from "@/types/credits";
 
 const FEATURE_ICONS: Record<string, React.ReactNode> = {
@@ -108,6 +111,12 @@ export default function CreditsPage() {
   const t = useTranslations("credits");
   const tc = useTranslations("common");
   const { locale } = useParams<{ locale: string }>();
+  const { isLoggedIn, addCredits } = useUserStore(
+    useShallow((s) => ({
+      isLoggedIn: s.isLoggedIn,
+      addCredits: s.addCredits,
+    }))
+  );
   const [packages, setPackages] = useState<CreditPackage[]>(
     DEFAULT_CREDIT_PACKAGES_RESPONSE.packages.map(mapApiPackage)
   );
@@ -127,6 +136,13 @@ export default function CreditsPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  // Keep the displayed balance in sync with the latest server state when
+  // landing here directly (the global Header owns the wallet store).
+  useEffect(() => {
+    if (isLoggedIn) dispatchMemberWalletRefresh();
+  }, [isLoggedIn]);
 
   useEffect(() => {
     let active = true;
@@ -171,6 +187,8 @@ export default function CreditsPage() {
     if (!pkg) return;
     setProcessing(true);
     setTimeout(() => {
+      addCredits(pkg.totalCredits);
+      dispatchMemberWalletRefresh();
       setProcessing(false);
       setShowCheckout(false);
       setShowSuccess(true);
@@ -192,7 +210,6 @@ export default function CreditsPage() {
           </h1>
           <p className="text-sm text-gray-400 mt-1">{t("subtitle")}</p>
         </div>
-        <PointsBadge type="premium" amount={150} size="lg" showLabel />
       </div>
 
       {firstPurchaseBonus && (
@@ -279,8 +296,16 @@ export default function CreditsPage() {
               >
                 {t("features.comparison")}
               </button>
+              {/* TODO: re-enable real purchase flow once the credit purchase API is ready
               <button
                 onClick={() => setShowCheckout(true)}
+                className="px-6 py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
+              >
+                {t("selectPackage")}
+              </button>
+              */}
+              <button
+                onClick={() => setShowComingSoon(true)}
                 className="px-6 py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
               >
                 {t("selectPackage")}
@@ -554,6 +579,33 @@ export default function CreditsPage() {
                 {t("checkout.goPredict")}
               </Link>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showComingSoon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="relative bg-[#12121a] border border-gray-800 rounded-2xl w-full max-w-sm text-center p-6 shadow-2xl space-y-4">
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+              aria-label={tc("close")}
+            >
+              <X size={20} />
+            </button>
+            <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto">
+              <Zap size={32} className="text-cyan-400" />
+            </div>
+            <h2 className="text-xl font-bold text-white">
+              {t("comingSoonTitle")}
+            </h2>
+            <p className="text-sm text-gray-400">{t("comingSoonMessage")}</p>
+            <button
+              onClick={() => setShowComingSoon(false)}
+              className="w-full py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
+            >
+              {tc("close")}
+            </button>
           </div>
         </div>
       )}

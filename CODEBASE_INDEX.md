@@ -4,7 +4,7 @@ Last indexed: 2026-05-24
 
 ## Purpose
 
-ScoreMatrix is a multilingual football prediction, live score, rewards, missions, leaderboard, news, and admin dashboard app. Most user-facing data is currently static/mock data in `src/data`, with football fixtures and related entities loaded through a ScoreMatrix soccer backend wrapper.
+ScoreMatrix is a multilingual football prediction, live score, rewards, missions, leaderboard, and news app. Most user-facing data is currently static/mock data in `src/data`, with football fixtures and related entities loaded through a ScoreMatrix soccer backend wrapper.
 
 Use this file as the first reference before opening many source files.
 
@@ -32,7 +32,7 @@ Root route:
 Locale shell:
 
 - `src/app/[locale]/layout.tsx`
-- Route groups under locale are used only for organization: `(public)` for auth pages, `(member)` for protected member pages, and `(admin)` for admin pages. URL paths stay the same.
+- Route groups under locale are used only for organization: `(public)` for auth pages and `(member)` for protected member pages. URL paths stay the same.
 - Valid locales from `src/i18n.ts`: `th`, `en`, `lo`, `my`, `km`, `zh`
 - Default locale: `th`
 - Layout wraps pages with `NextIntlClientProvider`, `Header`, `Sidebar`, `Footer`, `MobileBottomNav`, `ToastContainer`
@@ -47,9 +47,9 @@ Main pages:
 - Detail routes include `predict/[matchId]` for legacy redirects, `predict/[matchId]/[homeTeamId]/[awayTeamId]` as the canonical predict URL, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
 - `src/app/[locale]/(member)/leagues/[id]/page.tsx` renders private-league details and standings from `GET /leagues/{id}` without exposing backend league, owner, or member IDs.
 - Non-locale team detail URLs at `/football/teams/{teamId}` redirect to the default locale route `/{defaultLocale}/football/teams/{teamId}` while preserving query parameters.
+- Non-locale player detail URLs at `/football/players/{playerId}` redirect to the default locale route `/{defaultLocale}/football/players/{playerId}` while preserving query parameters.
 - Non-locale live-score match URLs at `/livescore/match/{providerId}` redirect to the default locale route `/{defaultLocale}/livescore/match/{providerId}` while preserving query parameters.
 - Predict links use the route `/predict/{apiFixtureId}/{homeTeamId}/{awayTeamId}` for API fixtures and keep local mock match ids for mock fixtures; older slug URLs such as `/predict/{matchSlug}-{apiFixtureId}/{homeTeamId}/{awayTeamId}` redirect to the canonical id-only route.
-- Admin pages under `src/app/[locale]/(admin)/admin/*`
 - Legal pages under `src/app/[locale]/legal/*`
 
 API routes:
@@ -99,7 +99,7 @@ When adding visible text, update all message files or follow the local fallback 
 Core types:
 
 - `src/types/common.ts`: enums such as `MatchStatus`, `PredictionStatus`, `RewardCategory`, `MissionType`, `LeaderboardPeriod`
-- Domain types: `match`, `team`, `prediction`, `ai-insight`, `reward`, `mission`, `leaderboard`, `event`, `news`, `user`, `credits`, `admin`
+- Domain types: `match`, `team`, `prediction`, `ai-insight`, `reward`, `mission`, `leaderboard`, `event`, `news`, `user`, `credits`
 
 Static data:
 
@@ -115,7 +115,9 @@ Static data:
 - `src/lib/api-football.ts`
   - Base URL: required `API_FOOTBALL_BASE_URL` from root `.env`
   - Exports fetchers for fixtures, live fixtures from `GET /live`, AI insights from `GET /ai-insights`, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
+  - Team profile normalization preserves base team/venue fields plus optional `leagues[]` and `squad.players[]` returned by `GET /soccer/teams/{provider_id}`
   - League listing maps `GET /leagues` / `v1/soccer/leagues` responses from `data[]` with `provider_id`, `current_season`, `sort_order`, `logo`, and country fields into `ApiFootballLeagueEntry`
+  - League detail normalization maps `GET /soccer/leagues/{provider_id}` into league metadata, country info, embedded teams, and embedded standings for the league detail page
   - Normalizes backend values and proxies media URLs
   - Falls back to mock fixtures through `getMockApiFootballFixtures`
 - `src/lib/football-page-data.ts`
@@ -138,6 +140,8 @@ Static data:
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
 - `src/app/[locale]/matches/page.tsx` uses today's football fixtures through `loadTodayFixtures`; `MatchesApi` refreshes once on mount through `/api/football/fixtures/today` and includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
+- `src/app/[locale]/football/teams/[teamId]/page.tsx` renders the team profile from `GET /soccer/teams/{provider_id}` with venue details, optional season stats, league participation cards, and a position-grouped squad roster that links to player detail pages.
+- `src/app/[locale]/football/leagues/[leagueId]/page.tsx` now renders a redesigned league detail page from `GET /soccer/leagues/{provider_id}` with hero metadata, featured teams, embedded standings, and a season schedule panel
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes
 - `src/lib/football-slugs.ts`: builds/extracts SEO slugs for fixtures/leagues/entities
 
@@ -150,8 +154,8 @@ Newest architecture/API source:
 - External source: `/Users/mckazine/Desktop/SCOREMATRIX_SYSTEM_ARCHITECTURE.html`
 - Local summary: `SCOREMATRIX_SYSTEM_ARCHITECTURE_INDEX.md`
 - Backend URLs are configured only through `API_DATA_BASE_URL` and `API_FOOTBALL_BASE_URL`.
-- API style: REST JSON with `Bearer` JWT for user/admin endpoints; errors are documented as `{ error: { code, message } }`.
-- Key target endpoints: `GET/PATCH /users/me`, `PATCH /users/me/preferences`, `GET /matches`, `GET /matches/live`, `POST/GET /predictions`, `POST /checkins`, `GET /leaderboard`, `GET /events`, `GET /rewards`, `POST /rewards/:id/redeem`, `GET /missions`, `POST /missions/:id/claim`, `GET/PATCH /notifications`, `GET/POST /referrals`, `GET/POST /credits`, `GET /stats/accuracy`, `GET /stats/form`, private leagues, payment webhook, and admin endpoints.
+- API style: REST JSON with `Bearer` JWT for member-facing endpoints; errors are documented as `{ error: { code, message } }`.
+- Key target endpoints: `GET/PATCH /users/me`, `PATCH /users/me/preferences`, `GET /matches`, `GET /matches/live`, `POST/GET /predictions`, `POST /checkins`, `GET /leaderboard`, `GET /events`, `GET /rewards`, `POST /rewards/:id/redeem`, `GET /missions`, `POST /missions/:id/claim`, `GET/PATCH /notifications`, `GET/POST /referrals`, `GET/POST /credits`, `GET /stats/accuracy`, `GET /stats/form`, private leagues, and payment webhook.
 - Important caveat: this newer architecture differs from the older member API in `API_REFERENCE_INDEX.md`; prefer the new architecture for new feature work unless the task explicitly targets legacy member endpoints.
 
 ## Legacy Auth And Member API Reference
@@ -189,7 +193,6 @@ Local API modules:
 - `src/components/layout/UserMenu.tsx`: profile dropdown logout calls same-origin `POST /api/auth/logout`, which forwards backend logout and clears the HttpOnly refresh session; the client then clears its access token/user store and redirects to locale home.
 - `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login after a 3-second delay with `next` set to the current URL.
 - `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
-- `src/app/[locale]/(admin)/admin/layout.tsx`: admin shell and sidebar for the `/admin` section, organized under the `(admin)` route group.
 - `src/app/[locale]/(member)/profile/page.tsx`: profile dashboard UI loads current profile data through `getCurrentUser()` (`GET /api/data/users/me`, proxied to the scorm data backend), syncs known fields into `useUserStore`, and falls back to the last store values on load failure.
 - `src/app/[locale]/(member)/profile/edit/page.tsx`: loads `GET /member/profile`, validates editable API fields, and submits `POST /member/update-profile`.
 - `src/app/[locale]/(public)/auth/forgot-password/page.tsx`: validates email and submits `POST /auth/forgot-password`; success copy follows the API's anti-enumeration behavior.

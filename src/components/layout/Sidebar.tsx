@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -15,7 +15,6 @@ import {
   Coins,
   Gift,
   Home,
-  Newspaper,
   Share2,
   Sparkles,
   Target,
@@ -46,6 +45,8 @@ import { MissionType } from "@/types/common";
 import type { LeaderboardEntry } from "@/types/leaderboard";
 import type { Mission } from "@/types/mission";
 
+const emptySubscribe = () => () => {};
+
 const SIDEBAR_LINKS = [
   { href: "", label: "home", icon: Home },
   { href: "/livescore", label: "livescore", icon: Activity },
@@ -60,7 +61,6 @@ const SIDEBAR_LINKS = [
   { href: "/stats", label: "stats", icon: BarChart3, authRequired: true },
   { href: "/affiliate", label: "affiliate", icon: Share2, authRequired: true },
   { href: "/leagues", label: "leagues", icon: Users, authRequired: true },
-  { href: "/news", label: "news", icon: Newspaper },
 ];
 
 const categoryColors: Record<string, "cyan" | "green" | "gold" | "purple" | "magenta"> = {
@@ -92,18 +92,28 @@ function getDefaultSidebarRewards() {
     .slice(0, 4);
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  initialHasAuthSession?: boolean;
+}
+
+export function Sidebar({ initialHasAuthSession = false }: SidebarProps) {
   const t = useTranslations();
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
+  const effectiveIsLoggedIn = initialHasAuthSession || (isMounted && isLoggedIn);
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
   const [missions, setMissions] = useState<Mission[]>(getDefaultSidebarMissions);
   const [rewards, setRewards] = useState<RewardViewItem[]>(getDefaultSidebarRewards);
-  const visibleLinks = SIDEBAR_LINKS.filter((link) => !link.authRequired || isLoggedIn);
+  const visibleLinks = SIDEBAR_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!effectiveIsLoggedIn) return;
 
     let active = true;
 
@@ -123,10 +133,10 @@ export function Sidebar() {
     return () => {
       active = false;
     };
-  }, [isLoggedIn, locale]);
+  }, [effectiveIsLoggedIn, locale]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!effectiveIsLoggedIn) return;
 
     let active = true;
 
@@ -146,10 +156,10 @@ export function Sidebar() {
     return () => {
       active = false;
     };
-  }, [isLoggedIn, locale]);
+  }, [effectiveIsLoggedIn, locale]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!effectiveIsLoggedIn) return;
 
     let active = true;
 
@@ -170,7 +180,7 @@ export function Sidebar() {
     return () => {
       active = false;
     };
-  }, [isLoggedIn, locale]);
+  }, [effectiveIsLoggedIn, locale]);
 
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;
@@ -202,7 +212,7 @@ export function Sidebar() {
       </nav>
 
       <div className="mt-3 space-y-2">
-        {isLoggedIn && (
+        {effectiveIsLoggedIn && (
           <Link
             href={`/${locale}/leaderboard`}
             className="group block rounded-xl border border-amber-300/20 bg-amber-300/8 p-2 transition-colors hover:border-amber-300/35 hover:bg-amber-300/12"
@@ -242,7 +252,7 @@ export function Sidebar() {
           </Link>
         )}
 
-        {isLoggedIn && (
+        {effectiveIsLoggedIn && (
           <Link
             href={`/${locale}/missions`}
             className="group block rounded-xl border border-purple-300/20 bg-purple-300/8 p-2 transition-colors hover:border-purple-300/35 hover:bg-purple-300/12"

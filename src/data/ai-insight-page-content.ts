@@ -21,12 +21,15 @@ export type AIInsightPageCopy = {
     highConfidence: string;
     upset: string;
   };
-  labels: {
-    featured: string;
-    upsetAlert: string;
-    confidence: string;
-    heat: string;
-    homeWin: string;
+    labels: {
+      featured: string;
+      upsetAlert: string;
+      confidence: string;
+      heat: string;
+      heatLow: string;
+      heatMid: string;
+      heatHigh: string;
+      homeWin: string;
     draw: string;
     awayWin: string;
     form: string;
@@ -90,6 +93,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       upsetAlert: "ระวังพลิกล็อก",
       confidence: "ความมั่นใจ",
       heat: "ความร้อนแรง",
+      heatLow: "🔥 ขาดลอย",
+      heatMid: "🔥 เหนือกว่า",
+      heatHigh: "🔥 สูสี",
       homeWin: "เจ้าบ้านชนะ",
       draw: "เสมอ",
       awayWin: "ทีมเยือนชนะ",
@@ -159,6 +165,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       upsetAlert: "Upset Alert",
       confidence: "Confidence",
       heat: "Heat",
+      heatLow: "🔥 One-sided",
+      heatMid: "🔥 Edge",
+      heatHigh: "🔥 Tight",
       homeWin: "Home win",
       draw: "Draw",
       awayWin: "Away win",
@@ -221,6 +230,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       upsetAlert: "ລະວັງພິກລັອກ",
       confidence: "ຄວາມໝັ້ນໃຈ",
       heat: "ຄວາມຮ້ອນແຮງ",
+      heatLow: "🔥 ຂາດລອຍ",
+      heatMid: "🔥 ເໜືອກວ່າ",
+      heatHigh: "🔥 ສູສີ",
       homeWin: "ເຈົ້າບ້ານຊະນະ",
       draw: "ສະເໝີ",
       awayWin: "ທີມຢາມຊະນະ",
@@ -267,6 +279,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       upsetAlert: "Upset သတိပေးချက်",
       confidence: "ယုံကြည်မှု",
       heat: "Heat",
+      heatLow: "🔥 အသာစီး",
+      heatMid: "🔥 သာလွန်",
+      heatHigh: "🔥 สูสี",
       homeWin: "အိမ်ရှင်နိုင်",
       draw: "သရေ",
       awayWin: "ဧည့်သည်နိုင်",
@@ -313,6 +328,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       upsetAlert: "ព្រមានพลិកលទ្ធផល",
       confidence: "ទំនុកចិត្ត",
       heat: "ភាពក្តៅ",
+      heatLow: "🔥 ម្ខាងជាង",
+      heatMid: "🔥 លើសបន្តិច",
+      heatHigh: "🔥 ប្រកៀក",
       homeWin: "ម្ចាស់ផ្ទះឈ្នះ",
       draw: "ស្មើ",
       awayWin: "ភ្ញៀវឈ្នះ",
@@ -359,6 +377,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       upsetAlert: "爆冷提醒",
       confidence: "信心",
       heat: "热度",
+      heatLow: "🔥 一边倒",
+      heatMid: "🔥 略占优",
+      heatHigh: "🔥 势均力敌",
       homeWin: "主胜",
       draw: "平局",
       awayWin: "客胜",

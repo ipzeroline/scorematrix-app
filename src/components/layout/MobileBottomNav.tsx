@@ -1,4 +1,5 @@
 "use client";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -14,12 +15,24 @@ const BOTTOM_LINKS = [
   { href: "/rewards", label: "rewards", icon: Gift, authRequired: true },
 ];
 
-export function MobileBottomNav() {
+const emptySubscribe = () => () => {};
+
+interface MobileBottomNavProps {
+  initialHasAuthSession?: boolean;
+}
+
+export function MobileBottomNav({ initialHasAuthSession = false }: MobileBottomNavProps) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const { locale } = useParams<{ locale: string }>();
+  const isMounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
-  const visibleLinks = BOTTOM_LINKS.filter((link) => !link.authRequired || isLoggedIn);
+  const effectiveIsLoggedIn = initialHasAuthSession || (isMounted && isLoggedIn);
+  const visibleLinks = BOTTOM_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
 
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;

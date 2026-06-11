@@ -45,11 +45,11 @@ export default async function LocaleLayout({
       <div className="flex min-h-screen flex-col pt-14">
         <Header initialHasAuthSession={hasAuthSession} />
         <div className="flex flex-1 max-w-[1440px] mx-auto w-full">
-          <Sidebar />
+          <Sidebar initialHasAuthSession={hasAuthSession} />
           <main className="flex-1 min-w-0 p-4 pb-20 lg:pb-4 [scroll-behavior:smooth] [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]">{children}</main>
         </div>
         <Footer />
-        <MobileBottomNav />
+        <MobileBottomNav initialHasAuthSession={hasAuthSession} />
       </div>
     </NextIntlClientProvider>
   );

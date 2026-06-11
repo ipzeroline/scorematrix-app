@@ -14,4 +14,3 @@ export { rewards } from './rewards';
 export { redemptions } from './redemptions';
 export { privateLeagues } from './private-leagues';
 export { newsArticles } from './news';
-export { adminStats, adminLogs } from './admin';

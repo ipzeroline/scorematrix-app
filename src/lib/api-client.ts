@@ -133,6 +133,13 @@ export function clearStoredAuthToken() {
   clearLegacyStoredAuthToken();
 }
 
+// Suppresses the "session expired" event for intentional logouts, so any
+// in-flight 401 that resolves afterwards does not surface the expiry toast.
+// Reset on the next successful login via setStoredAuthTokens.
+export function suppressAuthSessionExpired() {
+  authSessionExpiredDispatched = true;
+}
+
 export async function apiGet<T>(
   path: string,
   options: ApiRequestOptions = {}

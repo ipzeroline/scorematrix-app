@@ -8,7 +8,7 @@ export interface User {
   avatar: string | null;
   bio: string;
   favoriteTeam: string | null;
-  role: 'user' | 'admin';
+  role: 'user';
   stats: UserStats;
   preferences: UserPreferences;
   createdAt: string;

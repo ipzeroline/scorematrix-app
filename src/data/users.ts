@@ -22,7 +22,7 @@ function generateUsers(): User[] {
       avatar: avatars[i % 2],
       bio: "",
       favoriteTeam: null,
-      role: i <= 2 ? 'admin' : 'user',
+      role: 'user',
       stats: {
         freePoints: Math.floor(Math.random() * 50000),
         premiumCredits: Math.floor(Math.random() * 5000),
@@ -52,13 +52,13 @@ function generateUsers(): User[] {
     });
   }
 
-  // Ensure user-001 and user-002 are the admins with high stats
+  // Ensure the top seeded mock accounts have standout stats
   users[0] = {
     ...users[0],
-    username: 'admin_master',
-    displayName: 'Admin Master',
-    email: 'admin@scormatrix.app',
-    role: 'admin',
+    username: 'matrix_master',
+    displayName: 'Matrix Master',
+    email: 'matrix@scormatrix.app',
+    role: 'user',
     stats: {
       ...users[0].stats,
       freePoints: 100000,
@@ -78,10 +78,10 @@ function generateUsers(): User[] {
   };
   users[1] = {
     ...users[1],
-    username: 'mod_support',
-    displayName: 'Mod Support',
-    email: 'mod@scormatrix.app',
-    role: 'admin',
+    username: 'goal_architect',
+    displayName: 'Goal Architect',
+    email: 'goal@scormatrix.app',
+    role: 'user',
     stats: {
       ...users[1].stats,
       freePoints: 75000,

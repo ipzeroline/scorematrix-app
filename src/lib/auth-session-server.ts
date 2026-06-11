@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import {
+  AUTH_TOKEN_COOKIE_NAME,
   REFRESH_SESSION_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "@/lib/auth-guard";
@@ -91,6 +92,14 @@ export function stripRefreshToken(payload: unknown) {
 
 export async function getRefreshToken() {
   return (await cookies()).get(REFRESH_TOKEN_COOKIE_NAME)?.value ?? null;
+}
+
+export async function hasAuthSession() {
+  const cookieStore = await cookies();
+  return (
+    cookieStore.has(AUTH_TOKEN_COOKIE_NAME) ||
+    cookieStore.has(REFRESH_TOKEN_COOKIE_NAME)
+  );
 }
 
 export async function getRememberedAuthSession() {
