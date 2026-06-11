@@ -114,6 +114,11 @@ export function PredictMatchForm({
   const router = useRouter();
   const addToast = useNotificationStore((s) => s.addToast);
   const freePoints = useUserStore((s) => s.freePoints);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Core prediction states
   const [homeScore, setHomeScore] = useState<number | null>(0);
@@ -497,10 +502,10 @@ export function PredictMatchForm({
             {/* Centered VS Block */}
             <div className="flex flex-col items-center justify-center bg-black/50 px-4 py-2.5 rounded-xl border border-gray-800/80 shadow-2xl shrink-0 min-w-[90px] sm:min-w-[110px]">
               <span className="font-mono text-base sm:text-lg font-black text-cyan-400 tracking-wider">VS</span>
-              <span className="mt-1 whitespace-nowrap text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
+              <span suppressHydrationWarning className="mt-1 whitespace-nowrap text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
                 {formatDate(match.kickoffTime, locale)}
               </span>
-              <span className="whitespace-nowrap font-mono text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
+              <span suppressHydrationWarning className="whitespace-nowrap font-mono text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
                 {formatMatchTimeWithZone(match.kickoffTime, locale)}
               </span>
             </div>
@@ -735,7 +740,7 @@ export function PredictMatchForm({
                   </span>
                 </div>
                 <p className="mt-1.5 text-right text-[10px] font-semibold text-gray-500">
-                  {t("side.balance")}: {freePoints.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
+                  {t("side.balance")}: {mounted ? freePoints.toLocaleString() : "..."} {locale === "th" ? "แต้ม" : "pts"}
                 </p>
               </div>
             </div>
@@ -1043,7 +1048,7 @@ export function PredictMatchForm({
                 <Timer size={11} className="text-cyan-400/70" />
                 {match.league} - {match.round}
               </span>
-              <span className="inline-flex items-center gap-1.5">
+              <span suppressHydrationWarning className="inline-flex items-center gap-1.5">
                 <CalendarClock size={11} className="text-amber-400/70" />
                 {formatDateTime(match.kickoffTime, locale)}
               </span>

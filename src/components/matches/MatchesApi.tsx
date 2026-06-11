@@ -630,7 +630,7 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
           <div className="border-y border-gray-800/80 bg-[#0b0f15] px-3 py-2 sm:px-4">
             <div className="flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200">
+              <p suppressHydrationWarning className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200">
                 {group.label}
               </p>
               <span className="text-[11px] text-gray-500">{group.matches.length}</span>
@@ -727,8 +727,8 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <div className="flex items-center gap-2 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5">
               <CalendarDays size={13} className="shrink-0 text-cyan-300" />
-              <span className="text-[11px] text-gray-300">{matchDate}</span>
-              <span className="font-mono text-xs font-bold text-cyan-300 sm:text-sm">
+              <span suppressHydrationWarning className="text-[11px] text-gray-300">{matchDate}</span>
+              <span suppressHydrationWarning className="font-mono text-xs font-bold text-cyan-300 sm:text-sm">
                 {matchTime}
               </span>
             </div>

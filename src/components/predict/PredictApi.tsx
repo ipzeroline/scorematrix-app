@@ -201,6 +201,24 @@ type PlayerProfileResponse = {
   name?: unknown;
 };
 
+type ScoringRules = {
+  resultTiers?: Record<
+    string,
+    {
+      name?: string;
+      description?: string;
+      basePoints?: number;
+      bonusPoints?: number;
+      totalPoints?: number;
+    }
+  >;
+  bonuses?: Record<string, { name?: string; points?: number }>;
+  confidenceMultipliers?: Record<string, { name?: string; multiplier?: number }>;
+  boost?: { name?: string; description?: string; multiplier?: number };
+  streak?: { name?: string; description?: string; bonusPerLevel?: number; formula?: string };
+  formula?: { description?: string; profit?: string };
+};
+
 export function PredictApi() {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
@@ -217,6 +235,13 @@ export function PredictApi() {
   const [playerName, setPlayerName] = useState<string | null>(null);
 
   const isLoggedIn = useUserStore((store) => store.isLoggedIn);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const effectiveIsLoggedIn = mounted ? isLoggedIn : false;
 
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [scoringRules, setScoringRules] = useState<any | null>(null);
@@ -386,7 +411,7 @@ export function PredictApi() {
           </div>
           <p className="text-sm text-gray-500">{t("prediction.checkBackLater")}</p>
         </div>
-        {!isLoggedIn ? (
+        {!effectiveIsLoggedIn ? (
           <Link href={`/${locale}/auth/login?next=${encodeURIComponent(pathname)}`}>
             <Button variant="outline" size="sm" className="self-start sm:self-auto">
               <LogIn size={14} />
@@ -435,7 +460,7 @@ export function PredictApi() {
           {
             key: "history",
             label: t("prediction.predictionHistory"),
-            count: isLoggedIn ? history.length : undefined,
+            count: effectiveIsLoggedIn ? history.length : undefined,
           },
         ]}
         activeTab={tab}
@@ -445,7 +470,7 @@ export function PredictApi() {
       {tab === "upcoming" ? (
         <div className="space-y-3">
           <p className="text-xs text-gray-500">
-            {isLoggedIn
+            {effectiveIsLoggedIn
               ? t("prediction.filterHelpLoggedIn")
               : t("prediction.filterHelpGuest")}
           </p>
@@ -566,7 +591,7 @@ export function PredictApi() {
                           className="px-2 py-0.5 text-[10px]"
                         />
                       </div>
-                      {isLoggedIn && !hasPredicted ? (
+                      {effectiveIsLoggedIn && !hasPredicted ? (
                         <Link
                           className="self-end sm:self-auto"
                           href={buildPredictMatchHref(
@@ -580,7 +605,7 @@ export function PredictApi() {
                             {t("prediction.predictScore")}
                           </Button>
                         </Link>
-                      ) : !isLoggedIn ? (
+                      ) : !effectiveIsLoggedIn ? (
                         <Badge
                           variant="default"
                           className="self-end border-gray-700 text-gray-400 sm:self-auto"
@@ -597,7 +622,7 @@ export function PredictApi() {
         </div>
       ) : (
         <div className="space-y-2">
-          {!isLoggedIn ? (
+          {!effectiveIsLoggedIn ? (
             <EmptyState
               title={t("prediction.predictionHistory")}
               description={t("prediction.filterHelpGuest")}
