@@ -407,7 +407,21 @@
       "liveTitle": "Live status signals",
       "liveText": "Scan live, upcoming and finished status quickly so the match list stays useful during busy game days."
     },
-    "metricMatches": "Matches"
+    "metricMatches": "Matches",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "backToToday": "Back to today",
+    "loadError": "Unable to refresh matches. Showing the latest available data.",
+    "viewDetails": "View details",
+    "truncatedWarning": "Showing {shown} of {total} matches for this day.",
+    "filtersTitle": "Match filters",
+    "filtersDescription": "Choose a date, league, status, or search for a team.",
+    "clearFilters": "Clear filters",
+    "clearSearch": "Clear search",
+    "dateFilter": "Match date",
+    "leagueFilter": "League",
+    "searchFilter": "Team search",
+    "statusFilter": "Match status"
   },
   "livescore": {
     "title": "ຜົນສົດ",
@@ -422,6 +436,8 @@
     "filterCountry": "Filter by Country",
     "filterTime": "Filter by Time",
     "noMatches": "ບໍ່ພົບການແຂ່ງຂັນ",
+    "loadError": "ບໍ່ສາມາດອັບເດດການແຂ່ງຂັນສົດໄດ້. ກະລຸນາລອງໃໝ່.",
+    "sync": "ຊິງຂໍ້ມູນ",
     "kickoff": "Kickoff",
     "fullTime": "FT",
     "minute": "'"
@@ -506,6 +522,8 @@
     "noTeamStatistics": "ຍັງບໍ່ມີຂໍ້ມູນສະຖິຕິທີມ",
     "h2h": "ສະຖິຕິພົບກັນຍ້ອນຫຼັງ",
     "noH2hData": "ຍັງບໍ່ມີຂໍ້ມູນການພົບກັນຍ້ອນຫຼັງ",
+    "leagueStanding": "ອັນດັບລີກ",
+    "noStandingData": "ບໍ່ມີຂໍ້ມູນອັນດັບ",
     "noLineupData": "ຍັງບໍ່ມີຂໍ້ມູນລາຍຊື່ນັກເຕະ, ໂຄ້ດ ຫຼື ແຜນການຫຼິ້ນ",
     "coach": "ໂຄ້ດ",
     "formationPitch": "ສະໜາມແຜນການຫຼິ້ນ",
@@ -515,7 +533,29 @@
     "playerStatsTitleSuffix": "ສະຖິຕິນັກເຕະ",
     "captain": "ກັບຕັນ",
     "loadError": "ບໍ່ສາມາດໂຫຼດລາຍລະອຽດການແຂ່ງຂັນໄດ້",
-    "backToMatches": "ກັບໄປໜ້າການແຂ່ງຂັນ"
+    "backToMatches": "ກັບໄປໜ້າການແຂ່ງຂັນ",
+    "liveAutoRefresh": "ສົດ · ໂຫຼດໃໝ່ອັດຕະໂນມັດ",
+    "scorePeriod": "ຄະແນນແຕ່ລະໄລຍະ",
+    "firstScorer": "ຜູ້ຍິງປະຕູທຳອິດ",
+    "goalHighlight": "ໄຮໄລທ໌ປະຕູ",
+    "goalMinute": "ນາທີ",
+    "goalAssist": "ຜູ້ຊ່ວຍ",
+    "goalType": "ປະເພດ",
+    "goalDetail": "ລາຍລະອຽດ",
+    "goalComments": "ຄຳເຫັນ",
+    "h2hWin": "ຊະນະ",
+    "h2hDraw": "ເຮ່",
+    "h2hLoss": "ແພ້",
+    "recentForm": "ຟອມລ່າສຸດ",
+    "standingRank": "ອັນດັບ",
+    "standingPoints": "ຄະແນນ",
+    "standingPlayed": "ຫຼິ້ນ",
+    "standingWDL": "ຊ / ເ / ແ",
+    "standingGoals": "ປະຕູ",
+    "standingGD": "ຜົນຕ່າງ",
+    "standingSplit": "ເຮືອນ / ເຍືອນ",
+    "standingHome": "ເຮືອນ",
+    "standingAway": "ເຍືອນ"
   },
   "prediction": {
     "title": "ການທາຍຜົນ",
@@ -978,7 +1018,8 @@
       "cancel": "Cancel",
       "confirm": "Confirm",
       "clear": "Clear",
-      "vs": "VS"
+      "vs": "VS",
+      "back": "ກັບຄືນ"
     },
     "basic": {
       "title": "Basic prediction",

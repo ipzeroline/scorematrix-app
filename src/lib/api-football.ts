@@ -1,14 +1,9 @@
-import { matches } from "@/data/matches";
-import { leagues } from "@/data/leagues";
-import { teams } from "@/data/teams";
 import { normalizeFixtureDetailsPayload } from "@/lib/api-football-fixture-details";
 import { getFootballApiUrl } from "@/lib/backend-api-urls";
 import { proxyFootballMediaValue } from "@/lib/football-media";
 import { MatchStatus } from "@/types/common";
 
 const API_SPORTS_LEAGUE_LOGO_BASE_URL = "https://media.api-sports.io/football/leagues";
-
-export type ApiFootballSource = "api-football" | "mock";
 
 export interface ApiFootballFixture {
   id: string;
@@ -58,7 +53,8 @@ export interface ApiFootballFixture {
 }
 
 interface SoccerBackendResponse<T> {
-  source?: ApiFootballSource;
+  date?: string;
+  counts?: ApiFootballFixtureCounts;
   fetchedAt?: string;
   count?: number;
   query?: Record<string, string>;
@@ -78,10 +74,6 @@ interface SoccerBackendResponse<T> {
   h2h?: {
     fixtures?: ApiFootballFixture[];
   };
-}
-
-interface SoccerLiveResponse {
-  data?: SoccerLiveFixture[];
 }
 
 interface SoccerStandingsResponse {
@@ -531,12 +523,32 @@ export interface GetFixturesOptions {
   live?: boolean;
   league?: string;
   season?: string;
+  statusGroup?: ApiFootballFixtureStatusGroup;
+  status?: string;
+  timezone?: string;
   limit?: number;
 }
 
+export type ApiFootballFixtureStatusGroup =
+  | "live"
+  | "upcoming"
+  | "finished"
+  | "postponed"
+  | "cancelled";
+
+export interface ApiFootballFixtureCounts {
+  total: number;
+  live: number;
+  upcoming: number;
+  finished: number;
+  postponed: number;
+  cancelled: number;
+}
+
 export interface GetFixturesResult {
-  source: ApiFootballSource;
   fetchedAt: string;
+  date: string | null;
+  counts: ApiFootballFixtureCounts;
   query: Record<string, string>;
   count: number;
   fixtures: ApiFootballFixture[];
@@ -662,14 +674,57 @@ export interface ApiFootballPlayerStats {
   }[];
 }
 
+export interface ApiFootballScoreBreakdown {
+  halftime: { home: number | null; away: number | null };
+  extratime: { home: number | null; away: number | null };
+  penalty: { home: number | null; away: number | null };
+}
+
+export interface ApiFootballH2HFixture {
+  fixtureId: number;
+  date: string;
+  statusShort: string;
+  league: {
+    name: string;
+    season: number | null;
+    round: string | null;
+  };
+  home: { id: number; name: string; logo: string | null; winner: boolean | null };
+  away: { id: number; name: string; logo: string | null; winner: boolean | null };
+  goals: { home: number | null; away: number | null };
+  score: {
+    halftime: { home: number | null; away: number | null };
+    fulltime: { home: number | null; away: number | null };
+  };
+}
+
+export interface ApiFootballFixtureTeamStanding {
+  rank: number;
+  team: { id: number; name: string; logo: string | null };
+  points: number;
+  goalsDiff: number;
+  group: string;
+  form: string | null;
+  status: string;
+  description: string | null;
+  all: ApiFootballStandingRecord;
+  home: ApiFootballStandingRecord;
+  away: ApiFootballStandingRecord;
+}
+
 export interface GetFixtureDetailsResult {
-  source: ApiFootballSource;
   fetchedAt: string;
   fixture: ApiFootballFixture;
   events: ApiFootballEvent[];
   lineups: ApiFootballLineup[];
   statistics: ApiFootballTeamStatistics[];
   playerStats: ApiFootballPlayerStats[];
+  headToHead: ApiFootballH2HFixture[];
+  standings: {
+    home: ApiFootballFixtureTeamStanding | null;
+    away: ApiFootballFixtureTeamStanding | null;
+  } | null;
+  scoreBreakdown: ApiFootballScoreBreakdown;
 }
 
 export type ApiFootballAIInsightGroup = "live" | "highConfidence" | "upsetAlert";
@@ -716,12 +771,49 @@ export interface ApiFootballAIInsight {
     comment: string | null;
   } | null;
   generatedAt: string | null;
+  standings?: {
+    home: ApiFootballAIInsightStanding | null;
+    away: ApiFootballAIInsightStanding | null;
+  } | null;
+  h2hSummary?: {
+    totalMatches: number;
+    homeWins: number;
+    draws: number;
+    awayWins: number;
+    avgGoals: number;
+    recentForm: Array<"H" | "D" | "A" | string>;
+  } | null;
   league: {
     id: number;
     name: string;
     country_flag: string | null;
     logo: string | null;
   };
+}
+
+export interface ApiFootballAIInsightStanding {
+  rank: number | null;
+  points: number | null;
+  played: number | null;
+  win: number | null;
+  draw: number | null;
+  lose: number | null;
+  goalsFor: number | null;
+  goalsAgainst: number | null;
+  goalDiff: number | null;
+  form: string | null;
+  description: string | null;
+}
+
+export interface ApiFootballAIInsightTeamStats {
+  avgGoalsFor: number | null;
+  avgGoalsAgainst: number | null;
+  cleanSheets: number | null;
+  failedToScore: number | null;
+  penaltyScored: number | null;
+  avgBallPossession: number | string | null;
+  formations: string | null;
+  cardsAvg: number | null;
 }
 
 export interface GetAIInsightsResult {
@@ -852,6 +944,23 @@ export interface ApiFootballAIInsightDetail {
   upsetDescription: string | null;
   communitySentiment: ApiFootballAIInsight["communitySentiment"];
   keyFactors: string[];
+  probabilitySource?: string | null;
+  standings?: {
+    home: ApiFootballAIInsightStanding | null;
+    away: ApiFootballAIInsightStanding | null;
+  } | null;
+  teamStats?: {
+    home: ApiFootballAIInsightTeamStats | null;
+    away: ApiFootballAIInsightTeamStats | null;
+  } | null;
+  h2hSummary?: {
+    totalMatches: number;
+    homeWins: number;
+    draws: number;
+    awayWins: number;
+    avgGoals: number;
+    recentForm: Array<"H" | "D" | "A" | string>;
+  } | null;
   generatedAt: string;
   apiAdvice: string | null;
   apiUnderOver: string | null;
@@ -882,8 +991,17 @@ export interface ApiFootballAIInsightDetail {
 }
 
 interface SoccerAIInsightDetailResponse {
-  data?: Omit<ApiFootballAIInsightDetail, "fixture"> & {
+  data?: Omit<ApiFootballAIInsightDetail, "fixture" | "standings"> & {
     fixture?: SoccerLiveFixture | ApiFootballFixture | null;
+    standings?: unknown;
+    provider_id?: number;
+    league?: SoccerLiveFixture["league"];
+    season?: number | null;
+    status?: SoccerLiveFixture["status"];
+    goals?: SoccerLiveFixture["goals"];
+    teams?: SoccerLiveFixture["teams"];
+    starts_at?: string;
+    is_live?: boolean;
   };
 }
 
@@ -917,8 +1035,38 @@ export async function getApiFootballFixtures(
       : mappedFixtures;
 
   return {
-    source: payload.source ?? "api-football",
     fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
+    date: payload.date ?? options.date ?? null,
+    counts: payload.counts ?? countFixturesByStatus(fixtures),
+    query,
+    count: fixtures.length,
+    fixtures,
+    rateLimit: payload.rateLimit ?? {
+      requestsRemaining: null,
+      requestsLimit: null,
+    },
+  };
+}
+
+export async function getApiFootballFixtureList(
+  options: GetFixturesOptions = {}
+): Promise<GetFixturesResult> {
+  const query = buildFixtureListQuery(options);
+  if (typeof options.limit === "number") query.limit = String(options.limit);
+
+  const payload = await fetchSoccerBackend<SoccerBackendResponse<never>>("/", query);
+  const mappedFixtures = withLeagueLogoFallbacks(
+    payload.fixtures ?? (payload.data ?? []).map(mapLiveFixture)
+  );
+  const fixtures =
+    typeof options.limit === "number"
+      ? mappedFixtures.slice(0, options.limit)
+      : mappedFixtures;
+
+  return {
+    fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
+    date: payload.date ?? options.date ?? null,
+    counts: payload.counts ?? countFixturesByStatus(fixtures),
     query,
     count: fixtures.length,
     fixtures,
@@ -954,14 +1102,63 @@ export async function getApiFootballAIInsightDetail(
     {}
   );
 
-  if (!payload.data?.fixture) {
+  const data = payload.data;
+  if (!data) {
+    throw new ApiFootballError("AI insight detail not found", 404);
+  }
+
+  const fixtureSource = data.fixture ?? buildInsightFixtureSource(data);
+  if (!fixtureSource) {
     throw new ApiFootballError("AI insight detail not found", 404);
   }
 
   return {
-    ...payload.data,
-    fixture: mapInsightFixture(payload.data.fixture),
+    ...data,
+    standings: normalizeInsightStandings(data.standings),
+    fixture: mapInsightFixture(fixtureSource),
   };
+}
+
+function buildInsightFixtureSource(
+  data: NonNullable<SoccerAIInsightDetailResponse["data"]>
+): SoccerLiveFixture | null {
+  if (
+    typeof data.provider_id !== "number" ||
+    !data.teams ||
+    !data.status ||
+    !data.goals ||
+    !data.starts_at
+  ) {
+    return null;
+  }
+
+  return {
+    provider_id: data.provider_id,
+    league_id: data.league?.id ?? 0,
+    league: data.league ?? null,
+    season: data.season ?? null,
+    status: data.status,
+    goals: data.goals,
+    teams: data.teams,
+    starts_at: data.starts_at,
+    is_live: data.is_live ?? false,
+  };
+}
+
+function normalizeInsightStandings(
+  value: unknown
+): ApiFootballAIInsightDetail["standings"] {
+  if (!value || typeof value !== "object") return null;
+  const entry = value as { home?: unknown; away?: unknown };
+  const home = normalizeStanding(entry.home);
+  const away = normalizeStanding(entry.away);
+  if (!home && !away) return null;
+  return { home, away };
+}
+
+function normalizeStanding(value: unknown): ApiFootballAIInsightStanding | null {
+  if (!value || Array.isArray(value) || typeof value !== "object") return null;
+  return value as ApiFootballAIInsightStanding;
 }
 
 export async function getApiFootballTodayFixtures(
@@ -983,8 +1180,9 @@ export async function getApiFootballTodayFixtures(
       : mappedFixtures;
 
   return {
-    source: payload.source ?? "api-football",
     fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
+    date: payload.date ?? null,
+    counts: payload.counts ?? countFixturesByStatus(fixtures),
     query,
     count: fixtures.length,
     fixtures,
@@ -1014,9 +1212,10 @@ export async function getApiFootballUpcomingFixtures(
       : mappedFixtures;
 
   return {
-    source: payload.source ?? "api-football",
     fetchedAt:
       payload.fetchedAt ?? payload.data?.[0]?.last_synced_at ?? new Date().toISOString(),
+    date: payload.date ?? null,
+    counts: payload.counts ?? countFixturesByStatus(fixtures),
     query,
     count: fixtures.length,
     fixtures,
@@ -1030,27 +1229,10 @@ export async function getApiFootballUpcomingFixtures(
 export async function getApiFootballLiveFixtures(
   options: Pick<GetFixturesOptions, "limit"> = {}
 ): Promise<GetFixturesResult> {
-  const payload = await fetchSoccerBackend<SoccerLiveResponse>(
-    "/live",
-    {}
-  );
-  const mappedFixtures = withLeagueLogoFallbacks((payload.data ?? []).map(mapLiveFixture));
-  const fixtures =
-    typeof options.limit === "number"
-      ? mappedFixtures.slice(0, options.limit)
-      : mappedFixtures;
-
-  return {
-    source: "api-football",
-    fetchedAt: payload.data?.[0]?.last_synced_at ?? new Date().toISOString(),
-    query: {},
-    count: fixtures.length,
-    fixtures,
-    rateLimit: {
-      requestsRemaining: null,
-      requestsLimit: null,
-    },
-  };
+  return getApiFootballFixtureList({
+    ...options,
+    statusGroup: "live",
+  });
 }
 
 export async function getApiFootballFixtureDetails(
@@ -1062,10 +1244,6 @@ export async function getApiFootballFixtureDetails(
   );
   const details = normalizeFixtureDetailsPayload(payload);
 
-  if (details.source === "mock") {
-    throw new ApiFootballError("Fixture details must come from the live football API", 502);
-  }
-
   const fixture = details.fixture as ApiFootballFixture | undefined;
 
   if (!fixture) {
@@ -1073,13 +1251,15 @@ export async function getApiFootballFixtureDetails(
   }
 
   return {
-    source: details.source,
     fetchedAt: details.fetchedAt,
     fixture,
     events: details.events as ApiFootballEvent[],
     lineups: details.lineups as ApiFootballLineup[],
     statistics: details.statistics as ApiFootballTeamStatistics[],
     playerStats: details.playerStats as ApiFootballPlayerStats[],
+    headToHead: details.headToHead as ApiFootballH2HFixture[],
+    standings: details.standings as GetFixtureDetailsResult["standings"],
+    scoreBreakdown: details.scoreBreakdown as ApiFootballScoreBreakdown,
   };
 }
 
@@ -1158,6 +1338,117 @@ export async function getApiFootballLeagueSchedule(
   return result.fixtures.slice(0, limit);
 }
 
+// ── /leagues/{id}/{season} ─────────────────────────────────────────────────
+
+type RawLeagueDetailStanding = {
+  rank?: number | null;
+  team?: { id?: number | null; name?: string | null; logo?: string | null } | null;
+  points?: number | null;
+  goalsDiff?: number | null;
+  group?: string | null;
+  form?: string | null;
+  all?: { played?: number | null; win?: number | null; draw?: number | null; lose?: number | null } | null;
+};
+
+type RawLeagueDetailScheduleItem = {
+  provider_id?: number | null;
+  status?: { short?: string | null } | null;
+  goals?: { home?: number | null; away?: number | null } | null;
+  teams?: {
+    home?: { id?: number | null; name?: string | null; logo?: string | null } | null;
+    away?: { id?: number | null; name?: string | null; logo?: string | null } | null;
+  } | null;
+  starts_at?: string | null;
+  round?: string | null;
+  venue?: { name?: string | null } | null;
+};
+
+type RawLeagueDetailResponse = {
+  data?: {
+    standings?: RawLeagueDetailStanding[] | null;
+    schedule?: { data?: RawLeagueDetailScheduleItem[] | null } | null;
+  } | null;
+};
+
+export type ApiLeagueDetailStanding = {
+  rank: number;
+  team: { id: number | null; name: string; logo: string | null };
+  points: number;
+  goalsDiff: number;
+  group: string;
+  form: string | null;
+  all: { played: number; win: number; draw: number; lose: number };
+};
+
+export type ApiLeagueDetailFixture = {
+  apiFixtureId: number | null;
+  kickoffTime: string;
+  status: string;
+  home: { name: string; logo: string | null };
+  away: { name: string; logo: string | null };
+  score: { home: number | null; away: number | null };
+  venue: string;
+  round: string;
+};
+
+export type ApiLeagueDetailResult = {
+  standings: ApiLeagueDetailStanding[];
+  fixtures: ApiLeagueDetailFixture[];
+};
+
+export async function getApiFootballLeagueDetail(
+  leagueId: number,
+  season: number
+): Promise<ApiLeagueDetailResult> {
+  const payload = await fetchSoccerBackend<RawLeagueDetailResponse>(
+    `/leagues/${leagueId}/${season}`,
+    {}
+  );
+
+  const data = payload.data ?? {};
+
+  const standings: ApiLeagueDetailStanding[] = (data.standings ?? []).map((s) => ({
+    rank: s.rank ?? 0,
+    team: {
+      id: s.team?.id ?? null,
+      name: s.team?.name?.trim() || "",
+      logo: s.team?.logo?.trim() || null,
+    },
+    points: s.points ?? 0,
+    goalsDiff: s.goalsDiff ?? 0,
+    group: s.group?.trim() || "",
+    form: s.form?.trim() || null,
+    all: {
+      played: s.all?.played ?? 0,
+      win: s.all?.win ?? 0,
+      draw: s.all?.draw ?? 0,
+      lose: s.all?.lose ?? 0,
+    },
+  }));
+
+  const fixtures: ApiLeagueDetailFixture[] = (data.schedule?.data ?? []).map((item) => ({
+    apiFixtureId: item.provider_id ?? null,
+    kickoffTime: item.starts_at?.trim() || "",
+    status: item.status?.short?.trim() || "NS",
+    home: {
+      name: item.teams?.home?.name?.trim() || "",
+      logo: item.teams?.home?.logo?.trim() || null,
+    },
+    away: {
+      name: item.teams?.away?.name?.trim() || "",
+      logo: item.teams?.away?.logo?.trim() || null,
+    },
+    score: {
+      home: item.goals?.home ?? null,
+      away: item.goals?.away ?? null,
+    },
+    venue: item.venue?.name?.trim() || "",
+    round: item.round?.trim() || "",
+  }));
+
+  return { standings, fixtures };
+}
+
 export async function getApiFootballTeamProfile(
   team: number,
   league?: number,
@@ -1195,7 +1486,6 @@ export async function getApiFootballH2H(
       payload.data.fixtures
         .map((fixture) => {
           const details = normalizeFixtureDetailsPayload({
-            source: "api-football",
             fetchedAt: payload.data?.hydrated_at ?? undefined,
             data: fixture,
           });
@@ -1207,64 +1497,6 @@ export async function getApiFootballH2H(
   }
 
   return (payload.fixtures ?? payload.h2h?.fixtures ?? []).slice(0, limit);
-}
-
-export function getMockApiFootballFixtures(limit?: number): ApiFootballFixture[] {
-  const mockMatches =
-    typeof limit === "number" ? matches.slice(0, limit) : matches;
-
-  return mockMatches.map((match) => {
-    const league = leagues.find((item) => item.id === match.leagueId);
-    const home = teams.find((item) => item.id === match.homeTeamId);
-    const away = teams.find((item) => item.id === match.awayTeamId);
-
-    return {
-      id: match.id,
-      apiFixtureId: null,
-      referee: null,
-      timezone: null,
-      timestamp: null,
-      periods: {
-        first: null,
-        second: null,
-      },
-      league: {
-        id: league?.id ?? match.leagueId,
-        apiLeagueId: null,
-        name: league?.name ?? "Demo League",
-        country: league?.country ?? "Demo",
-        logo: league?.logo ?? null,
-        flag: null,
-        season: null,
-        round: match.round,
-      },
-      home: {
-        id: home?.id ?? match.homeTeamId,
-        apiTeamId: null,
-        name: home?.name ?? "Home Team",
-        logo: home?.crest ?? null,
-        winner: winnerFor(match.homeScore, match.awayScore),
-      },
-      away: {
-        id: away?.id ?? match.awayTeamId,
-        apiTeamId: null,
-        name: away?.name ?? "Away Team",
-        logo: away?.crest ?? null,
-        winner: winnerFor(match.awayScore, match.homeScore),
-      },
-      score: {
-        home: match.homeScore,
-        away: match.awayScore,
-      },
-      status: match.status,
-      statusShort: statusShortFor(match.status),
-      statusLong: match.status,
-      statusExtra: null,
-      elapsed: match.minute,
-      kickoffTime: match.kickoffTime,
-      venue: match.venue,
-    };
-  });
 }
 
 function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> {
@@ -1282,6 +1514,21 @@ function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> 
 
   if (options.league) query.league = options.league;
   if (options.season) query.season = options.season;
+  if (options.statusGroup) query.status_group = options.statusGroup;
+  if (options.status) query.status = options.status;
+  if (options.timezone) query.timezone = options.timezone;
+
+  return query;
+}
+
+function buildFixtureListQuery(options: GetFixturesOptions): Record<string, string> {
+  const query: Record<string, string> = {};
+
+  if (options.date) query.date = options.date;
+  if (options.league) query.league = options.league;
+  if (options.statusGroup) query.status_group = options.statusGroup;
+  if (options.status) query.status = options.status;
+  if (options.timezone) query.timezone = options.timezone;
 
   return query;
 }
@@ -1289,7 +1536,7 @@ function buildFixtureQuery(options: GetFixturesOptions): Record<string, string> 
 function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
   const normalizedStatus = normalizeMatchStatus(fixture.status.short);
   const status = isMatchStatus(normalizedStatus)
-    ? normalizedStatus
+    ? getEffectiveFixtureStatus(normalizedStatus, fixture.status.short, fixture.starts_at)
     : fixture.is_live
       ? MatchStatus.LIVE
       : fixture.is_terminal
@@ -1346,6 +1593,26 @@ function mapLiveFixture(fixture: SoccerLiveFixture): ApiFootballFixture {
   };
 }
 
+function getEffectiveFixtureStatus(
+  status: MatchStatus,
+  statusShort: string,
+  startsAt: string
+): MatchStatus {
+  const normalizedShort = statusShort.trim().toUpperCase();
+  const kickoff = new Date(startsAt).getTime();
+
+  if (
+    status === MatchStatus.UPCOMING &&
+    (normalizedShort === "NS" || normalizedShort === "TBD") &&
+    Number.isFinite(kickoff) &&
+    kickoff <= Date.now()
+  ) {
+    return MatchStatus.POSTPONED;
+  }
+
+  return status;
+}
+
 function mapInsightFixture(
   fixture: SoccerLiveFixture | ApiFootballFixture
 ): ApiFootballFixture {
@@ -1400,36 +1667,59 @@ async function fetchSoccerBackend<T>(
   query: Record<string, string>
 ): Promise<T> {
   const url = getFootballApiUrl(pathname);
+  const startedAt = Date.now();
   Object.entries(query).forEach(([key, value]) => {
     url.searchParams.set(key, value);
   });
 
-  const response = await fetch(url, {
-    headers: {
-      Accept: "application/json",
-    },
-    cache: "no-store",
-  });
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: "application/json",
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
 
-  const payload = (await response.json()) as T & {
-    error?: unknown;
-    errors?: unknown;
-    message?: string;
-  };
+    const payload = (await response.json()) as T & {
+      error?: unknown;
+      errors?: unknown;
+      message?: string;
+    };
 
-  if (!response.ok) {
-    throw new ApiFootballError(
-      "ScoreMatrix Soccer API request failed",
-      response.status,
-      payload.errors ?? payload.error ?? payload.message
-    );
+    if (!response.ok) {
+      throw new ApiFootballError(
+        "ScoreMatrix Soccer API request failed",
+        response.status,
+        payload.errors ?? payload.error ?? payload.message
+      );
+    }
+
+    if (hasBackendErrors(payload.errors)) {
+      throw new ApiFootballError("ScoreMatrix Soccer API returned errors", 502, payload.errors);
+    }
+
+    return normalizeSoccerBackendValue(proxyFootballMediaValue(payload));
+  } catch (error) {
+    const apiError =
+      error instanceof ApiFootballError
+        ? error
+        : new ApiFootballError(
+            error instanceof Error && error.name === "TimeoutError"
+              ? "ScoreMatrix Soccer API request timed out"
+              : "ScoreMatrix Soccer API request failed",
+            error instanceof Error && error.name === "TimeoutError" ? 504 : 502
+          );
+
+    console.error("[scorematrix:soccer-api]", {
+      endpoint: `${url.pathname}${url.search}`,
+      status: apiError.status,
+      durationMs: Date.now() - startedAt,
+      message: apiError.message,
+    });
+
+    throw apiError;
   }
-
-  if (hasBackendErrors(payload.errors)) {
-    throw new ApiFootballError("ScoreMatrix Soccer API returned errors", 502, payload.errors);
-  }
-
-  return normalizeSoccerBackendValue(proxyFootballMediaValue(payload));
 }
 
 async function fetchTeamProfilePayload(
@@ -1487,11 +1777,30 @@ function normalizeMatchStatus(status: string): string {
     CANC: MatchStatus.CANCELLED,
     CANCELLED: MatchStatus.CANCELLED,
     ABD: MatchStatus.CANCELLED,
-    AWD: MatchStatus.FINISHED,
-    WO: MatchStatus.FINISHED,
+    AWD: MatchStatus.CANCELLED,
+    WO: MatchStatus.CANCELLED,
   };
 
   return statusMap[normalized] ?? status;
+}
+
+function countFixturesByStatus(fixtures: ApiFootballFixture[]): ApiFootballFixtureCounts {
+  const counts: ApiFootballFixtureCounts = {
+    total: fixtures.length,
+    live: 0,
+    upcoming: 0,
+    finished: 0,
+    postponed: 0,
+    cancelled: 0,
+  };
+
+  for (const fixture of fixtures) {
+    if (fixture.status in counts) {
+      counts[fixture.status as keyof Omit<ApiFootballFixtureCounts, "total">] += 1;
+    }
+  }
+
+  return counts;
 }
 
 function mapBackendLeague(item: SoccerBackendLeagueEntry): ApiFootballLeagueEntry {
@@ -2101,16 +2410,4 @@ function hasBackendErrors(errors: unknown): boolean {
 function winnerFor(score: number | null, otherScore: number | null): boolean | null {
   if (score === null || otherScore === null || score === otherScore) return null;
   return score > otherScore;
-}
-
-function statusShortFor(status: MatchStatus): string {
-  const statusMap = {
-    [MatchStatus.LIVE]: "LIVE",
-    [MatchStatus.UPCOMING]: "NS",
-    [MatchStatus.FINISHED]: "FT",
-    [MatchStatus.POSTPONED]: "PST",
-    [MatchStatus.CANCELLED]: "CANC",
-  };
-
-  return statusMap[status];
 }

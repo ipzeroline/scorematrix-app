@@ -1,8 +1,11 @@
 "use client";
 
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
@@ -23,93 +26,67 @@ interface LiveMatch {
   status: MatchStatus;
 }
 
-const liveMatches: LiveMatch[] = [
-  {
-    id: "live-1",
-    homeTeam: "London United",
-    homeCrest: "",
-    awayTeam: "Mersey City",
-    awayCrest: "",
-    homeScore: 2,
-    awayScore: 1,
-    minute: 67,
-    league: "Premier",
-    leagueLogo: null,
-    status: MatchStatus.LIVE,
-  },
-  {
-    id: "live-2",
-    homeTeam: "Real Catalonia",
-    homeCrest: "",
-    awayTeam: "Atletico Madrid B",
-    awayCrest: "",
-    homeScore: 1,
-    awayScore: 1,
-    minute: 34,
-    league: "La Liga",
-    leagueLogo: null,
-    status: MatchStatus.LIVE,
-  },
-  {
-    id: "live-3",
-    homeTeam: "FC Bayern Stadt",
-    homeCrest: "",
-    awayTeam: "Dortmund 09",
-    awayCrest: "",
-    homeScore: 3,
-    awayScore: 0,
-    minute: 52,
-    league: "Bundesliga",
-    leagueLogo: null,
-    status: MatchStatus.LIVE,
-  },
-  {
-    id: "live-4",
-    homeTeam: "AC Milano Rosso",
-    homeCrest: "",
-    awayTeam: "Juventus Torino",
-    awayCrest: "",
-    homeScore: 0,
-    awayScore: 0,
-    minute: 15,
-    league: "Serie A",
-    leagueLogo: null,
-    status: MatchStatus.LIVE,
-  },
-  {
-    id: "live-5",
-    homeTeam: "Paris Saint-Germain B",
-    homeCrest: "",
-    awayTeam: "Olympique Lyon",
-    awayCrest: "",
-    homeScore: 2,
-    awayScore: 2,
-    minute: 78,
-    league: "Ligue 1",
-    leagueLogo: null,
-    status: MatchStatus.LIVE,
-  },
-];
-
 interface LiveMatchHighlightsProps {
-  fixtures?: ApiFootballFixture[];
-  apiMode?: boolean;
+  fixtures: ApiFootballFixture[];
+  initialError?: boolean;
 }
 
+type LiveFixturesResponse = {
+  fixtures: ApiFootballFixture[];
+  error?: string;
+};
+
+const LIVE_REFRESH_INTERVAL_MS = 45_000;
+
 export function LiveMatchHighlights({
-  fixtures = [],
-  apiMode = false,
+  fixtures,
+  initialError = false,
 }: LiveMatchHighlightsProps) {
   const locale = useLocale();
   const t = useTranslations();
-  const apiMatches = fixtures
-    .filter((fixture) => fixture.status === MatchStatus.LIVE)
-    .map(mapFixtureToLiveMatch);
-  const displayMatches = apiMode
-    ? apiMatches
-    : apiMatches.length > 0
-      ? apiMatches
-      : liveMatches;
+  const [currentFixtures, setCurrentFixtures] = useState(fixtures);
+  const [hasError, setHasError] = useState(initialError);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const displayMatches = useMemo(
+    () =>
+      currentFixtures
+        .filter((fixture) => fixture.status === MatchStatus.LIVE)
+        .map(mapFixtureToLiveMatch),
+    [currentFixtures]
+  );
+
+  const refreshFixtures = useCallback(async (showLoading = false) => {
+    if (showLoading) setIsRefreshing(true);
+
+    try {
+      const response = await fetch("/api/football/fixtures/live", {
+        cache: "no-store",
+      });
+      const data = (await response.json()) as LiveFixturesResponse;
+
+      if (!response.ok) throw new Error(data.error);
+
+      setCurrentFixtures(data.fixtures);
+      setHasError(false);
+    } catch {
+      setHasError(true);
+    } finally {
+      if (showLoading) setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshFixtures();
+    };
+    const interval = window.setInterval(refreshWhenVisible, LIVE_REFRESH_INTERVAL_MS);
+
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [refreshFixtures]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -135,15 +112,38 @@ export function LiveMatchHighlights({
             <span className="whitespace-nowrap rounded-lg border border-green-400/30 bg-green-500/10 px-3 py-1 font-mono text-sm font-bold text-green-300 shadow-[0_0_18px_rgba(16,185,129,0.16)]">
               {t("dashboard.matchCount", { count: displayMatches.length })}
             </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void refreshFixtures(true)}
+              disabled={isRefreshing}
+              aria-label={t("livescore.sync")}
+            >
+              <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+            </Button>
           </div>
         </div>
       </div>
 
-      {displayMatches.length === 0 ? (
+      {hasError && (
+        <Card className="flex items-center justify-between gap-3 border-red-500/20 bg-red-500/5 p-3 text-xs text-red-300">
+          <span>{t("livescore.loadError")}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void refreshFixtures(true)}
+            disabled={isRefreshing}
+          >
+            {t("common.retry")}
+          </Button>
+        </Card>
+      )}
+
+      {displayMatches.length === 0 && !hasError ? (
         <Card className="border-gray-800/80 p-5 text-sm text-gray-400">
           {t("livescore.noMatches")}
         </Card>
-      ) : (
+      ) : displayMatches.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {displayMatches.map((match) => (
             <Link
@@ -199,7 +199,7 @@ export function LiveMatchHighlights({
               </Link>
             ))}
           </div>
-      )}
+      ) : null}
     </div>
   );
 }

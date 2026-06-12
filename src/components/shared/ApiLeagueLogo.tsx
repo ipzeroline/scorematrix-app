@@ -25,6 +25,8 @@ export function ApiLeagueLogo({ name, logo, size = "md" }: ApiLeagueLogoProps) {
       className={`relative flex ${config.outer} shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white p-1`}
     >
       {showImage ? (
+          // Provider media is already proxied and intentionally bypasses Next image optimization.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={logo ?? ""}
             alt={`${name} logo`}

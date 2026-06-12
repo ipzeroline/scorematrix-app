@@ -409,7 +409,21 @@
       "liveTitle": "Live status signals",
       "liveText": "Scan live, upcoming and finished status quickly so the match list stays useful during busy game days."
     },
-    "metricMatches": "Matches"
+    "metricMatches": "Matches",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "backToToday": "Back to today",
+    "loadError": "Unable to refresh matches. Showing the latest available data.",
+    "viewDetails": "View details",
+    "truncatedWarning": "Showing {shown} of {total} matches for this day.",
+    "filtersTitle": "Match filters",
+    "filtersDescription": "Choose a date, league, status, or search for a team.",
+    "clearFilters": "Clear filters",
+    "clearSearch": "Clear search",
+    "dateFilter": "Match date",
+    "leagueFilter": "League",
+    "searchFilter": "Team search",
+    "statusFilter": "Match status"
   },
   "livescore": {
     "title": "Livescore",
@@ -424,6 +438,8 @@
     "filterCountry": "Filter by Country",
     "filterTime": "Filter by Time",
     "noMatches": "No matches found",
+    "loadError": "Live matches could not be updated. Please try again.",
+    "sync": "Sync",
     "kickoff": "Kickoff",
     "fullTime": "FT",
     "minute": "'"
@@ -508,6 +524,8 @@
     "noTeamStatistics": "No team statistics available yet",
     "h2h": "Historical head-to-head",
     "noH2hData": "No head-to-head data available yet",
+    "leagueStanding": "League Standing",
+    "noStandingData": "No standing data available",
     "noLineupData": "No lineup, coach or formation data available yet",
     "coach": "Coach",
     "formationPitch": "Formation pitch",
@@ -517,7 +535,29 @@
     "playerStatsTitleSuffix": "player stats",
     "captain": "Captain",
     "loadError": "Unable to load match details",
-    "backToMatches": "Back to matches"
+    "backToMatches": "Back to matches",
+    "liveAutoRefresh": "Live · auto-refreshing",
+    "scorePeriod": "Score by period",
+    "firstScorer": "First scorer",
+    "goalHighlight": "Goal highlight",
+    "goalMinute": "Minute",
+    "goalAssist": "Assist",
+    "goalType": "Type",
+    "goalDetail": "Detail",
+    "goalComments": "Comments",
+    "h2hWin": "Win",
+    "h2hDraw": "Draw",
+    "h2hLoss": "Loss",
+    "recentForm": "Recent form",
+    "standingRank": "Rank",
+    "standingPoints": "Points",
+    "standingPlayed": "Played",
+    "standingWDL": "W / D / L",
+    "standingGoals": "Goals",
+    "standingGD": "GD",
+    "standingSplit": "Home / Away",
+    "standingHome": "Home",
+    "standingAway": "Away"
   },
   "prediction": {
     "title": "Predictions",
@@ -980,7 +1020,8 @@
       "cancel": "Cancel",
       "confirm": "Confirm",
       "clear": "Clear",
-      "vs": "VS"
+      "vs": "VS",
+      "back": "Back"
     },
     "basic": {
       "title": "Basic prediction",

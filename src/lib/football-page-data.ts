@@ -5,7 +5,6 @@ import {
   getApiFootballLiveFixtures,
   getApiFootballTodayFixtures,
   getApiFootballUpcomingFixtures,
-  getMockApiFootballFixtures,
 } from "@/lib/api-football";
 import { getThailandDateKey } from "@/lib/utils";
 import { MatchStatus } from "@/types/common";
@@ -24,15 +23,22 @@ export async function loadFixturesForDate(
   }
 }
 
-export async function loadLiveFixtures(
-  limit = 24
-): Promise<ApiFootballFixture[]> {
+export async function loadLiveFixtures(): Promise<{
+  fixtures: ApiFootballFixture[];
+  error: boolean;
+}> {
   try {
-    const result = await getApiFootballLiveFixtures({ limit });
-    return result.fixtures;
+    const result = await getApiFootballLiveFixtures();
+    return {
+      fixtures: result.fixtures,
+      error: false,
+    };
   } catch (error) {
     logUnexpectedApiError(error);
-    return [];
+    return {
+      fixtures: [],
+      error: true,
+    };
   }
 }
 
@@ -56,7 +62,7 @@ export async function loadUpcomingFixtures(
     return result.fixtures;
   } catch (error) {
     logUnexpectedApiError(error);
-    return getMockApiFootballFixtures(limit);
+    return [];
   }
 }
 

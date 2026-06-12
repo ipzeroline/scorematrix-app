@@ -407,7 +407,21 @@
       "liveTitle": "Live status signals",
       "liveText": "Scan live, upcoming and finished status quickly so the match list stays useful during busy game days."
     },
-    "metricMatches": "Matches"
+    "metricMatches": "Matches",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "backToToday": "Back to today",
+    "loadError": "Unable to refresh matches. Showing the latest available data.",
+    "viewDetails": "View details",
+    "truncatedWarning": "Showing {shown} of {total} matches for this day.",
+    "filtersTitle": "Match filters",
+    "filtersDescription": "Choose a date, league, status, or search for a team.",
+    "clearFilters": "Clear filters",
+    "clearSearch": "Clear search",
+    "dateFilter": "Match date",
+    "leagueFilter": "League",
+    "searchFilter": "Team search",
+    "statusFilter": "Match status"
   },
   "livescore": {
     "title": "ពិន្ទុផ្ទាល់",
@@ -422,6 +436,8 @@
     "filterCountry": "Filter by Country",
     "filterTime": "Filter by Time",
     "noMatches": "No matches found",
+    "loadError": "មិនអាចអាប់ដេតការប្រកួតផ្ទាល់បានទេ។ សូមព្យាយាមម្តងទៀត។",
+    "sync": "ធ្វើសមកាលកម្ម",
     "kickoff": "Kickoff",
     "fullTime": "FT",
     "minute": "'"
@@ -506,6 +522,8 @@
     "noTeamStatistics": "មិនទាន់មានទិន្នន័យស្ថិតិក្រុម",
     "h2h": "ប្រវត្តិជួបគ្នា",
     "noH2hData": "មិនទាន់មានទិន្នន័យជួបគ្នា",
+    "leagueStanding": "លំដាប់លីគ",
+    "noStandingData": "មិនមានទិន្នន័យលំដាប់",
     "noLineupData": "មិនទាន់មានទិន្នន័យបញ្ជីកីឡាករ គ្រូបង្វឹក ឬទម្រង់លេង",
     "coach": "គ្រូបង្វឹក",
     "formationPitch": "ទីលានទម្រង់លេង",
@@ -515,7 +533,29 @@
     "playerStatsTitleSuffix": "ស្ថិតិកីឡាករ",
     "captain": "ប្រធានក្រុម",
     "loadError": "មិនអាចផ្ទុកព័ត៌មានលម្អិតការប្រកួតបានទេ",
-    "backToMatches": "ត្រឡប់ទៅការប្រកួត"
+    "backToMatches": "ត្រឡប់ទៅការប្រកួត",
+    "liveAutoRefresh": "ផ្ទាល់ · ធ្វើឱ្យស្រស់ដោយស្វ័យប្រវត្តិ",
+    "scorePeriod": "ពិន្ទុតាមដំណាក់",
+    "firstScorer": "អ្នកស៊ុតដំបូង",
+    "goalHighlight": "គូសសំខាន់ប្រហែល",
+    "goalMinute": "នាទី",
+    "goalAssist": "ជំនួយ",
+    "goalType": "ប្រភេទ",
+    "goalDetail": "ព័ត៌មានលម្អិត",
+    "goalComments": "មតិ",
+    "h2hWin": "ឈ្នះ",
+    "h2hDraw": "ស្មើ",
+    "h2hLoss": "ចាញ់",
+    "recentForm": "ទម្រង់ថ្មីៗ",
+    "standingRank": "លំដាប់",
+    "standingPoints": "ពិន្ទុ",
+    "standingPlayed": "លេង",
+    "standingWDL": "ឈ / ស / ច",
+    "standingGoals": "គ្រាប់បាល់",
+    "standingGD": "ភាពខុសគ្នា",
+    "standingSplit": "ផ្ទះ / ក្រៅ",
+    "standingHome": "ផ្ទះ",
+    "standingAway": "ក្រៅផ្ទះ"
   },
   "prediction": {
     "title": "ការទស្សន៍ទាយ",
@@ -978,7 +1018,8 @@
       "cancel": "Cancel",
       "confirm": "Confirm",
       "clear": "Clear",
-      "vs": "VS"
+      "vs": "VS",
+      "back": "ត្រឡប់ក្រោយ"
     },
     "basic": {
       "title": "Basic prediction",

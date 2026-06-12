@@ -26,7 +26,6 @@ import {
 } from "@/lib/utils";
 
 export interface FixturesPayload {
-  source: "api-football" | "mock";
   fetchedAt: string;
   count: number;
   fixtures: ApiFootballFixture[];
@@ -34,7 +33,7 @@ export interface FixturesPayload {
     requestsRemaining: string | null;
     requestsLimit: string | null;
   };
-  warning?: string;
+  error?: string;
 }
 
 interface LivescoreProps {
@@ -49,12 +48,11 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const [search, setSearch] = useState("");
   const [payload, setPayload] = useState(initialPayload);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [hasError, setHasError] = useState(Boolean(initialPayload.error));
 
   const loadFixtures = useCallback(async (showLoading = true) => {
     if (showLoading) {
       setIsLoading(true);
-      setError(null);
     }
 
     try {
@@ -64,22 +62,28 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
       const data = (await response.json()) as FixturesPayload;
 
       if (!response.ok) {
-        throw new Error(data.warning ?? "Unable to load fixtures");
+        throw new Error(data.error);
       }
 
       setPayload(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to load fixtures");
+      setHasError(false);
+    } catch {
+      setHasError(true);
     } finally {
       if (showLoading) setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const initialRefresh = setTimeout(() => void loadFixtures(false), 0);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadFixtures(false);
+    };
+    const interval = window.setInterval(refreshWhenVisible, 45_000);
 
+    document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => {
-      clearTimeout(initialRefresh);
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
     };
   }, [loadFixtures, locale]);
 
@@ -133,20 +137,22 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             className="w-fit"
           >
             <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-            Sync
+            {t("livescore.sync")}
           </Button>
         </div>
       </div>
 
-      {payload.warning && (
-        <Card className="border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-300">
-          {payload.warning}
-        </Card>
-      )}
-
-      {error && (
-        <Card className="border-red-500/20 bg-red-500/5 p-3 text-xs text-red-300">
-          {error}
+      {hasError && (
+        <Card className="flex items-center justify-between gap-3 border-red-500/20 bg-red-500/5 p-3 text-xs text-red-300">
+          <span>{t("livescore.loadError")}</span>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void loadFixtures()}
+            disabled={isLoading}
+          >
+            {t("common.retry")}
+          </Button>
         </Card>
       )}
 
@@ -181,7 +187,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             <Card key={index} className="h-[158px] animate-pulse bg-white/[0.03] sm:h-[74px]" />
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : hasError && liveMatches.length === 0 ? null : filtered.length === 0 ? (
         <EmptyState
           title={t("livescore.noMatches")}
           description={t("livescore.tryAdjustingFilters")}

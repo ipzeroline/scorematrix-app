@@ -268,7 +268,7 @@ export function Sidebar({ initialHasAuthSession = false }: SidebarProps) {
           </div>
 
           <div className="space-y-1.5">
-            {missions.map((mission, index) => {
+            {missions.map((mission) => {
               const done = mission.completed || mission.claimed || mission.progress >= mission.target;
               const reward = mission.rewardCredits && mission.rewardCredits > 0
                 ? `+${mission.rewardCredits} CR`

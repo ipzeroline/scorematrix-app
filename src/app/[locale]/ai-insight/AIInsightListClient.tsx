@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Brain, ChevronRight, Flame, Gauge, ShieldAlert, Sparkles, Users } from "lucide-react";
+import { AlertTriangle, Brain, Calendar, ChevronRight, Flame, Gauge, ShieldAlert, Sparkles, Users } from "lucide-react";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
@@ -69,6 +69,17 @@ export type AIInsightListItem = {
   apiWinner: string | null;
   upsetAlert: boolean;
   generatedAt: string;
+  standings: {
+    home: { rank: number | null; points: number | null; form: string | null } | null;
+    away: { rank: number | null; points: number | null; form: string | null } | null;
+  } | null;
+  h2h: {
+    totalMatches: number;
+    homeWins: number;
+    draws: number;
+    awayWins: number;
+    avgGoals: number;
+  } | null;
 };
 
 const localeMap: Record<string, string> = {
@@ -105,6 +116,8 @@ export function AIInsightListClient({
       : activeFilter === "upset"
         ? insights.filter((insight) => insight.upsetAlert)
         : insights;
+
+  const groupedInsights = groupInsightsByDay(filteredInsights, locale);
 
   const tabs: Array<{ key: FilterKey; label: string; count: number }> = [
     { key: "all", label: copy.filters.all, count: counts.all },
@@ -271,7 +284,7 @@ export function AIInsightListClient({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 px-3 py-3">
+      <div className="flex flex-col gap-4 px-3 py-3">
         {filteredInsights.length === 0 ? (
           <EmptyState
             title={source === "error" ? copy.error.title : copy.empty.title}
@@ -279,7 +292,15 @@ export function AIInsightListClient({
             icon={<AlertTriangle size={40} />}
           />
         ) : (
-          filteredInsights.map((insight) => (
+          groupedInsights.map((group) => (
+            <div key={group.key} className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 px-0.5">
+                <Calendar size={14} className="shrink-0 text-cyan-400" />
+                <span className="text-sm font-semibold text-slate-200">{group.label}</span>
+                <span className="text-xs text-slate-500">({group.items.length})</span>
+                <span className="ml-2 h-px flex-1 bg-gray-800" />
+              </div>
+              {group.items.map((insight) => (
             <Card
               key={insight.id}
               hover
@@ -297,16 +318,7 @@ export function AIInsightListClient({
                     size="xs"
                   />
                   <span className="truncate">{insight.league.name}</span>
-                  <span
-                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                      insight.status === MatchStatus.LIVE
-                        ? "animate-pulse bg-green-400"
-                        : insight.status === MatchStatus.FINISHED
-                          ? "bg-slate-500"
-                          : "bg-cyan-400"
-                    }`}
-                  />
-                  <span className="truncate text-slate-500">{insight.statusText}</span>
+                  <StatusBadge insight={insight} copy={copy} />
                   <span className="ml-auto shrink-0 text-sm text-slate-500">
                     {formatMatchMoment(insight, locale)}
                   </span>
@@ -345,6 +357,17 @@ export function AIInsightListClient({
                   ) : null}
                 </div>
 
+                {hasStandingsOrH2H(insight) ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                    {hasStandings(insight) ? (
+                      <StandingsRow insight={insight} copy={copy} />
+                    ) : null}
+                    {insight.h2h && insight.h2h.totalMatches > 0 ? (
+                      <H2HRow h2h={insight.h2h} copy={copy} />
+                    ) : null}
+                  </div>
+                ) : null}
+
                 <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
                   {insight.upsetAlert ? (
                     <Badge variant="magenta" className="border-magenta-500/25 bg-magenta-500/10 text-magenta-300">
@@ -369,6 +392,8 @@ export function AIInsightListClient({
                 </div>
               </Link>
             </Card>
+              ))}
+            </div>
           ))
         )}
       </div>
@@ -534,6 +559,104 @@ function HeatRow({
   );
 }
 
+function StatusBadge({
+  insight,
+  copy,
+}: {
+  insight: AIInsightListItem;
+  copy: ReturnType<typeof getAIInsightPageCopy>;
+}) {
+  const { variant, label, live } = getStatusBadge(insight, copy);
+
+  return (
+    <Badge variant={variant} className="shrink-0 gap-1">
+      {live ? (
+        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-400" />
+      ) : null}
+      {label}
+    </Badge>
+  );
+}
+
+function getStatusBadge(
+  insight: AIInsightListItem,
+  copy: ReturnType<typeof getAIInsightPageCopy>
+): { variant: "green" | "cyan" | "default" | "gold" | "red"; label: string; live: boolean } {
+  switch (insight.status) {
+    case MatchStatus.LIVE:
+      return { variant: "green", label: copy.labels.live, live: true };
+    case MatchStatus.FINISHED:
+      return { variant: "default", label: copy.labels.finished, live: false };
+    case MatchStatus.POSTPONED:
+      return { variant: "gold", label: copy.labels.postponed, live: false };
+    case MatchStatus.CANCELLED:
+      return { variant: "red", label: copy.labels.cancelled, live: false };
+    default:
+      return { variant: "cyan", label: copy.labels.upcoming, live: false };
+  }
+}
+
+function StandingsRow({
+  insight,
+  copy,
+}: {
+  insight: AIInsightListItem;
+  copy: ReturnType<typeof getAIInsightPageCopy>;
+}) {
+  const home = insight.standings?.home;
+  const away = insight.standings?.away;
+
+  return (
+    <div className="flex items-center gap-1.5 rounded-md border border-gray-800 bg-[#12121a] px-2 py-1">
+      <span className="text-slate-500">{copy.labels.rank}</span>
+      <span className="font-semibold text-cyan-400">{formatStanding(home)}</span>
+      <span className="text-slate-600">vs</span>
+      <span className="font-semibold text-magenta-300">{formatStanding(away)}</span>
+    </div>
+  );
+}
+
+function H2HRow({
+  h2h,
+  copy,
+}: {
+  h2h: NonNullable<AIInsightListItem["h2h"]>;
+  copy: ReturnType<typeof getAIInsightPageCopy>;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-md border border-gray-800 bg-[#12121a] px-2 py-1">
+      <span className="text-slate-500">{copy.labels.h2h}</span>
+      <span className="font-semibold text-cyan-400">{h2h.homeWins}</span>
+      <span className="text-slate-600">-</span>
+      <span className="font-semibold text-amber-400">{h2h.draws}</span>
+      <span className="text-slate-600">-</span>
+      <span className="font-semibold text-magenta-300">{h2h.awayWins}</span>
+      {h2h.avgGoals > 0 ? (
+        <span className="ml-1 text-slate-500">{`⚽ ${h2h.avgGoals.toFixed(1)}`}</span>
+      ) : null}
+    </div>
+  );
+}
+
+function formatStanding(
+  standing: { rank: number | null; points: number | null } | null | undefined
+) {
+  if (!standing || typeof standing.rank !== "number") return "-";
+  const points = typeof standing.points === "number" ? ` (${standing.points})` : "";
+  return `#${standing.rank}${points}`;
+}
+
+function hasStandings(insight: AIInsightListItem) {
+  return (
+    typeof insight.standings?.home?.rank === "number" ||
+    typeof insight.standings?.away?.rank === "number"
+  );
+}
+
+function hasStandingsOrH2H(insight: AIInsightListItem) {
+  return hasStandings(insight) || (insight.h2h != null && insight.h2h.totalMatches > 0);
+}
+
 function formatMatchMoment(insight: AIInsightListItem, locale: string) {
   if (insight.status === MatchStatus.LIVE) {
     return insight.elapsed !== null ? `${insight.elapsed}'` : "LIVE";
@@ -545,10 +668,66 @@ function formatMatchMoment(insight: AIInsightListItem, locale: string) {
 }
 
 function formatKickoffTime(value: string, locale: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
   return new Intl.DateTimeFormat(localeMap[locale] ?? "th-TH", {
+    day: "numeric",
+    month: "short",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(date);
+}
+
+function dayKey(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDayLabel(value: string, locale: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(localeMap[locale] ?? "th-TH", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function groupInsightsByDay(insights: AIInsightListItem[], locale: string) {
+  const groups = new Map<string, { key: string; label: string; sortAt: number; items: AIInsightListItem[] }>();
+
+  for (const insight of insights) {
+    const date = new Date(insight.kickoffTime);
+    const valid = !Number.isNaN(date.getTime());
+    const key = valid ? dayKey(date) : "unknown";
+    let group = groups.get(key);
+    if (!group) {
+      group = {
+        key,
+        label: valid ? formatDayLabel(insight.kickoffTime, locale) : "-",
+        sortAt: valid ? new Date(key).getTime() : Number.POSITIVE_INFINITY,
+        items: [],
+      };
+      groups.set(key, group);
+    }
+    group.items.push(insight);
+  }
+
+  const sorted = [...groups.values()].sort((a, b) => a.sortAt - b.sortAt);
+  for (const group of sorted) {
+    group.items.sort((a, b) => {
+      const aTime = new Date(a.kickoffTime).getTime();
+      const bTime = new Date(b.kickoffTime).getTime();
+      const aValid = Number.isNaN(aTime) ? Number.POSITIVE_INFINITY : aTime;
+      const bValid = Number.isNaN(bTime) ? Number.POSITIVE_INFINITY : bTime;
+      return aValid - bValid;
+    });
+  }
+
+  return sorted;
 }
 
 function getHeatLabel(

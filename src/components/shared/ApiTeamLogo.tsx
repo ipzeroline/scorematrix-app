@@ -59,6 +59,8 @@ export function ApiTeamLogo({
         </span>
       ) : (
         <span className={`absolute ${config.image} flex items-center justify-center`}>
+          {/* Provider media is already proxied and intentionally bypasses Next image optimization. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logo ?? ""}
             alt={`${name} logo`}

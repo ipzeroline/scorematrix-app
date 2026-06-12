@@ -44,7 +44,6 @@ test("normalizes fixture details returned under data", () => {
       statistics: [{ team: { id: 2286 } }],
       players: [{ team: { id: 2286 }, players: [] }],
     },
-    source: "api-football",
     fetchedAt: "2026-05-25T15:21:33+07:00",
   });
 

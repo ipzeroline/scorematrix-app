@@ -27,7 +27,6 @@ export async function GET(request: Request) {
 
     return Response.json(
       {
-        source: "api-football",
         fetchedAt: new Date().toISOString(),
         query: Object.fromEntries(searchParams.entries()),
         count: 0,

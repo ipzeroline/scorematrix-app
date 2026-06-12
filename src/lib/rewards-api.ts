@@ -31,6 +31,12 @@ export type RewardsResponse = {
   };
 };
 
+export type RedeemRewardResponse = {
+  success?: boolean;
+  message?: string;
+  data?: unknown;
+};
+
 type RewardsApiPayload =
   | ApiReward[]
   | RewardsResponse
@@ -169,7 +175,7 @@ export async function getReward(rewardId: string | number, options?: ApiRequestO
 
 export async function redeemReward(rewardId: string | number, shippingAddress?: string, options?: ApiRequestOptions) {
   const body = shippingAddress ? { shippingAddress } : {};
-  const response = await apiPostRaw<any>(`/rewards/${encodeURIComponent(String(rewardId))}/redeem`, body, options);
+  const response = await apiPostRaw<RedeemRewardResponse>(`/rewards/${encodeURIComponent(String(rewardId))}/redeem`, body, options);
   return response;
 }
 

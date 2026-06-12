@@ -6,13 +6,12 @@ import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/Badge";
 import { WorldCupGroupsBoard } from "@/components/world-cup/WorldCupGroupsBoard";
 import { LOCALE_CODES } from "@/i18n";
-import { worldCupGroups, type WorldCupGroup, type WorldCupMatch, type WorldCupTeam } from "@/data/world-cup-2026";
+import type { WorldCupGroup, WorldCupMatch, WorldCupTeam } from "@/data/world-cup-2026";
 import {
   ApiFootballError,
-  getApiFootballLeagueSchedule,
-  getApiFootballStandings,
-  type ApiFootballFixture,
-  type ApiFootballStanding,
+  getApiFootballLeagueDetail,
+  type ApiLeagueDetailStanding,
+  type ApiLeagueDetailFixture,
 } from "@/lib/api-football";
 
 const WORLD_CUP_LEAGUE_ID = 1;
@@ -49,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function WorldCup2026Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "worldCup2026" });
-  const { groups, source } = await getWorldCupGroups();
+  const groups = await getWorldCupGroups();
   const copy = {
     title: t("title"),
     description: t("description"),
@@ -81,10 +80,7 @@ export default async function WorldCup2026Page({ params }: Props) {
     winner: t("winner"),
     runnerUp: t("runnerUp"),
     third: t("third"),
-    sourceNote:
-      source === "api"
-        ? `${t("sourceNote")} Live API data refreshes on every request.`
-        : t("sourceNote"),
+    sourceNote: t("sourceNote"),
     statTeams: t("statTeams"),
     statGroups: t("statGroups"),
     statKickoff: t("statKickoff"),
@@ -93,7 +89,7 @@ export default async function WorldCup2026Page({ params }: Props) {
   return (
     <div className="flex flex-col gap-5 pb-8">
       <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#080b12] p-4 md:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_82%_20%,rgba(245,158,11,0.14),transparent_26%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:100%_100%,100%_100%,38px_38px,38px_38px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_82%_20%,rgba(245,158,11,0.14),transparent_26%),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-size-[100%_100%,100%_100%,38px_38px,38px_38px]" />
         <div className="relative grid gap-5 md:grid-cols-[minmax(0,1fr)_180px] md:items-center">
           <div>
             <Link
@@ -157,130 +153,106 @@ export default async function WorldCup2026Page({ params }: Props) {
   );
 }
 
-async function getWorldCupGroups(): Promise<{ groups: WorldCupGroup[]; source: "api" | "local" }> {
+async function getWorldCupGroups(): Promise<WorldCupGroup[]> {
   try {
-    const [standingsLeague, schedule] = await Promise.all([
-      getApiFootballStandings(WORLD_CUP_LEAGUE_ID, WORLD_CUP_SEASON),
-      getApiFootballLeagueSchedule(WORLD_CUP_LEAGUE_ID, WORLD_CUP_SEASON, 120),
-    ]);
-
-    if (!standingsLeague?.standings?.length && schedule.length === 0) {
-      return { groups: worldCupGroups, source: "local" };
-    }
-
-    const groups = buildGroupsFromApi(
-      standingsLeague?.standings ?? [],
-      schedule,
-      worldCupGroups
+    const { standings, fixtures } = await getApiFootballLeagueDetail(
+      WORLD_CUP_LEAGUE_ID,
+      WORLD_CUP_SEASON
     );
 
-    return {
-      groups: groups.length > 0 ? groups : worldCupGroups,
-      source: groups.length > 0 ? "api" : "local",
-    };
+    if (standings.length === 0) return [];
+
+    return buildGroupsFromLeagueDetail(standings, fixtures);
   } catch (error) {
-    if (error instanceof ApiFootballError) {
-      return { groups: worldCupGroups, source: "local" };
-    }
-    throw error;
+    if (!(error instanceof ApiFootballError)) throw error;
+    console.error("World Cup API error:", error.message);
+    return [];
   }
 }
 
-function buildGroupsFromApi(
-  standings: ApiFootballStanding[][],
-  fixtures: ApiFootballFixture[],
-  fallbackGroups: WorldCupGroup[]
-) {
-  const standingGroups = standings
-    .map((rows) => {
-      const groupId = extractGroupId(rows[0]?.group);
-      if (!groupId) return null;
-      const fallback = fallbackGroups.find((group) => group.id === groupId);
-      const teams = rows.map((row) => mapStandingTeam(row, fallback)).sort((a, b) => {
-        if ((b.points ?? 0) !== (a.points ?? 0)) return (b.points ?? 0) - (a.points ?? 0);
-        return (b.goalDifference ?? 0) - (a.goalDifference ?? 0);
-      });
+function buildGroupsFromLeagueDetail(
+  standings: ApiLeagueDetailStanding[],
+  fixtures: ApiLeagueDetailFixture[]
+): WorldCupGroup[] {
+  // Group standings by group id (e.g. "Group A" → "A")
+  const groupMap = new Map<string, ApiLeagueDetailStanding[]>();
+  for (const row of standings) {
+    const id = extractGroupId(row.group);
+    if (!id) continue;
+    const bucket = groupMap.get(id) ?? [];
+    bucket.push(row);
+    groupMap.set(id, bucket);
+  }
 
-      return {
-        id: groupId,
-        name: `Group ${groupId}`,
-        spotlight: fallback?.spotlight ?? `Group ${groupId}`,
-        teams,
-        matches: [] as WorldCupMatch[],
-      };
-    })
-    .filter((group): group is WorldCupGroup => Boolean(group));
+  const groups: WorldCupGroup[] = [];
 
-  const groups = standingGroups.length > 0 ? standingGroups : fallbackGroups.map((group) => ({ ...group, matches: [] }));
+  for (const [id, rows] of groupMap) {
+    const teams: WorldCupTeam[] = rows
+      .map((row) => ({
+        name: row.team.name,
+        code: teamCode(row.team.name),
+        flagCode: "un",
+        rank: row.rank,
+        logo: row.team.logo,
+        played: row.all.played,
+        wins: row.all.win,
+        draws: row.all.draw,
+        losses: row.all.lose,
+        goalDifference: row.goalsDiff,
+        points: row.points,
+      }))
+      .sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
 
-  for (const group of groups) {
-    const teamNames = new Set(group.teams.map((team) => normalizeName(team.name)));
+    const teamNameSet = new Set(teams.map((t) => normalizeName(t.name)));
     const groupFixtures = fixtures.filter(
-      (fixture) =>
-        teamNames.has(normalizeName(fixture.home.name)) &&
-        teamNames.has(normalizeName(fixture.away.name))
+      (f) =>
+        teamNameSet.has(normalizeName(f.home.name)) &&
+        teamNameSet.has(normalizeName(f.away.name))
     );
 
-    group.matches = groupFixtures.length > 0
-      ? groupFixtures.map((fixture) => mapFixtureToWorldCupMatch(fixture, group.teams))
-      : fallbackGroups.find((fallback) => fallback.id === group.id)?.matches ?? [];
+    const matches: WorldCupMatch[] = groupFixtures
+      .slice()
+      .sort((a, b) => new Date(a.kickoffTime).getTime() - new Date(b.kickoffTime).getTime())
+      .map((f, index) => ({
+        matchday: assignMatchday(index) as 1 | 2 | 3,
+        kickoffUtc: f.kickoffTime,
+        homeCode: findTeamCode(teams, f.home.name),
+        awayCode: findTeamCode(teams, f.away.name),
+        venue: f.venue || f.round || "",
+        status: f.status,
+        homeScore: f.score.home,
+        awayScore: f.score.away,
+        apiFixtureId: f.apiFixtureId,
+      }));
+
+    groups.push({
+      id,
+      name: `Group ${id}`,
+      spotlight: `Group ${id}`,
+      teams,
+      matches,
+    });
   }
 
   return groups.sort((a, b) => a.id.localeCompare(b.id));
 }
 
-function mapStandingTeam(row: ApiFootballStanding, fallback?: WorldCupGroup): WorldCupTeam {
-  const fallbackTeam = fallback?.teams.find(
-    (team) => normalizeName(team.name) === normalizeName(row.team.name)
-  );
-
-  return {
-    name: row.team.name,
-    code: fallbackTeam?.code ?? teamCode(row.team.name),
-    flagCode: fallbackTeam?.flagCode ?? "un",
-    rank: fallbackTeam?.rank ?? row.rank,
-    logo: row.team.logo,
-    played: row.all.played,
-    wins: row.all.win,
-    draws: row.all.draw,
-    losses: row.all.lose,
-    goalDifference: row.goalsDiff,
-    points: row.points,
-  };
+function assignMatchday(index: number): 1 | 2 | 3 {
+  if (index < 2) return 1;
+  if (index < 4) return 2;
+  return 3;
 }
 
-function mapFixtureToWorldCupMatch(
-  fixture: ApiFootballFixture,
-  teams: WorldCupTeam[]
-): WorldCupMatch {
-  return {
-    matchday: matchdayFromRound(fixture.league.round),
-    kickoffUtc: fixture.kickoffTime,
-    homeCode: findTeamCode(teams, fixture.home.name),
-    awayCode: findTeamCode(teams, fixture.away.name),
-    venue: fixture.venue || fixture.league.round,
-    status: fixture.status,
-    homeScore: fixture.score.home,
-    awayScore: fixture.score.away,
-    apiFixtureId: fixture.apiFixtureId,
-  };
-}
-
-function extractGroupId(group?: string | null) {
-  const match = group?.match(/Group\s+([A-L])/i);
+function extractGroupId(group: string) {
+  const match = group.match(/Group\s+([A-L])/i);
   return match?.[1]?.toUpperCase() ?? null;
 }
 
-function matchdayFromRound(round: string): 1 | 2 | 3 {
-  const match = round.match(/(\d+)/);
-  const value = match ? Number.parseInt(match[1], 10) : 1;
-  if (value >= 3) return 3;
-  if (value === 2) return 2;
-  return 1;
-}
-
 function findTeamCode(teams: WorldCupTeam[], name: string) {
-  return teams.find((team) => normalizeName(team.name) === normalizeName(name))?.code ?? teamCode(name);
+  return (
+    teams.find((t) => normalizeName(t.name) === normalizeName(name))?.code ??
+    teamCode(name)
+  );
 }
 
 function teamCode(name: string) {

@@ -68,9 +68,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DashboardPage({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations("dashboard");
-  const now = Date.now();
-  const [liveFixtures, todayFixtures, aiInsight, latestArticles, cookieStore] = await Promise.all([
-    loadLiveFixtures(24),
+  const [liveResult, todayFixtures, aiInsight, latestArticles, cookieStore] = await Promise.all([
+    loadLiveFixtures(),
     loadTodayFixtures(),
     loadFeaturedAIInsight(),
     getLatestArticles(locale, 6),
@@ -82,7 +81,7 @@ export default async function DashboardPage({ params }: Props) {
         return false;
       }
 
-      return new Date(fixture.kickoffTime).getTime() > now;
+      return getFixtureStatusGroup(fixture) === MatchStatus.UPCOMING;
     });
   const initialHasAuthSession =
     Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
@@ -101,7 +100,10 @@ export default async function DashboardPage({ params }: Props) {
 
       {/* Live Match Highlights */}
       <section>
-        <LiveMatchHighlights fixtures={liveFixtures} apiMode />
+        <LiveMatchHighlights
+          fixtures={liveResult.fixtures}
+          initialError={liveResult.error}
+        />
       </section>
 
       {/* Today's Matches */}

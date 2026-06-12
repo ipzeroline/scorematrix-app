@@ -7,7 +7,6 @@ import {
   Calendar,
   CalendarCheck,
   CalendarClock,
-  Coins,
   CheckCircle2,
   Dice5,
   Flame,
@@ -34,8 +33,6 @@ import {
 import {
   getCurrentUser,
   extractCurrentUser,
-  type CurrentUserData,
-  type CurrentUserResponse,
 } from "@/lib/auth-api";
 import {
   DEFAULT_MISSIONS_RESPONSE,

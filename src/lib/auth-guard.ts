@@ -20,6 +20,13 @@ const PROTECTED_ROUTE_PREFIXES = [
 
 export function isProtectedPath(pathname: string) {
   const pathWithoutLocale = stripLocalePrefix(pathname);
+
+  // The /predict browse index stays public, but submitting a prediction for a
+  // specific match (/predict/{matchId}/...) requires login.
+  if (pathWithoutLocale.startsWith("/predict/")) {
+    return true;
+  }
+
   return PROTECTED_ROUTE_PREFIXES.some(
     (prefix) =>
       pathWithoutLocale === prefix ||

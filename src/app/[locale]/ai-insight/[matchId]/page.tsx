@@ -29,6 +29,8 @@ import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import {
   ApiFootballError,
   type ApiFootballAIInsightDetail,
+  type ApiFootballAIInsightStanding,
+  type ApiFootballAIInsightTeamStats,
   type ApiFootballFixture,
   type ApiFootballTeamFormProfile,
   getApiFootballAIInsightDetail,
@@ -208,6 +210,24 @@ type LocalizedDetailCopy = {
   recentProfile: string;
   winnerId: string;
   season: string;
+  standings: string;
+  leaguePosition: string;
+  rankLabel: string;
+  pointsLabel: string;
+  goalDiff: string;
+  teamStatsSeason: string;
+  seasonAverages: string;
+  avgScored: string;
+  avgConceded: string;
+  possession: string;
+  avgCards: string;
+  topFormation: string;
+  h2hSummaryTitle: string;
+  totalMeetings: string;
+  avgGoals: string;
+  probabilitySource: string;
+  sourceComparison: string;
+  sourceApi: string;
 };
 
 const localeMap: Record<string, string> = {
@@ -353,6 +373,24 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     recentProfile: "ฟอร์ม 5 นัดล่าสุด",
     winnerId: "รหัสทีมเต็ง",
     season: "ฤดูกาล",
+    standings: "ตารางคะแนน",
+    leaguePosition: "อันดับในลีก",
+    rankLabel: "อันดับ",
+    pointsLabel: "คะแนน",
+    goalDiff: "ผลต่างประตู",
+    teamStatsSeason: "สถิติฤดูกาล",
+    seasonAverages: "ค่าเฉลี่ยทั้งฤดูกาล",
+    avgScored: "ยิงเฉลี่ย",
+    avgConceded: "เสียเฉลี่ย",
+    possession: "ครองบอล",
+    avgCards: "ใบเฉลี่ย",
+    topFormation: "แผนที่ใช้บ่อย",
+    h2hSummaryTitle: "สรุปการพบกัน",
+    totalMeetings: "พบกันทั้งหมด",
+    avgGoals: "ประตูเฉลี่ย",
+    probabilitySource: "ที่มาความน่าจะเป็น",
+    sourceComparison: "โมเดลเปรียบเทียบ",
+    sourceApi: "พยากรณ์จาก API",
   },
   en: {
     back: "Back to AI Insight",
@@ -455,6 +493,24 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     recentProfile: "Last five profile",
     winnerId: "Winner ID",
     season: "Season",
+    standings: "Standings",
+    leaguePosition: "League position",
+    rankLabel: "Rank",
+    pointsLabel: "Points",
+    goalDiff: "Goal difference",
+    teamStatsSeason: "Season stats",
+    seasonAverages: "Full-season averages",
+    avgScored: "Avg scored",
+    avgConceded: "Avg conceded",
+    possession: "Possession",
+    avgCards: "Avg cards",
+    topFormation: "Top formation",
+    h2hSummaryTitle: "Head-to-head summary",
+    totalMeetings: "Total meetings",
+    avgGoals: "Avg goals",
+    probabilitySource: "Probability source",
+    sourceComparison: "Comparison model",
+    sourceApi: "API prediction",
   },
 };
 
@@ -624,6 +680,14 @@ export default async function AIInsightDetailPage({ params }: Props) {
             <ProbabilityRow label={copy.labels.draw} value={insight.drawProbability} color="purple" />
             <ProbabilityRow label={fixture.away.name} value={insight.awayWinProbability} color="magenta" />
           </div>
+          {insight.probabilitySource ? (
+            <p className="mt-3 text-xs text-gray-500">
+              {details.probabilitySource}:{" "}
+              <span className="text-gray-300">
+                {formatProbabilitySource(insight.probabilitySource, details)}
+              </span>
+            </p>
+          ) : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <PredictionInfo label={details.winnerLean} value={insight.apiWinner?.name} />
             <PredictionInfo label={details.likelyScore} value={formatScorePrediction(insight.apiPredictedGoals)} />
@@ -645,6 +709,22 @@ export default async function AIInsightDetailPage({ params }: Props) {
         }}
         summary={
           <div className="space-y-5">
+            {hasStandings(insight.standings) ? (
+              <StandingsCard
+                standings={insight.standings ?? null}
+                homeName={fixture.home.name}
+                awayName={fixture.away.name}
+                details={details}
+              />
+            ) : null}
+            {hasTeamStatsData(insight.teamStats) ? (
+              <TeamStatsCard
+                teamStats={insight.teamStats ?? null}
+                homeName={fixture.home.name}
+                awayName={fixture.away.name}
+                details={details}
+              />
+            ) : null}
             <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
               <FixtureMetaCard fixture={fixture} details={details} locale={locale} />
               <FormIndexOverview
@@ -669,6 +749,9 @@ export default async function AIInsightDetailPage({ params }: Props) {
           <div className="space-y-5">
             <HeadToHeadCard
               history={headToHead}
+              summary={insight.h2hSummary ?? null}
+              homeName={fixture.home.name}
+              awayName={fixture.away.name}
               details={details}
               locale={locale}
             />
@@ -1545,13 +1628,21 @@ function InjuryTeamCard({
 
 function HeadToHeadCard({
   history,
+  summary,
+  homeName,
+  awayName,
   details,
   locale,
 }: {
   history: InsightHeadToHeadRecord[];
+  summary: ApiFootballAIInsightDetail["h2hSummary"];
+  homeName: string;
+  awayName: string;
   details: LocalizedDetailCopy;
   locale: string;
 }) {
+  const hasSummary = !!summary && summary.totalMatches > 0;
+
   return (
     <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
       <SectionHeading
@@ -1560,9 +1651,17 @@ function HeadToHeadCard({
         description={details.matchOverview}
         accent="purple"
       />
+      {hasSummary ? (
+        <H2HSummaryBoard
+          summary={summary}
+          homeName={homeName}
+          awayName={awayName}
+          details={details}
+        />
+      ) : null}
       <div className="mt-4 space-y-3">
         {history.length === 0 ? (
-          <EmptyState label={details.noHistory} />
+          hasSummary ? null : <EmptyState label={details.noHistory} />
         ) : (
           history.map((match) => (
             <div
@@ -1615,6 +1714,267 @@ function HeadToHeadCard({
         )}
       </div>
     </Card>
+  );
+}
+
+function StandingsCard({
+  standings,
+  homeName,
+  awayName,
+  details,
+}: {
+  standings: ApiFootballAIInsightDetail["standings"];
+  homeName: string;
+  awayName: string;
+  details: LocalizedDetailCopy;
+}) {
+  return (
+    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+      <SectionHeading
+        icon={Trophy}
+        title={details.standings}
+        description={details.leaguePosition}
+        accent="gold"
+      />
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <StandingColumn name={homeName} standing={standings?.home ?? null} details={details} tone="cyan" />
+        <StandingColumn name={awayName} standing={standings?.away ?? null} details={details} tone="magenta" />
+      </div>
+    </Card>
+  );
+}
+
+function StandingColumn({
+  name,
+  standing,
+  details,
+  tone,
+}: {
+  name: string;
+  standing: ApiFootballAIInsightStanding | null;
+  details: LocalizedDetailCopy;
+  tone: "cyan" | "magenta";
+}) {
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+
+  if (!standing) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
+        <div className="mt-3">
+          <EmptyState label={details.noPrediction} />
+        </div>
+      </div>
+    );
+  }
+
+  const form = String(standing.form ?? "")
+    .split("")
+    .filter((value): value is "W" | "D" | "L" => value === "W" || value === "D" || value === "L");
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className={cn("truncate text-sm font-bold", accent)}>{name}</h3>
+          {standing.description ? (
+            <p className="mt-1 text-xs text-gray-500">{standing.description}</p>
+          ) : null}
+        </div>
+        {typeof standing.rank === "number" ? (
+          <span className="shrink-0 rounded-full border border-white/10 bg-black/30 px-3 py-1 font-mono text-sm font-black text-white">
+            #{standing.rank}
+          </span>
+        ) : null}
+      </div>
+
+      {form.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {form.map((result, index) => (
+            <span
+              key={`${name}-${result}-${index}`}
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black",
+                result === "W" && "bg-green-500/18 text-green-300",
+                result === "D" && "bg-amber-500/18 text-amber-300",
+                result === "L" && "bg-red-500/18 text-red-300"
+              )}
+            >
+              {result}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <StatChip label={details.pointsLabel} value={formatNullableNumber(standing.points)} />
+        <StatChip label={details.played} value={formatNullableNumber(standing.played)} />
+        <StatChip label={details.goalDiff} value={formatSignedNumber(standing.goalDiff)} />
+        <StatChip
+          label={`${details.wins}/${details.draws}/${details.losses}`}
+          value={`${formatNullableNumber(standing.win)}/${formatNullableNumber(
+            standing.draw
+          )}/${formatNullableNumber(standing.lose)}`}
+        />
+        <StatChip label={details.goalsFor} value={formatNullableNumber(standing.goalsFor)} />
+        <StatChip label={details.goalsAgainst} value={formatNullableNumber(standing.goalsAgainst)} />
+      </div>
+    </div>
+  );
+}
+
+function TeamStatsCard({
+  teamStats,
+  homeName,
+  awayName,
+  details,
+}: {
+  teamStats: ApiFootballAIInsightDetail["teamStats"];
+  homeName: string;
+  awayName: string;
+  details: LocalizedDetailCopy;
+}) {
+  return (
+    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+      <SectionHeading
+        icon={BarChart3}
+        title={details.teamStatsSeason}
+        description={details.seasonAverages}
+        accent="cyan"
+      />
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <TeamStatsColumn name={homeName} stats={teamStats?.home ?? null} details={details} tone="cyan" />
+        <TeamStatsColumn name={awayName} stats={teamStats?.away ?? null} details={details} tone="magenta" />
+      </div>
+    </Card>
+  );
+}
+
+function TeamStatsColumn({
+  name,
+  stats,
+  details,
+  tone,
+}: {
+  name: string;
+  stats: ApiFootballAIInsightTeamStats | null;
+  details: LocalizedDetailCopy;
+  tone: "cyan" | "magenta";
+}) {
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+
+  if (!stats) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
+        <div className="mt-3">
+          <EmptyState label={details.noPrediction} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className={cn("truncate text-sm font-bold", accent)}>{name}</h3>
+        {stats.formations ? (
+          <span className="shrink-0 rounded-full border border-white/10 bg-black/30 px-2.5 py-0.5 font-mono text-xs text-gray-200">
+            {stats.formations}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <StatChip label={details.avgScored} value={formatDecimal(stats.avgGoalsFor)} />
+        <StatChip label={details.avgConceded} value={formatDecimal(stats.avgGoalsAgainst)} />
+        <StatChip label={details.possession} value={formatPossession(stats.avgBallPossession)} />
+        <StatChip label={details.cleanSheets} value={formatNullableNumber(stats.cleanSheets)} />
+        <StatChip label={details.failedToScore} value={formatNullableNumber(stats.failedToScore)} />
+        <StatChip label={details.penalties} value={formatNullableNumber(stats.penaltyScored)} />
+        <StatChip label={details.avgCards} value={formatDecimal(stats.cardsAvg)} />
+      </div>
+    </div>
+  );
+}
+
+function H2HSummaryBoard({
+  summary,
+  homeName,
+  awayName,
+  details,
+}: {
+  summary: NonNullable<ApiFootballAIInsightDetail["h2hSummary"]>;
+  homeName: string;
+  awayName: string;
+  details: LocalizedDetailCopy;
+}) {
+  const total = summary.totalMatches || 1;
+  const segments = [
+    { label: homeName, value: summary.homeWins, className: "bg-cyan-400" },
+    { label: details.drawOption, value: summary.draws, className: "bg-amber-400" },
+    { label: awayName, value: summary.awayWins, className: "bg-magenta-400" },
+  ];
+
+  return (
+    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <span className="uppercase tracking-[0.24em] text-gray-500">{details.h2hSummaryTitle}</span>
+        <div className="flex items-center gap-3 text-gray-400">
+          <span>
+            {details.totalMeetings}: <span className="font-mono text-white">{summary.totalMatches}</span>
+          </span>
+          <span>
+            {details.avgGoals}: <span className="font-mono text-white">{formatDecimal(summary.avgGoals)}</span>
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-white/8">
+        {segments.map((segment) => (
+          <div
+            key={segment.label}
+            className={segment.className}
+            style={{ width: `${Math.round((segment.value / total) * 100)}%` }}
+          />
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+        <div>
+          <p className="font-mono text-lg font-black text-cyan-300">{summary.homeWins}</p>
+          <p className="truncate text-gray-500">{homeName}</p>
+        </div>
+        <div>
+          <p className="font-mono text-lg font-black text-amber-300">{summary.draws}</p>
+          <p className="text-gray-500">{details.drawOption}</p>
+        </div>
+        <div>
+          <p className="font-mono text-lg font-black text-magenta-300">{summary.awayWins}</p>
+          <p className="truncate text-gray-500">{awayName}</p>
+        </div>
+      </div>
+
+      {summary.recentForm.length > 0 ? (
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+          {summary.recentForm.map((result, index) => {
+            const upper = String(result).toUpperCase();
+            return (
+              <span
+                key={`h2h-form-${index}`}
+                className={cn(
+                  "flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-black",
+                  upper === "H" && "bg-cyan-500/18 text-cyan-300",
+                  upper === "D" && "bg-amber-500/18 text-amber-300",
+                  upper === "A" && "bg-magenta-500/18 text-magenta-300"
+                )}
+              >
+                {upper}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -2248,6 +2608,59 @@ function formatInteger(value: number) {
 
 function formatNullableNumber(value: number | null | undefined) {
   return typeof value === "number" ? String(value) : "-";
+}
+
+function formatSignedNumber(value: number | null | undefined) {
+  if (typeof value !== "number") return "-";
+  return value > 0 ? `+${value}` : String(value);
+}
+
+function formatDecimal(value: number | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return "-";
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatPossession(value: number | string | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  if (typeof value === "number") return `${Math.round(value)}%`;
+  const trimmed = value.trim();
+  if (!trimmed) return "-";
+  return trimmed.endsWith("%") ? trimmed : `${trimmed}%`;
+}
+
+function formatProbabilitySource(value: string, details: LocalizedDetailCopy) {
+  if (value === "comparison_model") return details.sourceComparison;
+  if (value === "api_prediction") return details.sourceApi;
+  return value;
+}
+
+function hasStandings(standings: ApiFootballAIInsightDetail["standings"]) {
+  if (!standings) return false;
+  return (
+    typeof standings.home?.rank === "number" ||
+    typeof standings.away?.rank === "number"
+  );
+}
+
+function hasTeamStatsData(teamStats: ApiFootballAIInsightDetail["teamStats"]) {
+  if (!teamStats) return false;
+  return teamHasStats(teamStats.home) || teamHasStats(teamStats.away);
+}
+
+function teamHasStats(stats: ApiFootballAIInsightTeamStats | null) {
+  if (!stats) return false;
+  const numericFields = [
+    stats.avgGoalsFor,
+    stats.avgGoalsAgainst,
+    stats.cleanSheets,
+    stats.failedToScore,
+    stats.penaltyScored,
+    stats.cardsAvg,
+  ];
+  if (numericFields.some((field) => typeof field === "number" && field > 0)) return true;
+  if (typeof stats.avgBallPossession === "number" && stats.avgBallPossession > 0) return true;
+  if (typeof stats.avgBallPossession === "string" && stats.avgBallPossession.trim()) return true;
+  return !!stats.formations;
 }
 
 function stringValue(value: string | number | null | undefined) {

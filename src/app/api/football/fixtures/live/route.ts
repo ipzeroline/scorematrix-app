@@ -9,11 +9,11 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limit = toPositiveInt(searchParams.get("limit"), 100);
+  const limit = toPositiveInt(searchParams.get("limit"));
 
   try {
     const result = await getApiFootballLiveFixtures({
-      limit,
+      ...(limit ? { limit } : {}),
     });
 
     return Response.json(result, {
@@ -27,7 +27,6 @@ export async function GET(request: Request) {
 
     return Response.json(
       {
-        source: "api-football",
         fetchedAt: new Date().toISOString(),
         query: Object.fromEntries(searchParams.entries()),
         count: 0,
@@ -43,9 +42,9 @@ export async function GET(request: Request) {
   }
 }
 
-function toPositiveInt(value: string | null, fallback: number): number {
-  if (!value) return fallback;
+function toPositiveInt(value: string | null): number | undefined {
+  if (!value) return undefined;
   const parsed = Number.parseInt(value, 10);
-  if (Number.isNaN(parsed) || parsed < 1) return fallback;
+  if (Number.isNaN(parsed) || parsed < 1) return undefined;
   return Math.min(parsed, 100);
 }

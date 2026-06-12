@@ -18,7 +18,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { PointsBadge } from "@/components/shared/PointsBadge";
 import { CREDIT_PACKAGES } from "@/data/credit-packages";
 import {
   DEFAULT_CREDIT_PACKAGES_RESPONSE,

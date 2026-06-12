@@ -120,49 +120,71 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               </tr>
             </thead>
             <tbody>
-              {selectedGroup.teams.map((team, index) => (
-                <tr
-                  key={team.code}
-                  className="border-b border-gray-800/70 last:border-b-0 hover:bg-white/[0.02]"
-                >
-                  <td className="px-3 py-3 font-mono text-sm text-gray-500 md:px-4">
-                    {index + 1}
-                  </td>
-                  <td className="px-3 py-3 md:px-4">
-                    <div className="flex items-center gap-3">
-                      <TeamFlag team={team} flagAlt={copy.flagAlt} />
-                      <div className="min-w-0">
-                        <p className="flex min-w-0 items-center gap-2 truncate text-sm font-semibold text-white">
-                          <span className="truncate">{team.name}</span>
-                          <span className="font-mono text-[10px] font-black text-cyan-300">
-                            {team.code}
-                          </span>
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {copy.fifaRank} #{team.rank}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  {[
-                    team.played ?? 0,
-                    team.wins ?? 0,
-                    team.draws ?? 0,
-                    team.losses ?? 0,
-                    team.goalDifference ?? 0,
-                  ].map((value, valueIndex) => (
-                    <td
-                      key={`${team.code}-${valueIndex}`}
-                      className="px-2 py-3 text-center font-mono text-sm text-gray-400"
-                    >
-                      {value}
+              {selectedGroup.teams.map((team) => {
+                const pos = team.rank ?? 99;
+                const qualified = pos <= 2;
+                return (
+                  <tr
+                    key={team.name}
+                    className={cn(
+                      "border-b border-gray-800/70 last:border-b-0 transition-colors hover:bg-white/2",
+                      qualified && "bg-cyan-500/3"
+                    )}
+                  >
+                    <td className="px-3 py-3 md:px-4">
+                      <span
+                        className={cn(
+                          "inline-grid h-6 w-6 place-items-center rounded font-mono text-xs font-black",
+                          pos === 1
+                            ? "bg-amber-400/20 text-amber-300"
+                            : pos === 2
+                              ? "bg-cyan-500/20 text-cyan-300"
+                              : "bg-gray-800/60 text-gray-500"
+                        )}
+                      >
+                        {pos}
+                      </span>
                     </td>
-                  ))}
-                  <td className="px-3 py-3 text-center font-mono text-sm font-black text-white md:px-4">
-                    {team.points ?? 0}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-3 py-3 md:px-4">
+                      <div className="flex items-center gap-3">
+                        <TeamFlag team={team} flagAlt={copy.flagAlt} />
+                        <div className="min-w-0">
+                          <p className="min-w-0 truncate text-sm font-semibold text-white">
+                            {team.name}
+                          </p>
+                          {qualified && (
+                            <p className="text-[10px] font-bold text-amber-300">
+                              ✓ {pos === 1 ? copy.winner : copy.runnerUp}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    {[
+                      team.played ?? 0,
+                      team.wins ?? 0,
+                      team.draws ?? 0,
+                      team.losses ?? 0,
+                      team.goalDifference ?? 0,
+                    ].map((value, valueIndex) => (
+                      <td
+                        key={`${team.code}-${valueIndex}`}
+                        className="px-2 py-3 text-center font-mono text-sm text-gray-400"
+                      >
+                        {value}
+                      </td>
+                    ))}
+                    <td
+                      className={cn(
+                        "px-3 py-3 text-center font-mono text-sm font-black md:px-4",
+                        qualified ? "text-amber-300" : "text-gray-400"
+                      )}
+                    >
+                      {team.points ?? 0}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -184,7 +206,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
         <div className="mt-4 space-y-2">
           {fixtures.slice(0, 3).map((fixture, index) => (
             <div
-              key={`${fixture.home.code}-${fixture.away.code}`}
+              key={`${fixture.home.name}-${fixture.away.name}`}
               className="rounded-lg border border-gray-800 bg-white/[0.03] p-3"
             >
               <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-gray-500">

@@ -407,7 +407,21 @@
       "liveTitle": "สัญญาณสถานะแมตช์",
       "liveText": "สแกนสถานะสด กำลังจะแข่ง และจบแล้วได้รวดเร็ว เหมาะกับวันที่มีหลายคู่พร้อมกัน"
     },
-    "metricMatches": "คู่"
+    "metricMatches": "คู่",
+    "previousDay": "วันก่อนหน้า",
+    "nextDay": "วันถัดไป",
+    "backToToday": "กลับวันนี้",
+    "loadError": "โหลดรายการแข่งขันไม่สำเร็จ กำลังแสดงข้อมูลล่าสุดที่มี",
+    "viewDetails": "ดูรายละเอียด",
+    "truncatedWarning": "แสดง {shown} จากทั้งหมด {total} คู่ในวันนี้",
+    "filtersTitle": "ตัวกรองการแข่งขัน",
+    "filtersDescription": "เลือกวัน ลีก สถานะ หรือค้นหาทีมที่ต้องการ",
+    "clearFilters": "ล้างตัวกรอง",
+    "clearSearch": "ล้างการค้นหา",
+    "dateFilter": "วันแข่งขัน",
+    "leagueFilter": "ลีก",
+    "searchFilter": "ค้นหาทีม",
+    "statusFilter": "สถานะการแข่งขัน"
   },
   "livescore": {
     "title": "ผลการแข่งขันสด",
@@ -422,6 +436,8 @@
     "filterCountry": "กรองตามประเทศ",
     "filterTime": "กรองตามเวลา",
     "noMatches": "ไม่พบการแข่งขัน",
+    "loadError": "ไม่สามารถอัปเดตการแข่งขันสดได้ กรุณาลองใหม่",
+    "sync": "ซิงก์",
     "kickoff": "เริ่มแข่ง",
     "fullTime": "จบ",
     "minute": "'"
@@ -506,6 +522,8 @@
     "noTeamStatistics": "ยังไม่มีข้อมูลสถิติทีม",
     "h2h": "สถิติพบกันย้อนหลัง",
     "noH2hData": "ยังไม่มีข้อมูลการพบกันย้อนหลัง",
+    "leagueStanding": "อันดับลีก",
+    "noStandingData": "ไม่มีข้อมูลอันดับ",
     "noLineupData": "ยังไม่มีข้อมูลผู้เล่น โค้ช หรือแผนการเล่น",
     "coach": "โค้ช",
     "formationPitch": "สนามแผนการเล่น",
@@ -515,7 +533,29 @@
     "playerStatsTitleSuffix": "สถิตินักเตะ",
     "captain": "กัปตัน",
     "loadError": "ไม่สามารถโหลดรายละเอียดการแข่งขันได้",
-    "backToMatches": "กลับไปหน้าการแข่งขัน"
+    "backToMatches": "กลับไปหน้าการแข่งขัน",
+    "liveAutoRefresh": "สด · รีเฟรชอัตโนมัติ",
+    "scorePeriod": "คะแนนแต่ละช่วงเวลา",
+    "firstScorer": "ผู้ทำประตูแรก",
+    "goalHighlight": "ไฮไลต์ประตู",
+    "goalMinute": "นาที",
+    "goalAssist": "ผู้แอสซิสต์",
+    "goalType": "ประเภท",
+    "goalDetail": "รายละเอียด",
+    "goalComments": "ความคิดเห็น",
+    "h2hWin": "ชนะ",
+    "h2hDraw": "เสมอ",
+    "h2hLoss": "แพ้",
+    "recentForm": "ฟอร์มล่าสุด",
+    "standingRank": "อันดับ",
+    "standingPoints": "คะแนน",
+    "standingPlayed": "เล่น",
+    "standingWDL": "ช / ส / แ",
+    "standingGoals": "ประตู",
+    "standingGD": "ผลต่างประตู",
+    "standingSplit": "เหย้า / เยือน",
+    "standingHome": "เหย้า",
+    "standingAway": "เยือน"
   },
   "prediction": {
     "title": "ทายผล",
@@ -978,7 +1018,8 @@
       "cancel": "ยกเลิก",
       "confirm": "ยืนยัน",
       "clear": "ล้าง",
-      "vs": "VS"
+      "vs": "VS",
+      "back": "ย้อนกลับ"
     },
     "basic": {
       "title": "การทายพื้นฐาน",

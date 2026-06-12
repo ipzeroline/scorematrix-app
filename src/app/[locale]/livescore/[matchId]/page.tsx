@@ -4,9 +4,11 @@ import {
   ArrowLeft,
   Clock,
   ClipboardList,
+  History,
   ListChecks,
   ListPlus,
   MapPin,
+  Medal,
   Radio,
   ShieldCheck,
   Table2,
@@ -24,12 +26,16 @@ import {
   ApiFootballError,
   type ApiFootballEvent,
   type ApiFootballFixture,
+  type ApiFootballH2HFixture,
+  type ApiFootballFixtureTeamStanding,
+  type ApiFootballScoreBreakdown,
   type ApiFootballLineup,
   type ApiFootballPlayerStats,
   type ApiFootballTeamStatistics,
   getApiFootballFixtureDetails,
 } from "@/lib/api-football";
 import { buildFixtureSeoSlug, extractApiFixtureId } from "@/lib/football-slugs";
+import { LiveMatchRefresher } from "./LiveMatchRefresher";
 import { buildPredictMatchHref } from "@/lib/predict-route";
 import { hasAuthSession } from "@/lib/auth-session-server";
 import { MatchStatus } from "@/types/common";
@@ -66,6 +72,9 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         lineups: ApiFootballLineup[];
         statistics: ApiFootballTeamStatistics[];
         playerStats: ApiFootballPlayerStats[];
+        headToHead: ApiFootballH2HFixture[];
+        standings: { home: ApiFootballFixtureTeamStanding | null; away: ApiFootballFixtureTeamStanding | null } | null;
+        scoreBreakdown: ApiFootballScoreBreakdown;
         season: number;
         fetchedAt: string;
       }
@@ -74,10 +83,10 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
 
   try {
     const details = await getApiFootballFixtureDetails(apiFixtureId);
-    const { fixture, events, lineups, statistics, playerStats } = details;
+    const { fixture, events, lineups, statistics, playerStats, headToHead, standings, scoreBreakdown } = details;
     const season = fixture.league.season ?? new Date().getFullYear();
 
-    matchDetails = { fixture, events, lineups, statistics, playerStats, season, fetchedAt: details.fetchedAt };
+    matchDetails = { fixture, events, lineups, statistics, playerStats, headToHead, standings, scoreBreakdown, season, fetchedAt: details.fetchedAt };
   } catch (error) {
     loadErrorMessage =
       error instanceof ApiFootballError
@@ -96,7 +105,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
     );
   }
 
-  const { fixture, events, lineups, statistics, playerStats, season, fetchedAt } = matchDetails;
+  const { fixture, events, lineups, statistics, playerStats, headToHead, standings, scoreBreakdown, season, fetchedAt } = matchDetails;
   const homeLineup = lineups.find((lineup) => lineup.team.id === fixture.home.apiTeamId) ?? lineups[0];
   const awayLineup = lineups.find((lineup) => lineup.team.id === fixture.away.apiTeamId) ?? lineups[1];
 
@@ -143,6 +152,16 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                 ? `${fixture.score.home} - ${fixture.score.away}`
                 : t("common.vs")}
             </div>
+            {scoreBreakdown.halftime.home !== null && fixture.score.home !== null && (
+              <p className="mt-1 font-mono text-[11px] text-gray-500">
+                HT {scoreBreakdown.halftime.home} : {scoreBreakdown.halftime.away}
+              </p>
+            )}
+            {scoreBreakdown.penalty.home !== null && (
+              <p className="mt-0.5 font-mono text-[11px] font-semibold text-amber-300">
+                PEN {scoreBreakdown.penalty.home} : {scoreBreakdown.penalty.away}
+              </p>
+            )}
             <p className="mt-1.5 break-words font-mono text-[11px] leading-tight text-gray-400 sm:text-[11px]">
               {formatFixtureDateTime(fixture.kickoffTime, locale)}
             </p>
@@ -151,6 +170,11 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                 {fixture.elapsed}
                 {fixture.statusExtra ? `+${fixture.statusExtra}` : ""}&apos;
               </p>
+            )}
+            {fixture.status === MatchStatus.LIVE && (
+              <div className="mt-2">
+                <LiveMatchRefresher label={t("matchDetail.liveAutoRefresh")} />
+              </div>
             )}
           </div>
           <TeamHeader
@@ -212,10 +236,29 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         }}
       />
 
+      <PeriodScorePanel
+        scoreBreakdown={scoreBreakdown}
+        mainScore={fixture.score}
+        status={fixture.statusShort}
+        homeName={fixture.home.name}
+        awayName={fixture.away.name}
+        title={t("matchDetail.scorePeriod")}
+        isUpcoming={fixture.status === MatchStatus.UPCOMING}
+      />
+
       <FirstScorerPanel
         event={getFirstGoalEvent(events)}
-        emptyLabel={t("matchDetail.noEventData")}
-        relatedLabel={t("matchDetail.relatedPlayer")}
+        labels={{
+          title: t("matchDetail.firstScorer"),
+          empty: t("matchDetail.noEventData"),
+          highlight: t("matchDetail.goalHighlight"),
+          minute: t("matchDetail.goalMinute"),
+          assist: t("matchDetail.goalAssist"),
+          type: t("matchDetail.goalType"),
+          detail: t("matchDetail.goalDetail"),
+          related: t("matchDetail.relatedPlayer"),
+          comments: t("matchDetail.goalComments"),
+        }}
       />
 
       {showJsonBox && (
@@ -268,6 +311,39 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         noGridData: t("matchDetail.noGridData"),
         captain: t("matchDetail.captain"),
       }} playerStats={playerStats} />
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <H2HPanel
+          fixtures={headToHead}
+          homeTeamId={fixture.home.apiTeamId}
+          title={t("matchDetail.h2h")}
+          emptyLabel={t("matchDetail.noH2hData")}
+          labels={{
+            win: t("matchDetail.h2hWin"),
+            draw: t("matchDetail.h2hDraw"),
+            loss: t("matchDetail.h2hLoss"),
+          }}
+        />
+        <StandingPanel
+          standings={standings}
+          homeTeam={fixture.home}
+          awayTeam={fixture.away}
+          title={t("matchDetail.leagueStanding")}
+          emptyLabel={t("matchDetail.noStandingData")}
+          labels={{
+            rank: t("matchDetail.standingRank"),
+            points: t("matchDetail.standingPoints"),
+            played: t("matchDetail.standingPlayed"),
+            wdl: t("matchDetail.standingWDL"),
+            goals: t("matchDetail.standingGoals"),
+            gd: t("matchDetail.standingGD"),
+            recentForm: t("matchDetail.recentForm"),
+            split: t("matchDetail.standingSplit"),
+            home: t("matchDetail.standingHome"),
+            away: t("matchDetail.standingAway"),
+          }}
+        />
+      </section>
     </MatchDetailShell>
   );
 }
@@ -292,24 +368,32 @@ function JsonBox({ title, value }: { title: string; value: unknown }) {
 
 function FirstScorerPanel({
   event,
-  emptyLabel,
-  relatedLabel,
+  labels,
 }: {
   event: ApiFootballEvent | null;
-  emptyLabel: string;
-  relatedLabel: string;
+  labels: {
+    title: string;
+    empty: string;
+    highlight: string;
+    minute: string;
+    assist: string;
+    type: string;
+    detail: string;
+    related: string;
+    comments: string;
+  };
 }) {
   return (
     <Card className="overflow-hidden p-0">
-      <div className="border-b border-gray-800 bg-gradient-to-r from-green-500/10 via-white/[0.02] to-cyan-500/10 px-4 py-3">
+      <div className="border-b border-gray-800 bg-linear-to-r from-green-500/10 via-white/2 to-cyan-500/10 px-4 py-3">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
           <ShieldCheck size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
-          <span className="min-w-0 truncate">First scorer</span>
+          <span className="min-w-0 truncate">{labels.title}</span>
         </h2>
       </div>
       {!event ? (
         <div className="p-4">
-          <EmptyDetail label={emptyLabel} />
+          <EmptyDetail label={labels.empty} />
         </div>
       ) : (
         <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.8fr)]">
@@ -317,21 +401,15 @@ function FirstScorerPanel({
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-green-300">
-                  Goal Highlight
+                  {labels.highlight}
                 </p>
                 <h3 className="mt-2 truncate text-2xl font-black text-white sm:text-3xl">
                   {event.player.name ?? event.team.name}
                 </h3>
                 <div className="mt-3 flex min-w-0 items-center gap-3">
-                  <ApiTeamLogo
-                    name={event.team.name}
-                    logo={event.team.logo}
-                    size="md"
-                  />
+                  <ApiTeamLogo name={event.team.name} logo={event.team.logo} size="md" />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">
-                      {event.team.name}
-                    </p>
+                    <p className="truncate text-sm font-semibold text-white">{event.team.name}</p>
                     <p className="truncate text-xs text-gray-400">
                       {translateEventDetail(event.detail, buildEventFallbackLabels())}
                     </p>
@@ -339,43 +417,21 @@ function FirstScorerPanel({
                 </div>
               </div>
               <div className="rounded-2xl border border-green-400/25 bg-green-500/10 px-4 py-3 text-center shadow-[0_0_24px_rgba(34,197,94,0.18)]">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-green-200">
-                  Minute
-                </p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-green-200">{labels.minute}</p>
                 <p className="mt-1 font-mono text-2xl font-black text-green-300">
-                  {event.time.elapsed}
-                  {event.time.extra ? `+${event.time.extra}` : ""}
-                  &apos;
+                  {event.time.elapsed}{event.time.extra ? `+${event.time.extra}` : ""}&apos;
                 </p>
               </div>
             </div>
-
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <FirstScorerMeta
-                label="Assist"
-                value={event.assist.name ?? "-"}
-              />
-              <FirstScorerMeta
-                label="Type"
-                value={event.type}
-              />
+              <FirstScorerMeta label={labels.assist} value={event.assist.name ?? "-"} />
+              <FirstScorerMeta label={labels.type} value={event.type} />
             </div>
           </div>
-
           <div className="grid gap-3">
-            <FirstScorerMeta
-              label="Detail"
-              value={event.detail || "-"}
-            />
-            <FirstScorerMeta
-              label={relatedLabel}
-              value={event.assist.name ?? "-"}
-            />
-            <FirstScorerMeta
-              label="Comments"
-              value={event.comments ?? "-"}
-              multiline
-            />
+            <FirstScorerMeta label={labels.detail} value={event.detail || "-"} />
+            <FirstScorerMeta label={labels.related} value={event.assist.name ?? "-"} />
+            <FirstScorerMeta label={labels.comments} value={event.comments ?? "-"} multiline />
           </div>
         </div>
       )}
@@ -1537,6 +1593,394 @@ function getCaptainPlayerIds(teamId: number, playerStats: ApiFootballPlayerStats
 
 function isCaptainPlayer(playerId: number | null, captainIds: Set<number>) {
   return playerId !== null && captainIds.has(playerId);
+}
+
+/* ─────────────── Period Score Panel ─────────────── */
+
+function PeriodScorePanel({
+  scoreBreakdown,
+  mainScore,
+  status,
+  homeName,
+  awayName,
+  title,
+  isUpcoming,
+}: {
+  scoreBreakdown: ApiFootballScoreBreakdown;
+  mainScore: { home: number | null; away: number | null };
+  status: string;
+  homeName: string;
+  awayName: string;
+  title: string;
+  isUpcoming: boolean;
+}) {
+  const hasHT = scoreBreakdown.halftime.home !== null;
+  const hasET = scoreBreakdown.extratime.home !== null;
+  const hasPEN = scoreBreakdown.penalty.home !== null;
+  const hasFT = mainScore.home !== null;
+
+  if (isUpcoming || (!hasHT && !hasFT)) return null;
+
+  const periods: { label: string; home: number | null; away: number | null; accent: string; textAccent: string }[] = [];
+
+  if (hasHT) periods.push({ label: "HT", home: scoreBreakdown.halftime.home, away: scoreBreakdown.halftime.away, accent: "border-cyan-500/20 bg-cyan-500/5", textAccent: "text-cyan-300" });
+  if (hasFT) periods.push({ label: "FT", home: mainScore.home, away: mainScore.away, accent: "border-green-500/20 bg-green-500/5", textAccent: "text-green-300" });
+  if (hasET) periods.push({ label: "ET", home: scoreBreakdown.extratime.home, away: scoreBreakdown.extratime.away, accent: "border-amber-500/20 bg-amber-500/5", textAccent: "text-amber-300" });
+  if (hasPEN) periods.push({ label: "PEN", home: scoreBreakdown.penalty.home, away: scoreBreakdown.penalty.away, accent: "border-magenta-500/20 bg-magenta-500/5", textAccent: "text-pink-300" });
+
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="border-b border-gray-800 bg-white/2 px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <Clock size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+          <span>{title}</span>
+          <span className="ml-auto font-mono text-[10px] font-normal text-gray-500 uppercase tracking-wider">{status}</span>
+        </h2>
+      </div>
+      <div className="p-4">
+        <div className="mb-3 hidden grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:grid">
+          <span className="truncate text-xs font-semibold text-cyan-200">{homeName}</span>
+          <span className="w-16" />
+          <span className="truncate text-right text-xs font-semibold text-pink-200">{awayName}</span>
+        </div>
+        <div className="space-y-2">
+          {periods.map(({ label, home, away, accent, textAccent }) => (
+            <div
+              key={label}
+              className={cn("grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center gap-2 rounded-xl border px-3 py-2.5", accent)}
+            >
+              <span className="font-mono text-lg font-black text-cyan-200 sm:text-xl">
+                {home ?? "-"}
+              </span>
+              <span className={cn("text-center font-mono text-[10px] font-bold uppercase tracking-[0.18em]", textAccent)}>
+                {label}
+              </span>
+              <span className="text-right font-mono text-lg font-black text-pink-200 sm:text-xl">
+                {away ?? "-"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+/* ─────────────── H2H Panel ─────────────── */
+
+function H2HPanel({
+  fixtures,
+  homeTeamId,
+  title,
+  emptyLabel,
+  labels,
+}: {
+  fixtures: ApiFootballH2HFixture[];
+  homeTeamId: number | null;
+  title: string;
+  emptyLabel: string;
+  labels: { win: string; draw: string; loss: string };
+}) {
+  if (fixtures.length === 0) {
+    return (
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-gray-800 bg-white/2 px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+            <History size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+            <span className="min-w-0 truncate">{title}</span>
+          </h2>
+        </div>
+        <div className="p-4"><EmptyDetail label={emptyLabel} /></div>
+      </Card>
+    );
+  }
+
+  let wins = 0, draws = 0, losses = 0;
+  for (const m of fixtures) {
+    const isHomeTeamHome = homeTeamId !== null && m.home.id === homeTeamId;
+    const hg = m.goals.home, ag = m.goals.away;
+    if (hg === null || ag === null) continue;
+    if (hg === ag) { draws++; continue; }
+    const weWon = isHomeTeamHome ? hg > ag : ag > hg;
+    weWon ? wins++ : losses++;
+  }
+
+  return (
+    <Card className="overflow-hidden p-0">
+      <div className="border-b border-gray-800 bg-linear-to-r from-cyan-500/5 via-white/1 to-transparent px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <History size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+          <span className="min-w-0 truncate">{title}</span>
+          <span className="ml-auto shrink-0 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-cyan-300">
+            {fixtures.length}
+          </span>
+        </h2>
+      </div>
+
+      {/* W/D/L summary */}
+      <div className="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
+        {[
+          { label: labels.win, value: wins, color: "text-green-300", bg: "bg-green-500/8" },
+          { label: labels.draw, value: draws, color: "text-amber-300", bg: "bg-amber-500/8" },
+          { label: labels.loss, value: losses, color: "text-red-300", bg: "bg-red-500/8" },
+        ].map(({ label, value, color, bg }) => (
+          <div key={label} className={cn("flex flex-col items-center py-2.5", bg)}>
+            <span className={cn("font-mono text-2xl font-black", color)}>{value}</span>
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-gray-500">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Match rows */}
+      <div className="divide-y divide-gray-800/60">
+        {fixtures.map((match) => {
+          const isHomeTeamHome = homeTeamId !== null && match.home.id === homeTeamId;
+          const hg = match.goals.home, ag = match.goals.away;
+          const htH = match.score.halftime.home, htA = match.score.halftime.away;
+          const hasHT = htH !== null && htA !== null;
+
+          let resultChar = "D";
+          let resultStyle = "border-amber-500/30 bg-amber-500/10 text-amber-300";
+          if (hg !== null && ag !== null && hg !== ag) {
+            const weWon = isHomeTeamHome ? hg > ag : ag > hg;
+            resultChar = weWon ? "W" : "L";
+            resultStyle = weWon
+              ? "border-green-500/30 bg-green-500/10 text-green-300"
+              : "border-red-500/30 bg-red-500/10 text-red-300";
+          }
+
+          const dateStr = match.date
+            ? new Date(match.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" })
+            : "";
+
+          return (
+            <div key={match.fixtureId} className="px-3 py-2.5">
+              {/* Meta row */}
+              <div className="mb-2 flex items-center justify-between gap-1">
+                <span className="font-mono text-[10px] text-gray-600">{dateStr}</span>
+                <span className="min-w-0 truncate text-center font-mono text-[10px] text-gray-600">
+                  {match.league.name}{match.league.season ? ` ${match.league.season}` : ""}
+                </span>
+                {homeTeamId !== null && (
+                  <span className={cn("shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] font-black", resultStyle)}>
+                    {resultChar}
+                  </span>
+                )}
+              </div>
+              {/* Teams + score */}
+              <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center gap-1.5">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <ApiTeamLogo name={match.home.name} logo={match.home.logo} size="xs" />
+                  <span className={cn("truncate text-xs font-semibold", match.home.winner ? "text-white" : "text-gray-400")}>
+                    {match.home.name}
+                  </span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <span className="font-mono text-sm font-black text-white">
+                    {hg !== null && ag !== null ? `${hg} - ${ag}` : "- -"}
+                  </span>
+                  {hasHT && (
+                    <span className="font-mono text-[9px] text-gray-600">{htH} : {htA} HT</span>
+                  )}
+                </div>
+                <div className="flex min-w-0 items-center justify-end gap-1.5">
+                  <span className={cn("truncate text-right text-xs font-semibold", match.away.winner ? "text-white" : "text-gray-400")}>
+                    {match.away.name}
+                  </span>
+                  <ApiTeamLogo name={match.away.name} logo={match.away.logo} size="xs" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+/* ─────────────── Standings Panel ─────────────── */
+
+function StandingPanel({
+  standings,
+  homeTeam,
+  awayTeam,
+  title,
+  emptyLabel,
+  labels,
+}: {
+  standings: { home: ApiFootballFixtureTeamStanding | null; away: ApiFootballFixtureTeamStanding | null } | null;
+  homeTeam: ApiFootballFixture["home"];
+  awayTeam: ApiFootballFixture["away"];
+  title: string;
+  emptyLabel: string;
+  labels: { points: string; rank: string; played: string; wdl: string; goals: string; gd: string; recentForm: string; split: string; home: string; away: string };
+}) {
+  const home = standings?.home;
+  const away = standings?.away;
+
+  if (!home && !away) {
+    return (
+      <Card className="overflow-hidden p-0">
+        <div className="border-b border-gray-800 bg-white/2 px-4 py-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+            <Medal size={16} className="shrink-0 text-amber-300" aria-hidden="true" />
+            <span className="min-w-0 truncate">{title}</span>
+          </h2>
+        </div>
+        <div className="p-4"><EmptyDetail label={emptyLabel} /></div>
+      </Card>
+    );
+  }
+
+  const hs = home ?? away!;
+  const as_ = away ?? home!;
+  const maxPts = Math.max(hs.points, as_.points, 1);
+
+  const cmpRows: { label: string; hVal: string | number; aVal: string | number }[] = [
+    { label: labels.rank, hVal: `#${hs.rank}`, aVal: `#${as_.rank}` },
+    { label: labels.points, hVal: hs.points, aVal: as_.points },
+    { label: labels.played, hVal: hs.all.played, aVal: as_.all.played },
+    { label: labels.wdl, hVal: `${hs.all.win} / ${hs.all.draw} / ${hs.all.lose}`, aVal: `${as_.all.win} / ${as_.all.draw} / ${as_.all.lose}` },
+    { label: labels.goals, hVal: `${hs.all.goals.for} : ${hs.all.goals.against}`, aVal: `${as_.all.goals.for} : ${as_.all.goals.against}` },
+    { label: labels.gd, hVal: hs.goalsDiff > 0 ? `+${hs.goalsDiff}` : hs.goalsDiff, aVal: as_.goalsDiff > 0 ? `+${as_.goalsDiff}` : as_.goalsDiff },
+  ];
+  return (
+    <Card className="overflow-hidden p-0">
+      {/* Header */}
+      <div className="border-b border-gray-800 bg-linear-to-r from-amber-500/5 via-white/1 to-transparent px-4 py-3">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <Medal size={16} className="shrink-0 text-amber-300" aria-hidden="true" />
+          <span className="min-w-0 truncate">{title}</span>
+          {hs.group && (
+            <span className="ml-auto shrink-0 font-mono text-[10px] text-gray-500">{hs.group}</span>
+          )}
+        </h2>
+      </div>
+
+      <div className="space-y-4 p-4">
+        {/* Team header row */}
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <ApiTeamLogo name={homeTeam.name} logo={homeTeam.logo} size="sm" />
+            <div className="min-w-0">
+              <p className="truncate text-xs font-bold text-white">{homeTeam.name}</p>
+              {hs.description && (
+                <p className="truncate font-mono text-[9px] text-cyan-400">{hs.description}</p>
+              )}
+            </div>
+          </div>
+          <span className="shrink-0 font-mono text-[10px] text-gray-600">vs</span>
+          <div className="flex min-w-0 items-center justify-end gap-2">
+            <div className="min-w-0 text-right">
+              <p className="truncate text-xs font-bold text-white">{awayTeam.name}</p>
+              {as_.description && (
+                <p className="truncate font-mono text-[9px] text-pink-400">{as_.description}</p>
+              )}
+            </div>
+            <ApiTeamLogo name={awayTeam.name} logo={awayTeam.logo} size="sm" />
+          </div>
+        </div>
+
+        {/* Points visual bar */}
+        <div className="rounded-xl border border-gray-800 bg-[#0a0a0f] px-4 py-3">
+          <p className="mb-2 text-center font-mono text-[10px] font-semibold uppercase tracking-wider text-gray-500">Points</p>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="w-8 shrink-0 text-right font-mono text-sm font-black text-cyan-300">{hs.points}</span>
+            <div className="relative flex h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-800">
+              <div
+                className="h-full rounded-full bg-linear-to-r from-cyan-500 to-cyan-400"
+                style={{ width: `${(hs.points / maxPts) * 100}%` }}
+              />
+            </div>
+            <div
+              className="relative h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-800"
+            >
+              <div
+                className="absolute right-0 h-full rounded-full bg-linear-to-l from-pink-500 to-pink-400"
+                style={{ width: `${(as_.points / maxPts) * 100}%` }}
+              />
+            </div>
+            <span className="w-8 shrink-0 font-mono text-sm font-black text-pink-300">{as_.points}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="font-mono text-[9px] text-gray-600">Rank #{hs.rank}</span>
+            <span className="font-mono text-[9px] text-gray-600">Rank #{as_.rank}</span>
+          </div>
+        </div>
+
+        {/* Comparison rows */}
+        <div className="overflow-hidden rounded-xl border border-gray-800">
+          {cmpRows.map(({ label, hVal, aVal }) => (
+            <div
+              key={label}
+              className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center border-b border-gray-800/60 bg-[#0a0a0f] px-3 py-2 last:border-0"
+            >
+              <span className="font-mono text-xs font-bold text-cyan-200">{hVal}</span>
+              <span className="text-center font-mono text-[9px] font-semibold uppercase tracking-wider text-gray-600">{label}</span>
+              <span className="text-right font-mono text-xs font-bold text-pink-200">{aVal}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Form pills */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+          <FormPillRow form={hs.form} label={labels.recentForm} align="left" />
+          <FormPillRow form={as_.form} label={labels.recentForm} align="right" />
+        </div>
+
+        {/* Home / Away split */}
+        <div className="overflow-hidden rounded-xl border border-gray-800">
+          <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] border-b border-gray-800 bg-white/2 px-3 py-1.5">
+            <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-cyan-500">{homeTeam.name}</span>
+            <span className="text-center font-mono text-[9px] font-semibold uppercase tracking-wider text-gray-600">{labels.split}</span>
+            <span className="text-right font-mono text-[9px] font-semibold uppercase tracking-wider text-pink-500">{awayTeam.name}</span>
+          </div>
+          {[
+            { label: labels.home, h: hs.home, a: as_.home },
+            { label: labels.away, h: hs.away, a: as_.away },
+          ].map(({ label, h, a }) => (
+            <div key={label} className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center border-b border-gray-800/50 bg-[#0a0a0f] px-3 py-2 last:border-0">
+              <span className="font-mono text-[10px] text-gray-300">
+                {h.win}W {h.draw}D {h.lose}L
+                <span className="ml-1 text-gray-600">({h.goals.for}:{h.goals.against})</span>
+              </span>
+              <span className="text-center font-mono text-[9px] font-semibold uppercase text-gray-600">{label}</span>
+              <span className="text-right font-mono text-[10px] text-gray-300">
+                {a.win}W {a.draw}D {a.lose}L
+                <span className="ml-1 text-gray-600">({a.goals.for}:{a.goals.against})</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function FormPillRow({ form, label, align }: { form: string | null; label: string; align: "left" | "right" }) {
+  if (!form) return null;
+  const chars = form.split("").slice(0, 5);
+
+  return (
+    <div className={cn("flex flex-col gap-1", align === "right" && "items-end")}>
+      <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-gray-600">{label}</span>
+      <div className="flex gap-0.5">
+        {chars.map((char, i) => (
+          <span
+            key={i}
+            className={cn(
+              "grid h-5 w-5 shrink-0 place-items-center rounded font-mono text-[10px] font-black shadow-sm",
+              char === "W" && "bg-green-500/20 text-green-300 ring-1 ring-green-500/20",
+              char === "D" && "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/20",
+              char === "L" && "bg-red-500/20 text-red-300 ring-1 ring-red-500/20"
+            )}
+          >
+            {char}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function EmptyDetail({ label }: { label: string }) {

@@ -2,7 +2,6 @@ import { Livescore, type FixturesPayload } from "@/components/livescore/Livescor
 import {
   ApiFootballError,
   getApiFootballLiveFixtures,
-  getMockApiFootballFixtures,
 } from "@/lib/api-football";
 
 export const dynamic = "force-dynamic";
@@ -26,18 +25,15 @@ async function loadInitialFixtures(): Promise<FixturesPayload> {
       error instanceof ApiFootballError
         ? error
         : new ApiFootballError("Unable to fetch football fixtures", 500);
-    const fixtures = getMockApiFootballFixtures(50);
-
     return {
-      source: "mock",
       fetchedAt: new Date().toISOString(),
-      count: fixtures.length,
-      fixtures,
+      count: 0,
+      fixtures: [],
       rateLimit: {
         requestsRemaining: null,
         requestsLimit: null,
       },
-      warning: apiError.message,
+      error: apiError.message,
     };
   }
 }

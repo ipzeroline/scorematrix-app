@@ -57,7 +57,7 @@ API routes:
 - `src/app/api/auth/{login,register,refresh,logout}/route.ts`: same-origin auth BFF routes; proxy auth calls to the scorm backend, keep refresh tokens in rotating HttpOnly cookies, strip refresh tokens from browser-visible JSON, and clear server-managed refresh sessions on failure/logout
 - `src/app/api/data/[...path]/route.ts`: same-origin data API BFF; proxies browser data/member requests to `API_DATA_BASE_URL` while preserving bearer and locale headers
 - `src/app/api/football/fixtures/route.ts`: returns uncached fixtures from the soccer backend
-- `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer backend `GET /live` with no-store caching
+- `src/app/api/football/fixtures/live/route.ts`: returns live fixtures from soccer root `GET /?status_group=live` with no-store caching
 - `src/app/api/football/fixtures/today/route.ts`: returns today's fixtures from soccer backend `GET /fixtures/today`
 - `src/app/api/football/fixtures/upcoming/route.ts`: returns upcoming fixtures from soccer backend `GET /fixtures/upcoming`
 - `src/app/api/football/teams/route.ts`: proxies favorite-team options from soccer backend `GET /teams`
@@ -114,19 +114,18 @@ Static data:
 
 - `src/lib/api-football.ts`
   - Base URL: required `API_FOOTBALL_BASE_URL` from root `.env`
-  - Exports fetchers for fixtures, live fixtures from `GET /live`, AI insights from `GET /ai-insights`, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
+  - Exports fetchers for fixtures, live fixtures from soccer root `GET /?status_group=live`, AI insights from `GET /ai-insights`, today's fixtures from `GET /fixtures/today`, upcoming fixtures from `GET /fixtures/upcoming`, fixture details, leagues, standings, schedules, team profiles from `GET /soccer/teams/{provider_id}`, player profiles from `GET /soccer/players/{id}`, and H2H
   - Team profile normalization preserves base team/venue fields plus optional `leagues[]` and `squad.players[]` returned by `GET /soccer/teams/{provider_id}`
   - League listing maps `GET /leagues` / `v1/soccer/leagues` responses from `data[]` with `provider_id`, `current_season`, `sort_order`, `logo`, and country fields into `ApiFootballLeagueEntry`
   - League detail normalization maps `GET /soccer/leagues/{provider_id}` into league metadata, country info, embedded teams, and embedded standings for the league detail page
-  - Normalizes backend values and proxies media URLs
-  - Falls back to mock fixtures through `getMockApiFootballFixtures`
+  - Normalizes backend values and proxies media URLs; soccer requests use a 10-second timeout and structured failure logging, fixture response types omit the obsolete `source` field, and football fixture fetchers return empty results or API errors instead of mock fixtures
 - `src/lib/football-page-data.ts`
   - `loadFixturesForDate(limit?)` uses today's Asia/Bangkok date and returns an empty list instead of stale mock fixtures when the API fails
-  - `loadLiveFixtures(limit = 24)` uses uncached `GET /live` for homepage live match highlights
+  - `loadLiveFixtures()` uses uncached soccer root `GET /?status_group=live` with no limit for homepage live match highlights and reports API failure separately from an empty result
   - `loadTodayFixtures(limit?)` uses uncached `GET /fixtures/today`
   - `loadUpcomingFixtures(limit?)` uses uncached `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
-- `src/app/[locale]/page.tsx` loads live highlights from uncached `GET /live`, the "today matches" preview from uncached `GET /fixtures/today` sorted with the same `sortFixtures` order as `/matches`, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
+- `src/app/[locale]/page.tsx` loads live highlights exclusively from uncached soccer root `GET /?status_group=live` with no mock fallback; the client live section refreshes every 45 seconds while the tab is visible, preserves the last good result, and distinguishes API errors from no live matches. The page also loads the "today matches" preview from uncached `GET /fixtures/today` sorted with the same `sortFixtures` order as `/matches`, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
 - `src/app/[locale]/ai-insight/page.tsx` maps grouped `live`, `highConfidence`, and `upsetAlert` data from soccer backend `GET /ai-insights`, displays only insights with complete confidence/probability metrics, and distinguishes empty results from API failures.
 - `src/app/[locale]/ai-insight/[matchId]/page.tsx` renders a full AI match dashboard from `GET /ai-insights/{fixtureId}` with a redesigned cyber detail layout: match hero, confidence ring, probability bars, model comparison, API advice, community sentiment, form deep-dive, injury impact, lineup/trend cards, and optional head-to-head data when present in the payload. The page tolerates backend fields that exist in live responses but are not fully modeled in the shared TypeScript types yet, rather than failing the view.
 - AI insight detail hero reuses the shared `StatusBadge` with the fixture-detail status, matching the match-detail and other football pages.
@@ -134,12 +133,12 @@ Static data:
 - Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - Predict detail form sends `pointsWagered` as the base wager multiplied by confidence (`safe` x1.0, `confident` x1.5, `bold` x2.0).
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.
-- `src/app/[locale]/livescore/page.tsx` dynamically uses uncached `GET /live` through `getApiFootballLiveFixtures` for its initial fixture list with no limit; the `Livescore` client view refreshes through `/api/football/fixtures/live` once on mount or when the user presses Sync.
+- `src/app/[locale]/livescore/page.tsx` dynamically uses uncached soccer root `GET /?status_group=live` through `getApiFootballLiveFixtures` for its initial fixture list with no limit and returns an explicit error state on failure instead of mock fixtures; the `Livescore` client view refreshes through `/api/football/fixtures/live` every 45 seconds while the tab is visible or when the user presses Sync, preserving the last good result on refresh failure.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
 - Fixture-detail lineup normalization accepts incomplete payloads and `start_xi` aliases, and always supplies safe `team`, `coach`, `startXI`, and `substitutes` fields before match-detail rendering.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
-- `src/app/[locale]/matches/page.tsx` uses today's football fixtures through `loadTodayFixtures`; `MatchesApi` refreshes once on mount through `/api/football/fixtures/today` and includes status tabs for all/live/upcoming/finished/postponed/cancelled using normalized fixture status groups.
+- `src/app/[locale]/matches/page.tsx` loads the selected Bangkok-local date through soccer root `GET /` with `limit=500`; `MatchesApi` keeps the date, league, and effective status-group filters in the URL, uses backend whole-day counts, and treats stale NS/TBD plus AWD/WO according to the fixture API status-group contract. When the selected date is today and live matches exist, the client refreshes `/api/football/fixtures` every 45 seconds while the browser tab is visible.
 - `src/app/[locale]/football/teams/[teamId]/page.tsx` renders the team profile from `GET /soccer/teams/{provider_id}` with venue details, optional season stats, league participation cards, and a position-grouped squad roster that links to player detail pages.
 - `src/app/[locale]/football/leagues/[leagueId]/page.tsx` now renders a redesigned league detail page from `GET /soccer/leagues/{provider_id}` with hero metadata, featured teams, embedded standings, and a season schedule panel
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes

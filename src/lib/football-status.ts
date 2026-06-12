@@ -12,13 +12,14 @@ const LIVE_STATUS_SHORTS = new Set([
   "LIVE",
 ]);
 const UPCOMING_STATUS_SHORTS = new Set(["NS", "TBD", "UPCOMING"]);
-const FINISHED_STATUS_SHORTS = new Set(["FT", "AET", "PEN", "AWD", "WO", "FINISHED"]);
+const FINISHED_STATUS_SHORTS = new Set(["FT", "AET", "PEN", "FINISHED"]);
 const POSTPONED_STATUS_SHORTS = new Set(["PST", "POSTPONED"]);
-const CANCELLED_STATUS_SHORTS = new Set(["CANC", "ABD", "CANCELLED"]);
+const CANCELLED_STATUS_SHORTS = new Set(["CANC", "ABD", "AWD", "WO", "CANCELLED"]);
 
 type FixtureStatusSource = {
   status: MatchStatus | string;
   statusShort?: string | null;
+  kickoffTime?: string;
 };
 
 export type FootballStatusLabels = {
@@ -68,6 +69,14 @@ export function getFixtureStatusGroup(match: FixtureStatusSource) {
   if (LIVE_STATUS_SHORTS.has(statusShort) || LIVE_STATUS_SHORTS.has(rawStatus)) {
     return MatchStatus.LIVE;
   }
+  if (
+    (UPCOMING_STATUS_SHORTS.has(statusShort) || UPCOMING_STATUS_SHORTS.has(rawStatus)) &&
+    "kickoffTime" in match &&
+    typeof match.kickoffTime === "string" &&
+    new Date(match.kickoffTime).getTime() <= Date.now()
+  ) {
+    return MatchStatus.POSTPONED;
+  }
   if (UPCOMING_STATUS_SHORTS.has(statusShort) || UPCOMING_STATUS_SHORTS.has(rawStatus)) {
     return MatchStatus.UPCOMING;
   }
@@ -96,18 +105,4 @@ export function getFixtureStatusLabel(
   }
 
   return labels.statusByGroup[getFixtureStatusGroup(match)] ?? statusShort;
-}
-
-export function shouldHideStaleNotStartedFixture(match: {
-  kickoffTime: string;
-  statusShort?: string | null;
-}) {
-  const statusShort = String(match.statusShort ?? "").trim().toUpperCase();
-
-  if (statusShort !== "NS") {
-    return false;
-  }
-
-  const kickoff = new Date(match.kickoffTime).getTime();
-  return Number.isFinite(kickoff) && kickoff <= Date.now();
 }

@@ -407,7 +407,21 @@
       "liveTitle": "Live status signals",
       "liveText": "Scan live, upcoming and finished status quickly so the match list stays useful during busy game days."
     },
-    "metricMatches": "Matches"
+    "metricMatches": "Matches",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
+    "backToToday": "Back to today",
+    "loadError": "Unable to refresh matches. Showing the latest available data.",
+    "viewDetails": "View details",
+    "truncatedWarning": "Showing {shown} of {total} matches for this day.",
+    "filtersTitle": "Match filters",
+    "filtersDescription": "Choose a date, league, status, or search for a team.",
+    "clearFilters": "Clear filters",
+    "clearSearch": "Clear search",
+    "dateFilter": "Match date",
+    "leagueFilter": "League",
+    "searchFilter": "Team search",
+    "statusFilter": "Match status"
   },
   "livescore": {
     "title": "တိုက်ရိုက်ရလဒ်",
@@ -422,6 +436,8 @@
     "filterCountry": "Filter by Country",
     "filterTime": "Filter by Time",
     "noMatches": "No matches found",
+    "loadError": "တိုက်ရိုက်ပွဲများကို အပ်ဒိတ်မလုပ်နိုင်ပါ။ ထပ်မံကြိုးစားပါ။",
+    "sync": "စင့်ခ်",
     "kickoff": "Kickoff",
     "fullTime": "FT",
     "minute": "'"
@@ -506,6 +522,8 @@
     "noTeamStatistics": "အသင်းစာရင်းအင်း မရှိသေးပါ",
     "h2h": "အပြန်အလှန်တွေ့ဆုံမှုမှတ်တမ်း",
     "noH2hData": "အပြန်အလှန်တွေ့ဆုံမှုအချက်အလက် မရှိသေးပါ",
+    "leagueStanding": "လိဂ်အဆင့်သတ်မှတ်ချက်",
+    "noStandingData": "အဆင့်သတ်မှတ်ချက်အချက်အလက် မရှိပါ",
     "noLineupData": "လူစာရင်း၊ နည်းပြ သို့မဟုတ် ကစားပုံစနစ်အချက်အလက် မရှိသေးပါ",
     "coach": "နည်းပြ",
     "formationPitch": "ကစားပုံစနစ်ကွင်း",
@@ -515,7 +533,29 @@
     "playerStatsTitleSuffix": "ကစားသမားစာရင်းအင်း",
     "captain": "အသင်းခေါင်းဆောင်",
     "loadError": "ပွဲစဉ်အသေးစိတ်ကို မတင်နိုင်ပါ",
-    "backToMatches": "ပွဲစဉ်များသို့ ပြန်သွားရန်"
+    "backToMatches": "ပွဲစဉ်များသို့ ပြန်သွားရန်",
+    "liveAutoRefresh": "တိုက်ရိုက် · အလိုအလျောက်ပြန်ဆောင်",
+    "scorePeriod": "အချိန်ကာလအလိုက်ရမှတ်",
+    "firstScorer": "ပထမဂိုးသွင်းသူ",
+    "goalHighlight": "ဂိုးဟိုက်လိုက်",
+    "goalMinute": "မိနစ်",
+    "goalAssist": "အပ်ဆစ်",
+    "goalType": "အမျိုးအစား",
+    "goalDetail": "အသေးစိတ်",
+    "goalComments": "မှတ်ချက်",
+    "h2hWin": "နိုင်",
+    "h2hDraw": "သရေ",
+    "h2hLoss": "ရှုံး",
+    "recentForm": "မကြာသေးမီဖောင်",
+    "standingRank": "အဆင့်",
+    "standingPoints": "ရမှတ်",
+    "standingPlayed": "ကစား",
+    "standingWDL": "နိ / သ / ရှုံ",
+    "standingGoals": "ဂိုး",
+    "standingGD": "ဂိုးကွာ",
+    "standingSplit": "အိမ် / ပြင်",
+    "standingHome": "အိမ်ကွင်း",
+    "standingAway": "သွားကွင်း"
   },
   "prediction": {
     "title": "ခန့်မှန်းချက်များ",
@@ -978,7 +1018,8 @@
       "cancel": "Cancel",
       "confirm": "Confirm",
       "clear": "Clear",
-      "vs": "VS"
+      "vs": "VS",
+      "back": "နောက်သို့"
     },
     "basic": {
       "title": "Basic prediction",

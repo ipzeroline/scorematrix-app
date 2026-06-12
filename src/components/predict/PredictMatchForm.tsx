@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  ArrowLeft,
   Brain,
   CalendarClock,
   CheckCircle2,
@@ -11,12 +12,8 @@ import {
   Medal,
   Sparkles,
   Timer,
-  Zap,
-  Minus,
-  Plus,
   Search,
   HelpCircle,
-  SlidersHorizontal,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -24,7 +21,6 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { Tabs } from "@/components/ui/Tabs";
-import { PointsBadge } from "@/components/shared/PointsBadge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -32,6 +28,7 @@ import { cn, formatDate, formatDateTime, formatMatchTimeWithZone } from "@/lib/u
 import { useTranslations } from "next-intl";
 import { apiPostRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
+import { extractApiFixtureId } from "@/lib/football-slugs";
 import { useUserStore } from "@/stores/user-store";
 
 type ConfidenceLevel = "safe" | "confident" | "bold";
@@ -113,18 +110,30 @@ export function PredictMatchForm({
   const t = useTranslations("predictionForm");
   const router = useRouter();
   const addToast = useNotificationStore((s) => s.addToast);
-  const freePoints = useUserStore((s) => s.freePoints);
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Back navigation: return to the page the user came from, or fall back to the
+  // match detail page (livescore) for this provider id when there's no history.
+  const providerId = String(extractApiFixtureId(String(match.matchId)) ?? match.matchId).trim();
+  const matchDetailHref = `/${locale}/livescore/match/${providerId}`;
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(matchDetailHref);
+    }
+  };
+
+  const freePoints = useUserStore((s) => s.freePoints);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Core prediction states
   const [homeScore, setHomeScore] = useState<number | null>(0);
   const [awayScore, setAwayScore] = useState<number | null>(0);
   const [firstScorerPlayerId, setFirstScorerPlayerId] = useState<string | null>(null);
-  const [totalGoals, setTotalGoals] = useState<number | null>(null);
   const [halfHomeScore, setHalfHomeScore] = useState<number | null>(null);
   const [halfAwayScore, setHalfAwayScore] = useState<number | null>(null);
   const [pointsWagered, setPointsWagered] = useState(10);
@@ -152,7 +161,7 @@ export function PredictMatchForm({
       if (!res.ok) throw new Error("Failed to fetch squad");
       const json = await res.json();
       
-      let playersFlat: any[] = [];
+      let playersFlat: unknown[] = [];
       if (json && Array.isArray(json)) {
         playersFlat = json;
       } else if (json && Array.isArray(json.players)) {
@@ -164,14 +173,15 @@ export function PredictMatchForm({
       }
 
       if (playersFlat.length > 0) {
-        return playersFlat.map((p: any) => {
-          const item = p.player ?? p;
+        return playersFlat.map((entry) => {
+          const player = isRecord(entry) ? entry : {};
+          const item = isRecord(player.player) ? player.player : player;
           return {
-            id: item.id ?? item.apiPlayerId,
-            name: item.name,
-            number: item.number ?? (p.number ?? null),
+            id: toNullableNumber(item.id ?? item.apiPlayerId),
+            name: typeof item.name === "string" ? item.name : "",
+            number: toNullableNumber(item.number ?? player.number),
           };
-        });
+        }).filter((player) => player.name);
       }
       return null;
     } catch (error) {
@@ -242,18 +252,10 @@ export function PredictMatchForm({
     return () => clearInterval(interval);
   }, [match.kickoffTime]);
 
-  // Automatically calculate total goals when predicted scores change
-  useEffect(() => {
-    if (homeScore !== null && awayScore !== null) {
-      setTotalGoals(homeScore + awayScore);
-    } else if (homeScore !== null) {
-      setTotalGoals(homeScore);
-    } else if (awayScore !== null) {
-      setTotalGoals(awayScore);
-    } else {
-      setTotalGoals(null);
-    }
-  }, [homeScore, awayScore]);
+  const totalGoals =
+    homeScore !== null && awayScore !== null
+      ? homeScore + awayScore
+      : homeScore ?? awayScore;
 
   const getCountdownInfo = () => {
     if (timeLeft === null) {
@@ -407,6 +409,16 @@ export function PredictMatchForm({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6 space-y-6 pb-8">
+      {/* Back navigation */}
+      <button
+        type="button"
+        onClick={handleBack}
+        className="inline-flex items-center gap-2 text-sm font-medium text-gray-400 transition-colors hover:text-cyan-300 cursor-pointer"
+      >
+        <ArrowLeft size={16} />
+        {t("common.back")}
+      </button>
+
       {/* Top Header Section */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-800/40 pb-5">
         <div>
@@ -558,6 +570,7 @@ export function PredictMatchForm({
             <div className="grid gap-5">
               {/* Tactical pitch player picker */}
               <PlayerPicker
+                key={firstScorerPlayerId ?? "no-scorer"}
                 label={t("deep.firstScorer")}
                 home={match.home}
                 away={match.away}
@@ -862,7 +875,6 @@ export function PredictMatchForm({
             h2h={match.h2h ?? []}
             locale={locale}
             title={t("h2h.title")}
-            emptyLabel={t("h2h.empty")}
             vsLabel={t("common.vs")}
             homeTeamName={match.home.name}
           />
@@ -915,16 +927,6 @@ export function PredictMatchForm({
               </div>
             </div>
           </Card>
-
-          {/* Mini dashboards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2">
-            <MiniPanel icon={Zap} label={t("side.streak")} value="3" tone="text-amber-400" />
-            <MiniPanel icon={Medal} label={t("side.pointsCorrect")} value={useBoost ? "+10-50" : "+5-25"} tone="text-green-400" />
-            <Card className="p-3 text-center border border-gray-800/60 bg-gradient-to-b from-[#161622] to-[#0d0d15] flex flex-col justify-center items-center">
-              <PointsBadge type="free" amount={2840} size="md" showLabel />
-              <p className="mt-1.5 text-[10px] text-gray-500 font-semibold tracking-wider uppercase">{t("side.balance")}</p>
-            </Card>
-          </div>
 
           {/* AI Helper tool */}
           <Card className="relative overflow-hidden p-4 border border-cyan-500/20 bg-gradient-to-br from-[#0c1622] to-[#060b11]">
@@ -1344,14 +1346,12 @@ function H2HPanel({
   h2h,
   locale,
   title,
-  emptyLabel,
   vsLabel,
   homeTeamName,
 }: {
   h2h: PredictH2HFixture[];
   locale: string;
   title: string;
-  emptyLabel: string;
   vsLabel: string;
   homeTeamName: string;
 }) {
@@ -1843,32 +1843,6 @@ function getConfidenceMultiplier(confidence: ConfidenceLevel) {
   }
 }
 
-// ----------------------------------------------------
-// Payload and general helper previews
-// ----------------------------------------------------
-function PayloadPreview({
-  payload,
-}: {
-  payload: {
-    matchId: string;
-    predictedHomeScore: number | null;
-    predictedAwayScore: number | null;
-    firstScorerPlayerId: string | null;
-    totalGoals: number | null;
-    halfTimeHome: number | null;
-    halfTimeAway: number | null;
-    confidenceLevel: ConfidenceLevel;
-    useBoost: boolean;
-    pointsWagered: number;
-  };
-}) {
-  return (
-    <pre className="max-h-40 overflow-auto text-[10px] sm:text-xs leading-5 text-cyan-200/90 font-mono scrollbar-thin">
-      {JSON.stringify(payload, null, 2)}
-    </pre>
-  );
-}
-
 function PredictionSection({
   icon: Icon,
   title,
@@ -1956,14 +1930,6 @@ function PlayerPicker({
       onLoadAwaySquad();
     }
   }, [selectedTeam, onLoadAwaySquad]);
-
-  // Keep tab in sync with selected player value
-  useEffect(() => {
-    if (value) {
-      const isAway = awayPlayers.some(p => String(p.id ?? p.name) === value);
-      setSelectedTeam(isAway ? "away" : "home");
-    }
-  }, [value, awayPlayers]);
 
   // Position classifications and search filters
   const [homeSearch, setHomeSearch] = useState("");
@@ -2274,28 +2240,6 @@ function PlayerColumn({
   );
 }
 
-function MiniPanel({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: React.ComponentType<{ size?: number; className?: string }>;
-  label: string;
-  value: string;
-  tone: string;
-}) {
-  return (
-    <Card className="p-3 text-center border border-gray-805 bg-gradient-to-b from-[#161622] to-[#0d0d15] flex flex-col justify-center items-center">
-      <span className={cn("flex h-6 w-6 items-center justify-center rounded-full bg-black/35 mb-1", tone)}>
-        <Icon size={12} />
-      </span>
-      <p className="text-[10px] text-gray-500 font-semibold tracking-wider uppercase leading-none mb-1">{label}</p>
-      <p className="font-mono text-base font-black text-white leading-none">{value}</p>
-    </Card>
-  );
-}
-
 function FormulaValue({
   label,
   value,
@@ -2456,50 +2400,11 @@ function formatNullableNumber(value: number | null) {
   return value === null ? "-" : String(value);
 }
 
-function JSONPayloadView({
-  payload,
-}: {
-  payload: {
-    matchId: string;
-    predictedHomeScore: number | null;
-    predictedAwayScore: number | null;
-    firstScorerPlayerId: string | null;
-    totalGoals: number | null;
-    halfTimeHome: number | null;
-    halfTimeAway: number | null;
-    confidenceLevel: ConfidenceLevel;
-    useBoost: boolean;
-    pointsWagered: number;
-  };
-}) {
-  const entries = Object.entries(payload);
-  return (
-    <div className="font-mono text-[11px] bg-[#04060a]/90 p-3 rounded-lg border border-gray-900 leading-relaxed text-gray-400 space-y-1 select-all">
-      <div className="text-gray-600">{"{"}</div>
-      {entries.map(([key, value], idx) => {
-        const isLast = idx === entries.length - 1;
-        let valueElement = null;
-        
-        if (value === null) {
-          valueElement = <span className="text-gray-600">null</span>;
-        } else if (typeof value === "boolean") {
-          valueElement = <span className="text-emerald-400">{String(value)}</span>;
-        } else if (typeof value === "number") {
-          valueElement = <span className="text-fuchsia-400">{value}</span>;
-        } else {
-          valueElement = <span className="text-amber-300">&quot;{String(value)}&quot;</span>;
-        }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
 
-        return (
-          <div key={key} className="pl-4 flex flex-wrap gap-x-1 items-center">
-            <span className="text-cyan-400">&quot;{key}&quot;</span>
-            <span className="text-gray-500">:</span>
-            {valueElement}
-            {!isLast && <span className="text-gray-500">,</span>}
-          </div>
-        );
-      })}
-      <div className="text-gray-600">{"}"}</div>
-    </div>
-  );
+function toNullableNumber(value: unknown): number | null {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : null;
 }

@@ -1,9 +1,6 @@
 type MatchStatusValue = "upcoming" | "live" | "finished" | "postponed" | "cancelled";
 
-type ApiFootballSourceValue = "api-football" | "mock";
-
 type FixtureDetailsPayload = {
-  source?: ApiFootballSourceValue;
   fetchedAt?: string;
   fixture?: unknown;
   events?: unknown[];
@@ -12,6 +9,63 @@ type FixtureDetailsPayload = {
   playerStats?: unknown[];
   players?: unknown[];
   data?: unknown;
+};
+
+type RawH2HEntry = {
+  fixture?: {
+    id?: number | null;
+    date?: string | null;
+    status?: {
+      short?: string | null;
+      elapsed?: number | null;
+    } | null;
+  } | null;
+  league?: {
+    name?: string | null;
+    season?: number | null;
+    round?: string | null;
+  } | null;
+  teams?: {
+    home?: RawTeam | null;
+    away?: RawTeam | null;
+  } | null;
+  goals?: {
+    home?: number | null;
+    away?: number | null;
+  } | null;
+  score?: {
+    halftime?: { home?: number | null; away?: number | null } | null;
+    fulltime?: { home?: number | null; away?: number | null } | null;
+  } | null;
+};
+
+type RawStandingRecord = {
+  played?: number | null;
+  win?: number | null;
+  draw?: number | null;
+  lose?: number | null;
+  goals?: {
+    for?: number | null;
+    against?: number | null;
+  } | null;
+};
+
+type RawTeamStanding = {
+  rank?: number | null;
+  team?: {
+    id?: number | null;
+    name?: string | null;
+    logo?: string | null;
+  } | null;
+  points?: number | null;
+  goalsDiff?: number | null;
+  group?: string | null;
+  form?: string | null;
+  status?: string | null;
+  description?: string | null;
+  all?: RawStandingRecord | null;
+  home?: RawStandingRecord | null;
+  away?: RawStandingRecord | null;
 };
 
 type RawFixtureDetail = {
@@ -65,6 +119,13 @@ type RawFixtureDetail = {
   statistics?: unknown[];
   players?: unknown[];
   hydrated_at?: string | null;
+  headToHead?: {
+    fixtures?: RawH2HEntry[] | null;
+  } | null;
+  standings?: {
+    home?: RawTeamStanding | null;
+    away?: RawTeamStanding | null;
+  } | null;
 };
 
 type RawScorePair = {
@@ -80,15 +141,20 @@ type RawTeam = {
 };
 
 export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
+  const emptyScore = { home: null as number | null, away: null as number | null };
+  const emptyScoreBreakdown = { halftime: emptyScore, extratime: emptyScore, penalty: emptyScore };
+
   if (payload.fixture) {
     return {
-      source: payload.source ?? "api-football",
       fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
       fixture: payload.fixture,
       events: payload.events ?? [],
       lineups: normalizeLineups(payload.lineups),
       statistics: payload.statistics ?? [],
       playerStats: payload.playerStats ?? payload.players ?? [],
+      headToHead: [],
+      standings: null,
+      scoreBreakdown: emptyScoreBreakdown,
     };
   }
 
@@ -97,13 +163,15 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
 
   if (!detail || !rawFixture) {
     return {
-      source: payload.source ?? "api-football",
       fetchedAt: payload.fetchedAt ?? new Date().toISOString(),
       fixture: undefined,
       events: [],
       lineups: [],
       statistics: [],
       playerStats: [],
+      headToHead: [],
+      standings: null,
+      scoreBreakdown: emptyScoreBreakdown,
     };
   }
 
@@ -112,7 +180,6 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
   const away = detail.teams?.away;
 
   return {
-    source: payload.source ?? "api-football",
     fetchedAt: payload.fetchedAt ?? detail.hydrated_at ?? new Date().toISOString(),
     fixture: {
       id: fixtureId ? `api-football-${fixtureId}` : "api-football-unknown",
@@ -152,6 +219,22 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
     lineups: normalizeLineups(detail.lineups),
     statistics: detail.statistics ?? [],
     playerStats: detail.players ?? [],
+    headToHead: normalizeH2HFixtures(detail.headToHead?.fixtures),
+    standings: normalizeFixtureStandings(detail.standings),
+    scoreBreakdown: {
+      halftime: {
+        home: detail.score?.halftime?.home ?? null,
+        away: detail.score?.halftime?.away ?? null,
+      },
+      extratime: {
+        home: detail.score?.extratime?.home ?? null,
+        away: detail.score?.extratime?.away ?? null,
+      },
+      penalty: {
+        home: detail.score?.penalty?.home ?? null,
+        away: detail.score?.penalty?.away ?? null,
+      },
+    },
   };
 }
 
@@ -315,4 +398,103 @@ function formatVenue(venue: NonNullable<NonNullable<RawFixtureDetail["fixture"]>
   if (!venue) return "";
 
   return [venue.name, venue.city].filter(Boolean).join(", ");
+}
+
+function normalizeH2HFixtures(fixtures: RawH2HEntry[] | null | undefined) {
+  if (!Array.isArray(fixtures)) return [];
+
+  return fixtures
+    .filter(
+      (entry): entry is RawH2HEntry =>
+        Boolean(entry && typeof entry === "object" && entry.fixture?.id)
+    )
+    .map((entry) => {
+      const home = entry.teams?.home;
+      const away = entry.teams?.away;
+
+      return {
+        fixtureId: entry.fixture!.id!,
+        date: entry.fixture!.date ?? "",
+        statusShort: entry.fixture!.status?.short ?? "",
+        league: {
+          name: entry.league?.name ?? "",
+          season: entry.league?.season ?? null,
+          round: entry.league?.round ?? null,
+        },
+        home: {
+          id: home?.id ?? 0,
+          name: home?.name ?? "",
+          logo: home?.logo ?? null,
+          winner: home?.winner ?? null,
+        },
+        away: {
+          id: away?.id ?? 0,
+          name: away?.name ?? "",
+          logo: away?.logo ?? null,
+          winner: away?.winner ?? null,
+        },
+        goals: {
+          home: entry.goals?.home ?? null,
+          away: entry.goals?.away ?? null,
+        },
+        score: {
+          halftime: {
+            home: entry.score?.halftime?.home ?? null,
+            away: entry.score?.halftime?.away ?? null,
+          },
+          fulltime: {
+            home: entry.score?.fulltime?.home ?? null,
+            away: entry.score?.fulltime?.away ?? null,
+          },
+        },
+      };
+    });
+}
+
+function normalizeStandingRecord(record: RawStandingRecord | null | undefined) {
+  return {
+    played: record?.played ?? 0,
+    win: record?.win ?? 0,
+    draw: record?.draw ?? 0,
+    lose: record?.lose ?? 0,
+    goals: {
+      for: record?.goals?.for ?? 0,
+      against: record?.goals?.against ?? 0,
+    },
+  };
+}
+
+function normalizeTeamStanding(entry: RawTeamStanding | null | undefined) {
+  if (!entry) return null;
+
+  return {
+    rank: entry.rank ?? 0,
+    team: {
+      id: entry.team?.id ?? 0,
+      name: entry.team?.name ?? "",
+      logo: entry.team?.logo ?? null,
+    },
+    points: entry.points ?? 0,
+    goalsDiff: entry.goalsDiff ?? 0,
+    group: entry.group ?? "",
+    form: entry.form ?? null,
+    status: entry.status ?? "",
+    description: entry.description ?? null,
+    all: normalizeStandingRecord(entry.all),
+    home: normalizeStandingRecord(entry.home),
+    away: normalizeStandingRecord(entry.away),
+  };
+}
+
+function normalizeFixtureStandings(
+  standings: { home?: RawTeamStanding | null; away?: RawTeamStanding | null } | null | undefined
+) {
+  if (!standings) return null;
+
+  const home = normalizeTeamStanding(standings.home);
+  const away = normalizeTeamStanding(standings.away);
+
+  if (!home && !away) return null;
+
+  return { home, away };
 }

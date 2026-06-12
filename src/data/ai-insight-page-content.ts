@@ -33,6 +33,9 @@ export type AIInsightPageCopy = {
     draw: string;
     awayWin: string;
     form: string;
+    rank: string;
+    points: string;
+    h2h: string;
     community: string;
     votes: string;
     keyFactors: string;
@@ -100,6 +103,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       draw: "เสมอ",
       awayWin: "ทีมเยือนชนะ",
       form: "ฟอร์ม",
+      rank: "อันดับ",
+      points: "แต้ม",
+      h2h: "สถิติเจอกัน",
       community: "เสียงชุมชน",
       votes: "โหวต",
       keyFactors: "ปัจจัยสำคัญ",
@@ -172,6 +178,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       draw: "Draw",
       awayWin: "Away win",
       form: "Form",
+      rank: "Rank",
+      points: "Pts",
+      h2h: "Head-to-head",
       community: "Community",
       votes: "votes",
       keyFactors: "Key factors",
@@ -237,6 +246,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       draw: "ສະເໝີ",
       awayWin: "ທີມຢາມຊະນະ",
       form: "ຟອມ",
+      rank: "ອັນດັບ",
+      points: "ຄະແນນ",
+      h2h: "ສະຖິຕິພົບກັນ",
       community: "ຊຸມຊົນ",
       votes: "ໂຫວດ",
       keyFactors: "ປັດໃຈສໍາຄັນ",
@@ -286,6 +298,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       draw: "သရေ",
       awayWin: "ဧည့်သည်နိုင်",
       form: "ဖောင်မ်",
+      rank: "အဆင့်",
+      points: "ပွိုင့်",
+      h2h: "ထိပ်တိုက်တွေ့ဆုံ",
       community: "ကွန်မြူနิตี้",
       votes: "မဲ",
       keyFactors: "အရေးကြီးအချက်များ",
@@ -335,6 +350,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       draw: "ស្មើ",
       awayWin: "ភ្ញៀវឈ្នះ",
       form: "ទម្រង់",
+      rank: "ចំណាត់ថ្នាក់",
+      points: "ពិន្ទុ",
+      h2h: "ប្រវត្តិជួបគ្នា",
       community: "សហគមន៍",
       votes: "សម្លេង",
       keyFactors: "កត្តាសំខាន់",
@@ -384,6 +402,9 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       draw: "平局",
       awayWin: "客胜",
       form: "状态",
+      rank: "排名",
+      points: "积分",
+      h2h: "交锋",
       community: "社区",
       votes: "票",
       keyFactors: "关键因素",

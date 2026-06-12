@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -141,6 +141,9 @@ type PredictionHistoryApiItem = {
   streak_number?: number | null;
   pointsWagered?: number | null;
   points_wagered?: number | null;
+  scoring?: ScoringApiBreakdown | null;
+  score_breakdown?: ScoringApiBreakdown | null;
+  breakdown?: ScoringApiBreakdown | null;
   match?: {
     homeTeam?: {
       name?: string | null;
@@ -184,6 +187,7 @@ type PredictionHistoryItem = {
   comboMultiplier: number;
   streakNumber: number;
   pointsWagered: number;
+  scoring: ScoringApiBreakdown | null;
 };
 
 type PlayerProfileResponse = {
@@ -219,6 +223,41 @@ type ScoringRules = {
   formula?: { description?: string; profit?: string };
 };
 
+type ScoringApiBreakdown = {
+  stake?: number | null;
+  base_points?: number | null;
+  bonuses?: {
+    result_tier?: { type?: string | null; points?: number | null } | null;
+    first_scorer?: {
+      earned?: boolean | null;
+      predicted?: { player_id?: number | null } | null;
+      actual?: { player_id?: number | null; player_name?: string | null } | null;
+      points?: number | null;
+    } | null;
+    total_goals?: {
+      earned?: boolean | null;
+      predicted?: number | null;
+      actual?: number | null;
+      points?: number | null;
+    } | null;
+    half_time?: {
+      earned?: boolean | null;
+      predicted_home?: number | null;
+      predicted_away?: number | null;
+      points?: number | null;
+    } | null;
+  } | null;
+  subtotal_before_multipliers?: number | null;
+  multipliers?: {
+    confidence?: { level?: string | null; multiplier?: number | null } | null;
+    boost?: { used?: boolean | null; multiplier?: number | null } | null;
+    streak?: { streak_number?: number | null; bonus_per_level?: number | null; total?: number | null } | null;
+  } | null;
+  ranking_points?: number | null;
+  profit?: number | null;
+  total?: number | null;
+};
+
 export function PredictApi() {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
@@ -235,16 +274,16 @@ export function PredictApi() {
   const [playerName, setPlayerName] = useState<string | null>(null);
 
   const isLoggedIn = useUserStore((store) => store.isLoggedIn);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const effectiveIsLoggedIn = mounted ? isLoggedIn : false;
 
   const [showRulesModal, setShowRulesModal] = useState(false);
-  const [scoringRules, setScoringRules] = useState<any | null>(null);
+  const [scoringRules, setScoringRules] = useState<ScoringRules | null>(null);
   const [loadingRules, setLoadingRules] = useState(false);
   const [rulesRequestFailed, setRulesRequestFailed] = useState(false);
 
@@ -430,7 +469,7 @@ export function PredictApi() {
                 setLoadingRules(true);
                 setRulesRequestFailed(false);
                 try {
-                  const resp = await apiGetRaw<any>(
+                  const resp = await apiGetRaw<{ data?: ScoringRules } & ScoringRules>(
                     "https://api.scorematrix.live/api/v1/scorm/scoring-rules",
                     { locale }
                   );
@@ -518,7 +557,7 @@ export function PredictApi() {
                   hover
                   className={cn(
                     hasPredicted &&
-                      "border-emerald-500/35 bg-emerald-500/[0.04] shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_24px_rgba(16,185,129,0.08)]"
+                      "border-emerald-500/35 bg-emerald-500/4 shadow-[0_0_0_1px_rgba(16,185,129,0.18),0_0_24px_rgba(16,185,129,0.08)]"
                   )}
                 >
                   <div className="space-y-4">
@@ -564,7 +603,7 @@ export function PredictApi() {
                         logo={match.home.logo}
                         accent="cyan"
                       />
-                      <div className="min-w-[88px] text-center">
+                      <div className="min-w-22 text-center">
                         <p className="font-mono text-lg font-bold text-white">
                           {t("common.vs")}
                         </p>
@@ -847,7 +886,7 @@ export function PredictApi() {
                         accent="cyan"
                       />
 
-                      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.06] px-4 py-3 text-center font-mono">
+                      <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/6 px-4 py-3 text-center font-mono">
                         <div className="text-[10px] uppercase tracking-[0.16em] text-cyan-300/80">
                           {t("prediction.yourPrediction")}
                         </div>
@@ -868,18 +907,18 @@ export function PredictApi() {
                         label={t("prediction.yourPrediction")}
                         value={selectedPrediction.predicted}
                         valueClassName="text-cyan-300"
-                        toneClassName="border-cyan-500/15 bg-cyan-500/[0.05]"
+                        toneClassName="border-cyan-500/15 bg-cyan-500/5"
                       />
                       <HistoryOutcomeCard
                         label={t("prediction.actualResult")}
                         value={selectedPrediction.actual}
                         valueClassName="text-white"
-                        toneClassName="border-emerald-500/15 bg-emerald-500/[0.05]"
+                        toneClassName="border-emerald-500/15 bg-emerald-500/5"
                       />
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.05] p-4">
+                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
                       <HistorySummaryStat
                         label={t("prediction.pointsEarned")}
@@ -909,78 +948,90 @@ export function PredictApi() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 lg:grid-cols-2">
-                  <HistoryModalSection
-                    title="Prediction Setup"
-                    tone="text-cyan-300"
-                    className="border-cyan-500/10"
-                  >
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <HistoryModalMetric
-                        label={t("predictionForm.payload.pointsWagered")}
-                        value={`${Number(selectedPrediction.pointsWagered).toLocaleString()} PTS`}
-                        valueClassName="text-cyan-300"
-                      />
-                      <HistoryModalMetric
-                        label={t("prediction.combo")}
-                        value={`x${selectedPrediction.comboMultiplier}`}
-                        valueClassName="text-amber-300"
-                      />
-                      <HistoryModalMetric
-                        label={t("prediction.streak")}
-                        value={String(selectedPrediction.streakNumber)}
-                        valueClassName="text-emerald-300"
-                      />
-                      <HistoryModalMetric
-                        label="Boost"
-                        value={selectedPrediction.boostUsed ? "ON" : "OFF"}
-                        valueClassName={
-                          selectedPrediction.boostUsed
-                            ? "text-fuchsia-300"
-                            : "text-gray-300"
-                        }
-                      />
-                    </div>
-                  </HistoryModalSection>
+                {selectedPrediction.scoring ? (
+                  <ScoringBreakdownSection
+                    scoring={selectedPrediction.scoring}
+                    firstScorerPlayerName={
+                      loadingPlayer
+                        ? "Loading..."
+                        : selectedPrediction.firstScorerPlayerName || playerName || null
+                    }
+                  />
+                ) : (
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <HistoryModalSection
+                      title="Prediction Setup"
+                      tone="text-cyan-300"
+                      className="border-cyan-500/10"
+                    >
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <HistoryModalMetric
+                          label={t("predictionForm.payload.pointsWagered")}
+                          value={`${Number(selectedPrediction.pointsWagered).toLocaleString()} PTS`}
+                          valueClassName="text-cyan-300"
+                        />
+                        <HistoryModalMetric
+                          label={t("prediction.combo")}
+                          value={`x${selectedPrediction.comboMultiplier}`}
+                          valueClassName="text-amber-300"
+                        />
+                        <HistoryModalMetric
+                          label={t("prediction.streak")}
+                          value={String(selectedPrediction.streakNumber)}
+                          valueClassName="text-emerald-300"
+                        />
+                        <HistoryModalMetric
+                          label="Boost"
+                          value={selectedPrediction.boostUsed ? "ON" : "OFF"}
+                          valueClassName={
+                            selectedPrediction.boostUsed
+                              ? "text-fuchsia-300"
+                              : "text-gray-300"
+                          }
+                        />
+                      </div>
+                    </HistoryModalSection>
 
-                  <HistoryModalSection
-                    title="Extra Picks"
-                    tone="text-fuchsia-300"
-                    className="border-fuchsia-500/10"
-                  >
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <HistoryModalMetric
-                        label={t("predictionForm.summary.halfTime")}
-                        value={
-                          selectedPrediction.halfTimeHome !== null &&
-                          selectedPrediction.halfTimeAway !== null
-                            ? `${selectedPrediction.halfTimeHome} - ${selectedPrediction.halfTimeAway}`
-                            : "-"
-                        }
-                      />
-                      <HistoryModalMetric
-                        label={t("predictionForm.deep.totalGoals")}
-                        value={
-                          selectedPrediction.totalGoals !== null
-                            ? String(selectedPrediction.totalGoals)
-                            : "-"
-                        }
-                        valueClassName="text-amber-300"
-                      />
-                      <HistoryModalMetric
-                        label={t("predictionForm.deep.firstScorer")}
-                        value={
-                          selectedPrediction.firstScorerPlayerId
-                            ? loadingPlayer
-                              ? "Loading..."
-                              : selectedPrediction.firstScorerPlayerName || playerName || "-"
-                            : t("predictionForm.deep.noGoal")
-                        }
-                        valueClassName="text-cyan-300 sm:col-span-2"
-                      />
-                    </div>
-                  </HistoryModalSection>
-                </div>
+                    <HistoryModalSection
+                      title="Extra Picks"
+                      tone="text-fuchsia-300"
+                      className="border-fuchsia-500/10"
+                    >
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <HistoryModalMetric
+                          label={t("predictionForm.summary.halfTime")}
+                          value={
+                            selectedPrediction.halfTimeHome !== null &&
+                            selectedPrediction.halfTimeAway !== null
+                              ? `${selectedPrediction.halfTimeHome} - ${selectedPrediction.halfTimeAway}`
+                              : "-"
+                          }
+                        />
+                        <HistoryModalMetric
+                          label={t("predictionForm.deep.totalGoals")}
+                          value={
+                            selectedPrediction.totalGoals !== null
+                              ? String(selectedPrediction.totalGoals)
+                              : "-"
+                          }
+                          valueClassName="text-amber-300"
+                        />
+                        <HistoryModalMetric
+                          label={t("predictionForm.deep.firstScorer")}
+                          value={
+                            selectedPrediction.firstScorerPlayerId
+                              ? loadingPlayer
+                                ? "Loading..."
+                                : selectedPrediction.firstScorerPlayerName || playerName || "-"
+                              : t("predictionForm.deep.noGoal")
+                          }
+                          valueClassName="text-cyan-300"
+                          className="sm:col-span-2"
+                        />
+                      </div>
+                    </HistoryModalSection>
+                  </div>
+                )}
 
                 <HistoryModalSection
                   title="Timeline"
@@ -1033,14 +1084,14 @@ export function PredictApi() {
                 <h3 className="mb-2 text-sm font-semibold text-white">Result Tiers</h3>
                 <div className="space-y-2">
                   {Object.entries(scoringRules.resultTiers || {}).map(
-                    ([key, tier]: [string, any]) => (
+                    ([key, tier]) => (
                       <div key={key} className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div className="min-w-0">
                             <div className="text-sm font-semibold text-white truncate">{tier.name}</div>
-                            <div className="mt-1 text-xs text-gray-400 break-words whitespace-normal">{tier.description}</div>
+                            <div className="mt-1 text-xs text-gray-400 wrap-break-word whitespace-normal">{tier.description}</div>
                           </div>
-                          <div className="text-right text-sm font-mono text-white min-w-[88px]">
+                          <div className="text-right text-sm font-mono text-white min-w-22">
                             <div>Base: {tier.basePoints}</div>
                             <div>Bonus: {tier.bonusPoints}</div>
                             <div className="font-semibold">Total: {tier.totalPoints}</div>
@@ -1056,13 +1107,13 @@ export function PredictApi() {
               <div>
                 <h3 className="mb-2 text-sm font-semibold text-white">Bonuses</h3>
                 <div className="space-y-2">
-                  {Object.entries(scoringRules.bonuses || {}).map(([key, bonus]: [string, any]) => (
+                  {Object.entries(scoringRules.bonuses || {}).map(([key, bonus]) => (
                     <div key={key} className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="min-w-0">
                           <div className="text-sm font-semibold text-white truncate">{bonus.name}</div>
                         </div>
-                        <div className="text-sm font-mono text-white min-w-[64px]">{bonus.points} pts</div>
+                        <div className="text-sm font-mono text-white min-w-16">{bonus.points} pts</div>
                       </div>
                     </div>
                   ))}
@@ -1074,13 +1125,13 @@ export function PredictApi() {
                 <h3 className="mb-2 text-sm font-semibold text-white">Confidence Multipliers</h3>
                 <div className="space-y-2">
                   {Object.entries(scoringRules.confidenceMultipliers || {}).map(
-                    ([key, c]: [string, any]) => (
+                    ([key, c]) => (
                       <div key={key} className="rounded-lg border border-gray-800/60 bg-black/30 p-3">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div className="min-w-0">
                             <div className="text-sm font-semibold text-white truncate">{c.name}</div>
                           </div>
-                          <div className="text-sm font-mono text-white min-w-[48px]">x{c.multiplier}</div>
+                          <div className="text-sm font-mono text-white min-w-12">x{c.multiplier}</div>
                         </div>
                       </div>
                     )
@@ -1209,6 +1260,10 @@ function normalizePredictionHistory(
           toNullableNumber(item.streakNumber ?? item.streak_number) ?? 0,
         pointsWagered:
           toNullableNumber(item.pointsWagered ?? item.points_wagered) ?? 0,
+        scoring: (isRecord(item.scoring) ? item.scoring :
+          isRecord(item.score_breakdown) ? item.score_breakdown :
+          isRecord(item.breakdown) ? item.breakdown :
+          null) as ScoringApiBreakdown | null,
       } satisfies PredictionHistoryItem;
     })
     .filter((item): item is PredictionHistoryItem => item !== null);
@@ -1566,13 +1621,15 @@ function HistoryModalMetric({
   label,
   value,
   valueClassName,
+  className,
 }: {
   label: string;
   value: string;
   valueClassName?: string;
+  className?: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-800/80 bg-black/25 px-3 py-2.5">
+    <div className={cn("rounded-xl border border-gray-800/80 bg-black/25 px-3 py-2.5", className)}>
       <p className="text-[10px] uppercase tracking-[0.14em] text-gray-500">
         {label}
       </p>
@@ -1596,6 +1653,264 @@ function HistoryTimelineRow({
         {label}
       </span>
       <span className="text-right text-sm font-medium text-white">{value}</span>
+    </div>
+  );
+}
+
+// ----------------------------------------------------
+// Scoring Breakdown Section (prediction history modal)
+// ----------------------------------------------------
+function ScoringBreakdownSection({
+  scoring,
+  firstScorerPlayerName,
+}: {
+  scoring: ScoringApiBreakdown;
+  firstScorerPlayerName: string | null;
+}) {
+  const stake = scoring.stake ?? 0;
+  const basePoints = scoring.base_points ?? 0;
+  const subtotal = scoring.subtotal_before_multipliers ?? 0;
+  const rankingPoints = scoring.ranking_points ?? 0;
+  const profit = scoring.profit ?? 0;
+  const total = scoring.total ?? 0;
+
+  const bonuses = scoring.bonuses ?? {};
+  const multipliers = scoring.multipliers ?? {};
+
+  const confidenceLevel = multipliers.confidence?.level ?? "-";
+  const confidenceMultiplier = multipliers.confidence?.multiplier ?? 1;
+  const boostUsed = multipliers.boost?.used ?? false;
+  const boostMultiplier = multipliers.boost?.multiplier ?? 1;
+  const streakNumber = multipliers.streak?.streak_number ?? 0;
+  const streakBonusPerLevel = multipliers.streak?.bonus_per_level ?? 2;
+  const streakTotal = multipliers.streak?.total ?? 0;
+
+  const tierMeta = (type: string | null | undefined): { label: string; sublabel: string; tone: "gold" | "green" | "cyan" | "red" } => {
+    switch (type) {
+      case "exact":     return { label: "ถูกสกอร์เป๊ะ!", sublabel: "Exact Score", tone: "gold" };
+      case "goal_diff": return { label: "ผลต่างประตูถูก", sublabel: "Goal Difference", tone: "green" };
+      case "result":    return { label: "ผลแพ้ชนะถูก", sublabel: "Correct Result", tone: "cyan" };
+      default:          return { label: "ผิดทั้งหมด", sublabel: "Wrong", tone: "red" };
+    }
+  };
+
+  const tier = tierMeta(bonuses.result_tier?.type);
+  const tierEarned = bonuses.result_tier?.type !== "wrong" && bonuses.result_tier?.type != null;
+
+  return (
+    <div className="rounded-2xl border border-gray-800/80 bg-black/30 p-4 space-y-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Score Breakdown</p>
+
+      {/* Result Tier — prominent hero row */}
+      {bonuses.result_tier && (
+        <div className={cn(
+          "rounded-xl border px-4 py-3 flex items-center justify-between gap-3",
+          tier.tone === "gold"  && "border-amber-400/30 bg-amber-400/8",
+          tier.tone === "green" && "border-emerald-400/30 bg-emerald-400/8",
+          tier.tone === "cyan"  && "border-cyan-400/30 bg-cyan-400/8",
+          tier.tone === "red"   && "border-gray-700/60 bg-black/20",
+        )}>
+          <div className="flex items-center gap-3 min-w-0">
+            <span className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black",
+              tier.tone === "gold"  && "bg-amber-400 text-black",
+              tier.tone === "green" && "bg-emerald-400 text-black",
+              tier.tone === "cyan"  && "bg-cyan-400 text-black",
+              tier.tone === "red"   && "bg-gray-700 text-gray-400",
+            )}>
+              {tierEarned ? "✓" : "✗"}
+            </span>
+            <div className="min-w-0">
+              <p className={cn(
+                "text-sm font-black",
+                tier.tone === "gold"  && "text-amber-300",
+                tier.tone === "green" && "text-emerald-300",
+                tier.tone === "cyan"  && "text-cyan-300",
+                tier.tone === "red"   && "text-gray-400",
+              )}>
+                {tier.label}
+              </p>
+              <p className="text-[10px] text-gray-500">{tier.sublabel}</p>
+            </div>
+          </div>
+          <div className="text-right shrink-0">
+            <p className={cn(
+              "font-mono text-lg font-black",
+              tier.tone === "gold"  && "text-amber-300",
+              tier.tone === "green" && "text-emerald-300",
+              tier.tone === "cyan"  && "text-cyan-300",
+              tier.tone === "red"   && "text-gray-500",
+            )}>
+              +{bonuses.result_tier.points ?? 0}
+            </p>
+            <p className="text-[9px] text-gray-500">bonus pts</p>
+          </div>
+        </div>
+      )}
+
+      {/* Stake & Base Points */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-center">
+          <p className="text-[10px] uppercase tracking-wider text-amber-400/70">Stake</p>
+          <p className="font-mono text-xl font-black text-amber-300">{stake}</p>
+          <p className="text-[9px] text-gray-500">pts wagered</p>
+        </div>
+        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2.5 text-center">
+          <p className="text-[10px] uppercase tracking-wider text-cyan-400/70">Base Points</p>
+          <p className="font-mono text-xl font-black text-cyan-300">+{basePoints}</p>
+          <p className="text-[9px] text-gray-500">result score</p>
+        </div>
+      </div>
+
+      {/* Other Bonuses */}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">Extra Bonuses</p>
+        <div className="space-y-1.5">
+          {bonuses.first_scorer && (
+            <BonusRow
+              label="First Scorer"
+              earned={bonuses.first_scorer.earned ?? false}
+              detail={
+                bonuses.first_scorer.actual?.player_name
+                  ? `actual: ${bonuses.first_scorer.actual.player_name}`
+                  : bonuses.first_scorer.actual?.player_id
+                    ? `actual id: #${bonuses.first_scorer.actual.player_id}`
+                    : firstScorerPlayerName
+                      ? `pred: ${firstScorerPlayerName}`
+                      : bonuses.first_scorer.predicted?.player_id
+                        ? `pred id: #${bonuses.first_scorer.predicted.player_id}`
+                        : "—"
+              }
+              points={bonuses.first_scorer.points ?? 0}
+            />
+          )}
+          {bonuses.total_goals && (
+            <BonusRow
+              label="Total Goals"
+              earned={bonuses.total_goals.earned ?? false}
+              detail={`pred ${bonuses.total_goals.predicted ?? "-"} → actual ${bonuses.total_goals.actual ?? "-"}`}
+              points={bonuses.total_goals.points ?? 0}
+            />
+          )}
+          {bonuses.half_time && (
+            <BonusRow
+              label="Half Time"
+              earned={bonuses.half_time.earned ?? false}
+              detail={`pred ${bonuses.half_time.predicted_home ?? "-"}-${bonuses.half_time.predicted_away ?? "-"}`}
+              points={bonuses.half_time.points ?? 0}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Subtotal */}
+      <div className="flex items-center justify-between rounded-xl border border-gray-700/40 bg-black/25 px-3 py-2">
+        <span className="text-[11px] text-gray-400">Subtotal (ก่อนคูณ)</span>
+        <span className="font-mono text-sm font-black text-white">{subtotal} pts</span>
+      </div>
+
+      {/* Multipliers */}
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">Multipliers</p>
+        <div className="space-y-1.5">
+          <MultiplierRow
+            label={`Confidence: ${confidenceLevel}`}
+            value={`×${confidenceMultiplier.toFixed(1)}`}
+            tone="text-violet-300"
+          />
+          <MultiplierRow
+            label={`Boost: ${boostUsed ? "ON" : "off"}`}
+            value={`×${boostMultiplier.toFixed(1)}`}
+            tone={boostUsed ? "text-fuchsia-300" : "text-gray-400"}
+          />
+          <MultiplierRow
+            label={`Streak #${streakNumber} (×${streakBonusPerLevel}/level)`}
+            value={`+${streakTotal}`}
+            tone="text-emerald-300"
+          />
+        </div>
+      </div>
+
+      {/* Totals */}
+      <div className="space-y-1.5 border-t border-gray-800/60 pt-3">
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-500">Ranking Points</span>
+          <span className="font-mono font-bold text-white">{rankingPoints}</span>
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-gray-500">Profit</span>
+          <span className={cn("font-mono font-bold", profit >= 0 ? "text-emerald-300" : "text-rose-300")}>
+            {profit >= 0 ? "+" : ""}{profit}
+          </span>
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5 mt-1">
+          <span className="text-xs font-black uppercase tracking-wider text-emerald-300">TOTAL</span>
+          <span className="font-mono text-xl font-black text-emerald-300">{total} PTS</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BonusRow({
+  label,
+  earned,
+  detail,
+  points,
+}: {
+  label: string;
+  earned: boolean;
+  detail: string;
+  points: number;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-3 rounded-lg border px-3 py-2",
+        earned ? "border-emerald-500/25 bg-emerald-500/4" : "border-gray-800/60 bg-black/20"
+      )}
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <span
+          className={cn(
+            "flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-black",
+            earned ? "bg-emerald-500 text-black" : "bg-gray-700 text-gray-400"
+          )}
+        >
+          {earned ? "✓" : "✗"}
+        </span>
+        <div className="min-w-0">
+          <p className={cn("text-[11px] font-bold", earned ? "text-white" : "text-gray-400")}>
+            {label}
+          </p>
+          <p className="text-[10px] text-gray-500 truncate">{detail}</p>
+        </div>
+      </div>
+      <span
+        className={cn(
+          "font-mono text-sm font-black shrink-0",
+          earned ? "text-emerald-300" : "text-gray-500"
+        )}
+      >
+        +{points}
+      </span>
+    </div>
+  );
+}
+
+function MultiplierRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-800/60 bg-black/20 px-3 py-2">
+      <span className="text-[11px] text-gray-400">{label}</span>
+      <span className={cn("font-mono text-sm font-black text-white", tone)}>{value}</span>
     </div>
   );
 }

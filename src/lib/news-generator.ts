@@ -1,6 +1,5 @@
 import { LOCALE_CODES, type LocaleCode } from "@/i18n";
 import type { ApiFootballFixture } from "@/lib/api-football";
-import { getMockApiFootballFixtures } from "@/lib/api-football";
 import { loadFixturesForDate } from "@/lib/football-page-data";
 import { MatchStatus } from "@/types/common";
 import type { NewsArticle } from "@/types/news";
@@ -518,7 +517,7 @@ export async function getTodayArticles(locale: string): Promise<NewsListResult> 
 
   // Generate from API
   try {
-    const fixtures = await loadFixturesForDate(50).catch(() => getMockApiFootballFixtures(50));
+    const fixtures = await loadFixturesForDate(50);
     const generated = await generateArticles(fixtures);
 
     if (generated.length > 0) {
@@ -683,7 +682,7 @@ export async function regenerateTodayNews(): Promise<{ success: boolean; count: 
 
   const today = todayStr();
   try {
-    const fixtures = await loadFixturesForDate(50).catch(() => getMockApiFootballFixtures(50));
+    const fixtures = await loadFixturesForDate(50);
     const generated = await generateArticles(fixtures);
     await saveArticlesToJson(today, generated);
     return { success: true, count: generated.length };

@@ -112,19 +112,15 @@ export default function SettingsPage() {
   const preferences = useUserStore((s) => s.preferences);
   const updatePreference = useUserStore((s) => s.updatePreference);
   const [language, setLanguage] = useState(locale);
-  const [loading, setLoading] = useState(isLoggedIn);
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(false);
 
   // Hydrate the toggles from the server so they reflect the saved state.
   useEffect(() => {
-    if (!isLoggedIn) {
-      setLoading(false);
-      return;
-    }
+    if (!isLoggedIn) return;
     let active = true;
-    setLoading(true);
 
     getCurrentUser({ locale })
       .then((response) => {
@@ -153,6 +149,7 @@ export default function SettingsPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, locale]);
+  const isLoadingPreferences = isLoggedIn && loading;
 
   const switchLanguage = (newLocale: string) => {
     setLanguage(newLocale);
@@ -222,7 +219,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-500">{ts(desc)}</p>
               </div>
             </div>
-            {loading ? (
+            {isLoadingPreferences ? (
               <div className="w-10 h-6 rounded-full bg-gray-800 animate-pulse" />
             ) : (
               <Toggle
@@ -253,7 +250,7 @@ export default function SettingsPage() {
       <div className="space-y-2">
         <Button
           onClick={handleSave}
-          disabled={saving || loading}
+          disabled={saving || isLoadingPreferences}
           className="w-full"
           size="lg"
           neon

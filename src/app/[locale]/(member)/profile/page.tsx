@@ -202,12 +202,6 @@ export default function ProfilePage() {
     { label: t("achievements"), value: `${profileUser.achievementsUnlocked}/25`, icon: Star, className: "text-purple-400" },
   ];
 
-  const recentPredictions = [
-    { match: "London United vs Mersey City", predicted: "2-1", actual: "2-1", points: 10, status: "CORRECT", label: t("statusCorrect") },
-    { match: "Real Catalonia vs Atletico Madrid B", predicted: "1-1", actual: "1-0", points: 0, status: "INCORRECT", label: t("statusIncorrect") },
-    { match: "FC Bayern Stadt vs Dortmund 09", predicted: "3-1", actual: "3-2", points: 5, status: "PARTIAL", label: t("statusPartial") },
-  ];
-
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Profile Header */}
@@ -281,32 +275,6 @@ export default function ProfilePage() {
         View Full Statistics
       </Link>
 
-      {/* Recent Predictions */}
-      <Card className="p-4">
-        <h3 className="text-sm font-semibold text-white mb-3">{t("recentPredictions")}</h3>
-        <div className="space-y-2">
-          {recentPredictions.map((p, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-gray-800/50 last:border-0">
-              <div className="min-w-0">
-                <p className="text-xs text-white truncate">{p.match}</p>
-                <p className="text-[10px] text-gray-500">
-                  {t("predictionLine", { predicted: p.predicted, actual: p.actual })}
-                </p>
-              </div>
-              <div className="text-right shrink-0 ml-2">
-                <span className={`text-xs font-mono font-bold ${
-                  p.status === "CORRECT" ? "text-green-400" : p.status === "PARTIAL" ? "text-amber-400" : "text-red-400"
-                }`}>
-                  {p.label}
-                </span>
-                <span className="text-xs text-green-400 ml-2">
-                  {t("pointsShort", { points: p.points })}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 }

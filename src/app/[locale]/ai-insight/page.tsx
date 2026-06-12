@@ -133,6 +133,33 @@ function mapAIInsight(
     apiWinner: insight.apiWinner?.name ?? null,
     upsetAlert: insight.upsetAlert,
     generatedAt: insight.generatedAt ?? insight.starts_at,
+    standings: insight.standings
+      ? {
+          home: insight.standings.home
+            ? {
+                rank: insight.standings.home.rank,
+                points: insight.standings.home.points,
+                form: insight.standings.home.form,
+              }
+            : null,
+          away: insight.standings.away
+            ? {
+                rank: insight.standings.away.rank,
+                points: insight.standings.away.points,
+                form: insight.standings.away.form,
+              }
+            : null,
+        }
+      : null,
+    h2h: insight.h2hSummary
+      ? {
+          totalMatches: insight.h2hSummary.totalMatches,
+          homeWins: insight.h2hSummary.homeWins,
+          draws: insight.h2hSummary.draws,
+          awayWins: insight.h2hSummary.awayWins,
+          avgGoals: insight.h2hSummary.avgGoals,
+        }
+      : null,
   };
 }
 

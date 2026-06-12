@@ -407,7 +407,21 @@
       "liveTitle": "实时状态信号",
       "liveText": "快速查看直播、即将开始和已结束状态，适合比赛密集的日子。"
     },
-    "metricMatches": "比赛"
+    "metricMatches": "比赛",
+    "previousDay": "前一天",
+    "nextDay": "后一天",
+    "backToToday": "返回今天",
+    "loadError": "无法刷新比赛，正在显示最新可用数据。",
+    "viewDetails": "查看详情",
+    "truncatedWarning": "当天共 {total} 场比赛，当前显示 {shown} 场。",
+    "filtersTitle": "比赛筛选",
+    "filtersDescription": "选择日期、联赛、状态或搜索球队。",
+    "clearFilters": "清除筛选",
+    "clearSearch": "清除搜索",
+    "dateFilter": "比赛日期",
+    "leagueFilter": "联赛",
+    "searchFilter": "搜索球队",
+    "statusFilter": "比赛状态"
   },
   "livescore": {
     "title": "即时比分",
@@ -422,6 +436,8 @@
     "filterCountry": "按国家筛选",
     "filterTime": "按时间筛选",
     "noMatches": "未找到比赛",
+    "loadError": "无法更新实时比赛，请重试。",
+    "sync": "同步",
     "kickoff": "开赛",
     "fullTime": "全场",
     "minute": "'"
@@ -506,6 +522,8 @@
     "noTeamStatistics": "暂无球队统计",
     "h2h": "历史交锋",
     "noH2hData": "暂无历史交锋数据",
+    "leagueStanding": "联赛积分榜",
+    "noStandingData": "暂无积分榜数据",
     "noLineupData": "暂无阵容、教练或阵型数据",
     "coach": "教练",
     "formationPitch": "阵型球场",
@@ -515,7 +533,29 @@
     "playerStatsTitleSuffix": "球员统计",
     "captain": "队长",
     "loadError": "无法加载比赛详情",
-    "backToMatches": "返回比赛列表"
+    "backToMatches": "返回比赛列表",
+    "liveAutoRefresh": "直播 · 自动刷新",
+    "scorePeriod": "各阶段比分",
+    "firstScorer": "首位进球者",
+    "goalHighlight": "进球集锦",
+    "goalMinute": "分钟",
+    "goalAssist": "助攻",
+    "goalType": "类型",
+    "goalDetail": "详情",
+    "goalComments": "评论",
+    "h2hWin": "胜",
+    "h2hDraw": "平",
+    "h2hLoss": "负",
+    "recentForm": "近期状态",
+    "standingRank": "排名",
+    "standingPoints": "积分",
+    "standingPlayed": "场次",
+    "standingWDL": "胜 / 平 / 负",
+    "standingGoals": "进失球",
+    "standingGD": "净胜球",
+    "standingSplit": "主/客场",
+    "standingHome": "主场",
+    "standingAway": "客场"
   },
   "prediction": {
     "title": "预测",
@@ -978,7 +1018,8 @@
       "cancel": "取消",
       "confirm": "确认",
       "clear": "清除",
-      "vs": "VS"
+      "vs": "VS",
+      "back": "返回"
     },
     "basic": {
       "title": "基础预测",
