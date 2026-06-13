@@ -181,7 +181,8 @@ test("adapts raw fixture detail response to match detail UI fields", () => {
     players: { player: { name: string }; statistics: { games: { captain: boolean } }[] }[];
   };
 
-  assert.deepEqual(fixture.score, { home: 1, away: 2 });
+  assert.deepEqual(fixture.score, { home: null, away: null });
+  assert.deepEqual(result.scoreBreakdown.fulltime, { home: 1, away: 2 });
   assert.equal(fixture.venue, "Mexico City");
   assert.equal(event.type, "Substitution");
   assert.equal(result.lineups.length, 1);
@@ -219,6 +220,28 @@ test("keeps current goals separate from score periods", () => {
     extratime: { home: null, away: null },
     penalty: { home: null, away: null },
   });
+});
+
+test("does not fallback current goals from fulltime score", () => {
+  const result = normalizeFixtureDetailsPayload({
+    data: {
+      provider_id: 1545451,
+      fixture: { id: 1545451, status: { short: "FT" } },
+      teams: {
+        home: { id: 2286, name: "Home" },
+        away: { id: 2295, name: "Away" },
+      },
+      score: {
+        fulltime: { home: 2, away: 1 },
+      },
+    },
+  });
+
+  assert.deepEqual((result.fixture as { score: unknown }).score, {
+    home: null,
+    away: null,
+  });
+  assert.deepEqual(result.scoreBreakdown.fulltime, { home: 2, away: 1 });
 });
 
 test("treats 404 supplement failures as empty optional data", () => {

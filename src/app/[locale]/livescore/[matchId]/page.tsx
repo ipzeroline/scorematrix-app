@@ -150,16 +150,16 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               <StatusBadge status={fixture.status} />
             </div>
             <div className="font-mono text-[26px] font-bold leading-none text-white sm:text-4xl">
-              {fixture.score.home !== null
+              {hasCompleteScore(fixture.score)
                 ? `${fixture.score.home} - ${fixture.score.away}`
                 : t("common.vs")}
             </div>
-            {hasScore(scoreBreakdown.halftime) && (
+            {hasCompleteScore(scoreBreakdown.halftime) && (
               <p className="mt-1 font-mono text-[11px] text-gray-500">
                 HT {scoreBreakdown.halftime.home} : {scoreBreakdown.halftime.away}
               </p>
             )}
-            {hasScore(scoreBreakdown.penalty) && (
+            {hasCompleteScore(scoreBreakdown.penalty) && (
               <p className="mt-0.5 font-mono text-[11px] font-semibold text-amber-300">
                 PEN {scoreBreakdown.penalty.home} : {scoreBreakdown.penalty.away}
               </p>
@@ -1786,10 +1786,10 @@ function PeriodScorePanel({
   title: string;
   isUpcoming: boolean;
 }) {
-  const hasHT = hasScore(scoreBreakdown.halftime);
-  const hasFT = hasScore(scoreBreakdown.fulltime);
-  const hasET = hasScore(scoreBreakdown.extratime);
-  const hasPEN = hasScore(scoreBreakdown.penalty);
+  const hasHT = hasCompleteScore(scoreBreakdown.halftime);
+  const hasFT = hasCompleteScore(scoreBreakdown.fulltime);
+  const hasET = hasCompleteScore(scoreBreakdown.extratime);
+  const hasPEN = hasCompleteScore(scoreBreakdown.penalty);
 
   if (isUpcoming || (!hasHT && !hasFT && !hasET && !hasPEN)) return null;
 
@@ -1838,8 +1838,8 @@ function PeriodScorePanel({
   );
 }
 
-function hasScore(score: { home: number | null; away: number | null }) {
-  return score.home !== null || score.away !== null;
+function hasCompleteScore(score: { home: number | null; away: number | null }) {
+  return score.home !== null && score.away !== null;
 }
 
 /* ─────────────── H2H Panel ─────────────── */

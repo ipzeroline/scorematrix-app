@@ -217,8 +217,8 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       home: normalizeTeam(home),
       away: normalizeTeam(away),
       score: {
-        home: detail.goals?.home ?? detail.score?.fulltime?.home ?? null,
-        away: detail.goals?.away ?? detail.score?.fulltime?.away ?? null,
+        home: detail.goals?.home ?? null,
+        away: detail.goals?.away ?? null,
       },
       status: normalizeFixtureStatus(rawFixture.status?.short),
       statusShort: rawFixture.status?.short ?? "",
