@@ -228,6 +228,10 @@ type LocalizedDetailCopy = {
   probabilitySource: string;
   sourceComparison: string;
   sourceApi: string;
+  modelDiagnostics: string;
+  diagnosticDescription: string;
+  homeStrength: string;
+  awayStrength: string;
 };
 
 const localeMap: Record<string, string> = {
@@ -391,6 +395,10 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     probabilitySource: "ที่มาความน่าจะเป็น",
     sourceComparison: "โมเดลเปรียบเทียบ",
     sourceApi: "พยากรณ์จาก API",
+    modelDiagnostics: "สัญญาณความแข็งแกร่ง",
+    diagnosticDescription: "เปรียบเทียบความแข็งแกร่งและช่องว่างของทั้งสองทีม",
+    homeStrength: "ความแข็งแกร่งเจ้าบ้าน",
+    awayStrength: "ความแข็งแกร่งทีมเยือน",
   },
   en: {
     back: "Back to AI Insight",
@@ -511,6 +519,10 @@ const detailCopy: Record<string, LocalizedDetailCopy> = {
     probabilitySource: "Probability source",
     sourceComparison: "Comparison model",
     sourceApi: "API prediction",
+    modelDiagnostics: "Strength signals",
+    diagnosticDescription: "Compare team strength and the model's projected gap",
+    homeStrength: "Home strength",
+    awayStrength: "Away strength",
   },
 };
 
@@ -747,6 +759,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
         }
         model={
           <div className="space-y-5">
+            <ModelStrengthCard insight={insight} fixture={fixture} details={details} />
             <HeadToHeadCard
               history={headToHead}
               summary={insight.h2hSummary ?? null}
@@ -910,7 +923,7 @@ async function getDetailContext(matchId: string): Promise<DetailContext | null> 
       insight,
     };
   } catch (error) {
-    if (error instanceof ApiFootballError) return null;
+    if (error instanceof ApiFootballError && error.status === 404) return null;
     throw error;
   }
 }
@@ -1008,37 +1021,34 @@ function StrengthSummary({
   fixture: ApiFootballFixture;
   details: LocalizedDetailCopy;
 }) {
-  const hasStrength =
-    typeof insight.homeStrength === "number" &&
-    typeof insight.awayStrength === "number";
+  const hasProbabilities =
+    typeof insight.homeWinProbability === "number" &&
+    typeof insight.drawProbability === "number" &&
+    typeof insight.awayWinProbability === "number";
 
-  if (!hasStrength) return null;
+  if (!hasProbabilities) return null;
 
-  const homeStrength = clampPercent(insight.homeStrength ?? 0);
-  const awayStrength = clampPercent(insight.awayStrength ?? 0);
-  const favorite =
-    insight.favoriteTeam === "home"
-      ? fixture.home.name
-      : insight.favoriteTeam === "away"
-        ? fixture.away.name
-        : "-";
+  const homeProbability = clampPercent(insight.homeWinProbability ?? 0);
+  const drawProbability = clampPercent(insight.drawProbability ?? 0);
+  const awayProbability = clampPercent(insight.awayWinProbability ?? 0);
+  const favorite = insight.apiWinner?.name;
 
   return (
     <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-      <p className="text-xs uppercase tracking-[0.24em] text-gray-500">{details.matchupBoard}</p>
-          <p className="mt-1 text-sm text-gray-300">{details.strengthGap}</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-gray-500">{details.matchupBoard}</p>
+          <p className="mt-1 text-sm text-gray-300">{details.probabilityBreakdown}</p>
         </div>
-        <div className="flex flex-wrap gap-2 text-xs">
+        {favorite ? (
           <Badge variant="cyan">{`${details.favoriteTeam}: ${favorite}`}</Badge>
-          <Badge variant="purple">{`${details.strengthGap}: ${formatNullableNumber(insight.strengthGap)}`}</Badge>
-        </div>
+        ) : null}
       </div>
 
       <div className="space-y-3">
-        <StrengthTeamRow label={fixture.home.name} value={homeStrength} color="cyan" />
-        <StrengthTeamRow label={fixture.away.name} value={awayStrength} color="magenta" />
+        <StrengthTeamRow label={fixture.home.name} value={homeProbability} color="cyan" />
+        <StrengthTeamRow label={details.drawOption} value={drawProbability} color="purple" />
+        <StrengthTeamRow label={fixture.away.name} value={awayProbability} color="magenta" />
       </div>
     </div>
   );
@@ -1160,16 +1170,24 @@ function StrengthTeamRow({
 }: {
   label: string;
   value: number;
-  color: "cyan" | "magenta";
+  color: "cyan" | "purple" | "magenta";
 }) {
-  const tone = color === "cyan" ? "bg-cyan-400" : "bg-magenta";
-  const textTone = color === "cyan" ? "text-cyan-300" : "text-magenta";
+  const tone = {
+    cyan: "bg-cyan-400",
+    purple: "bg-purple-400",
+    magenta: "bg-magenta",
+  }[color];
+  const textTone = {
+    cyan: "text-cyan-300",
+    purple: "text-purple-300",
+    magenta: "text-magenta",
+  }[color];
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className={cn("truncate text-sm font-medium", textTone)}>{label}</span>
-        <span className="font-mono text-sm text-white">{value}</span>
+        <span className="font-mono text-sm text-white">{formatPercent(value)}</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-white/8">
         <div className={cn("h-full rounded-full", tone)} style={{ width: `${value}%` }} />
@@ -1324,15 +1342,13 @@ function ComparisonPanel({
   homeName: string;
   awayName: string;
 }) {
-  const rows = Object.entries(comparison).filter(
-    ([key, value]) => key !== "h2h" || (value.home ?? 0) > 0 || (value.away ?? 0) > 0
-  );
+  const rows = Object.entries(comparison);
 
   return (
     <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
       <SectionHeading
         icon={BarChart3}
-        title={details.matchupBoard}
+        title={details.sourceComparison}
         description={details.matchOverview}
         accent="purple"
       />
@@ -1355,6 +1371,51 @@ function ComparisonPanel({
             </div>
           ))
         )}
+      </div>
+    </Card>
+  );
+}
+
+function ModelStrengthCard({
+  insight,
+  fixture,
+  details,
+}: {
+  insight: ApiFootballAIInsightDetail;
+  fixture: ApiFootballFixture;
+  details: LocalizedDetailCopy;
+}) {
+  const favorite =
+    insight.favoriteTeam === "home"
+      ? fixture.home.name
+      : insight.favoriteTeam === "away"
+        ? fixture.away.name
+        : insight.favoriteTeam;
+
+  return (
+    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+      <SectionHeading
+        icon={BrainCircuit}
+        title={details.modelDiagnostics}
+        description={details.diagnosticDescription}
+        accent="cyan"
+      />
+      <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <PredictionInfo label={details.favoriteTeam} value={favorite} />
+        <PredictionInfo label={details.strengthGap} value={formatNullableNumber(insight.strengthGap)} />
+        <PredictionInfo label={details.homeAdvantage} value={formatMultiplier(insight.homeAdvantageFactor)} />
+      </div>
+      <div className="mt-5 space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+        <StrengthTeamRow
+          label={`${fixture.home.name} · ${details.homeStrength}`}
+          value={clampPercent(insight.homeStrength ?? 0)}
+          color="cyan"
+        />
+        <StrengthTeamRow
+          label={`${fixture.away.name} · ${details.awayStrength}`}
+          value={clampPercent(insight.awayStrength ?? 0)}
+          color="magenta"
+        />
       </div>
     </Card>
   );
@@ -2643,24 +2704,7 @@ function hasStandings(standings: ApiFootballAIInsightDetail["standings"]) {
 }
 
 function hasTeamStatsData(teamStats: ApiFootballAIInsightDetail["teamStats"]) {
-  if (!teamStats) return false;
-  return teamHasStats(teamStats.home) || teamHasStats(teamStats.away);
-}
-
-function teamHasStats(stats: ApiFootballAIInsightTeamStats | null) {
-  if (!stats) return false;
-  const numericFields = [
-    stats.avgGoalsFor,
-    stats.avgGoalsAgainst,
-    stats.cleanSheets,
-    stats.failedToScore,
-    stats.penaltyScored,
-    stats.cardsAvg,
-  ];
-  if (numericFields.some((field) => typeof field === "number" && field > 0)) return true;
-  if (typeof stats.avgBallPossession === "number" && stats.avgBallPossession > 0) return true;
-  if (typeof stats.avgBallPossession === "string" && stats.avgBallPossession.trim()) return true;
-  return !!stats.formations;
+  return !!teamStats && (!!teamStats.home || !!teamStats.away);
 }
 
 function stringValue(value: string | number | null | undefined) {

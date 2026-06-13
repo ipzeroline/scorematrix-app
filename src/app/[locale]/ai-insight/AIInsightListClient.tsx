@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import { MatchStatus } from "@/types/common";
 
-type FilterKey = "all" | "live" | "upset";
+type FilterKey = "all" | "live" | "highConfidence" | "upsetAlert";
 
 export type AIInsightListItem = {
   id: string;
@@ -105,24 +105,26 @@ export function AIInsightListClient({
 
   const counts = {
     all: insights.length,
-    live: insights.filter((insight) => insight.status === MatchStatus.LIVE).length,
+    live: insights.filter((insight) => insight.categories.includes("live")).length,
     highConfidence: insights.filter((insight) => insight.categories.includes("highConfidence")).length,
-    upset: insights.filter((insight) => insight.upsetAlert).length,
+    upsetAlert: insights.filter((insight) => insight.categories.includes("upsetAlert")).length,
   };
 
-  const filteredInsights =
-    activeFilter === "live"
-      ? insights.filter((insight) => insight.status === MatchStatus.LIVE)
-      : activeFilter === "upset"
-        ? insights.filter((insight) => insight.upsetAlert)
-        : insights;
+  const filteredInsights = activeFilter === "all"
+    ? insights
+    : insights.filter((insight) => insight.categories.includes(activeFilter));
 
   const groupedInsights = groupInsightsByDay(filteredInsights, locale);
 
   const tabs: Array<{ key: FilterKey; label: string; count: number }> = [
     { key: "all", label: copy.filters.all, count: counts.all },
-    { key: "live", label: "LIVE", count: counts.live },
-    { key: "upset", label: copy.filters.upset, count: counts.upset },
+    { key: "live", label: copy.filters.live, count: counts.live },
+    {
+      key: "highConfidence",
+      label: copy.filters.highConfidence,
+      count: counts.highConfidence,
+    },
+    { key: "upsetAlert", label: copy.filters.upset, count: counts.upsetAlert },
   ];
   const featuredInsight =
     insights.find((insight) => insight.categories.includes("highConfidence")) ??
@@ -146,7 +148,7 @@ export function AIInsightListClient({
       icon: Gauge,
       tone: "text-cyan-400",
     },
-    { label: copy.stats.upsetAlerts, value: String(counts.upset), icon: ShieldAlert, tone: "text-magenta" },
+    { label: copy.stats.upsetAlerts, value: String(counts.upsetAlert), icon: ShieldAlert, tone: "text-magenta" },
     {
       label: copy.stats.communityVotes,
       value: communityVotes.toLocaleString(localeMap[locale] ?? "th-TH"),
@@ -264,13 +266,13 @@ export function AIInsightListClient({
             </span>
           </div>
 
-          <div className="flex gap-1">
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => setActiveFilter(tab.key)}
-              className={`flex-1 rounded-[8px] px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
+              className={`min-w-0 rounded-[8px] px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
                 activeFilter === tab.key
                   ? "bg-cyan-500/10 text-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.08)]"
                   : "text-gray-500 hover:bg-white/5 hover:text-gray-200"
@@ -369,14 +371,16 @@ export function AIInsightListClient({
                 ) : null}
 
                 <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
-                  {insight.upsetAlert ? (
+                  {insight.categories.includes("upsetAlert") ? (
                     <Badge variant="magenta" className="border-magenta/25 bg-magenta/10 text-magenta">
                       {copy.labels.upsetAlert}
                       {typeof insight.upsetRisk === "number" ? ` ${Math.round(insight.upsetRisk)}%` : ""}
                     </Badge>
-                  ) : (
+                  ) : null}
+
+                  {insight.categories.includes("highConfidence") ? (
                     <Badge variant="green">{copy.filters.highConfidence}</Badge>
-                  )}
+                  ) : null}
 
                   {insight.favoriteTeam ? (
                     <Badge variant="cyan">

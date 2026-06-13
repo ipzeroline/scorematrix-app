@@ -1117,14 +1117,14 @@ export async function getApiFootballAIInsightDetail(
   }
 
   const fixtureSource = data.fixture ?? buildInsightFixtureSource(data);
-  if (!fixtureSource) {
-    throw new ApiFootballError("AI insight detail not found", 404);
-  }
+  const fixture = fixtureSource
+    ? mapInsightFixture(fixtureSource)
+    : (await getApiFootballFixtureDetails(fixtureId)).fixture;
 
   return {
     ...data,
     standings: normalizeInsightStandings(data.standings),
-    fixture: mapInsightFixture(fixtureSource),
+    fixture,
   };
 }
 
