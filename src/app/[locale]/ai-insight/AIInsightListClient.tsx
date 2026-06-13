@@ -371,6 +371,10 @@ export function AIInsightListClient({
                 ) : null}
 
                 <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
+                  <Badge variant="cyan">
+                    {`${copy.labels.confidence} ${formatPercentMetric(insight.confidenceScore)}`}
+                  </Badge>
+
                   {insight.categories.includes("upsetAlert") ? (
                     <Badge variant="magenta" className="border-magenta/25 bg-magenta/10 text-magenta">
                       {copy.labels.upsetAlert}
