@@ -22,6 +22,7 @@ import { useUserStore } from "@/stores/user-store";
 import {
   Brain,
   CheckCheck,
+  ExternalLink,
   LogIn,
   ShieldCheck,
   Trophy,
@@ -144,6 +145,13 @@ type PredictionHistoryApiItem = {
   scoring?: ScoringApiBreakdown | null;
   score_breakdown?: ScoringApiBreakdown | null;
   breakdown?: ScoringApiBreakdown | null;
+  scoringBreakdown?: ScoringApiBreakdown | null;
+  resultType?: string | null;
+  result_type?: string | null;
+  predictedResult?: string | null;
+  predicted_result?: string | null;
+  actualResult?: string | null;
+  actual_result_label?: string | null;
   match?: {
     homeTeam?: {
       name?: string | null;
@@ -174,7 +182,8 @@ type PredictionHistoryItem = {
   predicted: string;
   actual: string;
   points: number;
-  result: "correct" | "incorrect" | "pending" | "partial";
+  result: "correct" | "incorrect" | "pending" | "partial" | "void";
+  resultType: string | null;
   confidenceLevel: string | null;
   boostUsed: boolean;
   firstScorerPlayerId: string | null;
@@ -795,6 +804,14 @@ export function PredictApi() {
                       value={formatHistoryTimestamp(item.createdAt, locale)}
                       valueClassName="text-gray-300"
                     />
+                    <Link
+                      href={`/${locale}/matches/detail/${item.matchId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="ml-auto flex items-center gap-1 rounded-lg border border-cyan-500/30 bg-cyan-500/8 px-2.5 py-1 text-[11px] font-semibold text-cyan-300 transition-colors hover:border-cyan-400/50 hover:bg-cyan-500/15"
+                    >
+                      ดูรายละเอียด
+                      <ExternalLink size={10} />
+                    </Link>
                   </div>
                 </div>
               </Card>
@@ -877,6 +894,16 @@ export function PredictApi() {
               </div>
 
               <div className="space-y-5">
+                {selectedPrediction.result === "void" && (
+                  <div className="flex items-start gap-3 rounded-2xl border border-gray-700/60 bg-gray-900/60 px-4 py-3">
+                    <span className="mt-0.5 shrink-0 text-base">⚠️</span>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-300">การแข่งขันนี้ถูกโมฆะ</p>
+                      <p className="mt-0.5 text-xs text-gray-500">แมตช์นี้ถูกเลื่อนหรือยกเลิก — คะแนนที่ได้รับเท่ากับ 0</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid gap-3 md:grid-cols-[1.25fr_0.95fr]">
                   <div className="rounded-2xl border border-gray-800/80 bg-black/40 p-4">
                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
@@ -918,18 +945,30 @@ export function PredictApi() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+                  <div className={cn(
+                    "rounded-2xl border p-4",
+                    selectedPrediction.result === "void"
+                      ? "border-gray-700/40 bg-gray-900/30"
+                      : "border-emerald-500/20 bg-emerald-500/5"
+                  )}>
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
                       <HistorySummaryStat
                         label={t("prediction.pointsEarned")}
                         value={`+${selectedPrediction.points} PTS`}
-                        valueClassName="text-emerald-300"
+                        valueClassName={selectedPrediction.result === "void" ? "text-gray-400" : "text-emerald-300"}
                       />
                       <HistorySummaryStat
                         label="Result"
                         value={t(`prediction.${selectedPrediction.result}`)}
                         valueClassName={historyTierTextClass(selectedPrediction.result)}
                       />
+                      {selectedPrediction.resultType && selectedPrediction.result !== "void" && (
+                        <HistorySummaryStat
+                          label="Result Type"
+                          value={formatResultType(selectedPrediction.resultType)}
+                          valueClassName="text-amber-300"
+                        />
+                      )}
                       <HistorySummaryStat
                         label="Confidence"
                         value={formatHistoryConfidence(selectedPrediction.confidenceLevel)}
@@ -1050,13 +1089,23 @@ export function PredictApi() {
                   </div>
                 </HistoryModalSection>
 
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleClosePrediction}
-                >
-                  Close
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleClosePrediction}
+                  >
+                    Close
+                  </Button>
+                  <Link
+                    href={`/${locale}/matches/detail/${selectedPrediction.matchId}`}
+                    onClick={handleClosePrediction}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 px-4 py-2 text-sm font-semibold text-cyan-300 transition-colors hover:border-cyan-400/60 hover:bg-cyan-500/20"
+                  >
+                    ดูรายละเอียด
+                    <ExternalLink size={13} />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -1260,7 +1309,9 @@ function normalizePredictionHistory(
           toNullableNumber(item.streakNumber ?? item.streak_number) ?? 0,
         pointsWagered:
           toNullableNumber(item.pointsWagered ?? item.points_wagered) ?? 0,
-        scoring: (isRecord(item.scoring) ? item.scoring :
+        resultType: toSegment(item.resultType ?? item.result_type) ?? null,
+        scoring: (isRecord(item.scoringBreakdown) ? item.scoringBreakdown :
+          isRecord(item.scoring) ? item.scoring :
           isRecord(item.score_breakdown) ? item.score_breakdown :
           isRecord(item.breakdown) ? item.breakdown :
           null) as ScoringApiBreakdown | null,
@@ -1368,6 +1419,7 @@ function mapPredictionHistoryResult(status: string | null | undefined) {
   if (normalized === "pending") return "pending";
   if (normalized === "correct" || normalized === "winner") return "correct";
   if (normalized === "partial") return "partial";
+  if (normalized === "void") return "void";
   return "incorrect";
 }
 
@@ -1379,6 +1431,8 @@ function toHistoryBadgeVariant(result: PredictionHistoryItem["result"]) {
       return "cyan";
     case "partial":
       return "gold";
+    case "void":
+      return "default";
     default:
       return "red";
   }
@@ -1392,8 +1446,21 @@ function historyTierTextClass(result: PredictionHistoryItem["result"]) {
       return "text-amber-300";
     case "pending":
       return "text-cyan-300";
+    case "void":
+      return "text-gray-400";
     default:
       return "text-rose-300";
+  }
+}
+
+function formatResultType(value: string | null) {
+  switch (value) {
+    case "exact":    return "Exact Score";
+    case "goalDiff":
+    case "goal_diff": return "Goal Difference";
+    case "result":   return "Correct Result";
+    case "wrong":    return "Wrong";
+    default:         return value ?? "-";
   }
 }
 
@@ -1687,10 +1754,15 @@ function ScoringBreakdownSection({
 
   const tierMeta = (type: string | null | undefined): { label: string; sublabel: string; tone: "gold" | "green" | "cyan" | "red" } => {
     switch (type) {
-      case "exact":     return { label: "ถูกสกอร์เป๊ะ!", sublabel: "Exact Score", tone: "gold" };
-      case "goal_diff": return { label: "ผลต่างประตูถูก", sublabel: "Goal Difference", tone: "green" };
-      case "result":    return { label: "ผลแพ้ชนะถูก", sublabel: "Correct Result", tone: "cyan" };
-      default:          return { label: "ผิดทั้งหมด", sublabel: "Wrong", tone: "red" };
+      case "exact":
+        return { label: "ถูกสกอร์เป๊ะ!", sublabel: "Exact Score", tone: "gold" };
+      case "goal_diff":
+      case "goalDiff":
+        return { label: "ผลต่างประตูถูก", sublabel: "Goal Difference", tone: "green" };
+      case "result":
+        return { label: "ผลแพ้ชนะถูก", sublabel: "Correct Result", tone: "cyan" };
+      default:
+        return { label: "ผิดทั้งหมด", sublabel: "Wrong", tone: "red" };
     }
   };
 

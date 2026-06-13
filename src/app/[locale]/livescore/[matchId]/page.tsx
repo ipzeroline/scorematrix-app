@@ -191,7 +191,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             lineup={awayLineup}
           />
         </div>
-        {fixture.status === MatchStatus.UPCOMING && isLoggedIn && (
+        {fixture.status === MatchStatus.UPCOMING && isLoggedIn && new Date(fixture.kickoffTime) > new Date() && (
           <div className="mt-4 flex justify-center">
             <Link
               href={buildPredictMatchHref(

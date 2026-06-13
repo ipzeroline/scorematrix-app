@@ -298,7 +298,7 @@ export function AIInsightListClient({
             <div key={group.key} className="flex flex-col gap-2">
               <div className="flex items-center gap-2 px-0.5">
                 <Calendar size={14} className="shrink-0 text-cyan-400" />
-                <span className="text-sm font-semibold text-slate-200">{group.label}</span>
+                <span className="text-sm font-semibold text-slate-200" suppressHydrationWarning>{group.label}</span>
                 <span className="text-xs text-slate-500">({group.items.length})</span>
                 <span className="ml-2 h-px flex-1 bg-gray-800" />
               </div>

@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { Footer } from "@/components/layout/Footer";
 import { StoreInitializer } from "@/components/shared/StoreInitializer";
+import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import {
   AUTH_TOKEN_COOKIE_NAME,
@@ -41,6 +42,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider key={locale} locale={locale} messages={messages}>
       <StoreInitializer hasAuthSession={hasAuthSession} />
+      <ScrollToTop />
       <ToastContainer />
       <div className="flex min-h-screen flex-col pt-14">
         <Header initialHasAuthSession={hasAuthSession} />
