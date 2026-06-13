@@ -72,6 +72,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         lineups: ApiFootballLineup[];
         statistics: ApiFootballTeamStatistics[];
         playerStats: ApiFootballPlayerStats[];
+        teamStatistics: Awaited<ReturnType<typeof getApiFootballFixtureDetails>>["teamStatistics"];
+        teamSquads: Awaited<ReturnType<typeof getApiFootballFixtureDetails>>["teamSquads"];
         headToHead: ApiFootballH2HFixture[];
         standings: { home: ApiFootballFixtureTeamStanding | null; away: ApiFootballFixtureTeamStanding | null } | null;
         scoreBreakdown: ApiFootballScoreBreakdown;
@@ -83,10 +85,10 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
 
   try {
     const details = await getApiFootballFixtureDetails(apiFixtureId);
-    const { fixture, events, lineups, statistics, playerStats, headToHead, standings, scoreBreakdown } = details;
+    const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown } = details;
     const season = fixture.league.season ?? new Date().getFullYear();
 
-    matchDetails = { fixture, events, lineups, statistics, playerStats, headToHead, standings, scoreBreakdown, season, fetchedAt: details.fetchedAt };
+    matchDetails = { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt: details.fetchedAt };
   } catch (error) {
     loadErrorMessage =
       error instanceof ApiFootballError
@@ -105,7 +107,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
     );
   }
 
-  const { fixture, events, lineups, statistics, playerStats, headToHead, standings, scoreBreakdown, season, fetchedAt } = matchDetails;
+  const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt } = matchDetails;
   const homeLineup = lineups.find((lineup) => lineup.team.id === fixture.home.apiTeamId) ?? lineups[0];
   const awayLineup = lineups.find((lineup) => lineup.team.id === fixture.away.apiTeamId) ?? lineups[1];
 
@@ -152,12 +154,12 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                 ? `${fixture.score.home} - ${fixture.score.away}`
                 : t("common.vs")}
             </div>
-            {scoreBreakdown.halftime.home !== null && fixture.score.home !== null && (
+            {hasScore(scoreBreakdown.halftime) && (
               <p className="mt-1 font-mono text-[11px] text-gray-500">
                 HT {scoreBreakdown.halftime.home} : {scoreBreakdown.halftime.away}
               </p>
             )}
-            {scoreBreakdown.penalty.home !== null && (
+            {hasScore(scoreBreakdown.penalty) && (
               <p className="mt-0.5 font-mono text-[11px] font-semibold text-amber-300">
                 PEN {scoreBreakdown.penalty.home} : {scoreBreakdown.penalty.away}
               </p>
@@ -238,7 +240,6 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
 
       <PeriodScorePanel
         scoreBreakdown={scoreBreakdown}
-        mainScore={fixture.score}
         status={fixture.statusShort}
         homeName={fixture.home.name}
         awayName={fixture.away.name}
@@ -271,6 +272,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             lineups,
             statistics,
             playerStats,
+            teamStatistics,
+            teamSquads,
           }}
         />
       )}
@@ -311,6 +314,35 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         noGridData: t("matchDetail.noGridData"),
         captain: t("matchDetail.captain"),
       }} playerStats={playerStats} />
+
+      {teamStatistics ? (
+        <TeamSeasonStatisticsPanel
+          statistics={teamStatistics}
+          labels={{
+            title: t("football.teamSeasonStats"),
+            played: t("football.played"),
+            wins: t("football.wins"),
+            draws: t("football.draws"),
+            losses: t("football.losses"),
+            goalsFor: t("football.goalsFor"),
+            goalsAgainst: t("football.goalsAgainst"),
+            cleanSheets: t("football.cleanSheets"),
+          }}
+        />
+      ) : null}
+
+      {teamSquads ? (
+        <TeamSquadsPanel
+          squads={teamSquads}
+          locale={locale}
+          season={season}
+          labels={{
+            title: t("football.squadTitle"),
+            age: t("football.age"),
+            unavailable: t("matchDetail.unavailable"),
+          }}
+        />
+      ) : null}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <H2HPanel
@@ -1246,6 +1278,148 @@ function translateTeamStat(type: string, labels: TeamStatLabels) {
   }
 }
 
+function TeamSeasonStatisticsPanel({
+  statistics,
+  labels,
+}: {
+  statistics: NonNullable<
+    Awaited<ReturnType<typeof getApiFootballFixtureDetails>>["teamStatistics"]
+  >;
+  labels: {
+    title: string;
+    played: string;
+    wins: string;
+    draws: string;
+    losses: string;
+    goalsFor: string;
+    goalsAgainst: string;
+    cleanSheets: string;
+  };
+}) {
+  return (
+    <section>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-green-300">
+        {labels.title}
+      </h2>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {[statistics.home, statistics.away].map((stats, index) => {
+          if (!stats) return null;
+
+          const metrics = [
+            [labels.played, stats.fixtures.played.total],
+            [labels.wins, stats.fixtures.wins.total],
+            [labels.draws, stats.fixtures.draws.total],
+            [labels.losses, stats.fixtures.loses.total],
+            [labels.goalsFor, stats.goals.for.total.total],
+            [labels.goalsAgainst, stats.goals.against.total.total],
+            [labels.cleanSheets, stats.clean_sheet.total],
+          ] as const;
+
+          return (
+            <Card key={stats.team?.id ?? index} className="overflow-hidden p-0">
+              <div className={cn("flex items-center gap-3 border-b border-gray-800 p-4", index === 0 ? "bg-cyan-500/10" : "bg-magenta/10")}>
+                <ApiTeamLogo
+                  name={stats.team?.name ?? labels.title}
+                  logo={stats.team?.logo ?? null}
+                  size="sm"
+                  accent={index === 0 ? "cyan" : "magenta"}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white">{stats.team?.name}</p>
+                  <p className="text-xs text-gray-500">{stats.form || "-"}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
+                {metrics.map(([label, value]) => (
+                  <div key={label} className="rounded-lg border border-gray-800 bg-black/25 p-3">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
+                    <p className="mt-1 font-mono text-lg font-bold text-white">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function TeamSquadsPanel({
+  squads,
+  locale,
+  season,
+  labels,
+}: {
+  squads: NonNullable<Awaited<ReturnType<typeof getApiFootballFixtureDetails>>["teamSquads"]>;
+  locale: string;
+  season: number;
+  labels: {
+    title: string;
+    age: string;
+    unavailable: string;
+  };
+}) {
+  return (
+    <section>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">
+        {labels.title}
+      </h2>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {[squads.home, squads.away].map((squad, index) => {
+          if (!squad) return null;
+
+          return (
+            <Card key={squad.teamId ?? index} className="overflow-hidden p-0">
+              <div className={cn("flex items-center justify-between gap-3 border-b border-gray-800 p-4", index === 0 ? "bg-cyan-500/10" : "bg-magenta/10")}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <ApiTeamLogo
+                    name={squad.team?.name ?? labels.title}
+                    logo={squad.team?.logo ?? null}
+                    size="sm"
+                    accent={index === 0 ? "cyan" : "magenta"}
+                  />
+                  <p className="truncate text-sm font-bold text-white">{squad.team?.name}</p>
+                </div>
+                <Badge variant={index === 0 ? "cyan" : "magenta"}>{squad.players.length}</Badge>
+              </div>
+              <div className="max-h-[430px] divide-y divide-gray-800 overflow-y-auto">
+                {squad.players.map((player) => (
+                  <Link
+                    key={player.id || player.name}
+                    href={`/${locale}/football/players/${player.id}?season=${season}`}
+                    className="grid grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03]"
+                  >
+                    <span
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-full border font-mono text-xs font-bold",
+                        index === 0
+                          ? "border-cyan-500/25 bg-cyan-500/10 text-cyan-300"
+                          : "border-magenta/25 bg-magenta/10 text-magenta"
+                      )}
+                    >
+                      {player.number ?? "-"}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-xs font-semibold text-white">{player.name}</p>
+                      <p className="mt-0.5 truncate text-[10px] text-gray-500">
+                        {player.position ?? labels.unavailable}
+                      </p>
+                    </div>
+                    <p className="shrink-0 text-right text-[10px] text-gray-600">
+                      {labels.age}: {player.age ?? "-"}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function LineupsPanel({
   lineups,
   playerStats,
@@ -1599,7 +1773,6 @@ function isCaptainPlayer(playerId: number | null, captainIds: Set<number>) {
 
 function PeriodScorePanel({
   scoreBreakdown,
-  mainScore,
   status,
   homeName,
   awayName,
@@ -1607,24 +1780,23 @@ function PeriodScorePanel({
   isUpcoming,
 }: {
   scoreBreakdown: ApiFootballScoreBreakdown;
-  mainScore: { home: number | null; away: number | null };
   status: string;
   homeName: string;
   awayName: string;
   title: string;
   isUpcoming: boolean;
 }) {
-  const hasHT = scoreBreakdown.halftime.home !== null;
-  const hasET = scoreBreakdown.extratime.home !== null;
-  const hasPEN = scoreBreakdown.penalty.home !== null;
-  const hasFT = mainScore.home !== null;
+  const hasHT = hasScore(scoreBreakdown.halftime);
+  const hasFT = hasScore(scoreBreakdown.fulltime);
+  const hasET = hasScore(scoreBreakdown.extratime);
+  const hasPEN = hasScore(scoreBreakdown.penalty);
 
-  if (isUpcoming || (!hasHT && !hasFT)) return null;
+  if (isUpcoming || (!hasHT && !hasFT && !hasET && !hasPEN)) return null;
 
   const periods: { label: string; home: number | null; away: number | null; accent: string; textAccent: string }[] = [];
 
   if (hasHT) periods.push({ label: "HT", home: scoreBreakdown.halftime.home, away: scoreBreakdown.halftime.away, accent: "border-cyan-500/20 bg-cyan-500/5", textAccent: "text-cyan-300" });
-  if (hasFT) periods.push({ label: "FT", home: mainScore.home, away: mainScore.away, accent: "border-green-500/20 bg-green-500/5", textAccent: "text-green-300" });
+  if (hasFT) periods.push({ label: "FT", home: scoreBreakdown.fulltime.home, away: scoreBreakdown.fulltime.away, accent: "border-green-500/20 bg-green-500/5", textAccent: "text-green-300" });
   if (hasET) periods.push({ label: "ET", home: scoreBreakdown.extratime.home, away: scoreBreakdown.extratime.away, accent: "border-amber-500/20 bg-amber-500/5", textAccent: "text-amber-300" });
   if (hasPEN) periods.push({ label: "PEN", home: scoreBreakdown.penalty.home, away: scoreBreakdown.penalty.away, accent: "border-magenta-500/20 bg-magenta-500/5", textAccent: "text-pink-300" });
 
@@ -1666,6 +1838,10 @@ function PeriodScorePanel({
   );
 }
 
+function hasScore(score: { home: number | null; away: number | null }) {
+  return score.home !== null || score.away !== null;
+}
+
 /* ─────────────── H2H Panel ─────────────── */
 
 function H2HPanel({
@@ -1702,7 +1878,8 @@ function H2HPanel({
     if (hg === null || ag === null) continue;
     if (hg === ag) { draws++; continue; }
     const weWon = isHomeTeamHome ? hg > ag : ag > hg;
-    weWon ? wins++ : losses++;
+    if (weWon) wins++;
+    else losses++;
   }
 
   return (

@@ -64,12 +64,12 @@ interface MatchesApiProps {
 }
 
 const STATUS_TAB_DEFINITIONS = [
-  { key: "all", tone: "cyan" },
-  { key: MatchStatus.LIVE, tone: "green" },
   { key: MatchStatus.UPCOMING, tone: "cyan" },
+  { key: MatchStatus.LIVE, tone: "green" },
   { key: MatchStatus.FINISHED, tone: "green" },
   { key: MatchStatus.POSTPONED, tone: "amber" },
   { key: MatchStatus.CANCELLED, tone: "red" },
+  { key: "all", tone: "cyan" },
 ] as const;
 
 type MatchStatusTab = (typeof STATUS_TAB_DEFINITIONS)[number]["key"];
@@ -228,7 +228,7 @@ export function MatchesApi({
     [searchedFixtures, activeStatusTab]
   );
   const sortedFixtures = useMemo(
-    () => sortMatchesForBoard(statusFilteredFixtures),
+    () => sortMatchesByKickoffTime(statusFilteredFixtures),
     [statusFilteredFixtures]
   );
   const groupedFixtures = useMemo(
@@ -241,12 +241,15 @@ export function MatchesApi({
   const hasActiveFilters =
     !isToday ||
     activeLeague !== "all" ||
-    activeStatusTab !== "all" ||
+    activeStatusTab !== MatchStatus.UPCOMING ||
     Boolean(searchQuery.trim());
 
   function updateUrl(key: string, value?: string) {
     const query = new URLSearchParams(searchParams.toString());
-    if (value && value !== "all") query.set(key, value);
+    if (key === "status_group") {
+      if (value === MatchStatus.UPCOMING) query.delete(key);
+      else if (value) query.set(key, value);
+    } else if (value && value !== "all") query.set(key, value);
     else query.delete(key);
     startTransition(() => {
       router.replace(`${pathname}${query.size ? `?${query}` : ""}`, {
@@ -748,41 +751,11 @@ function getActiveStatusTabClass(
   return "border-cyan-500/30 bg-cyan-500/20 text-cyan-400";
 }
 
-function sortMatchesForBoard(fixtures: ApiFootballFixture[]) {
-  return [...fixtures].sort((left, right) => {
-    const priorityDiff =
-      getMatchBoardPriority(right) - getMatchBoardPriority(left);
-
-    if (priorityDiff !== 0) {
-      return priorityDiff;
-    }
-
-    return (
+function sortMatchesByKickoffTime(fixtures: ApiFootballFixture[]) {
+  return [...fixtures].sort(
+    (left, right) =>
       new Date(left.kickoffTime).getTime() - new Date(right.kickoffTime).getTime()
-    );
-  });
-}
-
-function getMatchBoardPriority(match: ApiFootballFixture) {
-  const statusGroup = getFixtureStatusGroup(match);
-
-  if (statusGroup === MatchStatus.UPCOMING) {
-    return 500;
-  }
-  if (statusGroup === MatchStatus.LIVE) {
-    return 400;
-  }
-  if (statusGroup === MatchStatus.POSTPONED) {
-    return 300;
-  }
-  if (statusGroup === MatchStatus.CANCELLED) {
-    return 200;
-  }
-  if (statusGroup === MatchStatus.FINISHED) {
-    return 100;
-  }
-
-  return 0;
+  );
 }
 
 type DayFixtureGroup = {
@@ -1169,7 +1142,7 @@ function getLeagueOptions(fixtures: ApiFootballFixture[]) {
 function toStatusTab(value: string | null): MatchStatusTab {
   return STATUS_TAB_DEFINITIONS.some((tab) => tab.key === value)
     ? (value as MatchStatusTab)
-    : "all";
+    : MatchStatus.UPCOMING;
 }
 
 function emptyCounts(): ApiFootballFixtureCounts {

@@ -22,7 +22,7 @@ const colorClasses = {
   green: "bg-green-500",
   gold: "bg-amber-500",
   purple: "bg-purple-500",
-  magenta: "bg-magenta-500",
+  magenta: "bg-magenta",
   red: "bg-red-500",
 };
 

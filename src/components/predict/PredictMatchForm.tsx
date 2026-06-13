@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useSyncExternalStore } from "react";
+import { memo, useCallback, useState, useEffect, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -148,9 +148,8 @@ export function PredictMatchForm({
   const [awayPlayers, setAwayPlayers] = useState<PredictPlayer[]>(match.away.players);
   const [loadingHome, setLoadingHome] = useState(false);
   const [loadingAway, setLoadingAway] = useState(false);
-  const [hasLoadedAway, setHasLoadedAway] = useState(false);
 
-  const fetchSquadPlayers = async (teamId: string | number) => {
+  const fetchSquadPlayers = useCallback(async (teamId: string | number) => {
     try {
       const numericId = typeof teamId === "string" ? parseInt(teamId.replace(/\D/g, ""), 10) : teamId;
       if (!numericId || isNaN(numericId)) return null;
@@ -188,7 +187,7 @@ export function PredictMatchForm({
       console.error("Error loading squad players:", error);
       return null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const loadSquads = async () => {
@@ -210,7 +209,6 @@ export function PredictMatchForm({
         fetchSquadPlayers(awayId).then((playersList) => {
           if (playersList && playersList.length > 0) {
             setAwayPlayers(playersList);
-            setHasLoadedAway(true);
           }
           setLoadingAway(false);
         });
@@ -218,19 +216,7 @@ export function PredictMatchForm({
     };
 
     loadSquads();
-  }, [match.home.id, match.away.id]);
-
-  const loadAwaySquad = async () => {
-    const awayId = match.away.id;
-    if (!awayId || hasLoadedAway || loadingAway) return;
-    setLoadingAway(true);
-    const playersList = await fetchSquadPlayers(awayId);
-    if (playersList && playersList.length > 0) {
-      setAwayPlayers(playersList);
-      setHasLoadedAway(true);
-    }
-    setLoadingAway(false);
-  };
+  }, [fetchSquadPlayers, match.home.id, match.away.id]);
 
   // UX display state: Summary Tab (Ticket vs JSON payload)
 
@@ -570,7 +556,6 @@ export function PredictMatchForm({
             <div className="grid gap-5">
               {/* Tactical pitch player picker */}
               <PlayerPicker
-                key={firstScorerPlayerId ?? "no-scorer"}
                 label={t("deep.firstScorer")}
                 home={match.home}
                 away={match.away}
@@ -579,9 +564,8 @@ export function PredictMatchForm({
                 locale={locale}
                 homePlayers={homePlayers}
                 awayPlayers={awayPlayers}
-                loadingHome={loadingHome}
-                loadingAway={loadingAway}
-                onLoadAwaySquad={loadAwaySquad}
+                loadingHome={loadingHome && homePlayers.length === 0}
+                loadingAway={loadingAway && awayPlayers.length === 0}
               />
               
               {/* Futuristic Statistics Console (Halftime & Total Goals Redesigned) */}
@@ -1873,7 +1857,7 @@ function PredictionSection({
 // ----------------------------------------------------
 // Player picker component
 // ----------------------------------------------------
-function PlayerPicker({
+function PlayerPickerComponent({
   label,
   home,
   away,
@@ -1884,7 +1868,6 @@ function PlayerPicker({
   awayPlayers,
   loadingHome,
   loadingAway,
-  onLoadAwaySquad,
 }: {
   label: string;
   home: {
@@ -1916,20 +1899,12 @@ function PlayerPicker({
   awayPlayers: PredictPlayer[];
   loadingHome: boolean;
   loadingAway: boolean;
-  onLoadAwaySquad: () => void;
 }) {
   const selectedPlayer = findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, value);
 
   // Team Selection State (Home by default, or Away if away player is selected)
   const isSelectedPlayerAway = awayPlayers.some(p => String(p.id ?? p.name) === value);
   const [selectedTeam, setSelectedTeam] = useState<"home" | "away">(isSelectedPlayerAway ? "away" : "home");
-
-  // Load away squad when the away tab is active
-  useEffect(() => {
-    if (selectedTeam === "away") {
-      onLoadAwaySquad();
-    }
-  }, [selectedTeam, onLoadAwaySquad]);
 
   // Position classifications and search filters
   const [homeSearch, setHomeSearch] = useState("");
@@ -2036,7 +2011,7 @@ function PlayerPicker({
 
       {/* Roster Column */}
       <div className="w-full">
-        {selectedTeam === "home" ? (
+        <div className={selectedTeam === "home" ? "block" : "hidden"} aria-hidden={selectedTeam !== "home"}>
           <PlayerColumn 
             team={{ ...home, players: homePlayers }} 
             value={value} 
@@ -2047,7 +2022,8 @@ function PlayerPicker({
             searchPlaceholder={searchPlaceholder}
             loading={loadingHome}
           />
-        ) : (
+        </div>
+        <div className={selectedTeam === "away" ? "block" : "hidden"} aria-hidden={selectedTeam !== "away"}>
           <PlayerColumn 
             team={{ ...away, players: awayPlayers }} 
             value={value} 
@@ -2058,11 +2034,13 @@ function PlayerPicker({
             searchPlaceholder={searchPlaceholder}
             loading={loadingAway}
           />
-        )}
+        </div>
       </div>
     </div>
   );
 }
+
+const PlayerPicker = memo(PlayerPickerComponent);
 
 function PlayerColumn({
   team,

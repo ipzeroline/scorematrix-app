@@ -1,6 +1,8 @@
 import { apiGetRaw, type ApiRequestOptions } from "@/lib/api-client";
 import type { LeaderboardEntry, LeaderboardReward } from "@/types/leaderboard";
 
+export type LeaderboardPeriodQuery = "daily" | "weekly" | "seasonal";
+
 export type ApiLeaderboardEntry = {
   rank: number;
   userId: string;
@@ -41,11 +43,17 @@ export const EMPTY_LEADERBOARD_RESPONSE: LeaderboardResponse = {
   rewards: [],
 };
 
-export async function getLeaderboard(options?: ApiRequestOptions) {
-  const response = await apiGetRaw<LeaderboardApiPayload>("/leaderboard", {
-    cache: "no-store",
-    ...options,
-  });
+export async function getLeaderboard(
+  period: LeaderboardPeriodQuery,
+  options?: ApiRequestOptions
+) {
+  const response = await apiGetRaw<LeaderboardApiPayload>(
+    `/leaderboard?period=${encodeURIComponent(period)}`,
+    {
+      cache: "no-store",
+      ...options,
+    }
+  );
   return normalizeLeaderboardResponse(response);
 }
 

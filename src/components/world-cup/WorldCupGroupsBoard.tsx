@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { CalendarDays, ChevronRight, Shield, Trophy } from "lucide-react";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
@@ -125,7 +126,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                 const qualified = pos <= 2;
                 return (
                   <tr
-                    key={team.name}
+                    key={team.providerId ?? team.code}
                     className={cn(
                       "border-b border-gray-800/70 last:border-b-0 transition-colors hover:bg-white/2",
                       qualified && "bg-cyan-500/3"
@@ -146,10 +147,14 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                       </span>
                     </td>
                     <td className="px-3 py-3 md:px-4">
-                      <div className="flex items-center gap-3">
+                      <TeamLink
+                        team={team}
+                        locale={locale}
+                        className="group/team flex items-center gap-3 rounded-md outline-none transition-colors hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/70"
+                      >
                         <TeamFlag team={team} flagAlt={copy.flagAlt} />
                         <div className="min-w-0">
-                          <p className="min-w-0 truncate text-sm font-semibold text-white">
+                          <p className="min-w-0 truncate text-sm font-semibold text-white transition-colors group-hover/team:text-cyan-300">
                             {team.name}
                           </p>
                           {qualified && (
@@ -158,7 +163,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                             </p>
                           )}
                         </div>
-                      </div>
+                      </TeamLink>
                     </td>
                     {[
                       team.played ?? 0,
@@ -206,7 +211,7 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
         <div className="mt-4 space-y-2">
           {fixtures.slice(0, 3).map((fixture, index) => (
             <div
-              key={`${fixture.home.name}-${fixture.away.name}`}
+              key={fixtureKey(fixture, index)}
               className="rounded-lg border border-gray-800 bg-white/[0.03] p-3"
             >
               <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-gray-500">
@@ -216,11 +221,16 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
                 <ChevronRight size={13} />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <FixtureTeam team={fixture.home} flagAlt={copy.flagAlt} />
+                <FixtureTeam team={fixture.home} flagAlt={copy.flagAlt} locale={locale} />
                 <span className="font-mono text-[10px] font-bold text-gray-500">
                   {formatFixtureScore(fixture, copy.vs)}
                 </span>
-                <FixtureTeam team={fixture.away} flagAlt={copy.flagAlt} align="right" />
+                <FixtureTeam
+                  team={fixture.away}
+                  flagAlt={copy.flagAlt}
+                  locale={locale}
+                  align="right"
+                />
               </div>
             </div>
           ))}
@@ -228,26 +238,30 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
 
         <div className="mt-4 grid gap-2">
           {[
-            { label: copy.winner, team: selectedGroup.teams[0], icon: Trophy },
-            { label: copy.runnerUp, team: selectedGroup.teams[1], icon: Shield },
-            { label: copy.third, team: selectedGroup.teams[2], icon: Shield },
+            { id: "winner", label: copy.winner, team: selectedGroup.teams[0], icon: Trophy },
+            { id: "runner-up", label: copy.runnerUp, team: selectedGroup.teams[1], icon: Shield },
+            { id: "third", label: copy.third, team: selectedGroup.teams[2], icon: Shield },
           ].map((item) => {
             const Icon = item.icon;
             return (
               <div
-                key={item.label}
+                key={item.id}
                 className="flex items-center justify-between rounded-lg border border-gray-800 bg-black/25 px-3 py-2"
               >
                 <span className="flex items-center gap-2 text-xs text-gray-400">
                   <Icon size={14} className="text-cyan-300" />
                   {item.label}
                 </span>
-                <span className="font-mono text-xs font-bold text-white">
+                <TeamLink
+                  team={item.team}
+                  locale={locale}
+                  className="group/team font-mono text-xs font-bold text-white outline-none transition-colors hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/70"
+                >
                   <span className="inline-flex items-center gap-2">
                     <TeamFlag team={item.team} flagAlt={copy.flagAlt} size="sm" />
                     {item.team.code}
                   </span>
-                </span>
+                </TeamLink>
               </div>
             );
           })}
@@ -274,9 +288,9 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
         </div>
 
         <div className="divide-y divide-gray-800/80">
-          {fixtures.map((fixture) => (
+          {fixtures.map((fixture, index) => (
             <article
-              key={`${fixture.kickoffUtc}-${fixture.home.code}-${fixture.away.code}`}
+              key={fixtureKey(fixture, index)}
               className="grid gap-3 p-4 transition-colors hover:bg-white/[0.02] md:grid-cols-[170px_minmax(0,1fr)_180px] md:items-center"
             >
               <div>
@@ -292,11 +306,16 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
               </div>
 
               <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_34px_minmax(0,1fr)] items-center gap-2">
-                <ScheduleTeam team={fixture.home} flagAlt={copy.flagAlt} />
+                <ScheduleTeam team={fixture.home} flagAlt={copy.flagAlt} locale={locale} />
                 <span className="text-center font-mono text-xs font-black text-gray-500">
                   {formatFixtureScore(fixture, copy.vs)}
                 </span>
-                <ScheduleTeam team={fixture.away} flagAlt={copy.flagAlt} align="right" />
+                <ScheduleTeam
+                  team={fixture.away}
+                  flagAlt={copy.flagAlt}
+                  locale={locale}
+                  align="right"
+                />
               </div>
 
               <p className="text-sm text-gray-400 md:text-right">
@@ -319,6 +338,45 @@ function hydrateMatch(match: WorldCupMatch, teams: WorldCupTeam[]) {
   }
 
   return { ...match, home, away };
+}
+
+function fixtureKey(fixture: WorldCupMatch, index: number) {
+  if (fixture.apiFixtureId !== null && fixture.apiFixtureId !== undefined) {
+    return `fixture-${fixture.apiFixtureId}`;
+  }
+
+  return [
+    "fixture",
+    fixture.kickoffUtc,
+    fixture.homeCode,
+    fixture.awayCode,
+    index,
+  ].join("-");
+}
+
+function TeamLink({
+  team,
+  locale,
+  className,
+  children,
+}: {
+  team: WorldCupTeam;
+  locale: string;
+  className: string;
+  children: React.ReactNode;
+}) {
+  if (team.providerId == null) {
+    return <span className={className}>{children}</span>;
+  }
+
+  return (
+    <Link
+      href={`/${locale}/football/teams/${team.providerId}?league=1&season=2026`}
+      className={className}
+    >
+      {children}
+    </Link>
+  );
 }
 
 function TeamFlag({
@@ -363,53 +421,63 @@ function formatFixtureScore(fixture: WorldCupMatch & { home: WorldCupTeam; away:
 function FixtureTeam({
   team,
   flagAlt,
+  locale,
   align = "left",
 }: {
   team: WorldCupTeam;
   flagAlt: string;
+  locale: string;
   align?: "left" | "right";
 }) {
   return (
-    <div
+    <TeamLink
+      team={team}
+      locale={locale}
       className={cn(
-        "flex min-w-0 flex-1 items-center gap-2",
+        "group/team flex min-w-0 flex-1 items-center gap-2 rounded outline-none transition-colors hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/70",
         align === "right" && "justify-end text-right"
       )}
     >
       {align === "left" && <TeamFlag team={team} flagAlt={flagAlt} size="sm" />}
-      <span className="truncate text-xs font-semibold text-white">
+      <span className="truncate text-xs font-semibold text-white transition-colors group-hover/team:text-cyan-300">
         {team.name}
       </span>
       {align === "right" && <TeamFlag team={team} flagAlt={flagAlt} size="sm" />}
-    </div>
+    </TeamLink>
   );
 }
 
 function ScheduleTeam({
   team,
   flagAlt,
+  locale,
   align = "left",
 }: {
   team: WorldCupTeam;
   flagAlt: string;
+  locale: string;
   align?: "left" | "right";
 }) {
   return (
-    <div
+    <TeamLink
+      team={team}
+      locale={locale}
       className={cn(
-        "flex min-w-0 items-center gap-2",
+        "group/team flex min-w-0 items-center gap-2 rounded outline-none transition-colors hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/70",
         align === "right" && "justify-end text-right"
       )}
     >
       {align === "left" && <TeamFlag team={team} flagAlt={flagAlt} />}
       <div className="min-w-0">
-        <p className="truncate text-sm font-bold text-white">{team.name}</p>
+        <p className="truncate text-sm font-bold text-white transition-colors group-hover/team:text-cyan-300">
+          {team.name}
+        </p>
         <p className="font-mono text-[10px] font-black text-cyan-300">
           {team.code}
         </p>
       </div>
       {align === "right" && <TeamFlag team={team} flagAlt={flagAlt} />}
-    </div>
+    </TeamLink>
   );
 }
 

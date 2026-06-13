@@ -190,6 +190,37 @@ test("adapts raw fixture detail response to match detail UI fields", () => {
   assert.equal(playerTeam.players[0].statistics[0].games.captain, true);
 });
 
+test("keeps current goals separate from score periods", () => {
+  const result = normalizeFixtureDetailsPayload({
+    data: {
+      provider_id: 1545451,
+      fixture: {
+        id: 1545451,
+        status: { short: "HT", long: "Halftime", elapsed: 45 },
+      },
+      teams: {
+        home: { id: 2286, name: "Home" },
+        away: { id: 2295, name: "Away" },
+      },
+      goals: { home: 2, away: 1 },
+      score: {
+        halftime: { home: 2, away: 1 },
+        fulltime: { home: null, away: null },
+        extratime: { home: null, away: null },
+        penalty: { home: null, away: null },
+      },
+    },
+  });
+
+  assert.deepEqual((result.fixture as { score: unknown }).score, { home: 2, away: 1 });
+  assert.deepEqual(result.scoreBreakdown, {
+    halftime: { home: 2, away: 1 },
+    fulltime: { home: null, away: null },
+    extratime: { home: null, away: null },
+    penalty: { home: null, away: null },
+  });
+});
+
 test("treats 404 supplement failures as empty optional data", () => {
   assert.equal(isIgnorableFixtureSupplementError({ status: 404 }), true);
   assert.equal(isIgnorableFixtureSupplementError({ status: 500 }), false);

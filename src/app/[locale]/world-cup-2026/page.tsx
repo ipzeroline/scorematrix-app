@@ -115,14 +115,14 @@ export default async function WorldCup2026Page({ params }: Props) {
             </p>
             <div className="mt-5 grid max-w-2xl grid-cols-3 gap-2">
               {[
-                { icon: Trophy, label: copy.statTeams },
-                { icon: Globe2, label: copy.statGroups },
-                { icon: CalendarDays, label: copy.statKickoff },
+                { id: "teams", icon: Trophy, label: copy.statTeams },
+                { id: "groups", icon: Globe2, label: copy.statGroups },
+                { id: "kickoff", icon: CalendarDays, label: copy.statKickoff },
               ].map((item) => {
                 const Icon = item.icon;
                 return (
                   <div
-                    key={item.label}
+                    key={item.id}
                     className="rounded-lg border border-gray-800 bg-black/25 p-3"
                   >
                     <Icon size={16} className="text-cyan-300" />
@@ -187,10 +187,20 @@ function buildGroupsFromLeagueDetail(
   const groups: WorldCupGroup[] = [];
 
   for (const [id, rows] of groupMap) {
-    const teams: WorldCupTeam[] = rows
+    const seenTeamNames = new Set<string>();
+    const uniqueRows = rows.filter((row) => {
+      const name = normalizeName(row.team.name);
+      if (!name || seenTeamNames.has(name)) return false;
+
+      seenTeamNames.add(name);
+      return true;
+    });
+    const teamCodes = createUniqueTeamCodes(uniqueRows);
+    const teams: WorldCupTeam[] = uniqueRows
       .map((row) => ({
+        providerId: row.team.id,
         name: row.team.name,
-        code: teamCode(row.team.name),
+        code: teamCodes.get(normalizeName(row.team.name)) ?? teamCode(row.team.name),
         flagCode: "un",
         rank: row.rank,
         logo: row.team.logo,
@@ -204,11 +214,27 @@ function buildGroupsFromLeagueDetail(
       .sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
 
     const teamNameSet = new Set(teams.map((t) => normalizeName(t.name)));
-    const groupFixtures = fixtures.filter(
-      (f) =>
-        teamNameSet.has(normalizeName(f.home.name)) &&
-        teamNameSet.has(normalizeName(f.away.name))
-    );
+    const seenFixtures = new Set<string>();
+    const groupFixtures = fixtures.filter((fixture) => {
+      const homeName = normalizeName(fixture.home.name);
+      const awayName = normalizeName(fixture.away.name);
+      if (
+        homeName === awayName ||
+        !teamNameSet.has(homeName) ||
+        !teamNameSet.has(awayName)
+      ) {
+        return false;
+      }
+
+      const fixtureKey =
+        fixture.apiFixtureId != null
+          ? `id:${fixture.apiFixtureId}`
+          : `${fixture.kickoffTime}:${homeName}:${awayName}`;
+      if (seenFixtures.has(fixtureKey)) return false;
+
+      seenFixtures.add(fixtureKey);
+      return true;
+    });
 
     const matches: WorldCupMatch[] = groupFixtures
       .slice()
@@ -255,14 +281,31 @@ function findTeamCode(teams: WorldCupTeam[], name: string) {
   );
 }
 
+function createUniqueTeamCodes(rows: ApiLeagueDetailStanding[]) {
+  const codes = new Map<string, string>();
+  const usedCodes = new Set<string>();
+
+  for (const row of rows) {
+    const normalizedName = normalizeName(row.team.name);
+    const baseCode = teamCode(row.team.name);
+    let code = baseCode;
+    let suffix = 2;
+
+    while (usedCodes.has(code)) {
+      const suffixText = String(suffix);
+      code = `${baseCode.slice(0, Math.max(1, 3 - suffixText.length))}${suffixText}`;
+      suffix += 1;
+    }
+
+    usedCodes.add(code);
+    codes.set(normalizedName, code);
+  }
+
+  return codes;
+}
+
 function teamCode(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 3)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
+  return normalizeName(name).slice(0, 3).toUpperCase() || "TBD";
 }
 
 function normalizeName(name: string) {

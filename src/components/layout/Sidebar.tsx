@@ -117,7 +117,7 @@ export function Sidebar({ initialHasAuthSession = false }: SidebarProps) {
 
     let active = true;
 
-    getLeaderboard({ locale })
+    getLeaderboard("weekly", { locale })
       .then((response) => {
         if (!active) return;
         const nextLeaders = (response?.entries ?? [])

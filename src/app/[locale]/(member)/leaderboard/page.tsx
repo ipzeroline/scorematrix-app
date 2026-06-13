@@ -24,13 +24,13 @@ import { Tabs } from "@/components/ui/Tabs";
 import {
   getLeaderboard,
   mapApiLeaderboardEntry,
+  type LeaderboardPeriodQuery,
   type LeaderboardResponse,
 } from "@/lib/leaderboard-api";
 import { getLeaderboardPageCopy } from "@/data/leaderboard-page-content";
 import { useUserStore } from "@/stores/user-store";
 import type { LeaderboardEntry, LeaderboardReward } from "@/types/leaderboard";
 
-type PeriodKey = "daily" | "weekly" | "seasonal";
 type LeaderboardViewData = {
   period: LeaderboardResponse["period"];
   entries: LeaderboardEntry[];
@@ -170,7 +170,7 @@ function formatRankRange(rankRange: [number, number]) {
 export default function LeaderboardPage() {
   const { locale } = useParams<{ locale: string }>();
   const copy = getLeaderboardPageCopy(locale);
-  const [period, setPeriod] = useState<PeriodKey>("daily");
+  const [period, setPeriod] = useState<LeaderboardPeriodQuery>("daily");
   const userId = useUserStore((state) => state.userId);
   const [leaderboard, setLeaderboard] = useState<LeaderboardViewData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -179,7 +179,7 @@ export default function LeaderboardPage() {
   useEffect(() => {
     let isActive = true;
 
-    getLeaderboard({ locale })
+    getLeaderboard(period, { locale })
       .then((response) => {
         if (!isActive) return;
         setLeaderboard(toLeaderboardViewData(response));
@@ -197,7 +197,7 @@ export default function LeaderboardPage() {
     return () => {
       isActive = false;
     };
-  }, [locale]);
+  }, [locale, period]);
 
   const entries = useMemo(
     () => leaderboard?.entries ?? EMPTY_LEADERBOARD_ENTRIES,
@@ -241,6 +241,15 @@ export default function LeaderboardPage() {
     },
   ];
   const showLoadingState = loading && leaderboard === null;
+  const handlePeriodChange = (value: string) => {
+    const nextPeriod = value as LeaderboardPeriodQuery;
+    if (nextPeriod === period) return;
+
+    setLeaderboard(null);
+    setLoading(true);
+    setLoadFailed(false);
+    setPeriod(nextPeriod);
+  };
 
   const stats = [
     {
@@ -369,7 +378,7 @@ export default function LeaderboardPage() {
         <Tabs
           tabs={tabs}
           activeTab={period}
-          onChange={(value) => setPeriod(value as PeriodKey)}
+          onChange={handlePeriodChange}
         />
 
         <div className="grid gap-4 lg:grid-cols-[0.9fr_1.4fr]">

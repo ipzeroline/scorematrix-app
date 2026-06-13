@@ -676,6 +676,7 @@ export interface ApiFootballPlayerStats {
 
 export interface ApiFootballScoreBreakdown {
   halftime: { home: number | null; away: number | null };
+  fulltime: { home: number | null; away: number | null };
   extratime: { home: number | null; away: number | null };
   penalty: { home: number | null; away: number | null };
 }
@@ -719,6 +720,14 @@ export interface GetFixtureDetailsResult {
   lineups: ApiFootballLineup[];
   statistics: ApiFootballTeamStatistics[];
   playerStats: ApiFootballPlayerStats[];
+  teamStatistics: {
+    home: ApiFootballTeamSeasonStats | null;
+    away: ApiFootballTeamSeasonStats | null;
+  } | null;
+  teamSquads: {
+    home: ApiFootballTeamProfile["squad"];
+    away: ApiFootballTeamProfile["squad"];
+  } | null;
   headToHead: ApiFootballH2HFixture[];
   standings: {
     home: ApiFootballFixtureTeamStanding | null;
@@ -1257,6 +1266,8 @@ export async function getApiFootballFixtureDetails(
     lineups: details.lineups as ApiFootballLineup[],
     statistics: details.statistics as ApiFootballTeamStatistics[],
     playerStats: details.playerStats as ApiFootballPlayerStats[],
+    teamStatistics: details.teamStatistics as GetFixtureDetailsResult["teamStatistics"],
+    teamSquads: details.teamSquads as GetFixtureDetailsResult["teamSquads"],
     headToHead: details.headToHead as ApiFootballH2HFixture[],
     standings: details.standings as GetFixtureDetailsResult["standings"],
     scoreBreakdown: details.scoreBreakdown as ApiFootballScoreBreakdown,

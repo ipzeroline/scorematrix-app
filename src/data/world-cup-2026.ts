@@ -1,4 +1,5 @@
 export type WorldCupTeam = {
+  providerId?: number | null;
   name: string;
   code: string;
   flagCode: string;

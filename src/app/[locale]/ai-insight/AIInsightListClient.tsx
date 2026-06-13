@@ -146,7 +146,7 @@ export function AIInsightListClient({
       icon: Gauge,
       tone: "text-cyan-400",
     },
-    { label: copy.stats.upsetAlerts, value: String(counts.upset), icon: ShieldAlert, tone: "text-magenta-400" },
+    { label: copy.stats.upsetAlerts, value: String(counts.upset), icon: ShieldAlert, tone: "text-magenta" },
     {
       label: copy.stats.communityVotes,
       value: communityVotes.toLocaleString(localeMap[locale] ?? "th-TH"),
@@ -370,7 +370,7 @@ export function AIInsightListClient({
 
                 <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
                   {insight.upsetAlert ? (
-                    <Badge variant="magenta" className="border-magenta-500/25 bg-magenta-500/10 text-magenta-300">
+                    <Badge variant="magenta" className="border-magenta/25 bg-magenta/10 text-magenta">
                       {copy.labels.upsetAlert}
                       {typeof insight.upsetRisk === "number" ? ` ${Math.round(insight.upsetRisk)}%` : ""}
                     </Badge>
@@ -486,11 +486,11 @@ function StrengthRow({ insight }: { insight: AIInsightListItem }) {
       <div className="w-[30px] text-center text-xs text-slate-500">{gap}</div>
       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
         <div
-          className="ml-auto h-full rounded-full bg-magenta-400 transition-all duration-500 shadow-[0_0_10px_rgba(217,70,239,0.25)]"
+          className="ml-auto h-full rounded-full bg-magenta transition-all duration-500 shadow-[0_0_10px_rgba(217,70,239,0.25)]"
           style={{ width: `${awayStrength}%` }}
         />
       </div>
-      <div className="w-[26px] text-center text-[12px] font-bold text-magenta-300">
+      <div className="w-[26px] text-center text-[12px] font-bold text-magenta">
         {awayStrength}
       </div>
     </div>
@@ -508,7 +508,7 @@ function ProbabilityRow({
     <div className="mb-1 grid grid-cols-3 gap-2">
       <ProbabilityCell label={copy.labels.homeWin} value={insight.homeWinProbability} tone="text-cyan-400" />
       <ProbabilityCell label={copy.labels.draw} value={insight.drawProbability} tone="text-amber-400" />
-      <ProbabilityCell label={copy.labels.awayWin} value={insight.awayWinProbability} tone="text-magenta-300" />
+      <ProbabilityCell label={copy.labels.awayWin} value={insight.awayWinProbability} tone="text-magenta" />
     </div>
   );
 }
@@ -539,7 +539,7 @@ function HeatRow({
 }) {
   const heat = normalizeHeat(insight.heatMeter ?? 0);
   const heatTone =
-    heat >= 70 ? "bg-magenta-400" : heat >= 40 ? "bg-amber-400" : "bg-green-400";
+    heat >= 70 ? "bg-magenta" : heat >= 40 ? "bg-amber-400" : "bg-green-400";
 
   return (
     <div className="flex items-center gap-2">
@@ -611,7 +611,7 @@ function StandingsRow({
       <span className="text-slate-500">{copy.labels.rank}</span>
       <span className="font-semibold text-cyan-400">{formatStanding(home)}</span>
       <span className="text-slate-600">vs</span>
-      <span className="font-semibold text-magenta-300">{formatStanding(away)}</span>
+      <span className="font-semibold text-magenta">{formatStanding(away)}</span>
     </div>
   );
 }
@@ -630,7 +630,7 @@ function H2HRow({
       <span className="text-slate-600">-</span>
       <span className="font-semibold text-amber-400">{h2h.draws}</span>
       <span className="text-slate-600">-</span>
-      <span className="font-semibold text-magenta-300">{h2h.awayWins}</span>
+      <span className="font-semibold text-magenta">{h2h.awayWins}</span>
       {h2h.avgGoals > 0 ? (
         <span className="ml-1 text-slate-500">{`⚽ ${h2h.avgGoals.toFixed(1)}`}</span>
       ) : null}

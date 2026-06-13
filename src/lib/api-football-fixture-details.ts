@@ -8,6 +8,8 @@ type FixtureDetailsPayload = {
   statistics?: unknown[];
   playerStats?: unknown[];
   players?: unknown[];
+  team_statistics?: unknown;
+  team_squads?: unknown;
   data?: unknown;
 };
 
@@ -118,6 +120,8 @@ type RawFixtureDetail = {
   lineups?: unknown[];
   statistics?: unknown[];
   players?: unknown[];
+  team_statistics?: unknown;
+  team_squads?: unknown;
   hydrated_at?: string | null;
   headToHead?: {
     fixtures?: RawH2HEntry[] | null;
@@ -142,7 +146,12 @@ type RawTeam = {
 
 export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
   const emptyScore = { home: null as number | null, away: null as number | null };
-  const emptyScoreBreakdown = { halftime: emptyScore, extratime: emptyScore, penalty: emptyScore };
+  const emptyScoreBreakdown = {
+    halftime: emptyScore,
+    fulltime: emptyScore,
+    extratime: emptyScore,
+    penalty: emptyScore,
+  };
 
   if (payload.fixture) {
     return {
@@ -152,6 +161,8 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       lineups: normalizeLineups(payload.lineups),
       statistics: payload.statistics ?? [],
       playerStats: payload.playerStats ?? payload.players ?? [],
+      teamStatistics: normalizeTeamStatistics(payload.team_statistics),
+      teamSquads: normalizeTeamSquads(payload.team_squads),
       headToHead: [],
       standings: null,
       scoreBreakdown: emptyScoreBreakdown,
@@ -169,6 +180,8 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       lineups: [],
       statistics: [],
       playerStats: [],
+      teamStatistics: null,
+      teamSquads: null,
       headToHead: [],
       standings: null,
       scoreBreakdown: emptyScoreBreakdown,
@@ -219,12 +232,18 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
     lineups: normalizeLineups(detail.lineups),
     statistics: detail.statistics ?? [],
     playerStats: detail.players ?? [],
+    teamStatistics: normalizeTeamStatistics(detail.team_statistics),
+    teamSquads: normalizeTeamSquads(detail.team_squads),
     headToHead: normalizeH2HFixtures(detail.headToHead?.fixtures),
     standings: normalizeFixtureStandings(detail.standings),
     scoreBreakdown: {
       halftime: {
         home: detail.score?.halftime?.home ?? null,
         away: detail.score?.halftime?.away ?? null,
+      },
+      fulltime: {
+        home: detail.score?.fulltime?.home ?? null,
+        away: detail.score?.fulltime?.away ?? null,
       },
       extratime: {
         home: detail.score?.extratime?.home ?? null,
@@ -236,6 +255,51 @@ export function normalizeFixtureDetailsPayload(payload: FixtureDetailsPayload) {
       },
     },
   };
+}
+
+function normalizeTeamStatistics(value: unknown) {
+  if (!isRecord(value)) return null;
+
+  const home = isRecord(value.home) ? value.home : null;
+  const away = isRecord(value.away) ? value.away : null;
+
+  return home || away ? { home, away } : null;
+}
+
+function normalizeTeamSquads(value: unknown) {
+  if (!isRecord(value)) return null;
+
+  const normalizeSquad = (squadValue: unknown) => {
+    if (!isRecord(squadValue)) return null;
+
+    const team = isRecord(squadValue.team) ? squadValue.team : {};
+    const players = Array.isArray(squadValue.players)
+      ? squadValue.players.filter(isRecord).map((player) => ({
+          id: toNumber(player.id) ?? 0,
+          name: toString(player.name) ?? "Unknown Player",
+          age: toNumber(player.age),
+          number: toNumber(player.number),
+          position: toString(player.position),
+          photo: toString(player.photo),
+        }))
+      : [];
+
+    return {
+      teamId: toNumber(squadValue.team_id),
+      hydratedAt: toString(squadValue.hydrated_at),
+      team: {
+        id: toNumber(team.id) ?? 0,
+        name: toString(team.name) ?? "Unknown Team",
+        logo: toString(team.logo),
+      },
+      players,
+    };
+  };
+
+  const home = normalizeSquad(value.home);
+  const away = normalizeSquad(value.away);
+
+  return home || away ? { home, away } : null;
 }
 
 export function isIgnorableFixtureSupplementError(error: unknown) {

@@ -980,7 +980,7 @@ function SimpleStatCard({
     gold: "text-amber-300 border-amber-400/15 bg-amber-400/6",
     red: "text-red-300 border-red-400/15 bg-red-400/6",
     blue: "text-cyan-300 border-cyan-400/15 bg-cyan-400/6",
-    magenta: "text-magenta-300 border-magenta-400/15 bg-magenta-400/6",
+    magenta: "text-magenta border-magenta/15 bg-magenta/6",
   } as const;
 
   return (
@@ -1129,7 +1129,7 @@ function RecentProfileOverview({
   details: LocalizedDetailCopy;
   tone: "cyan" | "magenta";
 }) {
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -1162,8 +1162,8 @@ function StrengthTeamRow({
   value: number;
   color: "cyan" | "magenta";
 }) {
-  const tone = color === "cyan" ? "bg-cyan-400" : "bg-magenta-400";
-  const textTone = color === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const tone = color === "cyan" ? "bg-cyan-400" : "bg-magenta";
+  const textTone = color === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <div>
@@ -1414,7 +1414,7 @@ function TeamFormCard({
   }
 
   const league = profile.league;
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
   const form = String(profile.form || league?.form || "")
     .split("")
     .filter((value): value is "W" | "D" | "L" => value === "W" || value === "D" || value === "L");
@@ -1496,12 +1496,12 @@ function GoalTimingCard({
     percentage: minuteMap?.[bucket]?.percentage ?? null,
   }));
   const maxTotal = Math.max(1, ...buckets.map((item) => item.total));
-  const barClass = color === "cyan" ? "bg-cyan-400" : "bg-magenta-400";
+  const barClass = color === "cyan" ? "bg-cyan-400" : "bg-magenta";
 
   return (
     <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
       <div className="mb-4 flex items-center gap-2">
-        <Goal size={15} className={color === "cyan" ? "text-cyan-300" : "text-magenta-300"} />
+        <Goal size={15} className={color === "cyan" ? "text-cyan-300" : "text-magenta"} />
         <h3 className="text-sm font-semibold text-white">{title}</h3>
       </div>
       <div className="flex h-44 items-end gap-2">
@@ -1595,7 +1595,7 @@ function InjuryTeamCard({
   const toneClasses =
     tone === "cyan"
       ? "border-cyan-400/15 bg-cyan-400/6 text-cyan-200"
-      : "border-magenta-400/15 bg-magenta-400/6 text-magenta-200";
+      : "border-magenta/15 bg-magenta/6 text-magenta";
 
   return (
     <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
@@ -1755,7 +1755,7 @@ function StandingColumn({
   details: LocalizedDetailCopy;
   tone: "cyan" | "magenta";
 }) {
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   if (!standing) {
     return (
@@ -1861,7 +1861,7 @@ function TeamStatsColumn({
   details: LocalizedDetailCopy;
   tone: "cyan" | "magenta";
 }) {
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   if (!stats) {
     return (
@@ -1912,7 +1912,7 @@ function H2HSummaryBoard({
   const segments = [
     { label: homeName, value: summary.homeWins, className: "bg-cyan-400" },
     { label: details.drawOption, value: summary.draws, className: "bg-amber-400" },
-    { label: awayName, value: summary.awayWins, className: "bg-magenta-400" },
+    { label: awayName, value: summary.awayWins, className: "bg-magenta" },
   ];
 
   return (
@@ -1949,7 +1949,7 @@ function H2HSummaryBoard({
           <p className="text-gray-500">{details.drawOption}</p>
         </div>
         <div>
-          <p className="font-mono text-lg font-black text-magenta-300">{summary.awayWins}</p>
+          <p className="font-mono text-lg font-black text-magenta">{summary.awayWins}</p>
           <p className="truncate text-gray-500">{awayName}</p>
         </div>
       </div>
@@ -1965,7 +1965,7 @@ function H2HSummaryBoard({
                   "flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-black",
                   upper === "H" && "bg-cyan-500/18 text-cyan-300",
                   upper === "D" && "bg-amber-500/18 text-amber-300",
-                  upper === "A" && "bg-magenta-500/18 text-magenta-300"
+                  upper === "A" && "bg-magenta/18 text-magenta"
                 )}
               >
                 {upper}
@@ -1991,7 +1991,7 @@ function SupplementalStatsCard({
   rows: Array<{ label: string; content: React.ReactNode[] | undefined }>;
   empty: string;
 }) {
-  const iconClass = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const iconClass = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
@@ -2060,7 +2060,7 @@ function TrendColumn({
     (profile?.league?.biggest as ExtendedBiggest | undefined);
   const streak = biggest?.streak;
   const goals = biggest?.goals;
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -2175,7 +2175,7 @@ function UnderOverSection({
   const goalsForUnderOver = profile?.goals?.for?.under_over ?? profile?.league?.goals?.for?.under_over;
   const goalsAgainstUnderOver =
     profile?.goals?.against?.under_over ?? profile?.league?.goals?.against?.under_over;
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
   const ranges = ["0.5", "1.5", "2.5", "3.5", "4.5"] as const;
 
   return (
@@ -2285,7 +2285,7 @@ function MinuteList({
   minuteMap: Record<string, { total?: number | null; percentage?: string | null }> | undefined;
   tone: "cyan" | "magenta";
 }) {
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
@@ -2316,7 +2316,7 @@ function CardsList({
   details: LocalizedDetailCopy;
   tone: "cyan" | "magenta";
 }) {
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
@@ -2369,7 +2369,7 @@ function DisciplineColumn({
   const cleanSheets = profile?.clean_sheet?.total ?? league?.clean_sheet?.total;
   const failedToScore = profile?.failed_to_score?.total ?? league?.failed_to_score?.total;
   const penalties = profile?.penalty ?? league?.penalty;
-  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta-300";
+  const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -2477,7 +2477,7 @@ function TagPill({
 }) {
   const classes = {
     cyan: "border-cyan-400/15 bg-cyan-400/8 text-cyan-200",
-    magenta: "border-magenta-400/15 bg-magenta-400/8 text-magenta-200",
+    magenta: "border-magenta/15 bg-magenta/8 text-magenta",
     neutral: "border-white/10 bg-white/6 text-gray-300",
   } as const;
 

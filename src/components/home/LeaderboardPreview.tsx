@@ -57,7 +57,7 @@ export function LeaderboardPreview() {
   useEffect(() => {
     let active = true;
 
-    getLeaderboard({ locale })
+    getLeaderboard("weekly", { locale })
       .then((response) => {
         if (!active) return;
         const users = response.entries
