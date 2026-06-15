@@ -237,29 +237,32 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
         </div>
 
         <div className="mt-4 grid gap-2">
-          {[
-            { id: "winner", label: copy.winner, team: selectedGroup.teams[0], icon: Trophy },
-            { id: "runner-up", label: copy.runnerUp, team: selectedGroup.teams[1], icon: Shield },
-            { id: "third", label: copy.third, team: selectedGroup.teams[2], icon: Shield },
-          ].map((item) => {
-            const Icon = item.icon;
+          {selectedGroup.teams.slice(0, 3).map((team, index) => {
+            const ranking = [
+              { id: "winner", label: copy.winner, icon: Trophy },
+              { id: "runner-up", label: copy.runnerUp, icon: Shield },
+              { id: "third", label: copy.third, icon: Shield },
+            ][index];
+            if (!ranking) return null;
+
+            const { id, label, icon: Icon } = ranking;
             return (
               <div
-                key={item.id}
+                key={id}
                 className="flex items-center justify-between rounded-lg border border-gray-800 bg-black/25 px-3 py-2"
               >
                 <span className="flex items-center gap-2 text-xs text-gray-400">
                   <Icon size={14} className="text-cyan-300" />
-                  {item.label}
+                  {label}
                 </span>
                 <TeamLink
-                  team={item.team}
+                  team={team}
                   locale={locale}
                   className="group/team font-mono text-xs font-bold text-white outline-none transition-colors hover:text-cyan-300 focus-visible:ring-2 focus-visible:ring-cyan-400/70"
                 >
                   <span className="inline-flex items-center gap-2">
-                    <TeamFlag team={item.team} flagAlt={copy.flagAlt} size="sm" />
-                    {item.team.code}
+                    <TeamFlag team={team} flagAlt={copy.flagAlt} size="sm" />
+                    {team.code}
                   </span>
                 </TeamLink>
               </div>

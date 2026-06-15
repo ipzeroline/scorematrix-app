@@ -459,14 +459,14 @@ export function PredictApi() {
           </div>
           <p className="text-sm text-gray-500">{t("prediction.checkBackLater")}</p>
         </div>
-        {!effectiveIsLoggedIn ? (
+        {/* {!effectiveIsLoggedIn ? (
           <Link href={`/${locale}/auth/login?next=${encodeURIComponent(pathname)}`}>
             <Button variant="outline" size="sm" className="self-start sm:self-auto">
               <LogIn size={14} />
               {t("prediction.signIn")}
             </Button>
           </Link>
-        ) : null}
+        ) : null} */}
         <Button
           variant="outline"
           size="sm"

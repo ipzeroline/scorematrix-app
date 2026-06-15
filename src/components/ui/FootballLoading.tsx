@@ -10,7 +10,7 @@ export function FootballLoading({ compact = false }: FootballLoadingProps) {
       className={
         compact
           ? "grid min-h-48 place-items-center"
-          : "grid min-h-[calc(100svh-12rem)] place-items-center"
+          : "grid min-h-[calc(100svh-12rem)] place-items-center [overflow-anchor:none]"
       }
     >
       <div className="flex flex-col items-center gap-5">

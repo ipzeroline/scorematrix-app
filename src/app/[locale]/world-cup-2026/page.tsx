@@ -6,7 +6,12 @@ import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/Badge";
 import { WorldCupGroupsBoard } from "@/components/world-cup/WorldCupGroupsBoard";
 import { LOCALE_CODES } from "@/i18n";
-import type { WorldCupGroup, WorldCupMatch, WorldCupTeam } from "@/data/world-cup-2026";
+import {
+  worldCupGroups,
+  type WorldCupGroup,
+  type WorldCupMatch,
+  type WorldCupTeam,
+} from "@/data/world-cup-2026";
 import {
   ApiFootballError,
   getApiFootballLeagueDetail,
@@ -160,13 +165,13 @@ async function getWorldCupGroups(): Promise<WorldCupGroup[]> {
       WORLD_CUP_SEASON
     );
 
-    if (standings.length === 0) return [];
+    if (standings.length === 0) return worldCupGroups;
 
     return buildGroupsFromLeagueDetail(standings, fixtures);
   } catch (error) {
     if (!(error instanceof ApiFootballError)) throw error;
     console.error("World Cup API error:", error.message);
-    return [];
+    return worldCupGroups;
   }
 }
 

@@ -110,7 +110,7 @@ Static data:
 - Page copy: `leaderboard-page-content.ts`, `ai-insight-page-content.ts`, `mission-page-content.ts`, `legal-documents.ts`, `legal-info-pages.ts`; League page copy lives in the `leagues` namespace of `src/messages/*.json`.
 - News JSON is date/locale based under `src/data/news/YYYY-MM-DD/{locale}.json`
 - World Cup data: `src/data/world-cup-2026.ts`
-- `src/app/[locale]/world-cup-2026/page.tsx` builds live World Cup groups from league detail data, preserves provider team IDs for links to localized team profiles, assigns collision-free team codes, and filters duplicate or invalid self-match fixtures before rendering.
+- `src/app/[locale]/world-cup-2026/page.tsx` builds live World Cup groups from league detail data, preserves provider team IDs for links to localized team profiles, assigns collision-free team codes, and filters duplicate or invalid self-match fixtures before rendering. When the soccer API fails or returns no standings, the page falls back to `src/data/world-cup-2026.ts` so the group board remains available.
 
 ## Football Backend Layer
 

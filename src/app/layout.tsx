@@ -69,6 +69,7 @@ export default async function RootLayout({
   return (
     <html
       lang={DEFAULT_LOCALE}
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${spaceGrotesk.variable} h-full`}
     >
       <body className="min-h-full bg-[#0a0a0f] text-[#e2e8f0] antialiased">
