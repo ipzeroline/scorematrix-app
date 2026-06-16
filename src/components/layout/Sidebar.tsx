@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -9,12 +9,11 @@ import {
   BarChart3,
   Brain,
   Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Crown,
   Coins,
   Gift,
   Home,
+  Mail,
+  LockKeyhole,
   Share2,
   Sparkles,
   Target,
@@ -22,28 +21,8 @@ import {
   Users,
   Zap,
 } from "lucide-react";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { cn } from "@/lib/utils";
-import {
-  getLeaderboard,
-  mapApiLeaderboardEntry,
-} from "@/lib/leaderboard-api";
-import {
-  DEFAULT_MISSIONS_RESPONSE,
-  getMissions,
-  mapApiMission,
-} from "@/lib/missions-api";
-import {
-  DEFAULT_REWARDS_RESPONSE,
-  getRewards,
-  mapApiReward,
-  type RewardViewItem,
-} from "@/lib/rewards-api";
-import { formatPoints } from "@/lib/currency";
 import { useUserStore } from "@/stores/user-store";
-import { MissionType } from "@/types/common";
-import type { LeaderboardEntry } from "@/types/leaderboard";
-import type { Mission } from "@/types/mission";
 
 const emptySubscribe = () => () => {};
 
@@ -61,36 +40,8 @@ const SIDEBAR_LINKS = [
   { href: "/stats", label: "stats", icon: BarChart3, authRequired: true },
   { href: "/affiliate", label: "affiliate", icon: Share2, authRequired: true },
   { href: "/leagues", label: "leagues", icon: Users, authRequired: true },
+  { href: "/legal/contact", label: "contactTeam", icon: Mail },
 ];
-
-const categoryColors: Record<string, "cyan" | "green" | "gold" | "purple" | "magenta"> = {
-  predict: "cyan",
-  streak: "gold",
-  accuracy: "green",
-  social: "purple",
-  daily_login: "magenta",
-};
-
-function getDefaultSidebarMissions() {
-  return [
-    ...(DEFAULT_MISSIONS_RESPONSE?.daily ?? []).map((mission) =>
-      mapApiMission(mission, MissionType.DAILY)
-    ),
-    ...(DEFAULT_MISSIONS_RESPONSE?.weekly ?? []).map((mission) =>
-      mapApiMission(mission, MissionType.WEEKLY)
-    ),
-    ...(DEFAULT_MISSIONS_RESPONSE?.special ?? []).map((mission) =>
-      mapApiMission(mission, MissionType.SPECIAL)
-    ),
-  ].slice(0, 4);
-}
-
-function getDefaultSidebarRewards() {
-  return (DEFAULT_REWARDS_RESPONSE?.data ?? [])
-    .map(mapApiReward)
-    .filter((reward) => reward.isActive)
-    .slice(0, 4);
-}
 
 interface SidebarProps {
   initialHasAuthSession?: boolean;
@@ -107,80 +58,7 @@ export function Sidebar({ initialHasAuthSession = false }: SidebarProps) {
   );
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const effectiveIsLoggedIn = initialHasAuthSession || (isMounted && isLoggedIn);
-  const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
-  const [missions, setMissions] = useState<Mission[]>(getDefaultSidebarMissions);
-  const [rewards, setRewards] = useState<RewardViewItem[]>(getDefaultSidebarRewards);
-  const visibleLinks = SIDEBAR_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
-
-  useEffect(() => {
-    if (!effectiveIsLoggedIn) return;
-
-    let active = true;
-
-    getLeaderboard("weekly", { locale })
-      .then((response) => {
-        if (!active) return;
-        const nextLeaders = (response?.entries ?? [])
-          .map(mapApiLeaderboardEntry)
-          .sort((a, b) => a.rank - b.rank)
-          .slice(0, 10);
-        setLeaders(nextLeaders);
-      })
-      .catch(() => {
-        if (active) setLeaders([]);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [effectiveIsLoggedIn, locale]);
-
-  useEffect(() => {
-    if (!effectiveIsLoggedIn) return;
-
-    let active = true;
-
-    getRewards({ locale })
-      .then((response) => {
-        if (!active) return;
-        const nextRewards = (response?.data ?? [])
-          .map(mapApiReward)
-          .filter((reward) => reward.isActive)
-          .slice(0, 4);
-        setRewards(nextRewards.length > 0 ? nextRewards : getDefaultSidebarRewards());
-      })
-      .catch(() => {
-        if (active) setRewards(getDefaultSidebarRewards());
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [effectiveIsLoggedIn, locale]);
-
-  useEffect(() => {
-    if (!effectiveIsLoggedIn) return;
-
-    let active = true;
-
-    getMissions({ locale })
-      .then((response) => {
-        if (!active) return;
-        const nextMissions = [
-          ...(response?.daily ?? []).map((mission) => mapApiMission(mission, MissionType.DAILY)),
-          ...(response?.weekly ?? []).map((mission) => mapApiMission(mission, MissionType.WEEKLY)),
-          ...(response?.special ?? []).map((mission) => mapApiMission(mission, MissionType.SPECIAL)),
-        ].slice(0, 4);
-        setMissions(nextMissions.length > 0 ? nextMissions : getDefaultSidebarMissions());
-      })
-      .catch(() => {
-        if (active) setMissions(getDefaultSidebarMissions());
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [effectiveIsLoggedIn, locale]);
+  const visibleLinks = SIDEBAR_LINKS;
 
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;
@@ -188,174 +66,118 @@ export function Sidebar({ initialHasAuthSession = false }: SidebarProps) {
   };
 
   return (
-    <aside className="hidden lg:flex min-h-[calc(100vh-3.5rem)] w-56 shrink-0 flex-col border-r border-gray-800/50 bg-[#0a0a0f] p-3 sticky top-14">
-      <nav className="flex flex-col gap-0.5">
+    <aside className="sticky top-14 hidden min-h-[calc(100vh-3.5rem)] w-56 shrink-0 flex-col border-r border-cyan-300/10 bg-[#0b0d14] p-3 lg:flex">
+      <nav className="flex flex-col gap-1">
         {visibleLinks.map((link) => {
           const Icon = link.icon;
-          const active = isActive(link.href);
+          const locked = Boolean(link.authRequired && !effectiveIsLoggedIn);
+          const active = !locked && isActive(link.href);
+          const accent = getSidebarAccent(link.label);
+          const href = locked
+            ? `/${locale}/auth/login?next=${encodeURIComponent(`/${locale}${link.href}`)}`
+            : `/${locale}${link.href}`;
           return (
             <Link
               key={link.href}
-              href={`/${locale}${link.href}`}
+              href={href}
+              aria-label={locked ? `${t(`nav.${link.label}`)} locked` : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                "group relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 text-sm font-bold transition-all duration-200",
                 active
-                  ? "text-cyan-400 bg-cyan-500/10 neon-cyan"
-                  : "text-gray-400 hover:text-white hover:bg-white/5",
+                  ? cn("border-cyan-300/25 bg-cyan-300/10 text-cyan-200 shadow-[0_0_22px_rgba(34,211,238,0.08)]", accent.active)
+                  : locked
+                    ? "border-white/5 text-gray-500 hover:border-amber-300/20 hover:bg-amber-300/[0.05] hover:text-amber-100"
+                    : "border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-white",
               )}
             >
-              <Icon size={18} />
-              {t(`nav.${link.label}`)}
+              {accent.highlight && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute inset-y-2 left-0 w-0.5 rounded-full opacity-70 transition-opacity group-hover:opacity-100",
+                    accent.bar
+                  )}
+                />
+              )}
+              <span
+                className={cn(
+                  "grid h-8 w-8 shrink-0 place-items-center rounded-lg border transition-colors",
+                  active
+                    ? accent.iconActive
+                    : locked
+                      ? "border-amber-300/15 bg-amber-300/[0.04] text-amber-200/70 group-hover:text-amber-100"
+                    : accent.highlight
+                      ? accent.icon
+                      : "border-transparent text-gray-400 group-hover:border-white/10 group-hover:bg-white/[0.04] group-hover:text-white"
+                )}
+              >
+                <Icon size={18} />
+              </span>
+              <span className="min-w-0 truncate">{t(`nav.${link.label}`)}</span>
+              {locked && (
+                <span className="ml-auto grid h-6 w-6 shrink-0 place-items-center rounded-full border border-amber-300/15 bg-amber-300/[0.06] text-amber-200/80 transition-colors group-hover:text-amber-100">
+                  <LockKeyhole size={12} aria-hidden="true" />
+                </span>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-3 space-y-2">
-        {effectiveIsLoggedIn && (
-          <Link
-            href={`/${locale}/leaderboard`}
-            className="group block rounded-xl border border-amber-300/20 bg-amber-300/8 p-2 transition-colors hover:border-amber-300/35 hover:bg-amber-300/12"
-          >
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs font-semibold text-amber-100">
-              <Trophy size={14} className="text-amber-300" aria-hidden="true" />
-              {t("nav.leaderboard")}
-            </span>
-            <ChevronRight
-              size={14}
-              className="text-amber-200/45 transition-transform group-hover:translate-x-0.5 group-hover:text-amber-200"
-              aria-hidden="true"
-            />
-          </div>
-          <div className="space-y-0.5">
-            {leaders.map((user) => (
-              <div
-                key={user.userId}
-                className="grid grid-cols-[18px_minmax(0,1fr)_34px_36px] items-center gap-1.5"
-              >
-                <span className="grid h-4 w-4 place-items-center rounded-full bg-amber-300/15 text-[8px] font-bold text-amber-200">
-                  {user.rank}
-                </span>
-                <span className="min-w-0 truncate text-[10px] text-gray-300">
-                  {user.username}
-                </span>
-                <span className="rounded bg-cyan-300/10 px-1 py-0.5 text-center text-[8px] font-semibold text-cyan-200">
-                  Lv.{user.level}
-                </span>
-                <span className="text-right text-[9px] font-mono font-semibold text-green-300">
-                  {formatPoints(user.points)}
-                </span>
-              </div>
-            ))}
-          </div>
-          </Link>
-        )}
-
-        {effectiveIsLoggedIn && (
-          <Link
-            href={`/${locale}/missions`}
-            className="group block rounded-xl border border-purple-300/20 bg-purple-300/8 p-2 transition-colors hover:border-purple-300/35 hover:bg-purple-300/12"
-          >
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs font-semibold text-purple-100">
-              <Zap size={14} className="text-purple-300" aria-hidden="true" />
-              {t("nav.missions")}
-            </span>
-            <span className="rounded-md border border-green-300/25 bg-green-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-green-200">
-              {missions.filter((mission) => mission.completed || mission.claimed).length}/{missions.length}
-            </span>
-          </div>
-
-          <div className="space-y-1.5">
-            {missions.map((mission) => {
-              const done = mission.completed || mission.claimed || mission.progress >= mission.target;
-              const reward = mission.rewardCredits && mission.rewardCredits > 0
-                ? `+${mission.rewardCredits} CR`
-                : `+${mission.rewardXP} XP`;
-              const color = categoryColors[mission.category] ?? "cyan";
-
-              return (
-                <div key={mission.id} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-1.5 text-[10px] font-medium text-gray-200">
-                      <CheckCircle2
-                        size={11}
-                        className={done ? "text-green-300" : "text-purple-300"}
-                        aria-hidden="true"
-                      />
-                      <span className="truncate">{mission.title}</span>
-                    </span>
-                    <span className="shrink-0 text-[9px] font-semibold text-cyan-200">
-                      {reward}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ProgressBar
-                      value={mission.progress}
-                      max={mission.target || 1}
-                      color={done ? "green" : color}
-                      size="sm"
-                      className="flex-1 min-w-0"
-                    />
-                    <span className="w-7 text-right text-[9px] font-mono text-gray-400">
-                      {mission.progress}/{mission.target}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          </Link>
-        )}
-
-        {isLoggedIn && (
-          <Link
-            href={`/${locale}/rewards`}
-            className="group block rounded-xl border border-pink-300/20 bg-pink-300/8 p-2 transition-colors hover:border-pink-300/35 hover:bg-pink-300/12"
-          >
-          <div className="mb-1.5 flex items-center justify-between">
-            <span className="flex items-center gap-2 text-xs font-semibold text-pink-100">
-              <Gift size={14} className="text-pink-300" aria-hidden="true" />
-              {t("nav.rewards")}
-            </span>
-            <span className="flex items-center gap-1 rounded-md border border-pink-300/20 bg-pink-300/10 px-1.5 py-0.5 text-[10px] font-semibold text-pink-100">
-              <Crown size={10} aria-hidden="true" />
-              {rewards.length}
-            </span>
-          </div>
-
-          <div className="space-y-1.5">
-            {rewards.map((reward) => (
-              <div key={reward.id} className="rounded-lg border border-white/10 bg-black/20 px-2 py-1.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="min-w-0 truncate text-[10px] font-medium text-white">
-                    {reward.name}
-                  </span>
-                  <span className="shrink-0 text-[9px] font-mono font-semibold text-pink-200">
-                    {formatPoints(reward.pointsCost)}
-                  </span>
-                </div>
-                <div className="mt-0.5 flex items-center justify-between gap-2">
-                  <span className="rounded bg-pink-300/10 px-1.5 py-0.5 text-[8px] font-semibold text-pink-100">
-                    {t(`rewards.${reward.category}`)}
-                  </span>
-                  <span className={cn(
-                    "text-[8px] font-mono",
-                    reward.stock <= 30 ? "text-red-300" : "text-gray-400",
-                  )}>
-                    stock {reward.stock}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-          </Link>
-        )}
-      </div>
-
       <div className="h-3 shrink-0" />
-
     </aside>
   );
+}
+
+function getSidebarAccent(label: string) {
+  switch (label) {
+    case "livescore":
+      return {
+        highlight: true,
+        active: "bg-lime-300/10 text-lime-100",
+        bar: "bg-lime-300 shadow-[0_0_12px_rgba(190,242,100,0.7)]",
+        icon: "border-lime-300/15 bg-lime-300/[0.06] text-lime-200",
+        iconActive: "border-lime-300/30 bg-lime-300/15 text-lime-100",
+      };
+    case "predict":
+      return {
+        highlight: true,
+        active: "bg-cyan-300/10 text-cyan-100",
+        bar: "bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.7)]",
+        icon: "border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200",
+        iconActive: "border-cyan-300/30 bg-cyan-300/15 text-cyan-100",
+      };
+    case "aiInsight":
+      return {
+        highlight: true,
+        active: "bg-purple-300/10 text-purple-100",
+        bar: "bg-purple-300 shadow-[0_0_12px_rgba(216,180,254,0.7)]",
+        icon: "border-purple-300/15 bg-purple-300/[0.06] text-purple-200",
+        iconActive: "border-purple-300/30 bg-purple-300/15 text-purple-100",
+      };
+    case "leaderboard":
+      return {
+        highlight: true,
+        active: "bg-amber-300/10 text-amber-100",
+        bar: "bg-amber-300 shadow-[0_0_12px_rgba(252,211,77,0.7)]",
+        icon: "border-amber-300/15 bg-amber-300/[0.06] text-amber-200",
+        iconActive: "border-amber-300/30 bg-amber-300/15 text-amber-100",
+      };
+    case "missions":
+      return {
+        highlight: true,
+        active: "bg-fuchsia-300/10 text-fuchsia-100",
+        bar: "bg-fuchsia-300 shadow-[0_0_12px_rgba(240,171,252,0.7)]",
+        icon: "border-fuchsia-300/15 bg-fuchsia-300/[0.06] text-fuchsia-200",
+        iconActive: "border-fuchsia-300/30 bg-fuchsia-300/15 text-fuchsia-100",
+      };
+    default:
+      return {
+        highlight: false,
+        active: "",
+        bar: "",
+        icon: "",
+        iconActive: "border-cyan-300/25 bg-cyan-300/10 text-cyan-100",
+      };
+  }
 }

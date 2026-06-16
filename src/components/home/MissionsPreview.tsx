@@ -77,10 +77,7 @@ export function MissionsPreview() {
           <span className="missions-preview-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-purple-400/35 bg-purple-500/10 text-purple-200">
             <Zap size={21} strokeWidth={2.35} aria-hidden="true" />
           </span>
-          <h3
-            className="truncate text-lg font-bold font-display text-white"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
+          <h3 className="truncate text-lg font-bold text-white">
             {t("gamification.dailyMissions")}
           </h3>
         </div>

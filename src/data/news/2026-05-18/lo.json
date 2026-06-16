@@ -23,7 +23,7 @@
     "title": "ສະຫຼຸບຂໍ້ມູນບານເຕະຈາກ API ປະຈຳມື້ນີ້",
     "summary": "ScoreMatrix ດຶງລາຍການແຂ່ງຂັນ 50 ລາຍການຈາກ API ມື້ນີ້ ຄອບຄຸມ Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia.",
     "content": "ລະບົບຂ່າວຂອງ ScoreMatrix ໃຊ້ຂໍ້ມູນ API ປະຈຳວັນເພື່ອຈັດລຳດັບປະເດັນບານເຕະທີ່ຄວນຕິດຕາມ. ມື້ນີ້ມີ 50 ລາຍການຈາກ Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia.\n\nຂໍ້ມູນເດັ່ນລວມເຖິງ London United vs Mersey City, North London FC vs East London Rovers, Real Catalonia vs Sevilla Sur ເພື່ອໃຫ້ AI Insights ແລະ Predictions ມີບໍລິບົດສົດໃໝ່.\n\nຂ່າວປະຈຳວັນຖືກບັນທຶກເປັນ JSON ແຍກຕາມພາສາ ເພື່ອໃຫ້ໂຫຼດໄວ ຄົ້ນຫາໄດ້ ແລະຮອງຮັບ SEO.",
-    "image": "/brand/scorematrix-logo.png",
+    "image": "/images/news/data-roundup.jpg",
     "author": "ScoreMatrix Data Desk",
     "category": "feature",
     "publishedAt": "2026-05-18T09:11:50.449Z",

@@ -22,6 +22,7 @@ export async function Footer() {
     { href: "/legal/privacy", label: t("legal.privacy") },
     { href: "/legal/reward-rules", label: t("legal.rewardRules") },
     { href: "/legal/legal-notice", label: t("legal.legalNotice") },
+    { href: "/legal/contact", label: t("nav.contactTeam") },
   ];
 
   return (

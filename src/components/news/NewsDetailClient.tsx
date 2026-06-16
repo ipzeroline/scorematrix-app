@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Clock, User, BarChart3, Lightbulb, Newspaper, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -147,6 +148,18 @@ export function NewsDetailClient({ article, locale }: Props) {
             </span>
             <span>{article.readTime} {copy.minRead}</span>
           </div>
+        </div>
+
+        <div className="relative mb-6 aspect-[16/9] overflow-hidden rounded-xl border border-white/10 bg-gray-950">
+          <Image
+            src={article.image}
+            alt={title}
+            fill
+            priority
+            sizes="(min-width: 768px) 768px, 100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />
         </div>
 
         {/* Content */}

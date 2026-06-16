@@ -10,7 +10,7 @@ Use this file as the first reference before opening many source files.
 
 ## Stack
 
-- Framework: Next.js `16.2.6`, App Router under `src/app`
+- Framework: Next.js `16.2.9`, App Router under `src/app`
 - React: `19.2.4`
 - Language: TypeScript, strict mode, alias `@/*` -> `src/*`
 - Styling: Tailwind CSS v4 via `@import "tailwindcss"` in `src/styles/globals.css`
@@ -20,7 +20,7 @@ Use this file as the first reference before opening many source files.
 - Package manager files: `package-lock.json` present, use npm unless user says otherwise
 - Scripts: `npm run dev`, `npm run build`, `npm run start` (`next start -p 7777`), `npm run lint`
 
-Note: AGENTS.md asks to read `node_modules/next/dist/docs/` before writing Next.js code, but `node_modules` is not installed in this workspace at index time.
+Note: AGENTS.md asks to read `node_modules/next/dist/docs/` before writing Next.js code. `node_modules` is installed in this workspace.
 
 ## Routing
 
@@ -43,7 +43,7 @@ Main pages:
 
 - `src/app/[locale]/page.tsx` dashboard/home
 - Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `credits`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
-- Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`
+- Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`, and `wallet/credit-history`
 - Detail routes include `predict/[matchId]` for legacy redirects, `predict/[matchId]/[homeTeamId]/[awayTeamId]` as the canonical predict URL, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
 - `src/app/[locale]/(member)/leagues/[id]/page.tsx` renders private-league details and standings from `GET /leagues/{id}` without exposing backend league, owner, or member IDs.
 - Non-locale team detail URLs at `/football/teams/{teamId}` redirect to the default locale route `/{defaultLocale}/football/teams/{teamId}` while preserving query parameters.
@@ -64,9 +64,9 @@ API routes:
 - `src/app/api/football/teams/route.ts`: proxies favorite-team options from soccer backend `GET /teams`
 - `src/app/api/football/teams/[id]/squad/route.ts`: proxies team squad players from soccer backend `GET /teams/{team_id}/squad`
 - `src/app/api/football/players/[id]/route.ts`: proxies football player profiles from soccer backend `GET /players/{id}`
-- `src/app/api/football/media/[...path]/route.ts`: proxies football media
-- `src/app/api/football/flags/[...path]/route.ts`: proxies flags
-- `src/app/api/news/regenerate/route.ts`: regenerates today news JSON
+- `src/app/api/football/media/[...path]/route.ts`: proxies API-Sports football media from allowlisted roots and returns cacheable image responses
+- `src/app/api/football/flags/[...path]/route.ts`: proxies allowlisted flagcdn PNG paths and returns cacheable image responses
+- `src/app/api/news/regenerate/route.ts`: regenerates today news JSON only when `Authorization: Bearer {NEWS_REGENERATION_SECRET|CRON_SECRET}` or `x-cron-secret` matches the configured secret
 
 ## Config
 
@@ -78,12 +78,15 @@ API routes:
   - Uses `next-intl/plugin` with `./src/i18n/request.ts`
   - Disables `poweredByHeader`
   - Disables Next.js image optimization caching and allows remote images from `https://media.api-sports.io`
-  - Disables generated ETags and adds project-wide no-cache headers plus basic security headers
+  - Disables generated ETags
+  - Adds security headers globally: DNS prefetch, nosniff, strict referrer policy, HSTS, frame denial, restricted permissions policy, and cross-origin opener policy
+  - Applies no-store headers to dynamic app/API data routes while leaving public/static/media assets cacheable
 - `src/app/layout.tsx` forces dynamic rendering, `force-no-store` fetch behavior, and zero revalidation for every App Router page.
 - `src/app/layout.tsx`
   - Imports `src/styles/globals.css`
-  - Uses `Inter` and `Space_Grotesk` from `next/font/google`
+  - Uses `Inter` from `next/font/google`, plus custom `@font-face` `AuraSans` (Noto Sans Thai subset) as the primary font for all languages
   - Defines base metadata and JSON-LD website schema
+- `src/lib/json-ld.ts` provides `serializeJsonLd()` for structured-data scripts so `<` is escaped before insertion through `dangerouslySetInnerHTML`.
 - `src/app/globals.css` exists but is not imported by the active root layout
 
 ## i18n
@@ -109,8 +112,18 @@ Static data:
 - Product/game loops: `predictions.ts`, `missions.ts`, `achievements.ts`, `rewards.ts`, `redemptions.ts`, `private-leagues.ts`
 - Page copy: `leaderboard-page-content.ts`, `ai-insight-page-content.ts`, `mission-page-content.ts`, `legal-documents.ts`, `legal-info-pages.ts`; League page copy lives in the `leagues` namespace of `src/messages/*.json`.
 - News JSON is date/locale based under `src/data/news/YYYY-MM-DD/{locale}.json`
+- Homepage SEO copy, metadata text, keywords, and FAQ entries live in `src/data/home-seo-content.ts` and are used by `src/app/[locale]/page.tsx` for localized metadata and visible FAQ/structured data.
+- Livescore SEO copy, metadata text, keywords, and FAQ entries live in `src/data/livescore-seo-content.ts` and are used by `src/app/[locale]/livescore/page.tsx` for localized metadata, visible FAQ content, and live-event JSON-LD.
+- Matches SEO copy, metadata text, keywords, and FAQ entries live in `src/data/matches-seo-content.ts` and are used by `src/app/[locale]/matches/page.tsx` for localized metadata, visible FAQ content, and fixture-list JSON-LD.
+- AI Insight SEO copy, metadata text, keywords, and FAQ entries live in `src/data/ai-insight-seo-content.ts` and are used by `src/app/[locale]/ai-insight/page.tsx` for localized metadata, visible FAQ content, and insight-list JSON-LD.
+- Predict SEO copy, metadata text, keywords, and FAQ entries live in `src/data/predict-seo-content.ts` and are used by `src/app/[locale]/predict/page.tsx` for localized metadata, visible FAQ content, and prediction-flow JSON-LD.
+- Register SEO copy, metadata text, keywords, and FAQ entries live in `src/data/register-seo-content.ts` and are used by `src/app/[locale]/(public)/auth/register/page.tsx` for localized metadata, visible FAQ content, RegisterAction JSON-LD, and sitemap inclusion.
+- Login SEO copy, metadata text, keywords, and FAQ entries live in `src/data/login-seo-content.ts` and are used by `src/app/[locale]/(public)/auth/login/page.tsx` for localized metadata, visible FAQ content, LoginAction JSON-LD, and sitemap inclusion.
+- Team contact SEO/support copy lives in `src/data/team-contact-content.ts`; `src/app/[locale]/legal/contact/page.tsx` uses it for localized metadata, official support email `helloscorematrix@gmail.com`, visible FAQ content, ContactPage/Organization JSON-LD, and support-channel content.
 - World Cup data: `src/data/world-cup-2026.ts`
 - `src/app/[locale]/world-cup-2026/page.tsx` builds live World Cup groups from league detail data, preserves provider team IDs for links to localized team profiles, assigns collision-free team codes, and filters duplicate or invalid self-match fixtures before rendering. When the soccer API fails or returns no standings, the page falls back to `src/data/world-cup-2026.ts` so the group board remains available.
+- `src/components/home/WorldFootballFeature.tsx` displays live World Cup standings and matches of the day on the home page, with data server-fetched and passed down from `src/app/[locale]/page.tsx`.
+
 
 ## Football Backend Layer
 
@@ -128,21 +141,21 @@ Static data:
   - `loadUpcomingFixtures(limit?)` uses uncached `GET /fixtures/upcoming`
   - `pickRandomFixture`, `sortFixtures`
 - `src/app/[locale]/page.tsx` loads live highlights exclusively from uncached soccer root `GET /?status_group=live` with no mock fallback; the client live section refreshes every 45 seconds while the tab is visible, preserves the last good result, and distinguishes API errors from no live matches. The page also loads the "today matches" preview from uncached `GET /fixtures/today` sorted with the same `sortFixtures` order as `/matches`, and the highest-confidence homepage AI feature from uncached `GET /ai-insights` with live insights as fallback.
-- `src/app/[locale]/ai-insight/page.tsx` maps and deduplicates grouped `live`, `highConfidence`, and `upsetAlert` data from soccer backend `GET /ai-insights`; the list exposes `all`, `live`, `highConfidence`, and `upsetAlert` category filters with API-group counts and distinguishes empty results from API failures.
-- `src/app/[locale]/ai-insight/[matchId]/page.tsx` renders a full AI match dashboard from `GET /ai-insights/{fixtureId}` with a redesigned cyber detail layout: match hero, confidence ring, probability bars, strength signals, model comparison, API advice, community sentiment, form deep-dive, injury impact, lineup/trend cards, and optional head-to-head data when present in the payload. When the AI response omits fixture metadata, the loader hydrates it from `GET /fixtures/{fixtureId}`; only genuine backend 404 responses become a not-found page.
+- `src/app/[locale]/ai-insight/page.tsx` maps and deduplicates grouped `live`, `highConfidence`, and `upsetAlert` data from soccer backend `GET /ai-insights`; the list exposes `all`, `live`, `highConfidence`, and `upsetAlert` category filters with API-group counts and distinguishes empty results from API failures. The page also emits localized metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb JSON-LD, and a limited AI-insight ItemList from the loaded insights.
+- `src/app/[locale]/ai-insight/[matchId]/page.tsx` renders a full AI match dashboard from `GET /ai-insights/{fixtureId}` with a professional eSport-style match center: broadcast hero, large team panels, status/score board, confidence cards, probability map, model verdict, key factors, model comparison, community sentiment, form deep-dive, injury impact, lineup/trend cards, and optional head-to-head data when present in the payload. The detail route emits match-specific localized metadata, canonical/hreflang alternates, indexable robots directives, Open Graph/Twitter metadata, and WebPage/AnalysisNewsArticle/SportsEvent/Breadcrumb JSON-LD. When the AI response omits fixture metadata, the loader hydrates it from `GET /fixtures/{fixtureId}`; only genuine backend 404 responses become a not-found page.
 - AI insight detail hero reuses the shared `StatusBadge` with the fixture-detail status, matching the match-detail and other football pages.
-- `src/app/[locale]/predict/page.tsx` no longer preloads soccer upcoming fixtures on the server; `src/components/predict/PredictApi.tsx` now loads scorm backend `GET https://api.scorematrix.live/api/v1/scorm/predictable-matches?excludePredicted=false` on the client, omits `Authorization` for guests, includes bearer auth for logged-in users, renders a single upcoming-match list without prediction filter/history tabs, shows a sign-in prompt badge for guests, and always keeps the predict CTA visible for logged-in users.
+- `src/app/[locale]/predict/page.tsx` no longer preloads soccer upcoming fixtures on the server; `src/components/predict/PredictApi.tsx` now loads scorm backend `GET https://api.scorematrix.live/api/v1/scorm/predictable-matches?excludePredicted=false` on the client, omits `Authorization` for guests, includes bearer auth for logged-in users, renders a single upcoming-match list without prediction filter/history tabs, shows a sign-in prompt badge for guests, and always keeps the predict CTA visible for logged-in users. The public predict hub emits localized metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb JSON-LD, and HowTo JSON-LD; protected predict detail URLs remain disallowed in robots.
 - Predict detail pages load H2H fixtures through `GET /soccer/h2h/{teamA}/{teamB}` via `getApiFootballH2H`; the predict form displays those fixtures in the existing right-side context panel.
 - Predict detail form sends `pointsWagered` as the base wager multiplied by confidence (`safe` x1.0, `confident` x1.5, `bold` x2.0).
 - Successful prediction submission dispatches `MEMBER_WALLET_REFRESH_EVENT`; `Header` listens for it and reloads `GET /users/me` so navbar points/credits update.
-- `src/app/[locale]/livescore/page.tsx` dynamically uses uncached soccer root `GET /?status_group=live` through `getApiFootballLiveFixtures` for its initial fixture list with no limit and returns an explicit error state on failure instead of mock fixtures; the `Livescore` client view refreshes through `/api/football/fixtures/live` every 45 seconds while the tab is visible or when the user presses Sync, preserving the last good result on refresh failure.
+- `src/app/[locale]/livescore/page.tsx` dynamically uses uncached soccer root `GET /?status_group=live` through `getApiFootballLiveFixtures` for its initial fixture list with no limit and returns an explicit error state on failure instead of mock fixtures; the `Livescore` client view refreshes through `/api/football/fixtures/live` every 45 seconds while the tab is visible or when the user presses Sync, preserving the last good result on refresh failure. The page also emits localized metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb JSON-LD, and a limited live-event ItemList from the initially loaded fixtures.
 - `src/app/[locale]/livescore/match/[providerId]/page.tsx` reuses the live-score match detail view and loads detail data through `getApiFootballFixtureDetails(providerId)`, which calls soccer backend `GET /fixtures/{providerId}` and maps real API metadata such as referee, status long/extra time, periods, venue, lineups, events, team statistics, and player statistics.
 - Fixture-detail lineup normalization accepts incomplete payloads and `start_xi` aliases, and always supplies safe `team`, `coach`, `startXI`, and `substitutes` fields before match-detail rendering.
 - Fixture-detail normalization also reads the soccer backend's `team_statistics` and `team_squads` supplements; match-detail routes render these as separate season-statistics and squad-roster panels when fixture-level `statistics` or `lineups` are unavailable.
 - `src/app/[locale]/matches/detail/[id]/page.tsx` reuses the same live-score match detail view; `src/components/matches/MatchesApi.tsx` links match rows/cards to `/{locale}/matches/detail/{apiFixtureId}` when a provider id exists.
 - Match detail renders score data without fallback: the current score comes only from API `goals`, period scores come only from API `score.halftime`, `score.fulltime`, `score.extratime`, and `score.penalty`, and a score is shown only when both home and away values are present.
 - `src/app/[locale]/match/[providerId]/page.tsx` is a legacy provider-id detail route that reuses the same view
-- `src/app/[locale]/matches/page.tsx` loads the selected Bangkok-local date through soccer root `GET /` with `limit=500`; `MatchesApi` keeps the date, league, and effective status-group filters in the URL, uses backend whole-day counts, and treats stale NS/TBD plus AWD/WO according to the fixture API status-group contract. When the selected date is today and live matches exist, the client refreshes `/api/football/fixtures` every 45 seconds while the browser tab is visible.
+- `src/app/[locale]/matches/page.tsx` loads the selected Bangkok-local date through soccer root `GET /` with `limit=500`; `MatchesApi` keeps the date, league, and effective status-group filters in the URL, uses backend whole-day counts, and treats stale NS/TBD plus AWD/WO according to the fixture API status-group contract. When the selected date is today and live matches exist, the client refreshes `/api/football/fixtures` every 45 seconds while the browser tab is visible. The page also emits localized metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb JSON-LD, and a limited fixture ItemList from the selected date.
 - `src/app/[locale]/football/teams/[teamId]/page.tsx` renders the team profile from `GET /soccer/teams/{provider_id}` with venue details, optional season stats, league participation cards, and a position-grouped squad roster that links to player detail pages.
 - `src/app/[locale]/football/leagues/[leagueId]/page.tsx` now renders a redesigned league detail page from `GET /soccer/leagues/{provider_id}` with hero metadata, featured teams, embedded standings, and a season schedule panel
 - `src/lib/football-media.ts`: rewrites football media/flag URLs through local proxy routes
@@ -182,17 +195,18 @@ Local API modules:
 - `src/lib/checkins-api.ts`: typed wrapper for `GET /checkins/rewards` and `POST /checkins`; the homepage `DailyCheckIn` loads the daily reward schedule from the backend, submits check-ins before updating local streak/points, and shows backend error messages through toast and inline copy.
 - `src/lib/achievements-api.ts`: typed wrapper for `GET /achievements`; the `/missions` achievements tab maps unlocked and locked API achievements into the existing mission dashboard card grid.
 - `src/lib/credits-api.ts`: typed wrapper for `GET /credits/packages`; the `/credits` page uses it to load purchasable credit packages and first-purchase bonus data from the scorm API.
+- `src/lib/credit-purchases-api.ts`: typed wrapper for `GET /credits/purchases`; the `/wallet/credit-history` page lists credit purchase history with status filters, totals, payment method labels, and pagination.
 - `src/lib/events-api.ts`: typed wrapper for `GET /events`; the `/events` page maps API event fields into the existing event card grid, sorts active events first, surfaces `isRegistered` state in cards, and `/events/[eventId]` now renders a redesigned API-backed detail view with server-fetched title/description/timing/fees plus a client registration panel that honors `isRegistered`, points, and credits.
 - `src/lib/leaderboard-api.ts`: typed wrapper for authenticated `GET /leaderboard?period=daily|weekly|seasonal`; the `/leaderboard` page reloads ranking data when its period tab changes, while the homepage leaderboard preview and desktop sidebar card load weekly rankings, with no mock fallback.
 - `src/lib/missions-api.ts`: typed wrapper for `GET /missions` and `POST /missions/:id/claim`; the `/missions` page maps `daily`, `weekly`, and `special` API missions into the existing mission card UI and supports interactive reward claims with Zustand sync.
 - `src/lib/leagues-api.ts`: typed wrappers for `GET /leagues`, `GET /leagues/:id`, `POST /leagues`, and `POST /leagues/:id/join`; entry-fee aliases are normalized, full leagues cannot be joined, league lists avoid exposing backend user IDs, and private invite codes render only when the detail response confirms the viewer is the owner.
 - `src/lib/referrals-api.ts`: typed wrapper for `GET /referrals`; the `/affiliate` page maps referral code, totals, share URL, referral rows, and reward tiers into the existing affiliate dashboard UI. Invite links are normalized client-side to the current origin and locale register route `/{locale}/auth/register?ref=...`.
-- `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards`, `GET /rewards/{id}`, and `POST /rewards/:id/redeem`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend and handles point spending, and the desktop sidebar rewards card loads active reward highlights from the same catalogue endpoint.
+- `src/lib/rewards-api.ts`: typed wrapper for `GET /rewards`, `GET /rewards/{id}`, and `POST /rewards/:id/redeem`; the `/rewards` page maps API reward catalogue items into the existing tabs/card grid UI, `/rewards/[rewardId]` loads the selected reward detail from the backend and handles point spending, and the homepage tabbed widget loads active reward highlights from the same catalogue endpoint.
 - `src/lib/stats-api.ts`: typed wrapper for `GET /stats/accuracy`; the `/stats` dashboard maps API `overall`, `trend`, and `leagueBreakdown` data into the existing summary cards and charts.
 - `src/lib/soccer-api.ts`: typed client wrapper for local `/api/football/teams`, which proxies soccer backend `GET /teams`; the local route returns normalized `teams` groups for favorite-team selection while preserving the backend `data` payload.
 - `src/components/auth/FavoriteTeamSelect.tsx`: grouped team selector for registration, grouped by league and showing league/team logos.
-- `src/app/[locale]/(public)/auth/register/page.tsx`: submits through same-origin `POST /api/auth/register`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, and the page loads favorite teams from `GET /teams`.
-- `src/app/[locale]/(public)/auth/login/page.tsx`: submits through same-origin `POST /api/auth/login`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, then the page updates `useUserStore` and redirects to locale home or `next` target.
+- `src/app/[locale]/(public)/auth/register/page.tsx`: server wrapper for the register route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/RegisterAction JSON-LD, and renders `RegisterClient`. `RegisterClient` submits through same-origin `POST /api/auth/register`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, and the client loads favorite teams from `GET /teams`.
+- `src/app/[locale]/(public)/auth/login/page.tsx`: server wrapper for the login route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/LoginAction JSON-LD, and renders `LoginClient`. `LoginClient` submits through same-origin `POST /api/auth/login`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, then the client updates `useUserStore` and redirects to locale home or `next` target.
 - `src/components/layout/UserMenu.tsx`: profile dropdown logout calls same-origin `POST /api/auth/logout`, which forwards backend logout and clears the HttpOnly refresh session; the client then clears its access token/user store and redirects to locale home.
 - `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login after a 3-second delay with `next` set to the current URL.
 - `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
@@ -200,6 +214,9 @@ Local API modules:
 - `src/app/[locale]/(member)/profile/edit/page.tsx`: loads `GET /member/profile`, validates editable API fields, and submits `POST /member/update-profile`.
 - `src/app/[locale]/(public)/auth/forgot-password/page.tsx`: validates email and submits `POST /auth/forgot-password`; success copy follows the API's anti-enumeration behavior.
 - `src/proxy.ts`: redirects unauthenticated access to protected member routes to `/{locale}/auth/login?next=...` only when both access and refresh token cookies are missing.
+- `src/components/layout/Header.tsx`, `Sidebar.tsx`, and `Footer.tsx` expose a localized public "contact team" link to `/{locale}/legal/contact`.
+- `src/app/sitemap.ts` includes only public indexable locale routes plus public login/register pages and news articles; protected member routes are intentionally omitted because unauthenticated users are redirected to login.
+- `src/app/robots.ts` disallows forgot-password, protected member areas, API routes, and protected predict detail URLs while allowing public pages such as home, login, register, contact, livescore, matches, predict index, AI insight index, credits, football league pages, legal pages, news, and World Cup pages.
 
 ## News
 
@@ -278,7 +295,7 @@ Validate:
 
 ## Known Caveats
 
-- `node_modules` is absent at index time, so local Next.js bundled docs could not be read.
+- Local Next.js bundled docs are available under `node_modules/next/dist/docs/`; read the relevant guide before changing App Router, metadata, route handlers, proxy, caching, or config.
 - `README.md` is still mostly the create-next-app default.
 - `package.json` name is `deepseek-app`, while the product is ScoreMatrix.
 - `src/app/globals.css` appears unused; active styles come from `src/styles/globals.css`.

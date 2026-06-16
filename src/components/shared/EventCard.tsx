@@ -5,7 +5,15 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
-import { Trophy, Globe, Star, Calendar, Users, Clock } from 'lucide-react';
+import {
+  Calendar,
+  ChevronRight,
+  Clock,
+  Globe,
+  Star,
+  Trophy,
+  Users,
+} from 'lucide-react';
 import type { SpecialEvent } from '@/types/event';
 
 const TOURNAMENT_ICONS: Record<string, React.ReactNode> = {
@@ -35,36 +43,44 @@ export function EventCard({ event }: { event: SpecialEvent }) {
   const isRegistered = Boolean(event.isRegistered);
 
   return (
-    <Link href={`/${locale}/events/${event.id}`}>
-      <Card hover className={cn('p-5 h-full transition-all', isActive && 'ring-1 ring-green-500/20')}>
-        {/* Status + Tournament type */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+    <Link href={`/${locale}/events/${event.id}`} className="group">
+      <Card
+        hover
+        neon={isActive ? 'green' : 'cyan'}
+        className={cn(
+          'relative h-full overflow-hidden border-white/10 bg-[#0b111d] p-4 transition-all sm:p-5',
+          isActive && 'border-green-400/25 ring-1 ring-green-500/20'
+        )}
+      >
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-400/60 via-purple-400/50 to-amber-300/50" />
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-gray-400">
             {TOURNAMENT_ICONS[event.tournamentType] ?? <Calendar size={16} />}
             {t(`tournamentTypes.${event.tournamentType}`)}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
             {isRegistered && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-green-500/10 text-green-400 border-green-500/20">
+              <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-green-400">
                 {t('registeredStatus')}
               </span>
             )}
-            <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-bold border', STATUS_BADGE[event.status])}>
+            <span className={cn('rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider', STATUS_BADGE[event.status])}>
               {t(`statuses.${event.status}`)}
             </span>
           </div>
         </div>
 
-        {/* Name */}
-        <h3 className="text-sm font-bold text-white mb-2 line-clamp-2">{event.name}</h3>
+        <h3 className="mb-3 line-clamp-2 text-xl font-black leading-tight text-white">
+          {event.name}
+        </h3>
 
-        {/* Description */}
-        <p className="text-xs text-gray-400 mb-4 line-clamp-2 whitespace-pre-line">{event.description}</p>
+        <p className="mb-5 line-clamp-3 whitespace-pre-line text-sm leading-6 text-gray-400">
+          {event.description}
+        </p>
 
-        {/* Meta */}
-        <div className="space-y-1.5 text-[10px] text-gray-500">
-          <div className="flex items-center gap-1.5">
-            <Clock size={12} />
+        <div className="space-y-2.5 text-sm text-gray-400">
+          <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-black/20 px-3 py-2">
+            <Clock size={14} className="text-cyan-300" />
             <span>
               {event.status === 'upcoming'
                 ? daysUntilStart > 0
@@ -75,8 +91,8 @@ export function EventCard({ event }: { event: SpecialEvent }) {
                   : t('ended')}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Users size={12} />
+          <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-black/20 px-3 py-2">
+            <Users size={14} className="text-purple-300" />
             <span>
               {event.maxParticipants
                 ? t('participantLimit', {
@@ -86,19 +102,19 @@ export function EventCard({ event }: { event: SpecialEvent }) {
                 : t('participantCount', { count: event.participantCount.toLocaleString() })}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Trophy size={12} />
+          <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-black/20 px-3 py-2">
+            <Trophy size={14} className="text-amber-300" />
             <span>{t('rewardTierCount', { count: event.rewards.length })}</span>
           </div>
         </div>
 
-        {/* Entry fee */}
-        <div className="mt-4 pt-3 border-t border-gray-800/50 flex items-center justify-between">
-          <span className={cn('text-xs font-bold', isFree ? 'text-green-400' : 'text-amber-400')}>
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-gray-800/70 pt-4">
+          <span className={cn('text-sm font-black', isFree ? 'text-green-400' : 'text-amber-400')}>
             {formatEntryFee(event, t)}
           </span>
-          <span className="text-[10px] text-cyan-400 font-medium">
+          <span className="inline-flex min-h-9 items-center gap-1 rounded-xl bg-cyan-500 px-3 text-xs font-black text-black transition-colors group-hover:bg-cyan-400">
             {isRegistered ? t('registeredStatus') : isActive ? t('viewEvent') : t('details')}
+            <ChevronRight size={14} />
           </span>
         </div>
       </Card>

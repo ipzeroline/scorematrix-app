@@ -1,7 +1,5 @@
 import { BarChart3, BrainCircuit, Goal, Swords } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import type { ProgressBarColor } from "@/components/ui/ProgressBar";
 import type { ApiFootballAIInsightDetail, ApiFootballFixture } from "@/lib/api-football";
 import { cn } from "@/lib/utils";
 import {
@@ -14,7 +12,6 @@ import {
   formatDecimal,
   formatMultiplier,
   formatScorePrediction,
-  formatProbabilitySource,
   formatHeadToHeadFulltime,
   formatVenue,
   clampPercent,
@@ -92,7 +89,7 @@ function ModelStrengthCard({
         : insight.favoriteTeam;
 
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={BrainCircuit}
         title={details.modelDiagnostics}
@@ -104,7 +101,7 @@ function ModelStrengthCard({
         <PredictionInfo label={details.strengthGap} value={formatNullableNumber(insight.strengthGap)} />
         <PredictionInfo label={details.homeAdvantage} value={formatMultiplier(insight.homeAdvantageFactor)} />
       </div>
-      <div className="mt-5 space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+      <div className="mt-5 space-y-4 rounded-xl border border-border bg-bg/50 p-4">
         <StrengthTeamRow
           label={`${fixture.home.name} · ${details.homeStrength}`}
           value={clampPercent(insight.homeStrength ?? 0)}
@@ -130,7 +127,7 @@ export function ApiPredictionCard({
   locale: string;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(14,20,34,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={BrainCircuit}
         title={details.apiAdvice}
@@ -138,8 +135,8 @@ export function ApiPredictionCard({
         accent="gold"
       />
       <div className="mt-4 space-y-4">
-        <div className="rounded-2xl border border-amber-400/15 bg-amber-400/8 p-4">
-          <p className="text-sm leading-6 text-amber-50/90">
+        <div className="rounded-xl border border-warning/20 bg-warning/10 p-4">
+          <p className="text-sm leading-6 text-text-secondary">
             {insight.apiAdvice || details.noPrediction}
           </p>
         </div>
@@ -154,7 +151,7 @@ export function ApiPredictionCard({
             <PredictionInfo label={details.overUnder} value={insight.apiUnderOver} />
           ) : null}
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <div className="rounded-xl border border-border bg-elevated/40 p-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.28em] text-gray-500">{details.likelyScore}</p>
             <Goal size={14} className="text-cyan-300" />
@@ -189,7 +186,7 @@ function HeadToHeadCard({
   const hasSummary = !!summary && summary.totalMatches > 0;
 
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={Swords}
         title={details.headToHead}
@@ -211,7 +208,7 @@ function HeadToHeadCard({
           history.map((match) => (
             <div
               key={match.fixtureId}
-              className="rounded-2xl border border-white/10 bg-white/5 p-4"
+              className="rounded-xl border border-border bg-elevated/40 p-4"
             >
               <div className="flex items-center justify-between gap-3 text-xs text-gray-500">
                 <span>{formatDateTime(match.date, locale)}</span>
@@ -281,7 +278,7 @@ function H2HSummaryBoard({
   ];
 
   return (
-    <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+    <div className="mt-4 rounded-xl border border-border bg-bg/50 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
         <span className="uppercase tracking-[0.24em] text-gray-500">{details.h2hSummaryTitle}</span>
         <div className="flex items-center gap-3 text-gray-400">
@@ -294,7 +291,7 @@ function H2HSummaryBoard({
         </div>
       </div>
 
-      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-white/8">
+      <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-border">
         {segments.map((segment) => (
           <div
             key={segment.label}
@@ -328,9 +325,9 @@ function H2HSummaryBoard({
                 key={`h2h-form-${index}`}
                 className={cn(
                   "flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-black",
-                  upper === "H" && "bg-cyan-500/18 text-cyan-300",
-                  upper === "D" && "bg-amber-500/18 text-amber-300",
-                  upper === "A" && "bg-magenta/18 text-magenta"
+                  upper === "H" && "bg-primary/10 text-primary border border-primary/20",
+                  upper === "D" && "bg-warning/10 text-warning border border-warning/20",
+                  upper === "A" && "bg-magenta/10 text-magenta border border-magenta/20"
                 )}
               >
                 {upper}
@@ -359,7 +356,7 @@ function ComparisonPanel({
   const rows = Object.entries(comparison);
 
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={BarChart3}
         title={details.sourceComparison}
@@ -371,7 +368,7 @@ function ComparisonPanel({
           <EmptyState label={details.noComparison} />
         ) : (
           rows.map(([key, value]) => (
-            <div key={key} className="rounded-2xl border border-white/10 bg-white/4 p-4">
+            <div key={key} className="rounded-xl border border-border bg-elevated/40 p-4">
               <div className="mb-3 flex items-center justify-between gap-3 text-sm">
                 <span className="font-medium text-white">{labels[key] ?? key}</span>
                 <span className="font-mono text-gray-400">

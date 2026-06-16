@@ -410,7 +410,7 @@ function dailyRoundupArticle(fixtures: ApiFootballFixture[]): GeneratedArticle {
         ].join("\n\n"),
       },
     ),
-    image: "/brand/scorematrix-logo.png",
+    image: "/images/news/data-roundup.jpg",
     author: "ScoreMatrix Data Desk",
     category: "feature",
     publishedAt: new Date().toISOString(),

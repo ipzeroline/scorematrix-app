@@ -25,7 +25,7 @@
     "title": "ယနေ့ Football API အချက်အလက် စုစည်းချက်",
     "summary": "ScoreMatrix သည် ယနေ့ API feed မှ Baiano - 2, Regionalliga - Mitte, USL League Two, FAI Cup အတွင်း ပွဲစဉ် 18 ခုကို ဆွဲယူထားသည်။",
     "content": "ScoreMatrix သတင်းစနစ်သည် နေ့စဉ် API feed ကို အသုံးပြုပြီး စောင့်ကြည့်သင့်သည့် ဘောလုံးအကြောင်းအရာများကို ဦးစားပေးစီစဉ်သည်။ ယနေ့ feed တွင် Baiano - 2, Regionalliga - Mitte, USL League Two, FAI Cup မှ ပွဲစဉ် 18 ခု ပါဝင်သည်။\n\nအဓိကဒေတာအချက်များမှာ SSA vs Grapiuna Itabuna, LASK Juniors vs Wolfsberger AC II, Fort Worth Vaqueros vs Lubbock Matadors ဖြစ်ပြီး AI Insights နှင့် Predictions အတွက် လတ်ဆတ်သော ပတ်ဝန်းကျင်အချက်အလက် ပေးသည်။\n\nနေ့စဉ်ဆောင်းပါးများကို ဘာသာစကားအလိုက် JSON အဖြစ် သိမ်းထားသောကြောင့် သတင်းစာမျက်နှာများ မြန်ဆန်၊ ရှာဖွေနိုင်ပြီး locale တစ်ခုချင်းစီအတွက် SEO အဆင်သင့်ဖြစ်သည်။",
-    "image": "/brand/scorematrix-logo.png",
+    "image": "/images/news/data-roundup.jpg",
     "author": "ScoreMatrix Data Desk",
     "category": "feature",
     "publishedAt": "2026-05-17T01:15:40.126Z",

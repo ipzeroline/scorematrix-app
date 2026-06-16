@@ -52,7 +52,7 @@ function CommunityCard({
   if (!sentiment) return null;
 
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(11,17,32,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={Users}
         title={copy.labels.community}

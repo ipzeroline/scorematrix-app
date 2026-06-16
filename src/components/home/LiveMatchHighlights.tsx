@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { RefreshCw } from "lucide-react";
+import { Activity, ChevronRight, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -91,25 +91,28 @@ export function LiveMatchHighlights({
   return (
     <div className="flex flex-col gap-4">
       {/* Title row */}
-      <div className="cyber-live-header relative overflow-hidden rounded-xl border border-cyan-500/20 bg-[#070a10] px-4 py-3">
+      <div className="cyber-live-header relative overflow-hidden rounded-2xl border border-lime-300/25 bg-[#07100e] px-4 py-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.32)]">
         <div className="absolute inset-0 cyber-live-header-scan" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-green-300/70 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-lime-300 via-cyan-300 to-amber-300" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-lime-300/70 to-transparent" />
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="relative flex h-3 w-3 shrink-0">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70 animate-ping" />
-              <span className="relative inline-flex h-3 w-3 rounded-full bg-green-400 shadow-[0_0_16px_rgba(74,222,128,0.95)]" />
+            <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-lime-300/30 bg-lime-300/10 text-lime-200">
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_16px_rgba(190,242,100,0.95)] animate-ping" />
+              <Activity size={20} strokeWidth={2.4} aria-hidden="true" />
             </span>
-            <h2
-              className="font-display truncate whitespace-nowrap text-xl font-bold tracking-normal text-white text-glow-cyan"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
-              {t("dashboard.liveNow")}
-            </h2>
+            <div className="min-w-0">
+              <h2 className="truncate bg-gradient-to-r from-lime-200 via-cyan-100 to-white bg-clip-text text-xl font-black leading-tight text-transparent drop-shadow-[0_0_14px_rgba(190,242,100,0.28)]">
+                {t("dashboard.liveNow")}
+              </h2>
+              <p className="truncate text-xs font-semibold text-lime-100/70">
+                {t("matchDetail.liveAutoRefresh")}
+              </p>
+            </div>
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span className="whitespace-nowrap rounded-lg border border-green-400/30 bg-green-500/10 px-3 py-1 font-mono text-sm font-bold text-green-300 shadow-[0_0_18px_rgba(16,185,129,0.16)]">
+            <span className="whitespace-nowrap rounded-xl border border-lime-300/30 bg-lime-300/10 px-3 py-1.5 text-sm font-black text-lime-200 shadow-[0_0_18px_rgba(16,185,129,0.16)]">
               {t("dashboard.matchCount", { count: displayMatches.length })}
             </span>
             <Button
@@ -140,65 +143,78 @@ export function LiveMatchHighlights({
       )}
 
       {displayMatches.length === 0 && !hasError ? (
-        <Card className="border-gray-800/80 p-5 text-sm text-gray-400">
+        <Card className="rounded-2xl border-lime-300/15 bg-[#0b111d] p-5 text-sm font-semibold text-gray-400">
           {t("livescore.noMatches")}
         </Card>
       ) : displayMatches.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="overflow-hidden rounded-2xl border border-lime-300/20 bg-[#080d16] shadow-[0_18px_55px_rgba(0,0,0,0.32)]">
           {displayMatches.map((match) => (
             <Link
               key={match.id}
               href={`/${locale}/livescore/match/${match.id}`}
+              className="group block border-b border-white/10 px-3.5 py-3 transition-all duration-150 last:border-b-0 hover:bg-lime-300/[0.06] sm:px-4"
             >
-              <Card neon="green" hover className="cyber-live-card relative overflow-hidden border-green-400/45 bg-[#07140f]">
-                  <div className="cyber-live-card-scan absolute inset-0" />
-                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-green-300 via-cyan-300 to-green-300" />
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-24 w-24 rounded-full bg-green-400/15 blur-2xl" />
-
-                  <div className="relative">
-                    {/* League badge */}
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="flex min-w-0 items-center gap-1.5 text-[10px] uppercase tracking-wider text-green-200/80">
-                        <ApiLeagueLogo
-                          name={match.league}
-                          logo={match.leagueLogo}
-                          size="xs"
-                        />
-                        <span className="truncate">{match.league}</span>
-                      </span>
-                      <StatusBadge status={match.status} />
-                    </div>
-
-                    {/* Teams and score */}
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                        <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="sm" />
-                        <span className="text-sm text-white text-center truncate w-full">
-                          {match.homeTeam}
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-2xl font-bold font-mono text-white text-glow-cyan">
-                          {match.homeScore} - {match.awayScore}
-                        </span>
-                        <span className="rounded-full border border-green-300/40 bg-green-400/15 px-2 py-0.5 text-xs font-bold text-green-200 font-mono">
-                          {match.minute}&apos;
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                        <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="sm" />
-                        <span className="text-sm text-white text-center truncate w-full">
-                          {match.awayTeam}
-                        </span>
-                      </div>
-                    </div>
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                {/* Left: Live Indicator & League */}
+                <div className="flex items-center gap-2 sm:gap-3 w-[55px] sm:w-1/4 shrink-0 min-w-0">
+                  {/* Live Indicator (green blinking dot + minute) */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                    </span>
+                    <span className="text-xs font-black text-lime-300 animate-pulse">
+                      {match.minute}&apos;
+                    </span>
                   </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                  <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+                    <ApiLeagueLogo name={match.league} logo={match.leagueLogo} size="xs" />
+                    <span className="max-w-[120px] truncate text-xs font-semibold text-gray-400">
+                      {match.league}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Center: Teams and Live Score */}
+                <div className="flex items-center justify-center gap-2 sm:gap-3 flex-1 min-w-0 px-1">
+                  {/* Home team */}
+                  <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-right">
+                    <span className="truncate text-xs font-bold text-gray-200 transition-colors group-hover:text-white sm:text-sm">
+                      {match.homeTeam}
+                    </span>
+                    <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="xs" />
+                  </div>
+
+                  {/* Live Score Box */}
+                  <div className="shrink-0 min-w-[58px] sm:min-w-[70px] text-center">
+                    <span className="inline-block rounded-lg border border-lime-300/30 bg-lime-300/10 px-2 py-1 text-xs font-black text-lime-200 shadow-[0_0_12px_rgba(16,185,129,0.1)] transition-colors group-hover:border-lime-300/50 sm:px-3 sm:text-sm">
+                      {match.homeScore} - {match.awayScore}
+                    </span>
+                  </div>
+
+                  {/* Away team */}
+                  <div className="flex items-center justify-start gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-left">
+                    <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="xs" />
+                    <span className="truncate text-xs font-bold text-gray-200 transition-colors group-hover:text-white sm:text-sm">
+                      {match.awayTeam}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: Live Status and Chevron Link */}
+                <div className="flex items-center justify-end gap-2 sm:gap-3 w-[75px] sm:w-1/4 shrink-0 min-w-0">
+                  <StatusBadge
+                    status={match.status}
+                    className="text-[9px] sm:text-[10px] shrink-0 bg-green-500/15 text-green-300 border border-green-500/20"
+                  />
+                  <div className="hidden sm:flex h-6 w-6 items-center justify-center rounded border border-border bg-black/20 group-hover:border-green-500/30 group-hover:text-green-300 transition-colors">
+                    <ChevronRight size={12} className="text-gray-500 group-hover:text-green-300 transition-colors" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
       ) : null}
     </div>
   );

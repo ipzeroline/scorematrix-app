@@ -2,7 +2,6 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Radio } from "lucide-react";
 
 export function LiveMatchRefresher({
   label,

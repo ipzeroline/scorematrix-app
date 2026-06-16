@@ -15,7 +15,19 @@ import {
 } from "@/lib/auth-api";
 import { useUserStore } from "@/stores/user-store";
 import { useShallow } from "zustand/react/shallow";
-import { Target, Zap, Star, TrendingUp, BarChart3, Pencil } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  ChevronRight,
+  Crown,
+  Pencil,
+  ShieldCheck,
+  Star,
+  Target,
+  TrendingUp,
+  WalletCards,
+  Zap,
+} from "lucide-react";
 
 export default function ProfilePage() {
   const t = useTranslations("profile");
@@ -189,92 +201,246 @@ export default function ProfilePage() {
   }, [locale, t]);
 
   const profileUser = user;
-  const xpProgress = profileUser.xp - (profileUser.level - 1) * 1000;
+  const rawXpProgress = profileUser.xp - (profileUser.level - 1) * 1000;
   const xpTarget = 1000;
+  const xpProgress = Math.min(Math.max(rawXpProgress, 0), xpTarget);
+  const xpRemaining = Math.max(xpTarget - xpProgress, 0);
   const memberSince = profileMeta.createdAt
     ? formatMemberSince(profileMeta.createdAt, locale)
     : "Jan 2026";
 
   const stats = [
-    { label: t("predictions"), value: profileUser.totalPredictions.toString(), icon: Target, className: "text-cyan-400" },
-    { label: t("accuracy"), value: `${profileUser.accuracy}%`, icon: TrendingUp, className: "text-green-400" },
-    { label: t("bestStreak"), value: profileUser.bestStreak.toString(), icon: Zap, className: "text-amber-400" },
-    { label: t("achievements"), value: `${profileUser.achievementsUnlocked}/25`, icon: Star, className: "text-purple-400" },
+    { label: t("predictions"), value: profileUser.totalPredictions.toString(), icon: Target, tone: "text-cyan-300" },
+    { label: t("accuracy"), value: `${profileUser.accuracy}%`, icon: TrendingUp, tone: "text-green-300" },
+    { label: t("bestStreak"), value: profileUser.bestStreak.toString(), icon: Zap, tone: "text-amber-300" },
+    { label: t("achievements"), value: `${profileUser.achievementsUnlocked}/25`, icon: Star, tone: "text-purple-300" },
   ];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      {/* Profile Header */}
-      <Card className="flex flex-col sm:flex-row items-center gap-4 p-6">
-        <Avatar
-          src={profileMeta.avatarUrl}
-          fallback={profileUser.username.slice(0, 2).toUpperCase()}
-          size="xl"
-          className="ring-2 ring-cyan-500/30"
-        />
-        <div className="text-center sm:text-left flex-1">
-          <h1 className="text-xl font-bold font-display text-white">{profileUser.displayName}</h1>
-          <p className="text-xs text-gray-500">@{profileUser.username}</p>
-          <p className="text-sm text-gray-500">
-            {profileLoading
-              ? t("loadingProfile")
-              : t("memberSince", { date: memberSince })}
-          </p>
-          {profileError && (
-            <p className="mt-1 text-xs text-red-400">{profileError}</p>
-          )}
-          <div className="flex gap-2 mt-2 justify-center sm:justify-start">
-            <Badge variant="purple">{t("level", { level: profileUser.level })}</Badge>
-            <Badge variant="cyan">{profileUser.rank}</Badge>
+    <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-6 lg:p-7">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.13),transparent_34%),linear-gradient(315deg,rgba(168,85,247,0.13),transparent_30%),linear-gradient(rgba(148,163,184,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.045)_1px,transparent_1px)] bg-[auto,auto,34px_34px,34px_34px]" />
+        <div className="relative grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="flex min-h-[320px] flex-col justify-between rounded-2xl border border-white/10 bg-black/24 p-4 sm:p-5">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div className="relative mx-auto shrink-0 sm:mx-0">
+                <div className="absolute -inset-2 rounded-full bg-cyan-400/15 blur-xl" />
+                <Avatar
+                  src={profileMeta.avatarUrl}
+                  fallback={profileUser.username.slice(0, 2).toUpperCase()}
+                  size="xl"
+                  className="relative ring-2 ring-cyan-400/40"
+                />
+              </div>
+              <div className="min-w-0 flex-1 text-center sm:text-left">
+                <div className="mb-3 flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+                  <Badge variant="cyan" size="md" className="uppercase tracking-wider">
+                    {t("commandCenter")}
+                  </Badge>
+                  <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
+                    <ShieldCheck size={14} />
+                    {t("skillNotice")}
+                  </span>
+                </div>
+                <h1 className="font-display text-4xl font-black leading-tight text-white sm:text-5xl">
+                  {profileUser.displayName}
+                </h1>
+                <p className="mt-2 text-base font-bold text-cyan-200">
+                  @{profileUser.username}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-gray-400 sm:text-base">
+                  {profileLoading
+                    ? t("loadingProfile")
+                    : t("memberSince", { date: memberSince })}
+                </p>
+                {profileError && (
+                  <p className="mt-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+                    {profileError}
+                  </p>
+                )}
+                <div className="mt-4 flex flex-wrap justify-center gap-2 sm:justify-start">
+                  <Badge variant="purple" size="md">
+                    {t("level", { level: profileUser.level })}
+                  </Badge>
+                  <Badge variant="gold" size="md">
+                    <Crown size={13} className="mr-1" />
+                    {profileUser.rank}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href={`/${locale}/profile/edit`}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 text-base font-black text-black transition-colors hover:bg-cyan-400"
+              >
+                <Pencil size={18} />
+                {t("editProfile")}
+              </Link>
+              <Link
+                href={`/${locale}/stats`}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-4 text-base font-black text-cyan-200 transition-colors hover:border-cyan-300/50 hover:bg-cyan-500/15"
+              >
+                <BarChart3 size={18} />
+                {t("fullStats")}
+              </Link>
+            </div>
           </div>
+
+          <Card className="relative overflow-hidden border-purple-400/20 bg-[#0b111d] p-4 sm:p-5">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-400/80 via-purple-400/70 to-amber-300/70" />
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase tracking-wider text-cyan-300">
+                  {t("walletStatus")}
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-white">
+                  {t("profileOverview")}
+                </h2>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
+                <WalletCards size={22} />
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              <div className="rounded-2xl border border-gray-800 bg-black/24 p-4">
+                <p className="mb-3 text-sm font-bold text-gray-400">
+                  {t("availableBalance")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <PointsBadge type="free" amount={profileUser.freePoints} size="lg" showLabel />
+                  <PointsBadge type="premium" amount={profileUser.premiumCredits} size="lg" showLabel />
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-gray-800 bg-black/24 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-bold text-gray-400">
+                      {t("nextLevel")}
+                    </p>
+                    <h3 className="mt-1 text-xl font-black text-white">
+                      {t("level", { level: profileUser.level })}
+                    </h3>
+                  </div>
+                  <span className="font-mono text-sm font-black text-purple-300">
+                    {xpProgress.toLocaleString()} / {xpTarget.toLocaleString()} XP
+                  </span>
+                </div>
+                <ProgressBar value={xpProgress} max={xpTarget} color="purple" size="lg" />
+                <p className="mt-2 text-sm leading-6 text-gray-400">
+                  {t("xpToLevel", { xp: xpRemaining, level: profileUser.level + 1 })}
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
-        <div className="flex flex-col items-center gap-3 sm:items-end">
-          <div className="flex gap-2">
-            <PointsBadge type="free" amount={profileUser.freePoints} size="lg" showLabel />
-            <PointsBadge type="premium" amount={profileUser.premiumCredits} size="lg" showLabel />
+      </section>
+
+      <section className="space-y-3">
+        <SectionHeader
+          icon={Activity}
+          eyebrow={t("accountSignal")}
+          title={t("competitiveRecord")}
+          description={t("competitiveRecordHint")}
+        />
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <StatCard
+              key={stat.label}
+              icon={stat.icon}
+              label={stat.label}
+              value={stat.value}
+              tone={stat.tone}
+            />
+          ))}
+        </div>
+      </section>
+
+      <Card className="border-cyan-400/15 bg-[#0b111d] p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-cyan-300">
+              {t("myStats")}
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              {t("fullStats")}
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-gray-400">
+              {t("fullStatsHint")}
+            </p>
           </div>
           <Link
-            href={`/${locale}/profile/edit`}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-700 px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:border-cyan-500/50 hover:text-cyan-400"
+            href={`/${locale}/stats`}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 text-sm font-black text-black transition-colors hover:bg-cyan-400"
           >
-            <Pencil size={14} />
-            {t("editProfile")}
+            <BarChart3 size={16} />
+            {t("fullStats")}
+            <ChevronRight size={16} />
           </Link>
         </div>
       </Card>
+    </div>
+  );
+}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {stats.map((s) => (
-          <Card key={s.label} className="text-center p-4">
-            <s.icon size={20} className={`mx-auto mb-2 ${s.className}`} />
-            <div className="text-lg font-bold font-mono text-white">{s.value}</div>
-            <div className="text-[10px] text-gray-500">{s.label}</div>
-          </Card>
-        ))}
-      </div>
-
-      {/* XP Progress */}
-      <Card className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm font-semibold text-white">{t("level", { level: profileUser.level })}</h3>
-          <span className="text-xs text-purple-400 font-mono">{xpProgress.toLocaleString()} / {xpTarget.toLocaleString()} XP</span>
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: typeof Target;
+  label: string;
+  value: string;
+  tone: string;
+}) {
+  return (
+    <Card className="relative overflow-hidden border-white/10 bg-[#0b111d] p-4 sm:p-5">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-gray-400">{label}</p>
+          <p className="mt-2 font-mono text-3xl font-black leading-none text-white">
+            {value}
+          </p>
         </div>
-        <ProgressBar value={xpProgress} max={xpTarget} color="purple" size="md" />
-        <p className="text-[10px] text-gray-600 mt-1">
-          {t("xpToLevel", { xp: xpTarget - xpProgress, level: profileUser.level + 1 })}
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-black/28">
+          <Icon size={20} className={tone} />
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function SectionHeader({
+  icon: Icon,
+  eyebrow,
+  title,
+  description,
+}: {
+  icon: typeof Target;
+  eyebrow: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex gap-3 rounded-2xl border border-white/10 bg-[#080d17] p-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
+        <Icon size={20} />
+      </div>
+      <div>
+        <p className="text-xs font-black uppercase tracking-wider text-cyan-300">
+          {eyebrow}
         </p>
-      </Card>
-
-      {/* View Full Stats */}
-      <Link
-        href={`/${locale}/stats`}
-        className="flex items-center justify-center gap-2 w-full p-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 text-cyan-400 hover:bg-cyan-500/10 transition-colors text-sm font-medium"
-      >
-        <BarChart3 size={16} />
-        View Full Statistics
-      </Link>
-
+        <h2 className="mt-1 text-xl font-black text-white">{title}</h2>
+        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-400">
+          {description}
+        </p>
+      </div>
     </div>
   );
 }

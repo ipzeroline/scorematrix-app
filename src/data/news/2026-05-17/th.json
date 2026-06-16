@@ -25,7 +25,7 @@
     "title": "สรุปข้อมูลฟุตบอลจาก API ประจำวันนี้",
     "summary": "ScoreMatrix ดึงรายการแข่งขัน 18 รายการจาก API วันนี้ ครอบคลุม Baiano - 2, Regionalliga - Mitte, USL League Two, FAI Cup",
     "content": "ระบบข่าวของ ScoreMatrix ใช้ข้อมูล API ประจำวันเพื่อจัดลำดับประเด็นฟุตบอลที่ควรติดตาม โดยวันนี้มีรายการแข่งขัน 18 รายการจาก Baiano - 2, Regionalliga - Mitte, USL League Two, FAI Cup\n\nคู่ที่ถูกหยิบขึ้นมาเป็นแกนข้อมูลได้แก่ SSA vs Grapiuna Itabuna, LASK Juniors vs Wolfsberger AC II, Fort Worth Vaqueros vs Lubbock Matadors ซึ่งช่วยให้หน้า AI Insights และ Prediction มีบริบทสดใหม่สำหรับผู้ใช้\n\nข่าวประจำวันจะถูกบันทึกเป็น JSON แยกตามภาษา เพื่อให้หน้าเว็บโหลดเร็ว ค้นหาได้ และรองรับ SEO ของแต่ละ locale",
-    "image": "/brand/scorematrix-logo.png",
+    "image": "/images/news/data-roundup.jpg",
     "author": "ScoreMatrix Data Desk",
     "category": "feature",
     "publishedAt": "2026-05-17T01:15:40.126Z",

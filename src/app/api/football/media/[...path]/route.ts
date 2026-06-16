@@ -1,7 +1,8 @@
-import { NO_CACHE_HEADERS } from "@/lib/no-cache";
-
 const MEDIA_BASE_URL = "https://media.api-sports.io";
 const ALLOWED_MEDIA_ROOTS = new Set(["football", "flags"]);
+const MEDIA_CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800",
+} as const;
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ function isAllowedPath(path: string[]) {
 async function proxyImage(url: string) {
   const response = await fetch(url, {
     headers: { Accept: "image/*" },
-    cache: "no-store",
+    next: { revalidate: 86400 },
   });
 
   if (!response.ok || !response.body) {
@@ -36,7 +37,7 @@ async function proxyImage(url: string) {
     status: 200,
     headers: {
       "Content-Type": response.headers.get("content-type") ?? "application/octet-stream",
-      ...NO_CACHE_HEADERS,
+      ...MEDIA_CACHE_HEADERS,
     },
   });
 }

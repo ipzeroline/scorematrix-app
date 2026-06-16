@@ -322,6 +322,16 @@ export function PredictMatchForm({
   );
   const wrongPointsPreview = 0;
   const selectedFirstScorer = findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, firstScorerPlayerId);
+  const selectedConfidenceLabel =
+    confidenceOptions.find((option) => option.value === confidence)?.label ?? confidence;
+  const predictedOutcomeLabel =
+    homeScore === null || awayScore === null
+      ? "-"
+      : homeScore > awayScore
+        ? t("outcome.homeWin", { team: match.home.name })
+        : awayScore > homeScore
+          ? t("outcome.awayWin", { team: match.away.name })
+          : t("outcome.draw");
   
   const payload = {
     matchId: /^\d+$/.test(String(match.matchId)) ? Number(match.matchId) : match.matchId,
@@ -399,20 +409,20 @@ export function PredictMatchForm({
       <button
         type="button"
         onClick={handleBack}
-        className="inline-flex items-center gap-2 text-sm font-medium text-gray-400 transition-colors hover:text-cyan-300 cursor-pointer"
+        className="inline-flex items-center gap-2 text-base font-medium text-gray-400 transition-colors hover:text-cyan-300 cursor-pointer"
       >
         <ArrowLeft size={16} />
         {t("common.back")}
       </button>
 
       {/* Top Header Section */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-gray-800/40 pb-5">
+      <div className="flex flex-col gap-4 border-b border-gray-800/40 pb-5 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <Badge variant="cyan" size="md">
             {t("badge")}
           </Badge>
-          <h1 className="mt-2 text-2xl md:text-3xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent">{t("title")}</h1>
-          <p className="mt-1.5 text-xs sm:text-sm text-gray-500 font-semibold leading-relaxed">
+          <h1 className="mt-2 text-3xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-gray-100 to-gray-400 bg-clip-text text-transparent md:text-4xl">{t("title")}</h1>
+          <p className="mt-2 text-sm font-semibold leading-relaxed text-gray-400 sm:text-base">
             {t("subtitle")}
           </p>
         </div>
@@ -420,7 +430,7 @@ export function PredictMatchForm({
         {/* Countdown capsule */}
         <div
           className={cn(
-            "predict-lock-countdown group relative overflow-hidden rounded-2xl border px-3.5 sm:px-4 py-2.5 sm:py-3 shadow-[0_0_35px_rgba(245,158,11,0.18)] transition-all shrink-0 w-full sm:w-auto",
+            "predict-lock-countdown group relative w-full shrink-0 overflow-hidden rounded-xl border px-3.5 py-2.5 shadow-[0_0_35px_rgba(245,158,11,0.18)] transition-all sm:w-auto sm:px-4 sm:py-3",
             isLocked
               ? "border-red-500/40 bg-gradient-to-b from-[#1c0c0c] to-[#0f0505] shadow-[0_0_30px_rgba(239,68,68,0.2)] text-red-300"
               : "border-amber-500/40 bg-gradient-to-b from-[#1c130b] to-[#0e0a05] text-amber-200"
@@ -440,7 +450,7 @@ export function PredictMatchForm({
             </span>
             <div className="min-w-0 flex items-center justify-center">
               {isLocked ? (
-                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-red-400 px-3 py-2 bg-black/60 border border-red-500/30 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse">
+                <span className="px-3 py-2 text-sm font-black uppercase tracking-wider text-red-400 bg-black/60 border border-red-500/30 rounded-lg shadow-[0_0_15px_rgba(239,68,68,0.3)] animate-pulse sm:text-base">
                   {t("locked")}
                 </span>
               ) : (
@@ -452,7 +462,7 @@ export function PredictMatchForm({
                           :
                         </span>
                       )}
-                      <span className="min-w-[34px] sm:min-w-[44px] h-9 sm:h-11 rounded-lg border border-amber-500/40 bg-black/75 text-center text-sm sm:text-base font-black text-amber-300 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.2),inset_0_0_8px_rgba(245,158,11,0.15)] tracking-tight">
+                        <span className="flex h-10 min-w-[38px] items-center justify-center rounded-lg border border-amber-500/40 bg-black/75 text-center text-base font-black tracking-tight text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.2),inset_0_0_8px_rgba(245,158,11,0.15)] sm:h-12 sm:min-w-[48px] sm:text-lg">
                         {part.value}
                       </span>
                     </div>
@@ -464,27 +474,52 @@ export function PredictMatchForm({
         </div>
       </div>
 
+      <div className="grid gap-3 md:grid-cols-3">
+        <FlowStep
+          number="01"
+          title={t("basic.fullScore")}
+          description={t("basic.selectScores")}
+          active={homeScore !== null && awayScore !== null}
+          tone="cyan"
+        />
+        <FlowStep
+          number="02"
+          title={t("deep.firstScorer")}
+          description={selectedFirstScorer?.name ?? t("common.no")}
+          active={Boolean(selectedFirstScorer)}
+          tone="magenta"
+        />
+        <FlowStep
+          number="03"
+          title={t("confidence.title")}
+          description={selectedConfidenceLabel}
+          active
+          tone="gold"
+        />
+      </div>
+
       {/* Unified Scoreboard Console Header */}
-      <Card neon="cyan" className="relative overflow-hidden p-0 border border-gray-800 bg-[#101017] shadow-xl">
+      <Card neon="cyan" className="relative overflow-hidden p-0 border border-cyan-500/25 bg-[#07080b] shadow-[0_0_40px_rgba(6,182,212,0.05)]">
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.12),transparent_28%),radial-gradient(circle_at_80%_25%,rgba(217,70,239,0.1),transparent_30%)]" />
         
-        <div className="relative p-5 sm:p-6 flex flex-col items-center">
+        <div className="relative mt-[2px] flex flex-col items-center p-5 sm:p-6">
           {/* League badge glass capsule */}
           <div className="mx-auto mb-4 flex w-fit items-center gap-3 rounded-xl border border-cyan-500/20 bg-black/45 px-3.5 py-1.5 shadow-[0_0_20px_rgba(34,211,238,0.08)] max-w-full">
             <ApiLeagueLogo name={match.league} logo={match.leagueLogo} size="md" />
             <div className="text-left min-w-0">
-              <p className="text-xs sm:text-sm font-extrabold text-white truncate">{match.league}</p>
-              <p className="text-[9px] sm:text-[10px] text-gray-500 font-bold uppercase tracking-wider truncate">
+              <p className="truncate text-sm font-extrabold text-white sm:text-base">{match.league}</p>
+              <p className="truncate text-xs font-bold uppercase tracking-wider text-gray-500">
                 {match.round} • {match.venue}
               </p>
             </div>
           </div>
 
           {/* Epic Unified Interactive Scoreboard Display Grid */}
-          <div className="my-2 grid grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-6 max-w-2xl mx-auto w-full select-none">
+          <div className="mx-auto my-2 grid w-full max-w-3xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 select-none sm:gap-6">
             {/* Home Team header Block */}
             <div className="min-w-0 flex flex-col items-center gap-1.5 sm:flex-row sm:justify-end sm:gap-3">
-              <p className="text-xs sm:text-sm md:text-base font-black text-white text-center sm:text-right">
+              <p className="line-clamp-2 text-center text-sm font-black text-white sm:text-right md:text-lg">
                 {match.home.name}
               </p>
               <div className="predict-team-float shrink-0">
@@ -498,12 +533,14 @@ export function PredictMatchForm({
             </div>
             
             {/* Centered VS Block */}
-            <div className="flex flex-col items-center justify-center bg-black/50 px-4 py-2.5 rounded-xl border border-gray-800/80 shadow-2xl shrink-0 min-w-[90px] sm:min-w-[110px]">
-              <span className="font-mono text-base sm:text-lg font-black text-cyan-400 tracking-wider">VS</span>
-              <span suppressHydrationWarning className="mt-1 whitespace-nowrap text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
+            <div className="flex min-w-[96px] shrink-0 flex-col items-center justify-center rounded-xl border border-cyan-500/20 bg-black/60 px-3 py-2.5 shadow-2xl sm:min-w-[126px] sm:px-4">
+              <span className="font-mono text-2xl font-black tracking-wider text-white sm:text-3xl">
+                {homeScore ?? "-"}<span className="px-1 text-gray-600">:</span>{awayScore ?? "-"}
+              </span>
+              <span suppressHydrationWarning className="mt-1 whitespace-nowrap text-xs font-extrabold uppercase tracking-wider text-gray-400">
                 {formatDate(match.kickoffTime, locale)}
               </span>
-              <span suppressHydrationWarning className="whitespace-nowrap font-mono text-[9px] font-extrabold uppercase tracking-wider text-gray-400">
+              <span suppressHydrationWarning className="whitespace-nowrap font-mono text-xs font-extrabold uppercase tracking-wider text-gray-400">
                 {formatMatchTimeWithZone(match.kickoffTime, locale)}
               </span>
             </div>
@@ -518,28 +555,55 @@ export function PredictMatchForm({
                   <ApiTeamLogo name={match.away.name} logo={match.away.logo} size="md" accent="magenta" />
                 </div>
               </div>
-              <p className="text-xs sm:text-sm md:text-base font-black text-white text-center sm:text-left">
+              <p className="line-clamp-2 text-center text-sm font-black text-white sm:text-left md:text-lg">
                 {match.away.name}
               </p>
             </div>
+          </div>
+
+          <div className="mt-5 grid w-full gap-2 border-t border-gray-800/70 pt-4 sm:grid-cols-3">
+            <HeroMetric label={t("basic.result")} value={predictedOutcomeLabel} tone="text-cyan-200" />
+            <HeroMetric
+              label={t("payload.pointsWagered")}
+              value={`${effectivePointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
+              tone="text-amber-200"
+            />
+            <HeroMetric label={t("summary.halfTime")} value={`${halfHomeScore ?? "-"} : ${halfAwayScore ?? "-"}`} tone="text-fuchsia-200" />
           </div>
         </div>
       </Card>
 
       {/* SCORE PREDICTOR CONSOLE */}
       <div className="space-y-6">
-        <Card className="relative overflow-hidden p-5 border border-gray-800/80 bg-gradient-to-b from-[#0c0d12] to-[#06070a]">
-          <ScorePredictorConsole
-            homeTeamName={match.home.name}
-            homeLogo={match.home.logo}
-            awayTeamName={match.away.name}
-            awayLogo={match.away.logo}
-            homeScore={homeScore}
-            awayScore={awayScore}
-            setHomeScore={setHomeScore}
-            setAwayScore={setAwayScore}
-            isLocked={isLocked}
-          />
+        <Card className="relative overflow-hidden border border-gray-800 bg-[#07080b] p-4 sm:p-5">
+          {/* Esports accent line */}
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
+          <div className="relative mt-[2px]">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
+                  {t("basic.title")}
+                </p>
+                <h2 className="mt-1 text-xl font-black text-white sm:text-2xl">
+                  {t("basic.selectScores")}
+                </h2>
+              </div>
+              <Badge variant={isLocked ? "red" : "green"}>
+                {isLocked ? t("locked") : t("locksIn", { time: countdownInfo.compact })}
+              </Badge>
+            </div>
+            <ScorePredictorConsole
+              homeTeamName={match.home.name}
+              homeLogo={match.home.logo}
+              awayTeamName={match.away.name}
+              awayLogo={match.away.logo}
+              homeScore={homeScore}
+              awayScore={awayScore}
+              setHomeScore={setHomeScore}
+              setAwayScore={setAwayScore}
+              isLocked={isLocked}
+            />
+          </div>
         </Card>
       </div>
       {/* Main Grid: Form Inputs + Sidebar */}
@@ -573,14 +637,14 @@ export function PredictMatchForm({
                 {/* 1st Half Scorecard Section */}
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5 mb-3 border-b border-gray-800/40 pb-2">
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-cyan-950 text-cyan-400 text-[10px] font-black font-mono">1ST</span>
-                    <p className="text-[11px] font-black uppercase tracking-wider text-gray-400">{t("deep.halfTimeScore")}</p>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-950 font-mono text-xs font-black text-cyan-400">1ST</span>
+                    <p className="text-sm font-black uppercase tracking-wider text-gray-300">{t("deep.halfTimeScore")}</p>
                   </div>
                   
                   <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                     {/* Home Halftime Pods */}
                     <div className="bg-[#05070b] p-3 rounded-lg border border-gray-950">
-                      <p className="truncate text-[10px] font-bold text-gray-500 mb-2 font-mono uppercase tracking-wide">
+                      <p className="mb-2 truncate font-mono text-xs font-bold uppercase tracking-wide text-gray-400">
                         {match.home.name} {locale === "th" ? "(ครึ่งแรก)" : "(Half-time)"}
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -596,7 +660,7 @@ export function PredictMatchForm({
                               }}
                               disabled={isLocked}
                               className={cn(
-                                "flex-1 py-1 px-2.5 rounded font-mono text-xs font-bold transition-all cursor-pointer h-7",
+                                "h-9 flex-1 rounded px-2.5 py-1 font-mono text-sm font-bold transition-all cursor-pointer",
                                 isSelected
                                   ? "bg-cyan-500/20 border border-cyan-400 text-cyan-200 shadow-[0_0_8px_rgba(34,211,238,0.2)]"
                                   : "bg-[#12121a] border border-gray-900 text-gray-500 hover:border-cyan-400/20 hover:text-white"
@@ -611,7 +675,7 @@ export function PredictMatchForm({
 
                     {/* Away Halftime Pods */}
                     <div className="bg-[#05070b] p-3 rounded-lg border border-gray-950">
-                      <p className="truncate text-[10px] font-bold text-gray-500 mb-2 font-mono uppercase tracking-wide">
+                      <p className="mb-2 truncate font-mono text-xs font-bold uppercase tracking-wide text-gray-400">
                         {match.away.name} {locale === "th" ? "(ครึ่งแรก)" : "(Half-time)"}
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -627,7 +691,7 @@ export function PredictMatchForm({
                               }}
                               disabled={isLocked}
                               className={cn(
-                                "flex-1 py-1 px-2.5 rounded font-mono text-xs font-bold transition-all cursor-pointer h-7",
+                                "h-9 flex-1 rounded px-2.5 py-1 font-mono text-sm font-bold transition-all cursor-pointer",
                                 isSelected
                                   ? "bg-magenta-500/20 border border-magenta-400 text-magenta-200 shadow-[0_0_8px_rgba(217,70,239,0.2)]"
                                   : "bg-[#12121a] border border-gray-900 text-gray-500 hover:border-magenta-400/20 hover:text-white"
@@ -649,7 +713,7 @@ export function PredictMatchForm({
                         setHalfHomeScore(null);
                         setHalfAwayScore(null);
                       }}
-                      className="mt-2.5 text-[9px] font-black text-gray-500 hover:text-red-400 cursor-pointer self-start"
+                      className="mt-2.5 cursor-pointer self-start text-xs font-black text-gray-500 hover:text-red-400"
                     >
                       ✕ CLEAR HALFTIME
                     </button>
@@ -659,17 +723,17 @@ export function PredictMatchForm({
                 {/* Total Goals Section */}
                 <div className="flex flex-col min-w-0">
                   <div className="flex items-center gap-1.5 mb-3 border-b border-gray-800/40 pb-2">
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-950 text-amber-400 text-[10px]">⚽</span>
-                    <p className="text-[11px] font-black uppercase tracking-wider text-gray-400">{t("deep.totalGoals")}</p>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-950 text-sm text-amber-400">⚽</span>
+                    <p className="text-sm font-black uppercase tracking-wider text-gray-300">{t("deep.totalGoals")}</p>
                   </div>
                   <div className="flex flex-col bg-[#05070b] p-4 rounded-lg border border-gray-950 w-full space-y-3 select-none">
                     {/* Glowing Bead Horizontal Selector */}
                     <div className="flex items-center justify-between w-full">
-                      <span className="text-[9px] sm:text-[10px] font-bold text-amber-500/80 uppercase font-mono tracking-wider animate-pulse flex items-center gap-1">
+                      <span className="flex items-center gap-1 font-mono text-xs font-bold uppercase tracking-wider text-amber-500/80 animate-pulse">
                         <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" />
                         {locale === "th" ? "คำนวณอัตโนมัติจากผลสกอร์" : "AUTO-CALCULATED FROM SCORE"}
                       </span>
-                      <span className="font-mono text-sm font-black text-amber-300 bg-amber-950/20 px-2 py-0.5 rounded border border-amber-500/15">
+                      <span className="rounded border border-amber-500/15 bg-amber-950/20 px-2 py-1 font-mono text-base font-black text-amber-300">
                         {totalGoals ?? "-"} {locale === "th" ? "ประตู" : "goals"}
                       </span>
                     </div>
@@ -683,7 +747,7 @@ export function PredictMatchForm({
                             key={`total-${val}`}
                             disabled={true}
                             className={cn(
-                              "h-8 min-w-8 flex-1 rounded-lg font-mono text-xs font-bold transition-all select-none",
+                              "h-9 min-w-9 flex-1 rounded-lg font-mono text-sm font-bold transition-all select-none",
                               isSelected
                                 ? "bg-amber-400 text-black font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.35)] scale-105 border border-amber-300"
                                 : "bg-[#12121a]/40 border border-gray-900/60 text-gray-600"
@@ -706,11 +770,11 @@ export function PredictMatchForm({
               <div className="min-w-0">
                 <label
                   htmlFor="pointsWagered"
-                  className="block text-xs font-black uppercase tracking-wider text-amber-300"
+                  className="block text-sm font-black uppercase tracking-wider text-amber-300"
                 >
                   {t("payload.pointsWagered")}
                 </label>
-                <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                <p className="mt-1 text-sm leading-relaxed text-gray-400">
                   {locale === "th"
                     ? "กำหนด stake สำหรับคำทายนี้ แล้วตรวจสูตรรวม points_earned ด้านล่าง"
                     : "Set the stake for this prediction, then review the points_earned formula below."}
@@ -732,21 +796,21 @@ export function PredictMatchForm({
                     disabled={isLocked}
                     className="min-w-0 flex-1 bg-transparent font-mono text-2xl font-black text-white outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
-                  <span className="shrink-0 text-xs font-bold uppercase text-amber-300">
+                  <span className="shrink-0 text-sm font-bold uppercase text-amber-300">
                     {locale === "th" ? "แต้ม" : "pts"}
                   </span>
                 </div>
-                <p className="mt-1.5 text-right text-[10px] font-semibold text-gray-500">
+                <p className="mt-1.5 text-right text-xs font-semibold text-gray-400">
                   {t("side.balance")}: {mounted ? freePoints.toLocaleString() : "..."} {locale === "th" ? "แต้ม" : "pts"}
                 </p>
               </div>
             </div>
             <div className="relative mt-4 space-y-3 rounded-xl border border-amber-500/15 bg-black/30 p-3">
               <div className="rounded-lg border border-amber-500/15 bg-black/35 px-3 py-2">
-                <p className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+                <p className="text-xs font-black uppercase tracking-wider text-amber-300">
                   {t("formula.payloadPreview")}
                 </p>
-                <p className="mt-1 text-right font-mono text-xs font-bold text-amber-200">
+                <p className="mt-1 text-right font-mono text-sm font-bold text-amber-200">
                   {pointsWagered.toLocaleString()} x {confidenceMultiplier.toFixed(1)} ={" "}
                   {effectivePointsWagered.toLocaleString()}{" "}
                   {locale === "th" ? "แต้ม" : "pts"}
@@ -754,10 +818,10 @@ export function PredictMatchForm({
               </div>
 
               <div className="rounded-lg border border-cyan-500/15 bg-[#071018] px-3 py-2.5">
-                <p className="text-[10px] font-black uppercase tracking-wider text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-wider text-cyan-300">
                   {t("formula.pointsEarnedTitle")}
                 </p>
-                <p className="mt-1 break-words font-mono text-xs font-bold text-cyan-100">
+                <p className="mt-1 break-words font-mono text-sm font-bold text-cyan-100">
                   {t("formula.pointsEarnedExpression")}
                 </p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-4">
@@ -782,17 +846,17 @@ export function PredictMatchForm({
                     tone="text-green-300"
                   />
                 </div>
-                <p className="mt-2 text-[10px] text-gray-500">
+                <p className="mt-2 text-xs text-gray-400">
                   {t("formula.streakNote")}
                 </p>
               </div>
 
               <div className="rounded-lg border border-gray-800/80 bg-black/25 px-3 py-2.5">
                 <div className="mb-2 flex items-center justify-between gap-2">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white">
+                  <p className="text-xs font-black uppercase tracking-wider text-white">
                     {t("formula.resultTierTitle")}
                   </p>
-                  <span className="font-mono text-[10px] text-gray-500">
+                  <span className="font-mono text-xs text-gray-400">
                     base = {SCORING_BASE_POINTS}
                   </span>
                 </div>
@@ -822,7 +886,7 @@ export function PredictMatchForm({
                     tone="text-red-300"
                   />
                 </div>
-                <p className="mt-2 text-[10px] text-red-300/80">
+                <p className="mt-2 text-xs text-red-300/80">
                   {t("formula.wrongNote")}
                 </p>
               </div>
@@ -864,50 +928,52 @@ export function PredictMatchForm({
           />
 
           {/* Physical Football Ticket summary */}
-          <Card className="overflow-hidden p-0 border border-gray-800 bg-gradient-to-b from-[#12121a] to-[#0b0b10]">
-            <div className="border-b border-gray-800/80 px-4 py-3 bg-black/20 flex items-center justify-between gap-3">
+          <Card className="overflow-hidden p-0 border border-cyan-500/20 bg-gradient-to-b from-[#101721] to-[#090b11] shadow-[0_0_30px_rgba(34,211,238,0.06)]">
+            <div className="border-b border-cyan-500/10 bg-black/30 px-4 py-3 flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xs font-black uppercase tracking-wider text-cyan-400">{t("summary.title")}</h2>
+                <h2 className="text-sm font-black uppercase tracking-wider text-cyan-400">{t("summary.title")}</h2>
+                <p className="mt-1 text-xs text-gray-400">{t("summary.description")}</p>
               </div>
             </div>
             <div className="p-4 space-y-4">
-              <div className="relative rounded-xl border border-dashed border-gray-800 bg-black/40 p-4 text-center overflow-hidden">
+              <div className="relative overflow-hidden rounded-xl border border-dashed border-cyan-500/25 bg-black/45 p-4 text-center">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(34,211,238,0.06),transparent_60%)]" />
-                <p className="text-[9px] font-black uppercase tracking-widest text-gray-500">{t("basic.fullScore")}</p>
-                <p className="mt-1 font-mono text-4xl font-extrabold text-white tracking-tight">
+                <p className="text-xs font-black uppercase tracking-widest text-gray-500">{t("basic.fullScore")}</p>
+                <p className="mt-1 font-mono text-5xl font-extrabold tracking-tight text-white">
                   {homeScore ?? "-"} <span className="text-gray-700 font-normal">:</span> {awayScore ?? "-"}
                 </p>
-                <p className="mt-2 truncate text-xs font-semibold text-gray-400">
-                  {match.home.name} <span className="text-gray-600 text-[10px]">vs</span> {match.away.name}
+                <p className="mt-2 truncate text-sm font-semibold text-gray-300">
+                  {match.home.name} <span className="text-xs text-gray-600">vs</span> {match.away.name}
                 </p>
               </div>
               
-              <div className="space-y-2 text-xs font-mono">
-                <SummaryRow label="predictedHomeScore" value={formatNullableNumber(payload.predictedHomeScore)} />
-                <SummaryRow label="predictedAwayScore" value={formatNullableNumber(payload.predictedAwayScore)} />
-                <SummaryRow 
-                  label="firstScorerPlayerId" 
-                  value={selectedFirstScorer ? selectedFirstScorer.name : "-"} 
-                  mono={!selectedFirstScorer} 
+              <div className="grid gap-2">
+                <SlipMetric label={t("basic.result")} value={predictedOutcomeLabel} tone="text-cyan-200" />
+                <SlipMetric
+                  label={t("deep.firstScorer")}
+                  value={selectedFirstScorer ? selectedFirstScorer.name : "-"}
                 />
-                <SummaryRow label="totalGoals" value={formatNullableNumber(payload.totalGoals)} />
-                <SummaryRow 
-                  label="halfTimeHome" 
-                  value={formatNullableNumber(payload.halfTimeHome)} 
+                <SlipMetric
+                  label={t("deep.totalGoals")}
+                  value={`${formatNullableNumber(payload.totalGoals)} ${locale === "th" ? "ประตู" : "goals"}`}
                 />
-                <SummaryRow 
-                  label="halfTimeAway" 
-                  value={formatNullableNumber(payload.halfTimeAway)} 
+                <SlipMetric
+                  label={t("summary.halfTime")}
+                  value={`${formatNullableNumber(payload.halfTimeHome)} : ${formatNullableNumber(payload.halfTimeAway)}`}
                 />
-                <SummaryRow label="pointsWagered" value={String(payload.pointsWagered)} mono />
-                <SummaryRow label="confidenceLevel" value={payload.confidenceLevel} mono />
-                <SummaryRow label="useBoost" value={payload.useBoost ? "true" : "false"} />
+                <SlipMetric
+                  label={t("payload.pointsWagered")}
+                  value={`${payload.pointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
+                  tone="text-amber-200"
+                />
+                <SlipMetric label={t("confidence.title")} value={selectedConfidenceLabel} tone="text-fuchsia-200" />
+                <SlipMetric label={t("payload.useBoost")} value={payload.useBoost ? t("common.yes") : t("common.no")} />
               </div>
 
               {/* Soccer Digital Ticket Barcode */}
               <div className="pt-4 border-t border-dashed border-gray-800 flex flex-col items-center justify-center opacity-70">
                 <div className="w-full h-8 bg-[repeating-linear-gradient(90deg,theme(colors.gray.600)_0_2px,transparent_2px_5px,theme(colors.gray.600)_5px_6px,transparent_6px_8px)]" />
-                <p className="mt-1 font-mono text-[9px] text-cyan-500/50 tracking-widest uppercase">SCM-PRD-TICKET</p>
+                <p className="mt-1 font-mono text-xs uppercase tracking-widest text-cyan-500/50">SCM-PRD-TICKET</p>
               </div>
             </div>
           </Card>
@@ -919,9 +985,9 @@ export function PredictMatchForm({
               <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-950/40 text-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.15)]">
                 <Brain size={15} className="animate-pulse" />
               </span>
-              <h3 className="text-xs font-black uppercase tracking-wider text-cyan-300">{t("ai.title")}</h3>
+              <h3 className="text-sm font-black uppercase tracking-wider text-cyan-300">{t("ai.title")}</h3>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-gray-400">
+            <p className="mt-2 text-sm leading-relaxed text-gray-400">
               {t("ai.description")}
             </p>
             <Button
@@ -987,7 +1053,7 @@ export function PredictMatchForm({
         <div className="space-y-5">
           {/* Match Scoreboard Card */}
           <div className="rounded-xl border border-gray-800 bg-gradient-to-b from-[#0a0a0f] to-[#06080c] px-5 py-4 text-center shadow-[0_0_30px_rgba(34,211,238,0.06)]">
-            <p className="mb-3 text-[10px] sm:text-xs text-gray-500 font-semibold uppercase tracking-widest">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-500 sm:text-sm">
               {t("confirm.youPredict")}
             </p>
 
@@ -1001,14 +1067,14 @@ export function PredictMatchForm({
                   size="md"
                   accent="cyan"
                 />
-                <span className="text-[11px] sm:text-xs font-bold text-white truncate max-w-full">
+                <span className="max-w-full truncate text-sm font-bold text-white">
                   {match.home.name}
                 </span>
               </div>
 
               {/* Score */}
               <div className="shrink-0">
-                <p className="font-mono text-xl sm:text-2xl font-black text-white tracking-tight">
+                <p className="font-mono text-2xl font-black tracking-tight text-white sm:text-3xl">
                   <span className="text-cyan-400">{homeScore ?? "-"}</span>
                   <span className="text-gray-600 mx-0.5">:</span>
                   <span className="text-magenta-400">{awayScore ?? "-"}</span>
@@ -1023,13 +1089,13 @@ export function PredictMatchForm({
                   size="md"
                   accent="magenta"
                 />
-                <span className="text-[11px] sm:text-xs font-bold text-white truncate max-w-full">
+                <span className="max-w-full truncate text-sm font-bold text-white">
                   {match.away.name}
                 </span>
               </div>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[10px] sm:text-xs text-gray-500">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-gray-500 sm:text-sm">
               <span className="inline-flex items-center gap-1.5">
                 <Timer size={11} className="text-cyan-400/70" />
                 {match.league} - {match.round}
@@ -1060,7 +1126,7 @@ export function PredictMatchForm({
             <div className="space-y-4">
               <div className="rounded-xl border border-gray-800 bg-[#0a0a0f] p-4">
                 <div className="mb-3 flex items-center justify-between gap-3 border-b border-gray-800/70 pb-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-gray-500">
                     {locale === "th" ? "สรุปก่อนส่ง" : "Submission summary"}
                   </p>
                   <Badge variant={useBoost ? "gold" : "default"}>
@@ -1106,7 +1172,7 @@ export function PredictMatchForm({
                 <ConfirmDetailCard label={t("deep.firstScorer")}>
                   {selectedFirstScorer ? (
                     <span className="inline-flex min-w-0 items-center gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 text-[10px] font-black font-mono text-cyan-300">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 font-mono text-xs font-black text-cyan-300">
                         {selectedFirstScorer.number ?? "?"}
                       </span>
                       <span className="truncate">{selectedFirstScorer.name}</span>
@@ -1130,7 +1196,7 @@ export function PredictMatchForm({
               </div>
 
               <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
-                <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-amber-300/90">
+                <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.16em] text-amber-300/90">
                   <AlertTriangle size={13} className="shrink-0" />
                   {t("confirm.lockNotice")}
                 </p>
@@ -1142,10 +1208,10 @@ export function PredictMatchForm({
           ) : (
             <div className="rounded-xl border border-cyan-500/20 bg-[#071018] p-4">
               <div className="mb-3 flex items-center justify-between gap-3 border-b border-cyan-500/10 pb-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-300">
                   {locale === "th" ? "คะแนนที่เป็นไปได้" : "Possible outcomes"}
                 </p>
-                <span className="font-mono text-[10px] text-gray-500">
+                <span className="font-mono text-xs text-gray-500">
                   base {SCORING_BASE_POINTS} / boost x{boostMultiplier.toFixed(1)}
                 </span>
               </div>
@@ -1175,7 +1241,7 @@ export function PredictMatchForm({
                   tone="text-red-300"
                 />
               </div>
-              <p className="mt-3 text-[10px] leading-relaxed text-gray-500">
+              <p className="mt-3 text-xs leading-relaxed text-gray-500">
                 {t("formula.pointsEarnedExpression")}
               </p>
             </div>
@@ -1192,6 +1258,97 @@ export function PredictMatchForm({
           </div>
         </div>
       </Modal>
+    </div>
+  );
+}
+
+function FlowStep({
+  number,
+  title,
+  description,
+  active,
+  tone,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  active: boolean;
+  tone: "cyan" | "magenta" | "gold";
+}) {
+  const activeTone =
+    tone === "cyan"
+      ? "border-cyan-400/45 bg-cyan-500/10 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.08)]"
+      : tone === "magenta"
+        ? "border-magenta-400/45 bg-magenta-500/10 text-magenta-200 shadow-[0_0_18px_rgba(217,70,239,0.08)]"
+        : "border-amber-400/45 bg-amber-500/10 text-amber-200 shadow-[0_0_18px_rgba(245,158,11,0.08)]";
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl border px-4 py-3 transition-all",
+        active
+          ? activeTone
+          : "border-gray-800 bg-[#0b0d13] text-gray-400"
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-black/45 font-mono text-sm font-black",
+            active ? "border-current" : "border-gray-800 text-gray-500"
+          )}
+        >
+          {number}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-base font-black text-white">{title}</p>
+          <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-gray-400">
+            {description}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="min-w-0 rounded-lg border border-gray-800/80 bg-black/35 px-3 py-2">
+      <p className="truncate text-xs font-black uppercase tracking-wider text-gray-500">
+        {label}
+      </p>
+      <p className={cn("mt-1 truncate text-base font-black text-white", tone)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function SlipMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
+      <span className="min-w-0 truncate text-sm font-semibold text-gray-400">
+        {label}
+      </span>
+      <span className={cn("max-w-[55%] truncate text-right text-sm font-extrabold text-white", tone)}>
+        {value}
+      </span>
     </div>
   );
 }
@@ -1223,30 +1380,30 @@ function ScorePredictorConsole({
   const quickSelects = [1, 2, 3, 4, 5];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2">
       {/* Home Giant Stepper */}
-      <div className="bg-[#05070b] p-4 rounded-xl border border-gray-950 flex flex-col items-center">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="bg-gradient-to-b from-[#0f1922] via-[#0b0e14] to-[#07090d] p-5 rounded-2xl border border-cyan-500/15 flex flex-col items-center shadow-[0_0_25px_rgba(6,182,212,0.03)] hover:border-cyan-500/30 transition-all duration-300">
+        <div className="flex items-center gap-2 mb-4">
           <ApiTeamLogo name={homeTeamName} logo={homeLogo} size="sm" accent="cyan" />
-          <p className="truncate text-xs font-bold text-gray-400 font-mono uppercase tracking-wider">{homeTeamName}</p>
+          <p className="truncate font-mono text-sm font-black uppercase tracking-widest text-cyan-400">{homeTeamName}</p>
         </div>
-        <div className="flex items-center w-full max-w-xs gap-3 mb-4">
+        <div className="flex items-center w-full max-w-xs gap-3 mb-5">
           <button
             type="button"
             onClick={() => !isLocked && setHomeScore(Math.max(0, (homeScore ?? 0) - 1))}
             disabled={isLocked || homeScore === null || homeScore === 0}
-            className="h-14 flex-1 rounded-xl bg-black border border-cyan-500/20 text-cyan-400 hover:border-cyan-400 hover:bg-cyan-500/5 transition-all text-xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-25"
+            className="h-14 flex-1 rounded-xl bg-black/80 border border-cyan-500/30 text-cyan-400 hover:border-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_12px_rgba(34,211,238,0.2)] transition-all text-2xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-20 disabled:pointer-events-none"
           >
             -
           </button>
-          <div className="w-16 h-14 bg-black/60 border border-cyan-950/40 rounded-xl flex items-center justify-center shadow-inner">
-            <span className="font-mono text-2xl font-black text-white">{homeScore ?? "-"}</span>
+          <div className="w-20 h-14 bg-black/90 border-2 border-cyan-500/20 rounded-xl flex items-center justify-center shadow-[inset_0_0_12px_rgba(34,211,238,0.08)]">
+            <span className="font-mono text-3xl font-black text-white text-center w-full">{homeScore ?? "-"}</span>
           </div>
           <button
             type="button"
             onClick={() => !isLocked && setHomeScore(Math.min(20, (homeScore ?? 0) + 1))}
             disabled={isLocked}
-            className="h-14 flex-1 rounded-xl bg-black border border-cyan-500/20 text-cyan-400 hover:border-cyan-400 hover:bg-cyan-500/5 transition-all text-xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-25"
+            className="h-14 flex-1 rounded-xl bg-black/80 border border-cyan-500/30 text-cyan-400 hover:border-cyan-400 hover:bg-cyan-500/10 hover:shadow-[0_0_12px_rgba(34,211,238,0.2)] transition-all text-2xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-20 disabled:pointer-events-none"
           >
             +
           </button>
@@ -1260,10 +1417,10 @@ function ScorePredictorConsole({
               onClick={() => !isLocked && setHomeScore(num)}
               disabled={isLocked}
               className={cn(
-                "h-10 flex-1 rounded-lg border text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-25",
+                "flex h-11 flex-1 items-center justify-center rounded-lg border text-sm font-extrabold transition-all cursor-pointer active:scale-95 disabled:opacity-20",
                 homeScore === num
-                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-400"
-                  : "bg-black/50 border-gray-800 text-gray-500 hover:border-cyan-500/50 hover:text-cyan-400"
+                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(34,211,238,0.15)] font-black"
+                  : "bg-black/60 border-gray-900 text-gray-500 hover:border-cyan-500/30 hover:text-cyan-400"
               )}
             >
               {num}
@@ -1273,28 +1430,28 @@ function ScorePredictorConsole({
       </div>
 
       {/* Away Giant Stepper */}
-      <div className="bg-[#05070b] p-4 rounded-xl border border-gray-950 flex flex-col items-center">
-        <div className="flex items-center gap-2 mb-3">
-          <p className="truncate text-xs font-bold text-gray-400 font-mono uppercase tracking-wider">{awayTeamName}</p>
+      <div className="bg-gradient-to-b from-[#1c0f22] via-[#0f0b14] to-[#0d070f] p-5 rounded-2xl border border-magenta-500/15 flex flex-col items-center shadow-[0_0_25px_rgba(217,70,239,0.03)] hover:border-magenta-500/30 transition-all duration-300">
+        <div className="flex items-center gap-2 mb-4">
+          <p className="truncate font-mono text-sm font-black uppercase tracking-widest text-magenta-400">{awayTeamName}</p>
           <ApiTeamLogo name={awayTeamName} logo={awayLogo} size="sm" accent="magenta" />
         </div>
-        <div className="flex items-center w-full max-w-xs gap-3 mb-4">
+        <div className="flex items-center w-full max-w-xs gap-3 mb-5">
           <button
             type="button"
             onClick={() => !isLocked && setAwayScore(Math.max(0, (awayScore ?? 0) - 1))}
             disabled={isLocked || awayScore === null || awayScore === 0}
-            className="h-14 flex-1 rounded-xl bg-black border border-magenta-500/20 text-magenta-400 hover:border-magenta-400 hover:bg-magenta-500/5 transition-all text-xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-25"
+            className="h-14 flex-1 rounded-xl bg-black/80 border border-magenta-500/30 text-magenta-400 hover:border-magenta hover:bg-magenta/10 hover:shadow-[0_0_12px_rgba(217,70,239,0.2)] transition-all text-2xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-20 disabled:pointer-events-none"
           >
             -
           </button>
-          <div className="w-16 h-14 bg-black/60 border border-magenta-950/40 rounded-xl flex items-center justify-center shadow-inner">
-            <span className="font-mono text-2xl font-black text-white">{awayScore ?? "-"}</span>
+          <div className="w-20 h-14 bg-black/90 border-2 border-magenta-500/20 rounded-xl flex items-center justify-center shadow-[inset_0_0_12px_rgba(217,70,239,0.08)]">
+            <span className="font-mono text-3xl font-black text-white text-center w-full">{awayScore ?? "-"}</span>
           </div>
           <button
             type="button"
             onClick={() => !isLocked && setAwayScore(Math.min(20, (awayScore ?? 0) + 1))}
             disabled={isLocked}
-            className="h-14 flex-1 rounded-xl bg-black border border-magenta-500/20 text-magenta-400 hover:border-magenta-400 hover:bg-magenta-500/5 transition-all text-xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-25"
+            className="h-14 flex-1 rounded-xl bg-black/80 border border-magenta-500/30 text-magenta-400 hover:border-magenta hover:bg-magenta/10 hover:shadow-[0_0_12px_rgba(217,70,239,0.2)] transition-all text-2xl font-black flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-20 disabled:pointer-events-none"
           >
             +
           </button>
@@ -1308,10 +1465,10 @@ function ScorePredictorConsole({
               onClick={() => !isLocked && setAwayScore(num)}
               disabled={isLocked}
               className={cn(
-                "h-10 flex-1 rounded-lg border text-xs font-bold transition-all flex items-center justify-center cursor-pointer active:scale-95 disabled:opacity-25",
+                "flex h-11 flex-1 items-center justify-center rounded-lg border text-sm font-extrabold transition-all cursor-pointer active:scale-95 disabled:opacity-20",
                 awayScore === num
-                  ? "bg-magenta-500/20 border-magenta-400 text-magenta-400"
-                  : "bg-black/50 border-gray-800 text-gray-500 hover:border-magenta-500/50 hover:text-magenta-400"
+                  ? "bg-magenta-500/20 border-magenta text-magenta-200 shadow-[0_0_10px_rgba(217,70,239,0.15)] font-black"
+                  : "bg-black/60 border-gray-900 text-gray-500 hover:border-magenta-500/30 hover:text-magenta"
               )}
             >
               {num}
@@ -1349,13 +1506,13 @@ function H2HPanel({
     <>
       <Card className="overflow-hidden border border-gray-800 p-0">
         <div className="border-b border-gray-800 px-4 py-3">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-white">
             <History size={16} className="text-purple-300" />
             <span className="min-w-0 truncate">{title}</span>
           </h3>
         </div>
         <div className="space-y-3 px-4 py-4">
-          <p className="text-xs leading-relaxed text-gray-500">
+          <p className="text-sm leading-relaxed text-gray-400">
             {locale === "th"
               ? `มีข้อมูลย้อนหลัง ${h2h.length} นัด กดเพื่อดูรายละเอียดทั้งหมด`
               : `${h2h.length} previous meetings available. Open to view full details.`}
@@ -1431,16 +1588,16 @@ function H2HPanel({
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       {resultDot}
-                      <span className="font-mono text-[10px] text-gray-400">
+                      <span className="font-mono text-xs text-gray-400">
                         {fixture.league.name}
                       </span>
                     </div>
-                    <p className="mt-1 font-mono text-[10px] text-gray-500">
+                    <p className="mt-1 font-mono text-xs text-gray-500">
                       {formatH2HDate(fixture.kickoffTime, locale)}
                     </p>
                   </div>
                   {isFinished ? (
-                    <span className="rounded-full border border-gray-800 bg-black/40 px-2 py-0.5 font-mono text-[10px] text-gray-400">
+                    <span className="rounded-full border border-gray-800 bg-black/40 px-2 py-0.5 font-mono text-xs text-gray-400">
                       {fixture.score.home}-{fixture.score.away}
                     </span>
                   ) : null}
@@ -1453,12 +1610,12 @@ function H2HPanel({
                     align="right"
                   />
                   <div className="rounded-xl border border-gray-800/70 bg-black/40 px-2 py-2 text-center">
-                    <span className="block font-mono text-sm font-black text-white">
+                    <span className="block font-mono text-base font-black text-white">
                       {isFinished
                         ? `${fixture.score.home} - ${fixture.score.away}`
                         : vsLabel}
                     </span>
-                    <span className="mt-1 block text-[9px] uppercase tracking-wider text-gray-500">
+                    <span className="mt-1 block text-xs uppercase tracking-wider text-gray-500">
                       {isFinished ? "FT" : vsLabel}
                     </span>
                   </div>
@@ -1490,13 +1647,13 @@ function H2HTeam({
       )}
     >
       {align === "right" && (
-        <span className="line-clamp-2 text-right text-xs font-semibold text-white">
+        <span className="line-clamp-2 text-right text-sm font-semibold text-white">
           {name}
         </span>
       )}
       <ApiTeamLogo name={name} logo={logo} size="sm" accent={align === "right" ? "cyan" : "magenta"} />
       {align === "left" && (
-        <span className="line-clamp-2 text-xs font-semibold text-white">{name}</span>
+        <span className="line-clamp-2 text-sm font-semibold text-white">{name}</span>
       )}
     </div>
   );
@@ -1739,7 +1896,7 @@ function ConfidenceCards({
           >
             <div className="flex items-center justify-between gap-2 mb-1 w-full">
               <span className={cn(
-                "text-xs sm:text-sm font-extrabold tracking-wide",
+                "text-sm font-extrabold tracking-wide sm:text-base",
                 isSelected
                   ? details.tone === "cyan" ? "text-cyan-300" : details.tone === "gold" ? "text-amber-300" : "text-magenta-300"
                   : "text-gray-300"
@@ -1747,7 +1904,7 @@ function ConfidenceCards({
                 {option.label}
               </span>
               <span className={cn(
-                "px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider",
+                "rounded px-2 py-0.5 text-xs font-black uppercase tracking-wider",
                 isSelected
                   ? details.tone === "cyan" 
                     ? "bg-cyan-400 text-black" 
@@ -1759,7 +1916,7 @@ function ConfidenceCards({
                 {details.badge}
               </span>
             </div>
-            <p className="text-[11px] text-gray-500 leading-relaxed mt-2 font-medium">
+            <p className="mt-2 text-sm font-medium leading-relaxed text-gray-400">
               {details.desc}
             </p>
           </button>
@@ -1795,8 +1952,8 @@ function BoostToggle({
       )}
     >
       <span className="min-w-0">
-        <span className="block text-sm font-bold text-white tracking-wide">{label}</span>
-        <span className="mt-1 block text-xs leading-relaxed text-gray-500 font-medium">{description}</span>
+        <span className="block text-base font-bold tracking-wide text-white">{label}</span>
+        <span className="mt-1 block text-sm font-medium leading-relaxed text-gray-400">{description}</span>
       </span>
       <span
         className={cn(
@@ -1845,8 +2002,8 @@ function PredictionSection({
           <Icon size={16} />
         </span>
         <div>
-          <h2 className="text-sm font-extrabold tracking-wide text-white">{title}</h2>
-          <p className="mt-0.5 text-xs text-gray-500 font-medium leading-normal">{subtitle}</p>
+          <h2 className="text-base font-extrabold tracking-wide text-white">{title}</h2>
+          <p className="mt-1 text-sm font-medium leading-normal text-gray-400">{subtitle}</p>
         </div>
       </div>
       {children}
@@ -1915,12 +2072,12 @@ function PlayerPickerComponent({
   return (
     <div className="w-full">
       <div className="mb-3 flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm font-bold text-white tracking-wide">{label}</p>
+        <p className="text-base font-bold tracking-wide text-white">{label}</p>
         {value && (
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="truncate rounded-full border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-0.5 text-[10px] font-bold text-cyan-300 transition-all hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30 cursor-pointer"
+            className="truncate rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-300 transition-all hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/30 cursor-pointer"
           >
             {selectedPlayer?.name ?? value} ✕
           </button>
@@ -1957,7 +2114,7 @@ function PlayerPickerComponent({
                   <span 
                     style={style}
                     className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full font-mono text-xs font-black shadow-lg animate-pulse mb-1.5",
+                      "mb-1.5 flex h-9 w-9 items-center justify-center rounded-full font-mono text-sm font-black shadow-lg animate-pulse",
                       !kitColors?.primary && (isHome ? "bg-cyan-400 text-black animate-pulse" : "bg-magenta-400 text-black animate-pulse")
                     )}
                   >
@@ -1965,14 +2122,14 @@ function PlayerPickerComponent({
                   </span>
                 );
               })()}
-              <p className="text-[9px] font-black uppercase tracking-widest text-emerald-400">TACTICAL GOALSCORER SELECTED</p>
-              <p className="text-xs sm:text-sm font-black text-white">{selectedPlayer.name}</p>
+              <p className="text-xs font-black uppercase tracking-widest text-emerald-400">TACTICAL GOALSCORER SELECTED</p>
+              <p className="text-sm font-black text-white sm:text-base">{selectedPlayer.name}</p>
             </div>
           ) : (
             <div className="text-center opacity-40">
               <HelpCircle className="mx-auto mb-1 text-gray-500" size={18} />
-              <p className="text-[9px] font-black uppercase tracking-widest text-gray-500">NO SCORER ASSIGNED</p>
-              <p className="text-[10px] sm:text-[11px] text-gray-600 font-medium">Click on any player in the squads below to predict first scorer</p>
+              <p className="text-xs font-black uppercase tracking-widest text-gray-500">NO SCORER ASSIGNED</p>
+              <p className="text-xs font-medium text-gray-500 sm:text-sm">Click on any player in the squads below to predict first scorer</p>
             </div>
           )}
         </div>
@@ -1984,7 +2141,7 @@ function PlayerPickerComponent({
           type="button"
           onClick={() => setSelectedTeam("home")}
           className={cn(
-            "flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer min-w-0",
+            "flex-1 flex flex-col items-center justify-center gap-1 rounded-lg py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer min-w-0",
             selectedTeam === "home"
               ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.08)]"
               : "text-gray-500 hover:text-gray-300 border border-transparent"
@@ -1998,7 +2155,7 @@ function PlayerPickerComponent({
           type="button"
           onClick={() => setSelectedTeam("away")}
           className={cn(
-            "flex-1 flex flex-col items-center justify-center gap-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer min-w-0",
+            "flex-1 flex flex-col items-center justify-center gap-1 rounded-lg py-2.5 text-xs font-black uppercase tracking-wider transition-all cursor-pointer min-w-0",
             selectedTeam === "away"
               ? "bg-magenta/10 border border-magenta/30 text-magenta shadow-[0_0_15px_rgba(217,70,239,0.08)]"
               : "text-gray-500 hover:text-gray-300 border border-transparent"
@@ -2090,9 +2247,9 @@ function PlayerColumn({
             size="sm"
             accent={tone}
           />
-          <p className="truncate text-xs font-bold text-white">{team.name}</p>
+          <p className="truncate text-sm font-bold text-white">{team.name}</p>
         </div>
-        <span className="text-[10px] text-gray-500 font-mono font-semibold shrink-0">
+        <span className="shrink-0 font-mono text-xs font-semibold text-gray-500">
           {filteredPlayers.length} / {team.players.length}
         </span>
       </div>
@@ -2105,7 +2262,7 @@ function PlayerColumn({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className={cn(
-            "w-full h-8 pl-8 pr-7 text-xs bg-black/45 border rounded-lg text-gray-300 placeholder-gray-600 outline-none transition-all",
+            "h-10 w-full rounded-lg border bg-black/45 pl-8 pr-7 text-sm text-gray-300 outline-none transition-all placeholder-gray-600",
             tone === "cyan" 
               ? "border-gray-800/80 focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/40" 
               : "border-gray-800/80 focus:border-magenta-500/40 focus:ring-1 focus:ring-magenta-500/40"
@@ -2116,7 +2273,7 @@ function PlayerColumn({
           <button
             type="button"
             onClick={() => onSearchChange("")}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white text-xs cursor-pointer"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer text-sm text-gray-500 hover:text-white"
           >
             ✕
           </button>
@@ -2152,7 +2309,7 @@ function PlayerColumn({
             </div>
           ))
         ) : filteredPlayers.length === 0 ? (
-          <p className="col-span-1 text-center py-6 text-[11px] text-gray-500 italic font-medium">
+          <p className="col-span-1 py-6 text-center text-sm font-medium italic text-gray-500">
             No players found
           </p>
         ) : (
@@ -2176,7 +2333,7 @@ function PlayerColumn({
                 <div className="flex items-center gap-2.5 min-w-0">
                   <span
                     className={cn(
-                      "flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] transition-all font-black",
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-black transition-all",
                       isSelected
                         ? tone === "cyan"
                           ? "bg-cyan-400 text-black"
@@ -2189,7 +2346,7 @@ function PlayerColumn({
                     {player.number ?? index + 1}
                   </span>
                   <span className={cn(
-                    "truncate text-[11px] font-bold leading-tight transition-colors",
+                    "truncate text-sm font-bold leading-tight transition-colors",
                     isSelected ? "text-white" : "text-gray-300 group-hover:text-white"
                   )}>
                     {player.name}
@@ -2198,7 +2355,7 @@ function PlayerColumn({
                 
                 {/* Right Side: Position */}
                 <span className={cn(
-                  "text-[9px] font-black tracking-wider uppercase font-mono px-2 py-0.5 rounded border transition-all shrink-0",
+                  "shrink-0 rounded border px-2 py-0.5 font-mono text-xs font-black uppercase tracking-wider transition-all",
                   isSelected
                     ? tone === "cyan"
                       ? "bg-cyan-400/20 border-cyan-400 text-cyan-200"
@@ -2229,8 +2386,8 @@ function FormulaValue({
 }) {
   return (
     <div className="rounded-lg border border-gray-800/80 bg-black/30 px-2.5 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
-      <p className={cn("mt-1 font-mono text-xs font-black text-white", tone)}>
+      <p className="text-xs uppercase tracking-wider text-gray-500">{label}</p>
+      <p className={cn("mt-1 font-mono text-sm font-black text-white", tone)}>
         {value}
       </p>
     </div>
@@ -2248,8 +2405,8 @@ function ConfirmMetric({
 }) {
   return (
     <div className="rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
-      <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
-      <p className={cn("mt-1 font-mono text-sm font-black text-white", tone)}>
+      <p className="text-xs uppercase tracking-wider text-gray-500">{label}</p>
+      <p className={cn("mt-1 font-mono text-base font-black text-white", tone)}>
         {value}
       </p>
     </div>
@@ -2266,10 +2423,10 @@ function ConfirmDetailCard({
   return (
     <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] px-3.5 py-2.5">
       <div className="flex items-center justify-between gap-2">
-        <p className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+        <p className="shrink-0 text-xs font-semibold uppercase tracking-wider text-gray-500">
           {label}
         </p>
-        <div className="min-w-0 text-right text-xs font-semibold text-white">
+        <div className="min-w-0 text-right text-sm font-semibold text-white">
           {children}
         </div>
       </div>
@@ -2292,16 +2449,16 @@ function OutcomeRow({
     <div className="rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className={cn("text-xs font-black uppercase tracking-wide text-white", tone)}>
+          <p className={cn("text-sm font-black uppercase tracking-wide text-white", tone)}>
             {label}
           </p>
-          <p className="mt-1 text-[10px] leading-relaxed text-gray-500">
+          <p className="mt-1 text-xs leading-relaxed text-gray-500">
             {description}
           </p>
         </div>
         <div className="shrink-0 text-right">
-          <p className="text-[10px] uppercase tracking-wider text-gray-500">points</p>
-          <p className={cn("font-mono text-sm font-black text-white", tone)}>
+          <p className="text-xs uppercase tracking-wider text-gray-500">points</p>
+          <p className={cn("font-mono text-base font-black text-white", tone)}>
             {points.toLocaleString()}
           </p>
         </div>
@@ -2324,39 +2481,12 @@ function TierRow({
   return (
     <div className="rounded-lg border border-gray-800/80 bg-black/30 px-3 py-2.5">
       <div className="flex items-center justify-between gap-2">
-        <p className={cn("text-xs font-black uppercase tracking-wide text-white", tone)}>
+        <p className={cn("text-sm font-black uppercase tracking-wide text-white", tone)}>
           {label}
         </p>
-        <span className={cn("font-mono text-xs font-black", tone)}>{bonus}</span>
+        <span className={cn("font-mono text-sm font-black", tone)}>{bonus}</span>
       </div>
-      <p className="mt-1 text-[10px] leading-relaxed text-gray-500">{description}</p>
-    </div>
-  );
-}
-
-function SummaryRow({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  const t = useTranslations("predictionForm");
-  const translatedLabel = t.has(`payload.${label}`) ? t(`payload.${label}`) : label;
-
-  let translatedValue = value;
-  if (label === "confidenceLevel") {
-    translatedValue = t.has(`confidence.${value}`) ? t(`confidence.${value}`) : value;
-  } else if (label === "useBoost") {
-    translatedValue = value === "true" ? t("common.yes") : t("common.no");
-  }
-
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-gray-900/60 pb-1.5 last:border-0 last:pb-0">
-      <span className="text-gray-500 font-medium text-[11px]">{translatedLabel}</span>
-      <span className={cn("text-right font-extrabold text-white text-[11px]", mono && "font-mono text-[10px] text-cyan-300")}>{translatedValue}</span>
+      <p className="mt-1 text-xs leading-relaxed text-gray-500">{description}</p>
     </div>
   );
 }

@@ -38,7 +38,7 @@ export default function FormTab({ fixture, insight, details }: FormTabProps) {
   return (
     <div className="space-y-5">
       <section className="grid items-start gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-        <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(12,17,31,0.96),rgba(7,10,18,0.98))] p-5">
+        <Card className="border-border bg-surface p-5 shadow-xl">
           <SectionHeading
             icon={TrendingUp}
             title={details.formDeepDive}
@@ -160,7 +160,7 @@ function TeamFormCard({
 }) {
   if (!profile) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="rounded-xl border border-border bg-elevated/40 p-4">
         <EmptyState label={details.noPrediction} />
       </div>
     );
@@ -174,7 +174,7 @@ function TeamFormCard({
     .filter((value): value is "W" | "D" | "L" => value === "W" || value === "D" || value === "L");
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className={cn("text-lg font-bold", accent)}>{name}</h3>
@@ -194,9 +194,9 @@ function TeamFormCard({
               key={`${name}-${result}-${index}`}
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-xl text-sm font-black",
-                result === "W" && "bg-green-500/18 text-green-300",
-                result === "D" && "bg-amber-500/18 text-amber-300",
-                result === "L" && "bg-red-500/18 text-red-300"
+                result === "W" && "bg-success/10 text-success border border-success/20",
+                result === "D" && "bg-warning/10 text-warning border border-warning/20",
+                result === "L" && "bg-danger/10 text-danger border border-danger/20"
               )}
             >
               {result}
@@ -250,10 +250,10 @@ function GoalTimingCard({
     percentage: minuteMap?.[bucket]?.percentage ?? null,
   }));
   const maxTotal = Math.max(1, ...buckets.map((item) => item.total));
-  const barClass = color === "cyan" ? "bg-cyan-400" : "bg-magenta";
+  const barClass = color === "cyan" ? "bg-cyan-500" : "bg-magenta";
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+    <div className="rounded-xl border border-border bg-bg/50 p-4">
       <div className="mb-4 flex items-center gap-2">
         <Goal size={15} className={color === "cyan" ? "text-cyan-300" : "text-magenta"} />
         <h3 className="text-sm font-semibold text-white">{title}</h3>
@@ -262,7 +262,7 @@ function GoalTimingCard({
         {buckets.map((item) => (
           <div key={item.bucket} className="flex flex-1 flex-col items-center justify-end gap-2">
             <span className="text-[10px] font-mono text-gray-500">{item.total}</span>
-            <div className="flex h-28 w-full items-end rounded-full bg-white/6 p-1">
+            <div className="flex h-28 w-full items-end rounded-full bg-border/40 p-1">
               <div
                 className={cn("w-full rounded-full transition-all duration-500", barClass)}
                 style={{ height: `${Math.max(8, Math.round((item.total / maxTotal) * 100))}%` }}
@@ -290,7 +290,7 @@ function TimingBreakdownSection({
   awayMap: Record<string, { total?: number | null; percentage?: string | null }> | undefined;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <h3 className="text-sm font-semibold text-white">{title}</h3>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <MinuteList name={homeName} minuteMap={homeMap} tone="cyan" />
@@ -312,7 +312,7 @@ function MinuteList({
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
+    <div className="rounded-xl border border-border bg-bg/50 p-3">
       <h4 className={cn("text-sm font-bold", accent)}>{name}</h4>
       <div className="mt-3 grid gap-2 text-sm text-gray-300">
         {minuteBuckets.map((bucket) => (
@@ -343,7 +343,7 @@ function SupplementalStatsCard({
   const iconClass = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <div className="flex items-center gap-2">
         <Icon size={15} className={iconClass} />
         <h2 className="text-sm font-semibold text-white">{title}</h2>
@@ -380,7 +380,7 @@ function TrendCard({
   awayProfile: ApiFootballTeamFormProfile | null;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <div className="flex items-center gap-2">
         <Icon size={15} className="text-amber-300" />
         <h2 className="text-sm font-semibold text-white">{title}</h2>
@@ -412,7 +412,7 @@ function TrendColumn({
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
       <div className="mt-3 grid gap-2 text-sm text-gray-300">
         <InfoRow label={details.biggestWin} value={formatScoreline(biggest?.wins)} />
@@ -443,7 +443,7 @@ function DisciplineCard({
   awayProfile: ApiFootballTeamFormProfile | null;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <div className="flex items-center gap-2">
         <Shield size={15} className="text-green-300" />
         <h2 className="text-sm font-semibold text-white">{title}</h2>
@@ -486,7 +486,7 @@ function DisciplineColumn({
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
       <div className="mt-3 grid gap-2 text-sm text-gray-300">
         <InfoRow label={details.cardsLabel} value={formatNullableNumber(yellowCards)} />
@@ -517,7 +517,7 @@ function AdvancedStatsCard({
   awayProfile: ApiFootballTeamFormProfile | null;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <div className="flex items-center gap-2">
         <BarChart3 size={15} className="text-cyan-300" />
         <h2 className="text-sm font-semibold text-white">{details.advancedStats}</h2>
@@ -564,7 +564,7 @@ function UnderOverSection({
   const ranges = ["0.5", "1.5", "2.5", "3.5", "4.5"] as const;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
       <p className="mt-1 text-xs uppercase tracking-[0.24em] text-gray-500">{details.underOver}</p>
       <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -615,7 +615,7 @@ function CardsBreakdownSection({
   awayProfile: ApiFootballTeamFormProfile | null;
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <h3 className="text-sm font-semibold text-white">{details.cardsBreakdown}</h3>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <CardsList
@@ -653,7 +653,7 @@ function CardsList({
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
-    <div className="rounded-2xl border border-white/8 bg-black/20 p-3">
+    <div className="rounded-xl border border-border bg-bg/50 p-3">
       <h4 className={cn("text-sm font-bold", accent)}>{name}</h4>
       <div className="mt-3 space-y-3">
         <div>

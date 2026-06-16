@@ -23,7 +23,7 @@
     "title": "សរុបទិន្នន័យបាល់ទាត់ពី API ថ្ងៃនេះ",
     "summary": "ScoreMatrix បានទាញយកការប្រកួត 50 ពី API ថ្ងៃនេះ គ្របដណ្តប់ Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia។",
     "content": "ប្រព័ន្ធព័ត៌មាន ScoreMatrix ប្រើ API ប្រចាំថ្ងៃដើម្បីរៀបចំប្រធានបទបាល់ទាត់ដែលគួរតាមដាន។ ថ្ងៃនេះមានការប្រកួត 50 ពី Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia។\n\nចំណុចទិន្នន័យសំខាន់រួមមាន London United vs Mersey City, North London FC vs East London Rovers, Real Catalonia vs Sevilla Sur ដែលជួយឱ្យ AI Insights និង Predictions មានបរិបទថ្មីសម្រាប់អ្នកប្រើ។\n\nអត្ថបទប្រចាំថ្ងៃត្រូវបានរក្សាទុកជា JSON តាមភាសា ដើម្បីឱ្យទំព័រព័ត៌មានលឿន ស្វែងរកបាន និងរួចរាល់សម្រាប់ SEO គ្រប់ locale។",
-    "image": "/brand/scorematrix-logo.png",
+    "image": "/images/news/data-roundup.jpg",
     "author": "ScoreMatrix Data Desk",
     "category": "feature",
     "publishedAt": "2026-05-18T09:11:50.449Z",

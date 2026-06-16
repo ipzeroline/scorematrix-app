@@ -8,8 +8,13 @@ import { useShallow } from "zustand/react/shallow";
 import {
   Brain,
   Check,
+  ChevronRight,
+  Coins,
+  CreditCard,
   FileText,
   Headphones,
+  LockKeyhole,
+  PackageCheck,
   Shield,
   Star,
   TrendingUp,
@@ -18,6 +23,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import { CREDIT_PACKAGES } from "@/data/credit-packages";
 import {
   DEFAULT_CREDIT_PACKAGES_RESPONSE,
@@ -181,6 +187,10 @@ export default function CreditsPage() {
 
   const pkg = packages.find((p) => p.id === selected) ?? packages[0];
   const comparisonFeatures = packages[0]?.features ?? [];
+  const featuredPackage = packages.find((p) => p.popular) ?? packages[0];
+  const maxTotalCredits = Math.max(...packages.map((p) => p.totalCredits), 0);
+  const maxBonusCredits = Math.max(...packages.map((p) => p.bonusCredits), 0);
+  const packageCount = packages.length;
 
   const handlePurchase = () => {
     if (!pkg) return;
@@ -201,35 +211,106 @@ export default function CreditsPage() {
   const formatBaht = (n: number) => `฿${n.toLocaleString()}`;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold font-display text-white">
-            {t("title")}
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">{t("subtitle")}</p>
+    <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-6 lg:p-7">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.13),transparent_34%),linear-gradient(315deg,rgba(245,158,11,0.12),transparent_30%),linear-gradient(rgba(148,163,184,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.045)_1px,transparent_1px)] bg-[auto,auto,34px_34px,34px_34px]" />
+        <div className="relative grid gap-5 xl:grid-cols-[1.08fr_0.92fr] xl:items-stretch">
+          <div className="flex min-h-[300px] flex-col justify-between rounded-2xl border border-white/10 bg-black/24 p-4 sm:p-5">
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Badge variant="cyan" size="md" className="uppercase tracking-wider">
+                  {t("commandCenter")}
+                </Badge>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
+                  <Shield size={14} />
+                  {t("skillNotice")}
+                </span>
+              </div>
+              <h1 className="font-display text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl">
+                {t("title")}
+              </h1>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">
+                {t("subtitle")}
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-red-400/25 bg-red-500/[0.06] p-4">
+              <div className="flex items-start gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-red-300/25 bg-red-300/10 text-red-200">
+                  <LockKeyhole size={22} />
+                </span>
+                <p className="text-sm font-medium leading-6 text-gray-300 sm:text-base">
+                  <strong className="text-red-300">{tc("important")}:</strong>{" "}
+                  {t("disclaimer")}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <HeroMetric
+              icon={Coins}
+              label={t("availablePackages")}
+              value={packageCount.toLocaleString()}
+              helper={t("packageArena")}
+              tone="text-cyan-300"
+              className="sm:col-span-2"
+            />
+            <HeroMetric
+              icon={CreditCard}
+              label={t("topPack")}
+              value={maxTotalCredits.toLocaleString()}
+              helper={tc("credits")}
+              tone="text-emerald-300"
+            />
+            <HeroMetric
+              icon={Zap}
+              label={t("maxBonus")}
+              value={`+${maxBonusCredits.toLocaleString()}`}
+              helper={t("bonusCredits", {
+                percent: featuredPackage?.bonusPercent ?? 0,
+              })}
+              tone="text-amber-300"
+            />
+            <HeroMetric
+              icon={PackageCheck}
+              label={t("selectedPack")}
+              value={pkg?.totalCredits.toLocaleString() ?? "0"}
+              helper={pkg?.name ?? t("selectPackage")}
+              tone="text-fuchsia-300"
+            />
+            <HeroMetric
+              icon={Shield}
+              label={t("checkout.secureCheckout")}
+              value="256"
+              helper={t("checkout.encrypted")}
+              tone="text-purple-300"
+            />
+          </div>
         </div>
-      </div>
+      </section>
 
       {firstPurchaseBonus && (
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
-          <p className="text-sm font-medium text-amber-100">
+        <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 shadow-[0_16px_48px_rgba(245,158,11,0.08)] sm:p-5">
+          <p className="flex items-start gap-3 text-sm font-bold leading-6 text-amber-100 sm:text-base">
+            <Star size={20} className="mt-0.5 shrink-0 text-amber-300" />
+            <span>
             {t("firstPurchaseBonus", {
               credits: firstPurchaseBonus.bonusCredits,
               amount: firstPurchaseBonus.minAmountThb.toLocaleString(),
             })}
+            </span>
           </p>
         </div>
       )}
 
-      <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4">
-        <p className="text-sm text-gray-300 font-medium leading-relaxed">
-          <strong className="text-red-400">{tc("important")}:</strong>{" "}
-          {t("disclaimer")}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <section className="space-y-4">
+        <SectionHeader
+          eyebrow={`${packages.length.toLocaleString()} ${t("availablePackages")}`}
+          title={t("packageArena")}
+          intro={t("packageHint")}
+        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {loadingPackages &&
           Array.from({ length: 5 }).map((_, index) => (
             <Card
@@ -245,18 +326,20 @@ export default function CreditsPage() {
               isSelected={selected === p.id}
               onClick={() => setSelected(p.id)}
               t={t}
+              tc={tc}
             />
           ))}
       </div>
+      </section>
 
       {pkg && (
-        <Card className={cn("p-5", TIER_BG[pkg.tier], TIER_BORDER[pkg.tier])}>
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
+        <Card className={cn("overflow-hidden border-cyan-400/20 bg-[#09111d] p-4 sm:p-5", TIER_BG[pkg.tier])}>
+          <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="min-w-0">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span
                   className={cn(
-                    "px-2 py-0.5 rounded-full text-xs font-bold border",
+                    "rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider",
                     TIER_BADGE[pkg.tier]
                   )}
                 >
@@ -268,16 +351,19 @@ export default function CreditsPage() {
                   </span>
                 )}
               </div>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-3xl font-bold text-white font-mono">
+              <h2 className="font-display text-2xl font-black text-white sm:text-3xl">
+                {t("selectedPack")}
+              </h2>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <span className="font-mono text-4xl font-black leading-none text-white sm:text-5xl">
                   {formatBaht(pkg.priceTHB)}
                 </span>
-                <span className="text-xs text-gray-500">{t("oneTime")}</span>
+                <span className="mb-1 text-sm font-bold text-gray-500">{t("oneTime")}</span>
               </div>
-              <p className="text-sm text-gray-300 mt-2">
+              <p className="mt-3 text-base leading-7 text-gray-300">
                 {pkg.baseCredits.toLocaleString()} {tc("credits")}
                 {pkg.bonusCredits > 0 && (
-                  <span className="text-amber-400 ml-1">
+                  <span className="ml-1 font-bold text-amber-300">
                     +{pkg.bonusCredits.toLocaleString()}{" "}
                     {t("bonusCredits", { percent: pkg.bonusPercent })}
                   </span>
@@ -288,10 +374,10 @@ export default function CreditsPage() {
                 </span>
               </p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="grid gap-3 sm:grid-cols-2 lg:w-72 lg:grid-cols-1">
               <button
                 onClick={() => setShowComparison(!showComparison)}
-                className="px-4 py-2 rounded-lg text-xs font-medium border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
+                className="min-h-12 rounded-xl border border-gray-700 px-4 text-sm font-bold text-gray-300 transition-colors hover:border-gray-600 hover:text-white"
               >
                 {t("features.comparison")}
               </button>
@@ -305,9 +391,10 @@ export default function CreditsPage() {
               */}
               <button
                 onClick={() => setShowComingSoon(true)}
-                className="px-6 py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 text-base font-black text-black transition-colors hover:bg-cyan-400"
               >
                 {t("selectPackage")}
+                <ChevronRight size={18} />
               </button>
             </div>
           </div>
@@ -315,8 +402,8 @@ export default function CreditsPage() {
       )}
 
       {showComparison && packages.length > 0 && (
-        <Card className="p-4 overflow-x-auto">
-          <h3 className="text-sm font-semibold text-white mb-4">
+        <Card className="overflow-x-auto border-white/10 bg-[#0b111d] p-4 sm:p-5">
+          <h3 className="mb-4 text-xl font-black text-white">
             {t("features.comparison")}
           </h3>
           <table className="w-full min-w-[700px] text-xs">
@@ -405,26 +492,32 @@ export default function CreditsPage() {
       )}
 
       {pkg && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <section className="space-y-4">
+          <SectionHeader
+            eyebrow={pkg.name}
+            title={t("features.title")}
+            intro={t("featureHint")}
+          />
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {pkg.features
             .filter((f) => f.included)
             .map((f) => (
               <Card
                 key={f.key}
                 hover={false}
-                className="p-3 flex items-center gap-3"
+                className="flex items-center gap-3 border-white/10 bg-[#0b111d] p-4"
               >
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center shrink-0">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10">
                   <span className="text-cyan-400">
                     {FEATURE_ICONS[f.key] ?? <Check size={14} />}
                   </span>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-white">
+                <div className="min-w-0">
+                  <p className="text-base font-black leading-tight text-white">
                     {t(`features.${f.key}`)}
                   </p>
                   {f.value && (
-                    <p className="text-[10px] text-cyan-400 font-mono">
+                    <p className="mt-1 font-mono text-xs font-bold text-cyan-300">
                       {f.value === "unlimited" ? t("features.unlimited") : f.value}
                       {["streakShield", "predictionBoost", "aiInsightDaily"].includes(
                         f.key
@@ -435,6 +528,7 @@ export default function CreditsPage() {
               </Card>
             ))}
         </div>
+        </section>
       )}
 
       {showCheckout && pkg && (
@@ -617,67 +711,154 @@ function PackageCard({
   isSelected,
   onClick,
   t,
+  tc,
 }: {
   pkg: CreditPackage;
   isSelected: boolean;
   onClick: () => void;
   t: ReturnType<typeof useTranslations<"credits">>;
+  tc: ReturnType<typeof useTranslations<"common">>;
 }) {
   return (
     <button onClick={onClick} className="text-left w-full">
       <Card
         hover
         className={cn(
-          "h-full p-4 relative transition-all",
+          "relative flex min-h-[250px] flex-col overflow-hidden border-white/10 bg-[#0b111d] p-4 transition-all sm:p-5",
           TIER_BG[pkg.tier],
           TIER_BORDER[pkg.tier],
-          isSelected && "border-white/20 ring-1 ring-white/10"
+          isSelected && "border-cyan-300/50 ring-2 ring-cyan-300/20"
         )}
       >
-        <div className="flex items-center gap-1 mb-2 min-h-[20px]">
+        <div
+          className={cn(
+            "absolute inset-x-0 top-0 h-1",
+            isSelected
+              ? "bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300"
+              : "bg-gradient-to-r from-cyan-400/30 via-purple-400/20 to-transparent"
+          )}
+        />
+        <div className="mb-3 flex min-h-[28px] items-center justify-between gap-2">
           {pkg.popular && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <span className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 text-xs font-bold text-cyan-300">
               {t("mostPopular")}
+            </span>
+          )}
+          {isSelected && (
+            <span className="ml-auto inline-flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 text-black">
+              <Check size={16} />
             </span>
           )}
         </div>
 
         <span
           className={cn(
-            "inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border mb-3",
+            "mb-4 inline-block w-fit rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-wider",
             TIER_BADGE[pkg.tier]
           )}
         >
           {pkg.name}
         </span>
 
-        <div className="mb-1">
-          <span className="text-2xl font-bold text-white font-mono">
+        <div>
+          <span className="font-mono text-3xl font-black leading-none text-white">
             ฿{pkg.priceTHB.toLocaleString()}
           </span>
+          <p className="mt-1 text-xs font-bold text-gray-500">{t("oneTime")}</p>
         </div>
 
-        <p className="text-xs text-gray-400 mb-3">
-          {pkg.baseCredits.toLocaleString()} credits
+        <p className="mt-4 text-sm leading-6 text-gray-300">
+          <span className="font-bold text-white">
+            {pkg.baseCredits.toLocaleString()} {tc("credits")}
+          </span>
           {pkg.bonusCredits > 0 && (
-            <span className="text-amber-400 ml-1">
+            <span className="ml-1 font-bold text-amber-300">
               +{pkg.bonusCredits.toLocaleString()}
             </span>
           )}
         </p>
 
         {pkg.bonusPercent > 0 && (
-          <div className="text-[10px] font-bold text-amber-400 mb-2">
+          <div className="mt-2 w-fit rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-xs font-black text-amber-300">
             {t("bonusCredits", { percent: pkg.bonusPercent })}
           </div>
         )}
 
-        <div className="pt-2 border-t border-gray-800/50">
-          <p className="text-[10px] text-gray-500">
+        <div className="mt-auto border-t border-gray-800/70 pt-4">
+          <p className="text-sm font-black text-cyan-200">
             {t("totalCredits", { count: pkg.totalCredits })}
+          </p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {isSelected ? t("selectedPack") : t("tapToSelect")}
           </p>
         </div>
       </Card>
     </button>
+  );
+}
+
+function HeroMetric({
+  icon: Icon,
+  label,
+  value,
+  helper,
+  tone,
+  className,
+}: {
+  icon: typeof Star;
+  label: string;
+  value: string;
+  helper: string;
+  tone: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-white/10 bg-black/28 p-4",
+        className
+      )}
+    >
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-gray-400">{label}</p>
+          <p className="mt-2 font-mono text-3xl font-black leading-none text-white sm:text-4xl">
+            {value}
+          </p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {helper}
+          </p>
+        </div>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
+          <Icon size={22} className={tone} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  intro,
+}: {
+  eyebrow: string;
+  title: string;
+  intro: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#0a101a] p-4 sm:p-5">
+      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
+        <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
+        {eyebrow}
+      </div>
+      <h2 className="font-display text-2xl font-black text-white sm:text-3xl">
+        {title}
+      </h2>
+      <p className="mt-2 max-w-3xl text-base leading-7 text-gray-400">
+        {intro}
+      </p>
+    </div>
   );
 }

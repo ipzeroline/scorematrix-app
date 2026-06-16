@@ -1,6 +1,7 @@
-import { NO_CACHE_HEADERS } from "@/lib/no-cache";
-
 const FLAG_BASE_URL = "https://flagcdn.com";
+const FLAG_CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800",
+} as const;
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function GET(
 
   const response = await fetch(`${FLAG_BASE_URL}/${path.map(encodeURIComponent).join("/")}`, {
     headers: { Accept: "image/*" },
-    cache: "no-store",
+    next: { revalidate: 86400 },
   });
 
   if (!response.ok || !response.body) {
@@ -27,7 +28,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": response.headers.get("content-type") ?? "image/png",
-      ...NO_CACHE_HEADERS,
+      ...FLAG_CACHE_HEADERS,
     },
   });
 }

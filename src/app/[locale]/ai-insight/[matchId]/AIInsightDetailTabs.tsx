@@ -26,16 +26,16 @@ export default function AIInsightDetailTabs({
   return (
     <div className="space-y-5">
       <div>
-        <div className="grid grid-cols-4 gap-2 rounded-2xl border border-white/10 bg-[#0b1220] p-1.5">
+        <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-cyan-300/15 bg-[#070b13] p-1.5 shadow-lg shadow-cyan-950/10 sm:grid-cols-4">
           {(["summary", "model", "form", "community"] as const).map((key) => (
             <button
               key={key}
               onClick={() => setTab(key)}
               className={cn(
-                "min-w-0 rounded-xl px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:px-4 sm:text-sm",
+                "min-w-0 rounded-xl px-2 py-2.5 text-center text-xs font-black uppercase tracking-wider transition-all sm:px-4 cursor-pointer",
                 tab === key
-                  ? "bg-cyan-400 text-slate-950 shadow-[0_8px_30px_rgba(34,211,238,0.3)]"
-                  : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  ? "bg-primary text-slate-950 shadow-md shadow-primary/25"
+                  : "text-text-secondary hover:bg-white/[0.05] hover:text-white"
               )}
             >
               {labels[key]}

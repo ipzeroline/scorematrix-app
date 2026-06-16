@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useShallow } from "zustand/react/shallow";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Tabs } from "@/components/ui/Tabs";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -25,7 +27,17 @@ import {
   type ActivityType,
 } from "@/lib/activities-api";
 import { cn, formatRelativeTime } from "@/lib/utils";
-import { Inbox } from "lucide-react";
+import {
+  AlertTriangle,
+  Coins,
+  Gem,
+  History,
+  Inbox,
+  ReceiptText,
+  ShieldCheck,
+  Trophy,
+  WalletCards,
+} from "lucide-react";
 import {
   ACCENT_CHIP,
   ACCENT_TEXT,
@@ -53,56 +65,87 @@ export function WalletClient() {
   }, [isLoggedIn]);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-xl font-bold font-display text-white">{t("title")}</h1>
+    <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-6 lg:p-7">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.13),transparent_34%),linear-gradient(315deg,rgba(245,158,11,0.12),transparent_30%),linear-gradient(rgba(148,163,184,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.045)_1px,transparent_1px)] bg-[auto,auto,34px_34px,34px_34px]" />
+        <div className="relative grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex min-h-[320px] flex-col justify-between rounded-2xl border border-white/10 bg-black/24 p-4 sm:p-5">
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Badge variant="cyan" size="md" className="uppercase tracking-wider">
+                  {t("commandCenter")}
+                </Badge>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
+                  <ShieldCheck size={14} />
+                  {t("skillNotice")}
+                </span>
+              </div>
+              <h1 className="font-display text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl">
+                {t("title")}
+              </h1>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">
+                {t("walletHint")}
+              </p>
+            </div>
 
-      {/* Legal Disclaimer */}
-      <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4">
-        <p className="text-sm text-gray-300 font-medium leading-relaxed">
-          <strong className="text-red-400">{t("importantLabel")}</strong>{" "}
-          {t("legalPrefix")} <strong>{t("noCashValue")}</strong>.{" "}
-          {t("legalSuffix")}
-        </p>
-      </div>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href={`/${locale}/credits`}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-4 text-base font-black text-black transition-colors hover:bg-cyan-400"
+              >
+                <Coins size={18} />
+                {t("buyCredits")}
+              </Link>
+              <Link
+                href={`/${locale}/wallet/credit-history`}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-4 text-base font-black text-cyan-200 transition-colors hover:border-cyan-300/50 hover:bg-cyan-500/15"
+              >
+                <ReceiptText size={18} />
+                {t("viewPurchaseHistory")}
+              </Link>
+            </div>
+          </div>
 
-      {/* Dual Currency Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Card className="p-5 border-green-500/20 bg-green-500/[0.03]">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">🟢</span>
-            <h3 className="text-sm font-semibold text-green-400">
-              {t("freePointsTitle")}
-            </h3>
+          <div className="grid gap-3">
+            <BalanceCard
+              icon={Trophy}
+              title={t("freePointsTitle")}
+              value={freePoints.toLocaleString()}
+              description={t("freePointsDescription")}
+              tone="green"
+            />
+            <BalanceCard
+              icon={Gem}
+              title={t("premiumCreditsTitle")}
+              value={premiumCredits.toLocaleString()}
+              description={t("premiumCreditsDescription")}
+              tone="gold"
+              action={
+                <Link
+                  href={`/${locale}/wallet/credit-history`}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-amber-400/25 bg-amber-500/10 px-3 text-sm font-black text-amber-200 transition-colors hover:border-amber-300/50 hover:bg-amber-500/15"
+                >
+                  <History size={16} />
+                  {t("purchaseHistoryTitle")}
+                </Link>
+              }
+            />
           </div>
-          <div className="text-3xl font-bold font-mono text-green-400 mb-3">
-            {freePoints.toLocaleString()}
+        </div>
+      </section>
+
+      <Card className="border-red-500/20 bg-red-500/[0.04] p-4 sm:p-5">
+        <div className="flex gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-red-400/20 bg-red-500/10 text-red-300">
+            <AlertTriangle size={18} />
           </div>
-          <p className="text-xs text-gray-500 leading-relaxed">
-            {t("freePointsDescription")}
+          <p className="text-sm font-medium leading-6 text-gray-300">
+            <strong className="text-red-300">{t("importantLabel")}</strong>{" "}
+            {t("legalPrefix")} <strong>{t("noCashValue")}</strong>.{" "}
+            {t("legalSuffix")}
           </p>
-        </Card>
-
-        <Card className="p-5 border-amber-500/20 bg-amber-500/[0.03]">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">🟡</span>
-            <h3 className="text-sm font-semibold text-amber-400">
-              {t("premiumCreditsTitle")}
-            </h3>
-          </div>
-          <div className="text-3xl font-bold font-mono text-amber-400 mb-3">
-            {premiumCredits.toLocaleString()}
-          </div>
-          <p className="text-xs text-gray-500 leading-relaxed mb-3">
-            {t("premiumCreditsDescription")}
-          </p>
-          <Link
-            href={`/${locale}/credits`}
-            className="inline-block px-4 py-2 rounded-lg text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
-          >
-            {t("buyCredits")}
-          </Link>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       <ActivityHistory isLoggedIn={isLoggedIn} locale={locale} />
     </div>
@@ -237,10 +280,39 @@ function ActivityHistory({
   const chips = category === "all" ? [] : CATEGORY_TYPES[category];
 
   return (
-    <Card className="p-4 space-y-4">
-      <h3 className="text-sm font-semibold text-white">{t("activityTitle")}</h3>
+    <Card className="space-y-4 border-cyan-400/15 bg-[#0b111d] p-4 sm:p-5">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
+            <WalletCards size={20} />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-wider text-cyan-300">
+              {t("activityLedger")}
+            </p>
+            <h3 className="mt-1 text-xl font-black text-white">
+              {t("activityTitle")}
+            </h3>
+            <p className="mt-1 text-sm leading-6 text-gray-400">
+              {t("activityHint")}
+            </p>
+          </div>
+        </div>
+        <Link
+          href={`/${locale}/wallet/credit-history`}
+          className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-3 text-sm font-black text-cyan-200 transition-colors hover:border-cyan-300/50 hover:bg-cyan-500/15"
+        >
+          <ReceiptText size={16} />
+          {t("viewPurchaseHistory")}
+        </Link>
+      </div>
 
-      <Tabs tabs={tabs} activeTab={category} onChange={onCategoryChange} />
+      <Tabs
+        tabs={tabs}
+        activeTab={category}
+        onChange={onCategoryChange}
+        className="rounded-2xl border border-white/10 bg-black/20 px-2"
+      />
 
       {chips.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -274,19 +346,21 @@ function ActivityHistory({
         <EmptyState icon={<Inbox size={48} />} title={t("noActivities")} />
       ) : (
         <>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {items.map((item) => (
               <ActivityRow key={item.id} item={item} locale={locale} />
             ))}
           </div>
           {hasMore && (
-            <button
+            <Button
+              type="button"
+              variant="outline"
               onClick={loadMore}
-              disabled={loadingMore}
-              className="w-full mt-2 py-2.5 rounded-lg text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors disabled:opacity-50 cursor-pointer"
+              loading={loadingMore}
+              className="mt-2 min-h-11 w-full text-sm font-black"
             >
               {loadingMore ? t("loading") : t("loadMore")}
-            </button>
+            </Button>
           )}
         </>
       )}
@@ -307,7 +381,7 @@ function Chip({
     <button
       onClick={onClick}
       className={cn(
-        "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors cursor-pointer",
+        "min-h-9 px-3 rounded-full text-xs font-bold whitespace-nowrap border transition-colors cursor-pointer",
         active
           ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
           : "bg-transparent text-gray-500 border-gray-800 hover:text-gray-300 hover:border-gray-700"
@@ -341,25 +415,25 @@ function ActivityRow({
   const amountLabel = formatAmount(item.amount, meta.sign);
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-gray-800/50 last:border-0">
+    <div className="flex items-center gap-3 rounded-2xl border border-gray-800 bg-black/20 p-3">
       <div
         className={cn(
-          "shrink-0 w-9 h-9 rounded-lg flex items-center justify-center",
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
           ACCENT_CHIP[meta.accent]
         )}
       >
         <Icon size={18} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-gray-200 truncate">{title}</p>
+        <p className="truncate text-sm font-bold text-gray-100">{title}</p>
         {subtitle && (
-          <p className="text-[10px] text-gray-600 truncate">{subtitle}</p>
+          <p className="mt-1 truncate text-xs text-gray-500">{subtitle}</p>
         )}
       </div>
       {amountLabel && (
         <span
           className={cn(
-            "text-xs font-mono font-bold shrink-0",
+            "shrink-0 font-mono text-sm font-black",
             ACCENT_TEXT[meta.accent]
           )}
         >
@@ -378,4 +452,54 @@ function formatAmount(
   const magnitude = Math.abs(amount).toLocaleString();
   const resolvedSign = amount < 0 ? "-" : sign ?? "+";
   return `${resolvedSign}${magnitude}`;
+}
+
+function BalanceCard({
+  icon: Icon,
+  title,
+  value,
+  description,
+  tone,
+  action,
+}: {
+  icon: typeof Coins;
+  title: string;
+  value: string;
+  description: string;
+  tone: "green" | "gold";
+  action?: React.ReactNode;
+}) {
+  const toneClasses =
+    tone === "green"
+      ? {
+          border: "border-green-400/20",
+          bg: "bg-green-500/[0.04]",
+          icon: "border-green-400/20 bg-green-500/10 text-green-300",
+          value: "text-green-300",
+        }
+      : {
+          border: "border-amber-400/20",
+          bg: "bg-amber-500/[0.04]",
+          icon: "border-amber-400/20 bg-amber-500/10 text-amber-300",
+          value: "text-amber-300",
+        };
+
+  return (
+    <Card className={cn("relative overflow-hidden p-4 sm:p-5", toneClasses.border, toneClasses.bg)}>
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-black text-white">{title}</p>
+          <p className={cn("mt-2 font-mono text-4xl font-black leading-none", toneClasses.value)}>
+            {value}
+          </p>
+        </div>
+        <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border", toneClasses.icon)}>
+          <Icon size={22} />
+        </div>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-gray-400">{description}</p>
+      {action && <div className="mt-4">{action}</div>}
+    </Card>
+  );
 }

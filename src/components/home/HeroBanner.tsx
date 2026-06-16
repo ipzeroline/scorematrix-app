@@ -60,10 +60,9 @@ export function HeroBanner() {
 
       <div className="relative z-10 flex flex-col items-start justify-center h-full px-6 md:px-10">
         <h1
-          className={`hero-content font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2 ${
+          className={`hero-content text-2xl font-bold text-white mb-2 sm:text-3xl md:text-4xl ${
             isTransitioning ? "translate-y-2 opacity-0" : "translate-y-0 opacity-100"
           }`}
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
           {t(`${slide.key}.headline`)}
         </h1>

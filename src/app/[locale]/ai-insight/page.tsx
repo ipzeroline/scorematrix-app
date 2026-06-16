@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   ApiFootballError,
   getApiFootballAIInsights,
@@ -5,6 +6,10 @@ import {
   type ApiFootballAIInsightGroup,
   type GetAIInsightsResult,
 } from "@/lib/api-football";
+import { getAIInsightSeoContent } from "@/data/ai-insight-seo-content";
+import { LOCALE_CODES } from "@/i18n";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { MatchStatus } from "@/types/common";
 import { AIInsightListClient, type AIInsightListItem } from "./AIInsightListClient";
 
@@ -18,18 +23,113 @@ const GROUPS: ApiFootballAIInsightGroup[] = [
   "upsetAlert",
 ];
 
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const seo = getAIInsightSeoContent(locale);
+  const pathname = `/${locale}/ai-insight`;
+  const canonical = `${SITE_URL}${pathname}`;
+  const languages = Object.fromEntries(
+    LOCALE_CODES.map((code) => [code, `${SITE_URL}/${code}/ai-insight`])
+  );
+
+  return {
+    title: seo.title,
+    description: seo.description,
+    keywords: seo.keywords,
+    alternates: {
+      canonical,
+      languages: {
+        ...languages,
+        "x-default": `${SITE_URL}/th/ai-insight`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
+    },
+    openGraph: {
+      title: seo.ogTitle,
+      description: seo.ogDescription,
+      url: canonical,
+      siteName: SITE_NAME,
+      locale,
+      type: "website",
+      images: [
+        {
+          url: "/brand/scorematrix-logo.png",
+          width: 512,
+          height: 512,
+          alt: `${SITE_NAME} AI Insight`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.ogTitle,
+      description: seo.ogDescription,
+      images: ["/brand/scorematrix-logo.png"],
+    },
+  };
+}
+
 export default async function AIInsightPage({ params }: Props) {
   const { locale } = await params;
+  const seo = getAIInsightSeoContent(locale);
   const { response, failed } = await loadAIInsights();
   const insights = mapAIInsights(response)
     .sort((a, b) => sortInsights(a, b));
+  const structuredData = buildAIInsightStructuredData(locale, seo, insights);
 
   return (
-    <AIInsightListClient
-      locale={locale}
-      insights={insights}
-      source={failed ? "error" : insights.length > 0 ? "api" : "empty"}
-    />
+    <div className="space-y-8 pb-8">
+      <AIInsightListClient
+        locale={locale}
+        insights={insights}
+        source={failed ? "error" : insights.length > 0 ? "api" : "empty"}
+      />
+
+      <section className="mx-auto max-w-6xl rounded-2xl border border-cyan-300/15 bg-[#0b111d] p-5 md:p-6">
+        <div className="max-w-4xl">
+          <p className="text-sm font-black uppercase tracking-wide text-cyan-300">
+            ScoreMatrix AI Insight
+          </p>
+          <h2 className="mt-2 text-2xl font-black leading-tight text-white md:text-3xl">
+            {seo.pageTitle}
+          </h2>
+          <p className="mt-3 text-base font-semibold leading-7 text-gray-400">
+            {seo.pageDescription}
+          </p>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {seo.faqs.map((faq) => (
+            <article
+              key={faq.question}
+              className="rounded-2xl border border-white/10 bg-black/20 p-4"
+            >
+              <h3 className="text-base font-black leading-6 text-white">
+                {faq.question}
+              </h3>
+              <p className="mt-2 text-sm font-semibold leading-6 text-gray-400">
+                {faq.answer}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
+      />
+    </div>
   );
 }
 
@@ -203,4 +303,147 @@ function getInsightPriorityScore(insight: AIInsightListItem) {
   if (insight.categories.includes("upsetAlert")) score += 100;
   if (typeof insight.confidenceScore === "number") score += insight.confidenceScore;
   return score;
+}
+
+function buildAIInsightStructuredData(
+  locale: string,
+  seo: ReturnType<typeof getAIInsightSeoContent>,
+  insights: AIInsightListItem[]
+) {
+  const url = `${SITE_URL}/${locale}/ai-insight`;
+  const insightItems = insights.slice(0, 20).map((insight, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    item: {
+      "@type": "AnalysisNewsArticle",
+      headline: `${insight.homeTeam.name} vs ${insight.awayTeam.name} AI Insight`,
+      description: buildInsightDescription(insight),
+      datePublished: insight.generatedAt,
+      dateModified: insight.generatedAt,
+      mainEntityOfPage: `${url}/${insight.matchId}`,
+      about: {
+        "@type": "SportsEvent",
+        name: `${insight.homeTeam.name} vs ${insight.awayTeam.name}`,
+        startDate: insight.kickoffTime,
+        eventStatus: getSchemaEventStatus(insight.status),
+        sport: "Football",
+        organizer: {
+          "@type": "SportsOrganization",
+          name: insight.league.name,
+        },
+        homeTeam: {
+          "@type": "SportsTeam",
+          name: insight.homeTeam.name,
+        },
+        awayTeam: {
+          "@type": "SportsTeam",
+          name: insight.awayTeam.name,
+        },
+      },
+      author: {
+        "@type": "Organization",
+        name: SITE_NAME,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: SITE_NAME,
+      },
+    },
+  }));
+
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": `${url}#webpage`,
+      url,
+      name: seo.title,
+      description: seo.description,
+      inLanguage: locale,
+      isPartOf: {
+        "@type": "WebSite",
+        name: SITE_NAME,
+        url: SITE_URL,
+      },
+      about: [
+        "AI football predictions",
+        "football match analysis",
+        "football probability analysis",
+        "soccer prediction insights",
+      ],
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `${url}#faq`,
+      mainEntity: seo.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "@id": `${url}#breadcrumb`,
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: SITE_NAME,
+          item: `${SITE_URL}/${locale}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "AI Insight",
+          item: url,
+        },
+      ],
+    },
+    ...(insightItems.length > 0
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "@id": `${url}#insights`,
+            name: seo.pageTitle,
+            itemListElement: insightItems,
+          },
+        ]
+      : []),
+  ];
+}
+
+function buildInsightDescription(insight: AIInsightListItem) {
+  const parts = [
+    typeof insight.confidenceScore === "number"
+      ? `confidence ${insight.confidenceScore}%`
+      : null,
+    typeof insight.homeWinProbability === "number"
+      ? `home ${insight.homeWinProbability}%`
+      : null,
+    typeof insight.drawProbability === "number"
+      ? `draw ${insight.drawProbability}%`
+      : null,
+    typeof insight.awayWinProbability === "number"
+      ? `away ${insight.awayWinProbability}%`
+      : null,
+    insight.upsetAlert ? "upset alert" : null,
+  ].filter(Boolean);
+
+  return parts.length > 0
+    ? parts.join(", ")
+    : `AI football insight for ${insight.homeTeam.name} vs ${insight.awayTeam.name}`;
+}
+
+function getSchemaEventStatus(status: MatchStatus): string {
+  if (status === MatchStatus.LIVE) return "https://schema.org/EventInProgress";
+  if (status === MatchStatus.FINISHED) return "https://schema.org/EventCompleted";
+  if (status === MatchStatus.POSTPONED) return "https://schema.org/EventPostponed";
+  if (status === MatchStatus.CANCELLED) return "https://schema.org/EventCancelled";
+  return "https://schema.org/EventScheduled";
 }

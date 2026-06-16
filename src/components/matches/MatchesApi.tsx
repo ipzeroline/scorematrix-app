@@ -25,19 +25,20 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Trophy,
   X,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { useUserStore } from "@/stores/user-store";
 import { MatchStatus } from "@/types/common";
 import {
   cn,
-  formatDate,
   formatTime,
   getThailandDateKey,
   THAILAND_TIME_ZONE,
@@ -232,8 +233,8 @@ export function MatchesApi({
     [statusFilteredFixtures]
   );
   const groupedFixtures = useMemo(
-    () => groupFixturesByDay(sortedFixtures, locale, tableLabels),
-    [sortedFixtures, locale, tableLabels]
+    () => groupFixturesByLeague(sortedFixtures),
+    [sortedFixtures]
   );
   const activeMatchCount = sortedFixtures.length;
   const isToday = selectedDate === getThailandDateKey();
@@ -272,37 +273,43 @@ export function MatchesApi({
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8">
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8 px-4 sm:px-0">
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <Card
           neon="cyan"
-          className="relative overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/10 via-[#12121a] to-purple-500/10 p-5 md:p-6"
+          className="relative overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/15 via-[#0c0d12] to-purple-500/10 p-6 md:p-8"
         >
-          <div className="relative flex max-w-2xl flex-col gap-4">
-           
+          {/* Futuristic grid background decoration */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,26,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,26,0.5)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative flex max-w-2xl flex-col gap-5">
             <div>
-              <h1 className="font-display text-2xl font-bold text-white md:text-4xl">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">
+                <Sparkles size={11} className="animate-pulse" />
+                {t("matches.boardTitle")}
+              </div>
+              <h1 className="font-display text-3xl font-black text-white md:text-5xl tracking-tight mt-3">
                 {t("matches.title")}
               </h1>
-              <p className="mt-3 max-w-xl text-sm leading-6 text-gray-400 md:text-base">
+              <p className="mt-3 max-w-xl text-xs sm:text-sm leading-relaxed text-gray-400">
                 {t("matches.subtitle")}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-          
+            <div className="flex flex-wrap gap-2.5 pt-1">
               <Link href={`/${locale}/livescore`}>
-                <Button size="sm" neon>
-                  <Activity size={14} />
+                <Button size="sm" neon className="cursor-pointer font-bold tracking-wide">
+                  <Activity size={14} className="animate-pulse" />
                   {t("matches.liveCenter")}
                 </Button>
               </Link>
               <Link href={`/${locale}/predict`}>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="cursor-pointer font-bold tracking-wide border-gray-800 hover:border-cyan-500/30">
                   {t("dashboard.startPredicting")}
                 </Button>
               </Link>
               <Link href={`/${locale}/football/leagues`}>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" className="cursor-pointer font-bold tracking-wide border-gray-800 hover:border-cyan-500/30">
                   {t("nav.leagues")}
                 </Button>
               </Link>
@@ -310,54 +317,84 @@ export function MatchesApi({
           </div>
         </Card>
 
-        <Card className="grid grid-cols-2 gap-3 p-4 sm:grid-cols-5 lg:grid-cols-1">
+        <Card className="grid gap-2 border-cyan-300/10 bg-[#090b10] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:grid-cols-2 lg:grid-cols-1">
           {[
             {
               label: t("livescore.live"),
               value: matchStats.live,
               color: "text-green-400",
+              indicatorBg: "bg-green-500",
+              glowColor: "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+              icon: Activity,
             },
             {
               label: t("livescore.upcoming"),
               value: matchStats.upcoming,
               color: "text-cyan-400",
+              indicatorBg: "bg-cyan-500",
+              glowColor: "shadow-[0_0_8px_rgba(56,189,248,0.5)]",
+              icon: CalendarDays,
             },
             {
               label: t("livescore.finished"),
               value: matchStats.finished,
-              color: "text-green-400",
+              color: "text-gray-400",
+              indicatorBg: "bg-gray-500",
+              glowColor: "shadow-[0_0_8px_rgba(156,163,175,0.3)]",
+              icon: ShieldCheck,
             },
             {
               label: t("status.postponed"),
               value: matchStats.postponed,
               color: "text-amber-400",
+              indicatorBg: "bg-amber-500",
+              glowColor: "shadow-[0_0_8px_rgba(245,158,11,0.5)]",
+              icon: AlertTriangle,
             },
             {
               label: t("status.cancelled"),
               value: matchStats.cancelled,
               color: "text-red-400",
+              indicatorBg: "bg-red-500",
+              glowColor: "shadow-[0_0_8px_rgba(239,68,68,0.5)]",
+              icon: X,
             },
-          ].map((item) => (
-            <div
-              key={item.label}
-              className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3"
-            >
-              {isPending ? (
-                <Skeleton className="h-7 w-12 rounded-md" />
-              ) : (
-                <p className={cn("font-mono text-2xl font-bold", item.color)}>
-                  {item.value}
-                </p>
-              )}
-              <p className="mt-1 text-[10px] uppercase tracking-wider text-gray-500">
-                {item.label}
-              </p>
-            </div>
-          ))}
+          ].map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <div
+                key={item.label}
+                className={cn(
+                  "group relative flex min-h-[86px] items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/10 bg-[#0c111a] p-4 transition-colors hover:border-cyan-300/25",
+                  index === 4 && "sm:col-span-2 lg:col-span-1"
+                )}
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.03]", item.color)}>
+                    <Icon size={19} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-black leading-6 text-white">
+                      {item.label}
+                    </p>
+                    <span className={cn("mt-1 block h-1 w-10 rounded-full", item.indicatorBg, item.glowColor)} />
+                  </div>
+                </div>
+                {isPending ? (
+                  <Skeleton className="h-8 w-14 shrink-0 rounded" />
+                ) : (
+                  <p className={cn("shrink-0 font-mono text-3xl font-black leading-none", item.color)}>
+                    {item.value}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </Card>
       </section>
 
-      <Card className="overflow-hidden p-0">
+      <Card className="overflow-hidden p-0 bg-[#08090d] border-gray-800/80">
         <div className="flex flex-col gap-3 border-b border-cyan-500/15 bg-gradient-to-r from-cyan-500/[0.08] via-transparent to-fuchsia-500/[0.05] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
           <div className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-lg border border-cyan-500/25 bg-cyan-500/10 text-cyan-300">
@@ -373,7 +410,7 @@ export function MatchesApi({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-800 bg-black/20 px-3 text-xs text-gray-500">
+            <span className="inline-flex h-9 items-center gap-2 rounded-lg border border-gray-800 bg-black/20 px-3 text-xs text-gray-500 font-semibold uppercase tracking-wider font-mono">
               {isPending ? (
                 <LoaderCircle size={14} className="animate-spin text-cyan-400" />
               ) : null}
@@ -384,7 +421,7 @@ export function MatchesApi({
               size="sm"
               onClick={clearFilters}
               disabled={!hasActiveFilters}
-              className="h-9"
+              className="h-9 font-bold tracking-wide cursor-pointer"
             >
               <RotateCcw size={14} />
               {t("matches.clearFilters")}
@@ -392,12 +429,10 @@ export function MatchesApi({
           </div>
         </div>
 
-        <div className="grid gap-5 p-4 sm:p-5">
+        <div className="grid gap-5 p-4 sm:p-5 bg-[#090b10]">
           <div className="grid gap-3 lg:grid-cols-12">
             <div className="grid gap-2 lg:col-span-5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
-                {t("matches.dateFilter")}
-              </span>
+              <FilterLabel icon={CalendarDays} label={t("matches.dateFilter")} />
               <div className="grid gap-2 sm:grid-cols-[40px_minmax(0,1fr)_40px_auto]">
                 <label className="relative block sm:col-start-2 sm:row-start-1">
                   <CalendarDays size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-cyan-400" />
@@ -405,14 +440,14 @@ export function MatchesApi({
                     type="date"
                     value={selectedDate}
                     onChange={(event) => updateUrl("date", event.target.value)}
-                    className="h-11 w-full min-w-0 rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-3 text-sm text-white outline-none focus:border-cyan-500/50"
+                    className="h-11 w-full min-w-0 rounded-lg border border-gray-800 bg-[#0c0d12] pl-9 pr-3 text-sm text-white outline-none transition-all focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 font-semibold [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:invert"
                   />
                 </label>
                 <div className="grid grid-cols-[40px_40px_minmax(0,1fr)] gap-2 sm:contents">
-                  <Button variant="outline" size="sm" onClick={() => changeDate(-1)} aria-label={t("matches.previousDay")} className="h-11 sm:col-start-1 sm:row-start-1">
+                  <Button variant="outline" size="sm" onClick={() => changeDate(-1)} aria-label={t("matches.previousDay")} className="h-11 sm:col-start-1 sm:row-start-1 cursor-pointer">
                     <ChevronLeft size={16} />
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => changeDate(1)} aria-label={t("matches.nextDay")} className="h-11 sm:col-start-3 sm:row-start-1">
+                  <Button variant="outline" size="sm" onClick={() => changeDate(1)} aria-label={t("matches.nextDay")} className="h-11 sm:col-start-3 sm:row-start-1 cursor-pointer">
                     <ChevronRight size={16} />
                   </Button>
                   {!isToday ? (
@@ -420,7 +455,7 @@ export function MatchesApi({
                       size="sm"
                       variant="outline"
                       onClick={() => updateUrl("date", getThailandDateKey())}
-                      className="h-11 min-w-0 whitespace-nowrap px-3 text-cyan-300 sm:col-start-4 sm:row-start-1"
+                      className="h-11 min-w-0 whitespace-nowrap px-3 text-cyan-400 hover:text-cyan-300 font-bold sm:col-start-4 sm:row-start-1 cursor-pointer"
                     >
                       {t("matches.backToToday")}
                     </Button>
@@ -430,13 +465,11 @@ export function MatchesApi({
             </div>
 
             <label className="grid gap-2 lg:col-span-3">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
-                {t("matches.leagueFilter")}
-              </span>
+              <FilterLabel icon={ShieldCheck} label={t("matches.leagueFilter")} />
               <select
                 value={activeLeague}
                 onChange={(event) => updateUrl("league", event.target.value)}
-                className="h-11 min-w-0 rounded-lg border border-gray-800 bg-[#0a0a0f] px-3 text-sm text-white outline-none focus:border-cyan-500/50"
+                className="h-11 min-w-0 rounded-lg border border-gray-800 bg-[#0c0d12] px-3 text-sm text-white outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 transition-all font-semibold cursor-pointer"
               >
                 <option value="all">{t("livescore.allLeagues")}</option>
                 {leagues.map((league) => (
@@ -448,9 +481,7 @@ export function MatchesApi({
             </label>
 
             <label className="grid gap-2 lg:col-span-4">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
-                {t("matches.searchFilter")}
-              </span>
+              <FilterLabel icon={Search} label={t("matches.searchFilter")} />
               <span className="relative block">
                 <Search
                   size={15}
@@ -460,7 +491,7 @@ export function MatchesApi({
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
                   placeholder={t("livescore.searchTeams")}
-                  className="h-11 w-full rounded-lg border border-gray-800 bg-[#0a0a0f] pl-9 pr-10 text-sm text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-500/50"
+                  className="h-11 w-full rounded-lg border border-gray-800 bg-[#0c0d12] pl-9 pr-10 text-sm text-white placeholder-gray-500 outline-none transition-all focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/30 font-semibold"
                 />
                 {searchQuery ? (
                   <button
@@ -478,9 +509,7 @@ export function MatchesApi({
 
           {fixtures.length > 0 ? (
             <div className="grid gap-2 border-t border-gray-800/80 pt-4">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-500">
-                {t("matches.statusFilter")}
-              </span>
+              <FilterLabel icon={Activity} label={t("matches.statusFilter")} />
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
               {statusTabs.map((tab) => {
                 const isActive = activeStatusTab === tab.key;
@@ -491,17 +520,31 @@ export function MatchesApi({
                     type="button"
                     onClick={() => updateUrl("status_group", tab.key)}
                     className={cn(
-                      "flex min-h-11 items-center justify-between gap-2 rounded-lg border px-3 py-2 text-xs font-medium whitespace-nowrap transition-all duration-200",
+                      "flex min-h-11 items-center justify-between gap-2.5 rounded-lg border px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer",
                       isActive
                         ? getActiveStatusTabClass(tab.tone)
-                        : "border-gray-800 bg-[#12121a] text-gray-400 hover:border-gray-600"
+                        : "border-gray-800 bg-[#0c0d12] text-gray-400 hover:border-cyan-500/30 hover:bg-[#11131a] hover:text-white"
                     )}
                   >
-                    <span>{tab.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={cn(
+                        "h-1.5 w-1.5 rounded-full shrink-0",
+                        tab.tone === "green" ? "bg-green-400 shadow-[0_0_4px_rgba(74,222,128,0.5)]" :
+                        tab.tone === "amber" ? "bg-amber-400 shadow-[0_0_4px_rgba(251,191,36,0.5)]" :
+                        tab.tone === "red" ? "bg-red-400 shadow-[0_0_4px_rgba(248,113,113,0.5)]" :
+                        "bg-cyan-400 shadow-[0_0_4px_rgba(34,211,238,0.5)]"
+                      )} />
+                      <span>{tab.label}</span>
+                    </div>
                     {isPending ? (
                       <Skeleton className="h-5 w-7 rounded" />
                     ) : (
-                      <span className="rounded border border-white/10 bg-black/20 px-1.5 py-0.5 font-mono text-[10px] text-gray-500">
+                      <span className={cn(
+                        "rounded border px-1.5 py-0.5 font-mono text-[10px] transition-colors",
+                        isActive
+                          ? "border-white/10 bg-black/30 text-white"
+                          : "border-white/5 bg-black/15 text-gray-500"
+                      )}>
                         {tab.count}
                       </span>
                     )}
@@ -531,11 +574,13 @@ export function MatchesApi({
         </div>
       ) : null}
 
-      <Card className="overflow-hidden p-0">
-        <div className="flex flex-col gap-3 border-b border-gray-800 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="overflow-hidden p-0 border-gray-800/80 bg-[#07080b] relative">
+        {/* Esports accent line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
+        <div className="flex flex-col gap-3 border-b border-gray-800/60 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between bg-gradient-to-r from-[#0d0e14] via-[#07080b] to-[#0d0e14] mt-[2px]">
           <div className="flex items-center gap-2">
             <Sparkles size={14} className="text-cyan-400" />
-            <h2 className="text-sm font-semibold text-white">
+            <h2 className="text-sm font-semibold text-white uppercase tracking-wider font-display">
               {t("matches.boardTitle")}
             </h2>
           </div>
@@ -543,7 +588,7 @@ export function MatchesApi({
             {isPending ? (
               <Skeleton className="h-6 w-24 rounded-full" />
             ) : (
-              <Badge variant="cyan" size="sm" className="w-fit">
+              <Badge variant="cyan" size="sm" className="w-fit font-bold tracking-wide">
                 {t("dashboard.matchCount", { count: activeMatchCount })}
               </Badge>
             )}
@@ -553,14 +598,14 @@ export function MatchesApi({
         {isPending ? (
           <MatchesBoardSkeleton />
         ) : fixtures.length === 0 ? (
-          <div className="p-10 text-center text-sm text-gray-500">
+          <div className="p-12 text-center text-sm text-gray-500">
             {t("livescore.noMatches")}
           </div>
         ) : (
-          <div className="bg-[#08080d] p-3 sm:p-4">
+          <div className="bg-[#050508] p-3 sm:p-4">
             {activeMatchCount === 0 ? (
-              <div className="rounded-lg border border-gray-800 bg-[#101018] p-10 text-center">
-                <p className="text-sm font-semibold text-white">
+              <div className="rounded-lg border border-gray-800 bg-[#0d0f14] p-12 text-center">
+                <p className="text-sm font-bold text-white">
                   {t("livescore.noMatches")}
                 </p>
                 <p className="mt-1 text-xs text-gray-500">
@@ -601,10 +646,10 @@ export function MatchesApi({
         ].map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.title} className="p-4">
+            <Card key={item.title} className="p-5 border-gray-800/80 bg-[#090b10] hover:border-cyan-500/20 transition-all duration-300">
               <Icon size={18} className="mb-3 text-cyan-400" />
-              <h3 className="text-sm font-semibold text-white">{item.title}</h3>
-              <p className="mt-2 text-xs leading-5 text-gray-500">{item.text}</p>
+              <h3 className="text-sm font-bold text-white tracking-wide">{item.title}</h3>
+              <p className="mt-2 text-xs leading-relaxed text-gray-500">{item.text}</p>
             </Card>
           );
         })}
@@ -616,31 +661,27 @@ export function MatchesApi({
 function MatchesBoardSkeleton() {
   return (
     <div
-      className="space-y-3 bg-[#08080d] p-3 sm:p-4"
+      className="space-y-3 bg-[#050508] p-3 sm:p-4 animate-pulse"
       aria-hidden="true"
     >
-      <div className="rounded-xl border border-gray-800 bg-[#101018]">
-        <div className="flex items-center justify-between gap-4 border-b border-gray-800 px-4 py-3">
-          <Skeleton className="h-4 w-36 rounded" />
-          <Skeleton className="h-4 w-20 rounded" />
-        </div>
-        <div className="divide-y divide-gray-800/80">
+      <div className="rounded-xl border border-gray-800 bg-[#0c0d12]">
+        <div className="divide-y divide-gray-800/50">
           {Array.from({ length: 6 }, (_, index) => (
             <div
               key={index}
-              className="grid min-h-20 grid-cols-[48px_minmax(0,1fr)_54px] items-center gap-3 px-3 py-3 sm:grid-cols-[64px_minmax(0,1fr)_80px_minmax(0,1fr)_96px] sm:px-4"
+              className="grid min-h-12 grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3"
             >
-              <Skeleton className="h-4 w-10 rounded" />
-              <div className="flex items-center gap-2 sm:justify-end">
-                <Skeleton className="h-9 w-9 shrink-0 rounded-full sm:order-2" />
-                <Skeleton className="h-4 w-20 rounded sm:w-28" />
+              <Skeleton className="h-4 w-12 rounded" />
+              <div className="flex items-center gap-2 justify-end">
+                <Skeleton className="h-3.5 w-20 rounded" />
+                <Skeleton className="h-6 w-6 rounded-full" />
               </div>
-              <Skeleton className="h-8 w-12 justify-self-center rounded-lg sm:w-16" />
-              <div className="hidden items-center gap-2 sm:flex">
-                <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
-                <Skeleton className="h-4 w-28 rounded" />
+              <Skeleton className="h-7 w-12 mx-auto rounded" />
+              <div className="flex items-center gap-2 justify-start">
+                <Skeleton className="h-6 w-6 rounded-full" />
+                <Skeleton className="h-3.5 w-20 rounded" />
               </div>
-              <Skeleton className="hidden h-6 w-20 justify-self-end rounded-full sm:block" />
+              <Skeleton className="h-7 w-16 justify-self-end rounded" />
             </div>
           ))}
         </div>
@@ -736,19 +777,35 @@ function getStatusTabLabel(
   return labels.cancelled;
 }
 
+function FilterLabel({
+  icon: Icon,
+  label,
+}: {
+  icon: LucideIcon;
+  label: string;
+}) {
+  return (
+    <span className="inline-flex w-fit items-center gap-2 rounded-full border border-cyan-300/15 bg-cyan-300/[0.06] px-3 py-1.5 text-xs font-black leading-none text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.08)]">
+      <Icon size={14} className="text-cyan-300" />
+      {label}
+    </span>
+  );
+}
+
+
 function getActiveStatusTabClass(
   tone: (typeof STATUS_TAB_DEFINITIONS)[number]["tone"]
 ) {
   if (tone === "green") {
-    return "border-green-500/30 bg-green-500/15 text-green-300";
+    return "border-green-500/50 bg-green-500/10 text-green-400 shadow-[0_0_12px_rgba(16,185,129,0.15)]";
   }
   if (tone === "amber") {
-    return "border-amber-500/30 bg-amber-500/15 text-amber-300";
+    return "border-amber-500/50 bg-amber-500/10 text-amber-400 shadow-[0_0_12px_rgba(234,179,8,0.15)]";
   }
   if (tone === "red") {
-    return "border-red-500/30 bg-red-500/15 text-red-300";
+    return "border-red-500/50 bg-red-500/10 text-red-400 shadow-[0_0_12px_rgba(239,68,68,0.15)]";
   }
-  return "border-cyan-500/30 bg-cyan-500/20 text-cyan-400";
+  return "border-cyan-500/50 bg-cyan-500/10 text-cyan-400 shadow-[0_0_12px_rgba(56,189,248,0.15)]";
 }
 
 function sortMatchesByKickoffTime(fixtures: ApiFootballFixture[]) {
@@ -758,37 +815,18 @@ function sortMatchesByKickoffTime(fixtures: ApiFootballFixture[]) {
   );
 }
 
-type DayFixtureGroup = {
+type LeagueFixtureGroup = {
   key: string;
   label: string;
+  country: string | null;
+  logo: string | null;
   matches: ApiFootballFixture[];
 };
 
-function groupFixturesByDay(
-  fixtures: ApiFootballFixture[],
-  locale: string,
-  labels: Pick<MatchTableLabels, "today" | "tomorrow">
-) {
-  const groups = new Map<string, DayFixtureGroup>();
-  const todayKey = getThailandDateKey();
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowKey = getThailandDateKey(tomorrow);
-
+function groupFixturesByLeague(fixtures: ApiFootballFixture[]) {
+  const groups = new Map<string, LeagueFixtureGroup>();
   for (const fixture of fixtures) {
-    const date = new Date(fixture.kickoffTime);
-    const key = getThailandDateKey(date);
-    const label =
-      key === todayKey
-        ? labels.today
-        : key === tomorrowKey
-          ? labels.tomorrow
-          : new Intl.DateTimeFormat(locale, {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              timeZone: THAILAND_TIME_ZONE,
-            }).format(date);
+    const key = String(fixture.league.apiLeagueId ?? fixture.league.id ?? fixture.league.name);
     const existing = groups.get(key);
 
     if (existing) {
@@ -796,14 +834,17 @@ function groupFixturesByDay(
     } else {
       groups.set(key, {
         key,
-        label,
+        label: fixture.league.name,
+        country: fixture.league.country,
+        logo: fixture.league.logo,
         matches: [fixture],
       });
     }
   }
 
   return Array.from(groups.values()).sort((left, right) =>
-    left.key.localeCompare(right.key)
+    new Date(left.matches[0]?.kickoffTime ?? 0).getTime() -
+      new Date(right.matches[0]?.kickoffTime ?? 0).getTime()
   );
 }
 
@@ -822,33 +863,6 @@ function getEmptyStateTitle(
   return labels.matches;
 }
 
-function getFixtureRowTone(statusGroup: MatchStatus | string, index: number) {
-  if (statusGroup === MatchStatus.LIVE) {
-    return "bg-gradient-to-r from-rose-500/[0.08] via-[#101018] to-[#101018]";
-  }
-
-  return index % 2 === 0 ? "bg-[#101018]" : "bg-[#0d1118]";
-}
-
-function getScoreTone(statusGroup: MatchStatus | string) {
-  if (statusGroup === MatchStatus.LIVE) {
-    return "border-rose-400/25 bg-rose-500/10";
-  }
-  if (statusGroup === MatchStatus.UPCOMING) {
-    return "border-cyan-400/15 bg-cyan-500/[0.05]";
-  }
-  if (statusGroup === MatchStatus.POSTPONED) {
-    return "border-amber-400/20 bg-amber-500/[0.06]";
-  }
-  if (statusGroup === MatchStatus.CANCELLED) {
-    return "border-red-400/20 bg-red-500/[0.06]";
-  }
-  if (statusGroup === MatchStatus.FINISHED) {
-    return "border-white/8 bg-black/20";
-  }
-
-  return "border-white/10 bg-black/25";
-}
 
 const FlatMatchesSection = memo(function FlatMatchesSection({
   groups,
@@ -858,7 +872,7 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
   activeStatusTab,
   searchQuery,
 }: {
-  groups: DayFixtureGroup[];
+  groups: LeagueFixtureGroup[];
   locale: string;
   labels: MatchTableLabels;
   isLoggedIn: boolean;
@@ -867,7 +881,7 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
 }) {
   if (groups.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-800 bg-[#101018] p-10 text-center">
+      <div className="rounded-lg border border-gray-800 bg-[#0d0f14] p-10 text-center">
         <p className="text-sm font-semibold text-white">
           {getEmptyStateTitle(activeStatusTab, labels)}
         </p>
@@ -881,19 +895,59 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
   }
 
   return (
-    <section className="overflow-hidden rounded-lg border border-gray-800 bg-[#101018]">
+    <section className="overflow-hidden rounded-xl border border-gray-800/70 bg-[#07080b]">
+      {/* Desktop Table Header */}
+      <div className="hidden md:grid grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white">
+        <div className="pl-1">{labels.time}</div>
+        <div className="text-right pr-3">{labels.home}</div>
+        <div className="text-center">{labels.vs}</div>
+        <div className="text-left pl-3">{labels.away}</div>
+        <div className="text-right pr-4">{labels.predict}</div>
+      </div>
+
       {groups.map((group) => (
         <div key={group.key}>
-          <div className="border-y border-gray-800/80 bg-[#0b0f15] px-3 py-2 sm:px-4">
-            <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
-              <p suppressHydrationWarning className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-200">
-                {group.label}
-              </p>
-              <span className="text-[11px] text-gray-500">{group.matches.length}</span>
+          {/* League Subheader */}
+          <div className="relative overflow-hidden border-b border-cyan-300/10 bg-gradient-to-r from-cyan-300/[0.14] via-[#0b1018] to-fuchsia-400/[0.08] px-4 py-3.5 sm:px-5">
+            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-300 via-fuchsia-400 to-amber-300" />
+            <div className="absolute right-0 top-0 h-full w-40 bg-[linear-gradient(135deg,transparent_0%,rgba(34,211,238,0.08)_42%,transparent_43%,transparent_58%,rgba(217,70,239,0.08)_59%,transparent_100%)]" />
+            <div className="relative flex min-w-0 items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative">
+                  <span className="absolute -inset-1 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] shadow-[0_0_22px_rgba(34,211,238,0.12)]" />
+                  <span className="relative block">
+                    <ApiLeagueLogo name={group.label} logo={group.logo} size="sm" />
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Trophy
+                      size={14}
+                      className="shrink-0 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.35)]"
+                    />
+                    <p className="min-w-0 truncate text-base font-black uppercase tracking-widest text-white">
+                      {group.label}
+                    </p>
+                  </div>
+                  <div className="mt-1 flex items-center gap-2">
+                    <div className="h-0.5 w-20 rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-transparent" />
+                    {group.country ? (
+                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-cyan-200/70">
+                        {group.country}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+              <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-cyan-300/20 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100 shadow-[inset_0_0_18px_rgba(34,211,238,0.08)]">
+                <span>{group.matches.length}</span>
+                <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
+                  {labels.matches}
+                </span>
+              </span>
             </div>
           </div>
-          <div className="divide-y divide-gray-800/70">
+          <div className="divide-y divide-gray-800/30">
             {group.matches.map((match, index) => (
               <MatchFixtureRow
                 key={match.id}
@@ -929,7 +983,6 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
     () => buildMatchDetailHref(match, locale),
     [match, locale]
   );
-  const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
   const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
   const statusGroup = useMemo(() => getFixtureStatusGroup(match), [match]);
   const statusLabel = useMemo(
@@ -951,8 +1004,6 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
     [locale, match]
   );
   const showPredictAction = isLoggedIn && statusGroup === MatchStatus.UPCOMING;
-  const rowTone = getFixtureRowTone(statusGroup, index);
-  const scoreTone = getScoreTone(statusGroup);
 
   return (
     <article
@@ -965,158 +1016,238 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
           router.push(matchDetailHref);
         }
       }}
-      className={cn(
-        "group relative cursor-pointer transition-colors duration-200 hover:bg-white/2.5",
-        rowTone
-      )}
+      className="group relative cursor-pointer transition-all duration-200 outline-none"
     >
-      <div className="flex flex-col gap-4 p-3 sm:p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800/70 pb-3">
-          <div className="flex min-w-0 flex-wrap items-center gap-2 text-[10px] sm:text-[11px]">
-            <span className="truncate rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2 py-1 font-semibold tracking-wide text-cyan-200 uppercase">
-              {match.league.name}
-            </span>
-            <span className="truncate text-gray-500">{match.league.country}</span>
-            {/* {match.league.round && (
-              <span className="truncate text-gray-600">{match.league.round}</span>
-            )} */}
-          </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <div className="flex items-center gap-2 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5">
-              <CalendarDays size={13} className="shrink-0 text-cyan-300" />
-              <span suppressHydrationWarning className="text-[11px] text-gray-300">{matchDate}</span>
-              <span suppressHydrationWarning className="font-mono text-xs font-bold text-cyan-300 sm:text-sm">
-                {matchTime}
-              </span>
-            </div>
+      {/* Desktop Grid Row */}
+      <div
+        className={cn(
+          "hidden md:grid grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 transition-all duration-200 border-l-2",
+          statusGroup === MatchStatus.LIVE
+            ? "border-l-green-500 bg-gradient-to-r from-green-500/[0.04] via-transparent to-transparent"
+            : statusGroup === MatchStatus.UPCOMING
+            ? "border-l-cyan-500/20 group-hover:border-l-cyan-400"
+            : "border-l-transparent",
+          index % 2 === 0 ? "bg-[#0c0d12]" : "bg-[#090a0e]",
+          "hover:bg-[#121622] group-focus-visible:bg-[#121622]"
+        )}
+      >
+        {/* Column 1: Time / Status */}
+        <div className="flex flex-col justify-center items-start pl-1">
+          <span className="font-mono text-xs font-black tracking-wider text-cyan-200">
+            {matchTime}
+          </span>
+          <div className="mt-0.5">
             {statusGroup === MatchStatus.LIVE ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-rose-400/35 bg-rose-500/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-200">
-                <span className="live-status-dot h-1.5 w-1.5 rounded-full bg-rose-300" />
+              <span className="inline-flex items-center gap-1 rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-green-300 animate-pulse">
+                <span className="h-1 w-1 rounded-full bg-green-400 live-status-dot" />
                 {labels.live}
               </span>
-            ) : null}
-            <StatusBadge status={match.status} label={statusLabel} />
+            ) : (
+              <span className={cn(
+                "text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md border border-white/5 bg-white/[0.03] text-gray-400",
+                statusGroup === MatchStatus.POSTPONED && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                statusGroup === MatchStatus.CANCELLED && "bg-red-500/10 text-red-400 border-red-500/20"
+              )}>
+                {statusLabel}
+              </span>
+            )}
           </div>
         </div>
 
-        <div
-          className={cn(
-            "grid grid-cols-[minmax(0,1fr)_96px_minmax(0,1fr)] gap-2 items-center sm:gap-3",
-            showPredictAction
-              ? "sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_120px]"
-              : "sm:grid-cols-[minmax(0,1fr)_140px_minmax(0,1fr)]"
-          )}
-        >
-          <Link href={matchDetailHref} className="min-w-0">
-            <TeamMatchBlock
+        {/* Column 2: Home Team */}
+        <div className="flex items-center justify-end gap-2 text-right min-w-0 pr-1">
+          <span className="truncate text-sm font-black text-gray-300 group-hover:text-cyan-300 transition-colors tracking-wide">
+            {match.home.name}
+          </span>
+          <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <ApiTeamLogo
               name={match.home.name}
               logo={match.home.logo}
-              align="right"
-              side="home"
+              size="xs"
+              accent="cyan"
             />
-          </Link>
-
-          <Link
-            href={matchDetailHref}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 rounded-xl border px-3 py-3 text-center",
-              scoreTone
-            )}
-          >
-            <span className="font-mono text-lg font-bold tracking-wide text-white sm:text-xl">
-              {match.score.home !== null
-                ? `${match.score.home} - ${match.score.away}`
-                : labels.vs}
-            </span>
-            <span className="text-[10px] text-gray-500 sm:text-[11px]">{statusDetail}</span>
-          </Link>
-
-          <Link href={matchDetailHref} className="min-w-0">
-            <TeamMatchBlock
-              name={match.away.name}
-              logo={match.away.logo}
-              align="left"
-              side="away"
-            />
-          </Link>
-
-          {showPredictAction ? (
-            <div className="col-span-3 hidden sm:flex sm:col-span-1 sm:justify-end">
-              <Link
-                href={predictMatchHref}
-                onClick={(event) => event.stopPropagation()}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-500 px-4 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400 sm:text-sm"
-              >
-                {labels.predictScore}
-              </Link>
-            </div>
-          ) : null}
+          </div>
         </div>
 
-        <div className="sm:hidden">
+        {/* Column 3: Score / VS Pill */}
+        <div className="flex flex-col items-center justify-center shrink-0">
+          <div className={cn(
+            "flex min-w-[58px] items-center justify-center px-2.5 py-1.5 rounded-lg border font-mono text-xs font-black tracking-wider transition-all duration-200",
+            statusGroup === MatchStatus.LIVE
+              ? "bg-green-500/15 border-green-500/35 text-green-400"
+              : statusGroup === MatchStatus.FINISHED
+              ? "bg-gray-800/20 border-gray-700/50 text-gray-300"
+              : "bg-cyan-500/5 border-cyan-500/15 text-cyan-300"
+          )}>
+            {match.score.home !== null ? (
+              <span className="font-extrabold tabular-nums">
+                {match.score.home} - {match.score.away}
+              </span>
+            ) : (
+              <span className="text-[11px] uppercase text-cyan-200 font-black px-1">
+                {labels.vs}
+              </span>
+            )}
+          </div>
+          {statusDetail && (
+            <span className="text-[8px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wider truncate max-w-[92px]">
+              {statusDetail}
+            </span>
+          )}
+        </div>
+
+        {/* Column 4: Away Team */}
+        <div className="flex items-center justify-start gap-2 text-left min-w-0 pl-1">
+          <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <ApiTeamLogo
+              name={match.away.name}
+              logo={match.away.logo}
+              size="xs"
+              accent="magenta"
+            />
+          </div>
+          <span className="truncate text-sm font-black text-gray-300 group-hover:text-magenta-300 transition-colors tracking-wide">
+            {match.away.name}
+          </span>
+        </div>
+
+        {/* Column 5: Actions / Navigation */}
+        <div className="flex items-center justify-end gap-2 pr-1">
           {showPredictAction ? (
             <Link
               href={predictMatchHref}
               onClick={(event) => event.stopPropagation()}
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-amber-500 px-4 text-xs font-semibold text-black transition-all duration-200 hover:bg-amber-400"
+              className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 px-3 text-[11px] font-black tracking-wide text-black transition-all duration-200 shadow-md shadow-amber-500/10 hover:scale-[1.02]"
             >
-              {labels.predictScore}
+              {labels.predict}
             </Link>
           ) : null}
+          <Link
+            href={matchDetailHref}
+            onClick={(event) => event.stopPropagation()}
+            aria-label={labels.viewDetails}
+            title={labels.viewDetails}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.06] text-cyan-100 transition-all duration-200 hover:border-cyan-200/40 hover:bg-cyan-300/10"
+          >
+            <ChevronRight size={14} />
+          </Link>
+        </div>
+      </div>
+
+      {/* Mobile Row Layout */}
+      <div
+        className={cn(
+          "border-b border-gray-900/60 border-l-4 px-3.5 py-4 transition-all duration-200 md:hidden",
+          statusGroup === MatchStatus.LIVE
+            ? "border-l-green-500 bg-gradient-to-r from-green-500/[0.03] to-transparent"
+          : statusGroup === MatchStatus.UPCOMING
+            ? "border-l-cyan-500/20"
+            : "border-l-transparent",
+          index % 2 === 0 ? "bg-[#0c0d12]" : "bg-[#090a0e]"
+        )}
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="whitespace-nowrap text-base font-black leading-none text-cyan-200">
+              {matchTime}
+            </div>
+            {statusDetail ? (
+              <div className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide text-gray-500">
+                {statusDetail}
+              </div>
+            ) : null}
+          </div>
+          {statusGroup === MatchStatus.LIVE ? (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-green-500/30 bg-green-500/10 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-green-300">
+              <span className="h-1 w-1 rounded-full bg-green-400 live-status-dot" />
+              {labels.live}
+            </span>
+          ) : (
+            <span className={cn(
+              "shrink-0 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-gray-300",
+              statusGroup === MatchStatus.POSTPONED && "bg-amber-500/10 text-amber-400 border-amber-500/20",
+              statusGroup === MatchStatus.CANCELLED && "bg-red-500/10 text-red-400 border-red-500/20"
+            )}>
+              {statusLabel}
+            </span>
+          )}
         </div>
 
-        <div className="flex items-center justify-end border-t border-gray-800/60 pt-2">
-          <span className="inline-flex items-center gap-2 text-[11px] font-medium text-gray-500 transition-colors duration-200 group-hover:text-cyan-200 sm:text-xs">
-            <span>{labels.viewDetails}</span>
-            <span className="text-base leading-none sm:text-lg">&gt;</span>
+        <div className="grid grid-cols-[minmax(0,1fr)_58px_minmax(0,1fr)] items-center gap-2.5">
+          <div className="min-w-0">
+            <div className="mb-1.5 flex justify-center">
+              <ApiTeamLogo
+                name={match.home.name}
+                logo={match.home.logo}
+                size="sm"
+                accent="cyan"
+              />
+            </div>
+            <span className="block truncate text-center text-sm font-black leading-tight text-gray-100">
+              {match.home.name}
+            </span>
+          </div>
+
+          <div className="flex justify-center">
+            <div className={cn(
+              "grid min-h-10 min-w-12 place-items-center rounded-xl border px-2 font-mono text-xs font-black",
+              statusGroup === MatchStatus.LIVE
+                ? "bg-green-500/10 border-green-500/30 text-green-400"
+                : statusGroup === MatchStatus.FINISHED
+                ? "bg-gray-800/20 border-gray-700/50 text-gray-300"
+                : "bg-cyan-500/5 border-cyan-500/15 text-cyan-300"
+            )}>
+              {match.score.home !== null ? (
+                <span className="tabular-nums">{match.score.home}-{match.score.away}</span>
+              ) : (
+                <span className="uppercase text-cyan-300">{labels.vs}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <div className="mb-1.5 flex justify-center">
+              <ApiTeamLogo
+                name={match.away.name}
+                logo={match.away.logo}
+                size="sm"
+                accent="magenta"
+              />
+            </div>
+            <span className="block truncate text-center text-sm font-black leading-tight text-gray-100">
+              {match.away.name}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+          <span className="truncate text-xs font-semibold text-gray-500">
+            {match.league.round ?? labels.viewDetails}
           </span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            {showPredictAction ? (
+              <Link
+                href={predictMatchHref}
+                onClick={(event) => event.stopPropagation()}
+                className="inline-flex h-8 items-center justify-center rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 px-3 text-xs font-black uppercase tracking-wide text-black transition-colors"
+              >
+                {labels.predict}
+              </Link>
+            ) : null}
+            <Link
+              href={matchDetailHref}
+              onClick={(event) => event.stopPropagation()}
+              aria-label={labels.viewDetails}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200 transition-colors hover:border-cyan-200/40 hover:bg-cyan-300/10"
+            >
+              <ChevronRight size={14} />
+            </Link>
+          </div>
         </div>
       </div>
     </article>
   );
 });
-
-function TeamMatchBlock({
-  name,
-  logo,
-  align,
-  side,
-}: {
-  name: string;
-  logo: string | null;
-  align: "left" | "right";
-  side: "home" | "away";
-}) {
-  return (
-    <div
-      className={cn(
-        "flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 text-center transition-colors sm:flex-row sm:gap-3 sm:px-3 sm:py-3",
-        side === "home"
-          ? "border-cyan-500/15 bg-cyan-500/[0.04]"
-          : "border-fuchsia-500/15 bg-fuchsia-500/[0.04]",
-        align === "right" && "sm:justify-end sm:text-right"
-      )}
-    >
-      <div
-        className={cn(
-          align === "right" && "sm:order-2"
-        )}
-      >
-        <ApiTeamLogo
-          name={name}
-          logo={logo}
-          size="md"
-          accent={side === "home" ? "cyan" : "magenta"}
-        />
-      </div>
-      <div className={cn("min-w-0", align === "right" && "sm:order-1")}>
-        <p className="truncate text-[13px] font-semibold leading-tight text-white sm:text-base">
-          {name}
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function buildMatchDetailHref(match: ApiFootballFixture, locale: string) {
   return `/${locale}/matches/detail/${match.apiFixtureId ?? buildFixtureSeoSlug(match)}`;
@@ -1170,9 +1301,6 @@ function getMatchStatusDetail(
   return statusLong || statusShort || fallbackLabel;
 }
 
-function formatMatchDate(match: ApiFootballFixture, locale: string) {
-  return formatDate(match.kickoffTime, locale);
-}
 
 function formatMatchTime(match: ApiFootballFixture, locale: string) {
   return formatTime(match.kickoffTime, locale);

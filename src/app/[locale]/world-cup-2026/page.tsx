@@ -158,7 +158,7 @@ export default async function WorldCup2026Page({ params }: Props) {
   );
 }
 
-async function getWorldCupGroups(): Promise<WorldCupGroup[]> {
+export async function getWorldCupGroups(): Promise<WorldCupGroup[]> {
   try {
     const { standings, fixtures } = await getApiFootballLeagueDetail(
       WORLD_CUP_LEAGUE_ID,

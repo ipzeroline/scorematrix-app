@@ -106,7 +106,7 @@ function StandingsCard({
   details: LocalizedDetailCopy;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={Trophy}
         title={details.standings}
@@ -136,7 +136,7 @@ function StandingColumn({
 
   if (!standing) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="rounded-xl border border-border bg-elevated/40 p-4">
         <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
         <div className="mt-3">
           <EmptyState label={details.noPrediction} />
@@ -150,7 +150,7 @@ function StandingColumn({
     .filter((value): value is "W" | "D" | "L" => value === "W" || value === "D" || value === "L");
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className={cn("truncate text-sm font-bold", accent)}>{name}</h3>
@@ -159,7 +159,7 @@ function StandingColumn({
           ) : null}
         </div>
         {typeof standing.rank === "number" ? (
-          <span className="shrink-0 rounded-full border border-white/10 bg-black/30 px-3 py-1 font-mono text-sm font-black text-white">
+          <span className="shrink-0 rounded-full border border-border bg-bg/50 px-3 py-1 font-mono text-sm font-black text-white">
             #{standing.rank}
           </span>
         ) : null}
@@ -172,9 +172,9 @@ function StandingColumn({
               key={`${name}-${result}-${index}`}
               className={cn(
                 "flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black",
-                result === "W" && "bg-green-500/18 text-green-300",
-                result === "D" && "bg-amber-500/18 text-amber-300",
-                result === "L" && "bg-red-500/18 text-red-300"
+                result === "W" && "bg-success/10 text-success border border-success/20",
+                result === "D" && "bg-warning/10 text-warning border border-warning/20",
+                result === "L" && "bg-danger/10 text-danger border border-danger/20"
               )}
             >
               {result}
@@ -212,7 +212,7 @@ function TeamStatsCard({
   details: LocalizedDetailCopy;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={BarChart3}
         title={details.teamStatsSeason}
@@ -242,7 +242,7 @@ function TeamStatsColumn({
 
   if (!stats) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="rounded-xl border border-border bg-elevated/40 p-4">
         <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
         <div className="mt-3">
           <EmptyState label={details.noPrediction} />
@@ -252,11 +252,11 @@ function TeamStatsColumn({
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <div className="flex items-center justify-between gap-3">
         <h3 className={cn("truncate text-sm font-bold", accent)}>{name}</h3>
         {stats.formations ? (
-          <span className="shrink-0 rounded-full border border-white/10 bg-black/30 px-2.5 py-0.5 font-mono text-xs text-gray-200">
+          <span className="shrink-0 rounded-full border border-border bg-bg/50 px-2.5 py-0.5 font-mono text-xs text-text-secondary">
             {stats.formations}
           </span>
         ) : null}
@@ -284,7 +284,7 @@ function FixtureMetaCard({
   locale: string;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={Clock3}
         title={details.fixtureMeta}
@@ -319,7 +319,7 @@ function FormIndexOverview({
   details: LocalizedDetailCopy;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(11,19,32,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={TrendingUp}
         title={details.formIndex}
@@ -362,7 +362,7 @@ function RecentProfileOverview({
   const accent = tone === "cyan" ? "text-cyan-300" : "text-magenta";
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <h3 className={cn("text-sm font-bold", accent)}>{name}</h3>
       <div className="mt-3 grid gap-2 text-sm text-gray-300">
         <InfoRow label={details.formIndex} value={formatNullableNumber(formIndex)} />
@@ -391,7 +391,7 @@ function KeyFactorsPanel({
   copy: ReturnType<typeof getAIInsightPageCopy>;
 }) {
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(11,19,32,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={Sparkles}
         title={copy.labels.keyFactors}
@@ -405,10 +405,10 @@ function KeyFactorsPanel({
           factors.map((factor) => (
             <div
               key={factor}
-              className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-gray-300"
+              className="flex items-start gap-3 rounded-xl border border-border bg-elevated/40 p-4 text-sm text-text-secondary leading-relaxed"
             >
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-cyan-300" />
-              <span className="leading-6">{factor}</span>
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+              <span>{factor}</span>
             </div>
           ))
         )}
@@ -432,7 +432,7 @@ function InjuryImpactCard({
 }) {
   if (!injuryImpact) {
     return (
-      <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+      <Card className="border-border bg-surface p-5 shadow-xl">
         <SectionHeading
           icon={HeartPulse}
           title={details.injuryDesk}
@@ -447,7 +447,7 @@ function InjuryImpactCard({
   }
 
   return (
-    <Card className="border-white/10 bg-[linear-gradient(180deg,rgba(10,16,28,0.96),rgba(7,10,18,0.98))] p-5">
+    <Card className="border-border bg-surface p-5 shadow-xl">
       <SectionHeading
         icon={HeartPulse}
         title={details.injuryDesk}
@@ -489,14 +489,14 @@ function InjuryTeamCard({
 }) {
   const toneClasses =
     tone === "cyan"
-      ? "border-cyan-400/15 bg-cyan-400/6 text-cyan-200"
-      : "border-magenta/15 bg-magenta/6 text-magenta";
+      ? "border-primary/20 bg-primary/10 text-primary"
+      : "border-magenta/20 bg-magenta/10 text-magenta";
 
   // formatSlashMetric inline to avoid import overhead
   const slashMetric = typeof impact === "number" ? `${Math.round(impact * 10) / 10}/10` : "-/10";
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-border bg-elevated/40 p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-base font-bold text-white">{name}</h3>

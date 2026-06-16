@@ -87,10 +87,7 @@ export function LeaderboardPreview() {
           <span className="leaderboard-preview-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-amber-400/35 bg-amber-400/10 text-amber-200">
             <Trophy size={21} strokeWidth={2.35} aria-hidden="true" />
           </span>
-          <h3
-            className="truncate text-lg font-bold font-display text-white"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
+          <h3 className="truncate text-lg font-bold text-white">
             {t("leaderboard.title")}
           </h3>
         </div>

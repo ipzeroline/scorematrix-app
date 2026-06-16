@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -63,10 +64,7 @@ export function NewsSection({ articles }: NewsSectionProps) {
                 aria-hidden="true"
               />
             </span>
-            <h2
-              className="font-display truncate text-xl font-bold tracking-normal text-white"
-              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-            >
+            <h2 className="truncate text-xl font-bold tracking-normal text-white">
               {t("dashboard.latestNews")}
             </h2>
           </div>
@@ -97,13 +95,24 @@ export function NewsSection({ articles }: NewsSectionProps) {
             <Link
               key={article.id}
               href={`/${locale}/news/${article.slug}`}
-              className="block h-full"
+              className="group block h-full"
             >
               <Card
                 hover
                 className="news-article-card relative flex h-full flex-col gap-3 overflow-hidden"
               >
                 <div className="news-article-card-sheen absolute inset-0" />
+                <div className="relative -mx-4 -mt-4 mb-1 aspect-[16/9] overflow-hidden rounded-t-xl bg-gray-950">
+                  <Image
+                    src={article.image}
+                    alt={title}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#12121a] via-transparent to-black/15" />
+                </div>
+
                 {/* Category badge */}
                 <div className="relative flex items-center justify-between">
                   <Badge variant={meta.variant} size="sm">

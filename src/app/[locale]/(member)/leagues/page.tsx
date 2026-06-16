@@ -5,14 +5,19 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import {
+  Activity,
   BarChart3,
   Crown,
   LockKeyhole,
   Plus,
+  Radio,
+  Search,
   ShieldCheck,
+  Swords,
   Trophy,
   UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -22,6 +27,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ApiClientError, isAuthSessionExpiredError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import {
   createLeague,
   getLeagues,
@@ -51,6 +57,14 @@ export default function LeaguesPage() {
     subtitle: t("subtitle"),
     joinLeague: t("joinLeague"),
     createLeague: t("createLeague"),
+    commandCenter: t("commandCenter"),
+    skillNotice: t("skillNotice"),
+    hubHint: t("hubHint"),
+    availableHint: t("availableHint"),
+    searchLabel: t("searchLabel"),
+    searchPlaceholder: t("searchPlaceholder"),
+    clearSearch: t("clearSearch"),
+    noSearchResults: t("noSearchResults"),
     stats: {
       activeLeagues: t("activeLeagues"),
       totalMembers: t("totalMembers"),
@@ -140,6 +154,7 @@ export default function LeaguesPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [joinedLeagues, setJoinedLeagues] = useState<JoinedLeague[]>([]);
   const [availableLeagues, setAvailableLeagues] = useState<AvailableLeague[]>([]);
+  const [availableSearch, setAvailableSearch] = useState("");
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -183,6 +198,22 @@ export default function LeaguesPage() {
     (sum, league) => sum + league.myPoints,
     0
   );
+  const normalizedAvailableSearch = availableSearch.trim().toLowerCase();
+  const filteredAvailableLeagues =
+    normalizedAvailableSearch.length === 0
+      ? availableLeagues
+      : availableLeagues.filter((league) => {
+          const accessLabel = league.isLocked ? listCopy.locked : listCopy.public;
+          return [
+            league.name,
+            league.description ?? "",
+            accessLabel,
+            `${league.memberCount}/${league.maxMembers}`,
+          ]
+            .join(" ")
+            .toLowerCase()
+            .includes(normalizedAvailableSearch);
+        });
 
   const closeCreateModal = () => {
     if (isCreating) return;
@@ -361,72 +392,76 @@ export default function LeaguesPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <section className="rounded-xl border border-gray-800 bg-[#12121a] p-5 sm:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
-              <ShieldCheck size={14} />
-              {copy.title}
-            </div>
+    <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-6 lg:p-7">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.13),transparent_34%),linear-gradient(315deg,rgba(168,85,247,0.13),transparent_30%),linear-gradient(rgba(148,163,184,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.045)_1px,transparent_1px)] bg-[auto,auto,34px_34px,34px_34px]" />
+        <div className="relative grid gap-5 xl:grid-cols-[1.08fr_0.92fr] xl:items-stretch">
+          <div className="flex min-h-[300px] flex-col justify-between rounded-2xl border border-white/10 bg-black/24 p-4 sm:p-5">
             <div>
-              <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Badge variant="cyan" size="md" className="uppercase tracking-wider">
+                  {copy.commandCenter}
+                </Badge>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
+                  <ShieldCheck size={14} />
+                  {copy.skillNotice}
+                </span>
+              </div>
+              <h1 className="font-display text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl">
                 {copy.title}
               </h1>
-              <p className="mt-2 text-sm leading-6 text-gray-400">
+              <p className="mt-3 max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">
                 {copy.subtitle}
               </p>
             </div>
-          </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={availableLeagues.length === 0}
-              onClick={scrollToAvailableLeagues}
-            >
-              <UserPlus size={14} />
-              {copy.joinLeague}
-            </Button>
-            <Button size="sm" neon onClick={() => setShowCreate(true)}>
-              <Plus size={14} />
-              {copy.createLeague}
-            </Button>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-
-            return (
-              <div
-                key={stat.label}
-                className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-4"
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Button
+                size="md"
+                variant="outline"
+                disabled={availableLeagues.length === 0}
+                onClick={scrollToAvailableLeagues}
+                className="min-h-12 text-base font-black"
               >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                  <Icon size={16} className={stat.tone} />
-                </div>
-                <p className="mt-2 text-xl font-semibold text-white">
-                  {stat.value}
-                </p>
-              </div>
-            );
-          })}
+                <UserPlus size={18} />
+                {copy.joinLeague}
+              </Button>
+              <Button
+                size="md"
+                neon
+                onClick={() => setShowCreate(true)}
+                className="min-h-12 text-base font-black"
+              >
+                <Plus size={18} />
+                {copy.createLeague}
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            {stats.map((stat, index) => (
+              <HeroMetric
+                key={stat.label}
+                icon={stat.icon}
+                label={stat.label}
+                value={stat.value}
+                helper={index === 0 ? copy.hubHint : copy.title}
+                tone={stat.tone}
+                className={index === 0 ? "sm:col-span-2" : undefined}
+              />
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base font-semibold text-white">
-            {copy.sections.myLeagues}
-          </h2>
-          <Badge variant="cyan" size="md">
-            {joinedLeagues.length} {copy.stats.activeLeagues}
-          </Badge>
-        </div>
+        <SectionHeader
+          icon={Radio}
+          eyebrow={`${joinedLeagues.length} ${copy.stats.activeLeagues}`}
+          title={copy.sections.myLeagues}
+          description={copy.hubHint}
+          action={<Badge variant="cyan" size="md">{joinedLeagues.length} {copy.stats.activeLeagues}</Badge>}
+        />
 
         {isLoadingLeagues ? (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -476,12 +511,13 @@ export default function LeaguesPage() {
                   key={league.id}
                   hover
                   neon="cyan"
-                  className="space-y-4 p-4"
+                  className="relative space-y-5 overflow-hidden border-cyan-400/15 bg-[#0b111d] p-4 sm:p-5"
                 >
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-400/70 via-purple-400/60 to-amber-300/50" />
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-sm font-semibold text-white">
+                        <h3 className="truncate text-xl font-black leading-tight text-white">
                           {league.name}
                         </h3>
                         <Badge variant={league.isOwner ? "gold" : "default"}>
@@ -490,7 +526,7 @@ export default function LeaguesPage() {
                             : copy.labels.member}
                         </Badge>
                       </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400">
                         <span className="inline-flex items-center gap-1.5">
                           <Users size={13} />
                           {league.memberCount}/{league.maxMembers}{" "}
@@ -502,7 +538,7 @@ export default function LeaguesPage() {
                         </span>
                       </div>
                     </div>
-                    <Badge variant="green" className="shrink-0">
+                    <Badge variant="green" size="md" className="shrink-0">
                       {league.myPoints.toLocaleString()} {copy.labels.points}
                     </Badge>
                   </div>
@@ -512,17 +548,17 @@ export default function LeaguesPage() {
                       <span>{copy.labels.capacity}</span>
                       <span>{fillPercent}%</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-gray-800">
+                    <div className="h-3 overflow-hidden rounded-full border border-gray-800 bg-black/40 p-0.5">
                       <div
-                        className="h-full rounded-full bg-cyan-400"
+                        className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-purple-400"
                         style={{ width: `${fillPercent}%` }}
                       />
                     </div>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
-                      <p className="text-[11px] text-gray-500">
+                    <div className="rounded-2xl border border-gray-800 bg-black/24 p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
                         {copy.labels.weeklyLeader}
                       </p>
                       <div className="mt-2 flex items-center justify-between gap-3">
@@ -535,8 +571,8 @@ export default function LeaguesPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3">
-                      <p className="text-[11px] text-gray-500">
+                    <div className="rounded-2xl border border-gray-800 bg-black/24 p-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
                         {copy.labels.yourRank}
                       </p>
                       <div className="mt-2 flex items-center justify-between gap-3">
@@ -564,7 +600,7 @@ export default function LeaguesPage() {
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/${locale}/leagues/${league.id}`}
-                        className="inline-flex items-center justify-center rounded-lg bg-cyan-500 px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-cyan-400"
+                        className="inline-flex min-h-10 items-center justify-center rounded-xl bg-cyan-500 px-4 text-sm font-black text-black transition-colors hover:bg-cyan-400"
                       >
                         {copy.labels.viewBoard}
                       </Link>
@@ -577,11 +613,54 @@ export default function LeaguesPage() {
         )}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div ref={availableSectionRef} className="scroll-mt-24 space-y-3">
-          <h2 className="text-base font-semibold text-white">
-            {listCopy.available}
-          </h2>
+          <SectionHeader
+            icon={Swords}
+            eyebrow={listCopy.available}
+            title={listCopy.available}
+            description={copy.availableHint}
+            action={
+              !isLoadingLeagues && availableLeagues.length > 0 ? (
+                <Badge variant="cyan" size="md">
+                  {filteredAvailableLeagues.length}/{availableLeagues.length}
+                </Badge>
+              ) : undefined
+            }
+          />
+          {!isLoadingLeagues && availableLeagues.length > 0 && (
+            <Card className="border-cyan-400/15 bg-[#080d17] p-3 sm:p-4">
+              <label
+                htmlFor="available-league-search"
+                className="mb-2 flex items-center gap-2 text-sm font-black text-white"
+              >
+                <Search size={16} className="text-cyan-300" />
+                {copy.searchLabel}
+              </label>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  id="available-league-search"
+                  type="search"
+                  value={availableSearch}
+                  onChange={(event) => setAvailableSearch(event.target.value)}
+                  placeholder={copy.searchPlaceholder}
+                  className="min-h-12 rounded-xl border-cyan-400/20 bg-black/30 pl-4 text-base font-semibold"
+                />
+                {availableSearch && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAvailableSearch("")}
+                    className="min-h-12 shrink-0 text-sm font-black"
+                  >
+                    <X size={16} />
+                    {copy.clearSearch}
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
           {isLoadingLeagues ? (
             <div className="space-y-3">
               <Skeleton className="h-28" />
@@ -591,19 +670,41 @@ export default function LeaguesPage() {
             <Card className="p-6 text-center text-sm text-gray-500">
               {listCopy.noAvailable}
             </Card>
+          ) : filteredAvailableLeagues.length === 0 ? (
+            <Card className="border-cyan-400/15 bg-[#0b111d] p-6 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300">
+                <Search size={20} />
+              </div>
+              <h3 className="mt-3 text-lg font-black text-white">
+                {copy.noSearchResults}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-gray-400">
+                {copy.availableHint}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setAvailableSearch("")}
+                className="mt-4 min-h-10 text-sm font-black"
+              >
+                <X size={16} />
+                {copy.clearSearch}
+              </Button>
+            </Card>
           ) : (
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              {availableLeagues.map((league) => {
+              {filteredAvailableLeagues.map((league) => {
                 const isFull = league.memberCount >= league.maxMembers;
 
                 return (
-                <Card key={league.id} className="p-4">
+                <Card key={league.id} className="border-white/10 bg-[#0b111d] p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-semibold text-white">
+                      <h3 className="text-lg font-black text-white">
                         {league.name}
                       </h3>
-                      <p className="mt-1 text-xs leading-5 text-gray-500">
+                      <p className="mt-2 text-sm leading-6 text-gray-400">
                         {league.description}
                       </p>
                     </div>
@@ -620,8 +721,8 @@ export default function LeaguesPage() {
                           : listCopy.public}
                     </Badge>
                   </div>
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-800 pt-3">
-                    <span className="text-xs text-gray-500">
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-800 pt-4">
+                    <span className="text-sm font-bold text-gray-400">
                       {league.memberCount}/{league.maxMembers}{" "}
                       {copy.labels.members}
                     </span>
@@ -643,23 +744,26 @@ export default function LeaguesPage() {
         </div>
 
         <div className="space-y-3">
-          <h2 className="text-base font-semibold text-white">
-            {copy.sections.howItWorks}
-          </h2>
+          <SectionHeader
+            icon={Activity}
+            eyebrow={copy.sections.howItWorks}
+            title={copy.sections.howItWorks}
+            description={copy.hubHint}
+          />
           <div className="space-y-3">
             {copy.how.map((item, index) => (
               <div
                 key={item.title}
-                className="flex gap-3 rounded-xl border border-gray-800 bg-[#12121a] p-4"
+                className="flex gap-3 rounded-2xl border border-gray-800 bg-[#0b111d] p-4"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 text-xs font-semibold text-cyan-300">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10 text-sm font-black text-cyan-300">
                   {index + 1}
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">
+                  <h3 className="text-base font-black text-white">
                     {item.title}
                   </h3>
-                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                  <p className="mt-1 text-sm leading-6 text-gray-400">
                     {item.description}
                   </p>
                 </div>
@@ -842,6 +946,81 @@ export default function LeaguesPage() {
           </Button>
         </form>
       </Modal>
+    </div>
+  );
+}
+
+function HeroMetric({
+  icon: Icon,
+  label,
+  value,
+  helper,
+  tone,
+  className,
+}: {
+  icon: typeof Trophy;
+  label: string;
+  value: string;
+  helper: string;
+  tone: string;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-white/10 bg-black/28 p-4",
+        className
+      )}
+    >
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-gray-400">{label}</p>
+          <p className="mt-2 font-mono text-3xl font-black leading-none text-white sm:text-4xl">
+            {value}
+          </p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {helper}
+          </p>
+        </div>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
+          <Icon size={22} className={tone} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  icon: Icon,
+  eyebrow,
+  title,
+  description,
+  action,
+}: {
+  icon: typeof Trophy;
+  eyebrow: string;
+  title: string;
+  description: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#0a101a] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+      <div>
+        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
+          <span className="grid h-8 w-8 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10">
+            <Icon size={16} />
+          </span>
+          {eyebrow}
+        </div>
+        <h2 className="font-display text-2xl font-black text-white sm:text-3xl">
+          {title}
+        </h2>
+        <p className="mt-2 max-w-3xl text-base leading-7 text-gray-400">
+          {description}
+        </p>
+      </div>
+      {action}
     </div>
   );
 }

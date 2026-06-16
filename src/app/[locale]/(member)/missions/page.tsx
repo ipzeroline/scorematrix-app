@@ -8,10 +8,15 @@ import {
   CalendarCheck,
   CalendarClock,
   CheckCircle2,
+  Clock3,
+  Crown,
   Dice5,
   Flame,
+  Gift,
+  Gauge,
   Star,
   Sparkles,
+  ShieldCheck,
   Target,
   Trophy,
   Users,
@@ -21,7 +26,6 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { Tabs } from "@/components/ui/Tabs";
 import { PointsBadge } from "@/components/shared/PointsBadge";
 import { XPProgressBar } from "@/components/shared/XPProgressBar";
 import { getMissionPageCopy } from "@/data/mission-page-content";
@@ -315,61 +319,120 @@ export default function MissionsPage() {
     };
   }, [locale]);
 
+  const activeMissions =
+    tab === "daily"
+      ? daily
+      : tab === "weekly"
+      ? weekly
+      : tab === "special"
+      ? special
+      : [];
+  const readyToClaim = activeMissions.filter(
+    (mission) => mission.completed && !mission.claimed && !claimed[mission.id]
+  ).length;
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6 pb-8">
-      <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b1018] p-5 md:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(34,211,238,0.14),transparent_30%),radial-gradient(circle_at_82%_22%,rgba(168,85,247,0.12),transparent_28%)]" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex-1">
-            <h1 className="font-display text-3xl font-black text-white md:text-4xl">
-              {copy.title}
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400">
-              {copy.subtitle}
-            </p>
-            <XPProgressBar
-              currentXP={heroStats.xp}
-              level={heroStats.level}
-              className="mt-4 max-w-md"
-            />
+    <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
+      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-6 lg:p-7">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),transparent_34%),linear-gradient(315deg,rgba(236,72,153,0.12),transparent_30%),linear-gradient(rgba(148,163,184,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.045)_1px,transparent_1px)] bg-[auto,auto,32px_32px,32px_32px]" />
+        <div className="relative grid gap-5 xl:grid-cols-[1.35fr_0.65fr] xl:items-stretch">
+          <div className="flex min-h-[280px] flex-col justify-between rounded-2xl border border-white/10 bg-black/24 p-4 sm:p-5">
+            <div>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <Badge variant="cyan" size="md" className="uppercase tracking-wider">
+                  {copy.commandCenter}
+                </Badge>
+                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
+                  <ShieldCheck size={14} />
+                  {copy.skillBased}
+                </span>
+              </div>
+              <h1 className="font-display text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl xl:whitespace-nowrap">
+                {copy.title}
+              </h1>
+              <p className="mt-3 max-w-3xl text-base font-semibold leading-7 text-gray-300 sm:text-lg">
+                {copy.subtitle}
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-cyan-400/[0.06] p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-cyan-200/80">
+                    {copy.levelLine
+                      .replace("{level}", heroStats.level.toLocaleString())
+                      .replace("{xp}", heroStats.xp.toLocaleString())}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-400">
+                    {copy.xpProgress}
+                  </p>
+                </div>
+                <span className="grid h-11 w-11 place-items-center rounded-xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-200">
+                  <Gauge size={23} />
+                </span>
+              </div>
+              <XPProgressBar
+                currentXP={heroStats.xp}
+                level={heroStats.level}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 lg:w-[430px]">
+          <div className="grid gap-3 sm:grid-cols-2">
             <HeroStat
               icon={CheckCircle2}
               label={copy.completedToday}
-              value={`${heroStats.missionsCompleted.toLocaleString()}/${daily.length}`}
-              tone="text-green-300"
+              value={`${heroStats.missionsCompleted.toLocaleString()}/${daily.length || 0}`}
+              helper={copy.daily}
+              tone="text-emerald-300"
+              className="sm:col-span-2"
             />
             <HeroStat
               icon={Trophy}
               label={copy.totalRewards}
               value={heroStats.freePoints.toLocaleString()}
+              helper={copy.points}
               tone="text-amber-300"
             />
             <HeroStat
               icon={Flame}
               label={copy.activeStreak}
-              value={`${heroStats.streak.toLocaleString()} ${copy.days}`}
-              tone="text-red-300"
+              value={heroStats.streak.toLocaleString()}
+              helper={copy.days}
+              tone="text-rose-300"
+            />
+            <HeroStat
+              icon={Gift}
+              label={copy.ready}
+              value={readyToClaim.toLocaleString()}
+              helper={copy.claimReward}
+              tone="text-fuchsia-300"
+            />
+            <HeroStat
+              icon={Crown}
+              label={copy.achievements}
+              value={`${achievements.totalUnlocked.toLocaleString()}/${achievements.totalAvailable.toLocaleString()}`}
+              helper={copy.unlocked}
+              tone="text-cyan-300"
             />
           </div>
         </div>
       </section>
 
-      <Tabs
+      <MissionTabs
         tabs={[
-          { key: "daily", label: copy.daily, count: daily.length },
-          { key: "weekly", label: copy.weekly, count: weekly.length },
-          { key: "special", label: copy.special, count: special.length },
-          { key: "achievements", label: copy.achievements, count: achievements.totalAvailable },
+          { key: "daily", label: copy.daily, count: daily.length, icon: CalendarCheck, activeLabel: copy.active },
+          { key: "weekly", label: copy.weekly, count: weekly.length, icon: Calendar, activeLabel: copy.active },
+          { key: "special", label: copy.special, count: special.length, icon: Sparkles, activeLabel: copy.active },
+          { key: "achievements", label: copy.achievements, count: achievements.totalAvailable, icon: Trophy, activeLabel: copy.active },
         ]}
         activeTab={tab}
-        onChange={(key) => setTab(key as TabKey)}
+        onChange={setTab}
       />
 
       {tab === "daily" && (
         <MissionList
+          title={copy.daily}
           intro={copy.dailyIntro}
           missions={daily}
           copy={copy}
@@ -383,6 +446,7 @@ export default function MissionsPage() {
 
       {tab === "weekly" && (
         <MissionList
+          title={copy.weekly}
           intro={copy.weeklyIntro}
           missions={weekly}
           copy={copy}
@@ -396,6 +460,7 @@ export default function MissionsPage() {
 
       {tab === "special" && (
         <MissionList
+          title={copy.special}
           intro={copy.specialIntro}
           missions={special}
           copy={copy}
@@ -408,10 +473,12 @@ export default function MissionsPage() {
       )}
 
       {tab === "achievements" && (
-        <section>
-          <p className="mb-4 text-sm leading-6 text-gray-500">
-            {copy.achievementsIntro}
-          </p>
+        <section className="space-y-4">
+          <SectionHeader
+            eyebrow={`${achievements.totalUnlocked.toLocaleString()}/${achievements.totalAvailable.toLocaleString()} ${copy.unlocked}`}
+            title={copy.achievements}
+            intro={copy.achievementsIntro}
+          />
           {achievementsLoading && (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
               {Array.from({ length: 6 }).map((_, index) => (
@@ -592,10 +659,10 @@ function AchievementGrid({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="green">
+        <Badge variant="green" size="md">
           {copy.unlocked} {achievements.totalUnlocked.toLocaleString()}
         </Badge>
-        <Badge variant="default">
+        <Badge variant="default" size="md">
           {copy.locked}{" "}
           {Math.max(
             achievements.totalAvailable - achievements.totalUnlocked,
@@ -633,7 +700,7 @@ function AchievementCard({
   return (
     <Card
       className={cn(
-        "flex min-h-52 flex-col p-4",
+        "flex min-h-56 flex-col overflow-hidden border-white/10 bg-[#0b111d] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.24)] sm:p-5",
         !achievement.unlocked && "opacity-80"
       )}
     >
@@ -646,10 +713,10 @@ function AchievementCard({
             </Badge>
             <Badge variant={tierVariant}>{achievement.tier}</Badge>
           </div>
-          <h3 className="truncate text-sm font-bold text-white">
+          <h3 className="text-lg font-black leading-tight text-white">
             {achievement.name}
           </h3>
-          <p className="mt-1 text-xs leading-5 text-gray-500">
+          <p className="mt-2 text-sm leading-6 text-gray-400">
             {achievement.description}
           </p>
         </div>
@@ -657,9 +724,9 @@ function AchievementCard({
 
       <div className="mt-auto space-y-3">
         <div>
-          <div className="mb-1 flex justify-between text-[10px]">
-            <span className="text-gray-500">{copy.progress}</span>
-            <span className="font-mono text-gray-400">
+          <div className="mb-2 flex justify-between text-xs">
+            <span className="font-bold uppercase tracking-wider text-gray-500">{copy.progress}</span>
+            <span className="font-mono font-bold text-gray-300">
               {current.toLocaleString()}/{required.toLocaleString()}
             </span>
           </div>
@@ -685,7 +752,7 @@ function AchievementCard({
               +{achievement.rewardXp.toLocaleString()} {copy.xp}
             </span>
           )}
-          <span className="ml-auto rounded-full border border-gray-700 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-normal text-gray-400">
+          <span className="ml-auto rounded-full border border-gray-700 px-3 py-1 text-xs font-bold uppercase tracking-normal text-gray-400">
             {achievement.category}
           </span>
         </div>
@@ -703,7 +770,7 @@ function AchievementIcon({
     return (
       <span
         aria-hidden="true"
-        className="h-12 w-12 shrink-0 rounded-xl border border-cyan-400/20 bg-cyan-400/10 bg-contain bg-center bg-no-repeat"
+        className="h-14 w-14 shrink-0 rounded-2xl border border-cyan-400/20 bg-cyan-400/10 bg-contain bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${achievement.badgeIconUrl})` }}
       />
     );
@@ -711,9 +778,9 @@ function AchievementIcon({
 
   return (
     <span
-      aria-hidden="true"
-      className={cn(
-        "grid h-12 w-12 shrink-0 place-items-center rounded-xl border font-mono text-xs font-black",
+        aria-hidden="true"
+        className={cn(
+        "grid h-14 w-14 shrink-0 place-items-center rounded-2xl border font-mono text-sm font-black",
         achievement.unlocked
           ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-200"
           : "border-cyan-400/20 bg-cyan-400/10 text-cyan-200"
@@ -762,23 +829,131 @@ function HeroStat({
   icon: Icon,
   label,
   value,
+  helper,
   tone,
+  className,
 }: {
   icon: typeof Star;
   label: string;
   value: string;
+  helper: string;
   tone: string;
+  className?: string;
 }) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-black/25 p-3">
-      <Icon size={16} className={tone} />
-      <p className="mt-2 font-mono text-lg font-black text-white">{value}</p>
-      <p className="mt-1 text-[10px] leading-tight text-gray-500">{label}</p>
+    <div
+      className={cn(
+        "relative overflow-hidden rounded-2xl border border-white/10 bg-black/28 p-4",
+        className
+      )}
+    >
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold text-gray-400">{label}</p>
+          <p className="mt-2 font-mono text-3xl font-black leading-none text-white sm:text-4xl">
+            {value}
+          </p>
+          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+            {helper}
+          </p>
+        </div>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
+          <Icon size={22} className={tone} />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function MissionTabs({
+  tabs,
+  activeTab,
+  onChange,
+}: {
+  tabs: Array<{
+    key: TabKey;
+    label: string;
+    count: number;
+    icon: typeof Star;
+    activeLabel: string;
+  }>;
+  activeTab: TabKey;
+  onChange: (key: TabKey) => void;
+}) {
+  return (
+    <div className="sticky top-[76px] z-20 rounded-2xl border border-white/10 bg-[#070b13]/92 p-1.5 shadow-[0_18px_48px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+      <div className="grid grid-cols-2 gap-1.5 lg:grid-cols-4">
+        {tabs.map((item) => {
+          const Icon = item.icon;
+          const active = item.key === activeTab;
+          return (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => onChange(item.key)}
+              className={cn(
+                "group flex min-h-[60px] items-center justify-between gap-3 rounded-xl border px-3 py-2 text-left transition",
+                active
+                  ? "border-cyan-300/50 bg-gradient-to-br from-cyan-300/20 via-indigo-500/18 to-fuchsia-500/16 text-white shadow-[0_0_24px_rgba(34,211,238,0.14)]"
+                  : "border-transparent bg-white/[0.03] text-gray-400 hover:border-white/10 hover:bg-white/[0.06] hover:text-white"
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span
+                  className={cn(
+                    "grid h-10 w-10 shrink-0 place-items-center rounded-xl border",
+                    active
+                      ? "border-cyan-300/30 bg-cyan-300/10 text-cyan-200"
+                      : "border-white/10 bg-black/20 text-gray-500 group-hover:text-cyan-200"
+                  )}
+                >
+                  <Icon size={20} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate whitespace-nowrap text-base font-black [word-break:keep-all] sm:text-lg">
+                    {item.label}
+                  </span>
+                  <span className="mt-0.5 block truncate whitespace-nowrap text-xs font-bold uppercase tracking-wider text-gray-500 [word-break:keep-all]">
+                    {item.count.toLocaleString()} {item.activeLabel}
+                  </span>
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  intro,
+}: {
+  eyebrow: string;
+  title: string;
+  intro: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#0a101a] p-4 sm:p-5">
+      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
+        <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
+        {eyebrow}
+      </div>
+      <h2 className="font-display text-2xl font-black text-white sm:text-3xl">
+        {title}
+      </h2>
+      <p className="mt-2 max-w-3xl text-base leading-7 text-gray-400">
+        {intro}
+      </p>
     </div>
   );
 }
 
 function MissionList({
+  title,
   intro,
   missions,
   copy,
@@ -788,6 +963,7 @@ function MissionList({
   loadFailed,
   onClaim,
 }: {
+  title: string;
   intro: string;
   missions: Mission[];
   copy: ReturnType<typeof getMissionPageCopy>;
@@ -798,8 +974,12 @@ function MissionList({
   onClaim: (id: string) => void;
 }) {
   return (
-    <section>
-      <p className="mb-4 text-sm leading-6 text-gray-500">{intro}</p>
+    <section className="space-y-4">
+      <SectionHeader
+        eyebrow={`${missions.length.toLocaleString()} ${copy.missionsLabel}`}
+        title={title}
+        intro={intro}
+      />
       {loading && (
         <div className="grid gap-3 lg:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -888,46 +1068,73 @@ function MissionPanel({
   return (
     <Card
       className={cn(
-        "flex min-h-44 flex-col p-4 transition-opacity",
-        isClaimed && "opacity-60"
+        "group relative flex min-h-[260px] flex-col overflow-hidden border-white/10 bg-[#0b111d] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.22)] transition sm:p-5",
+        canClaim && "border-amber-300/35 shadow-[0_0_34px_rgba(245,158,11,0.12)]",
+        isClaimed && "opacity-65"
       )}
     >
+      <div
+        className={cn(
+          "absolute inset-x-0 top-0 h-1",
+          canClaim
+            ? "bg-gradient-to-r from-amber-300 via-fuchsia-400 to-cyan-300"
+            : "bg-gradient-to-r from-cyan-400/40 via-purple-400/30 to-transparent"
+        )}
+      />
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
           className={cn(
-            "grid h-12 w-12 shrink-0 place-items-center rounded-xl border",
+            "grid h-14 w-14 shrink-0 place-items-center rounded-2xl border",
             getIconContainerClass(mission.category)
           )}
         >
-          <Icon size={24} />
+          <Icon size={27} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-            <Badge variant={color}>{copy.categories[mission.category] ?? mission.category}</Badge>
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <Badge variant={color} size="md">
+              {copy.categories[mission.category] ?? mission.category}
+            </Badge>
+            {canClaim && (
+              <Badge variant="gold" size="md">
+                {copy.ready}
+              </Badge>
+            )}
+            {isClaimed && (
+              <Badge variant="green" size="md">
+                {copy.claimed}
+              </Badge>
+            )}
             {timeLeft > 0 && (
-              <div className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider text-gray-500">
-                <CalendarClock size={12} />
+              <div className="flex items-center gap-1.5 rounded-full border border-gray-800 bg-black/20 px-2.5 py-1 text-xs font-mono font-bold uppercase tracking-wider text-gray-400">
+                <CalendarClock size={13} />
                 <span>
                   {copy.resetsIn.replace("{time}", formatTimeLeft(timeLeft))}
                 </span>
               </div>
             )}
           </div>
-          <h3 className="truncate text-sm font-bold text-white">{mission.title}</h3>
-          <p className="mt-1 text-xs leading-5 text-gray-400">{mission.description}</p>
+          <h3 className="text-xl font-black leading-tight text-white sm:text-2xl">
+            {mission.title}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-gray-400 sm:text-base">
+            {mission.description}
+          </p>
         </div>
       </div>
 
-      <div className="mt-auto space-y-3 pt-3">
+      <div className="mt-auto space-y-4 pt-5">
         <div>
-          <div className="mb-1 flex justify-between text-[10px]">
-            <span className="font-semibold uppercase tracking-wider text-gray-500">{copy.progress}</span>
+          <div className="mb-2 flex items-center justify-between gap-3 text-xs">
+            <span className="font-bold uppercase tracking-wider text-gray-500">
+              {copy.progress}
+            </span>
             <div className="flex items-baseline gap-1.5 font-mono">
-              <span className="font-semibold text-gray-300">
+              <span className="text-sm font-black text-gray-200">
                 {mission.progress.toLocaleString()}/{mission.target.toLocaleString()}
               </span>
-              <span className="text-xs font-bold text-cyan-300">({progressPercent}%)</span>
+              <span className="text-sm font-black text-cyan-300">({progressPercent}%)</span>
             </div>
           </div>
           <ProgressBar
@@ -938,25 +1145,48 @@ function MissionPanel({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 border-t border-gray-800/70 pt-3">
-          {mission.rewardPoints > 0 && (
-            <PointsBadge type="free" amount={mission.rewardPoints} size="sm" showLabel />
-          )}
-          {mission.rewardXP > 0 && (
-            <Badge variant="purple">+{mission.rewardXP.toLocaleString()} {copy.xp}</Badge>
-          )}
-          {mission.rewardCredits !== undefined && mission.rewardCredits > 0 && (
-            <Badge variant="magenta">+{mission.rewardCredits.toLocaleString()} CR</Badge>
-          )}
-          <div className="ml-auto">
+        <div className="grid gap-3 border-t border-gray-800/70 pt-4 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div className="flex flex-wrap items-center gap-2">
+            {mission.rewardPoints > 0 && (
+              <PointsBadge type="free" amount={mission.rewardPoints} size="sm" showLabel />
+            )}
+            {mission.rewardXP > 0 && (
+              <Badge variant="purple" size="md">
+                +{mission.rewardXP.toLocaleString()} {copy.xp}
+              </Badge>
+            )}
+            {mission.rewardCredits !== undefined && mission.rewardCredits > 0 && (
+              <Badge variant="magenta" size="md">
+                +{mission.rewardCredits.toLocaleString()} CR
+              </Badge>
+            )}
+          </div>
+          <div className="sm:ml-auto">
             {canClaim ? (
-              <Button variant="gold" size="sm" onClick={() => onClaim(mission.id)}>{copy.claim}</Button>
+              <Button
+                variant="gold"
+                size="md"
+                className="min-h-11 w-full px-5 text-base font-black sm:w-auto"
+                onClick={() => onClaim(mission.id)}
+              >
+                <Gift size={18} className="mr-2" />
+                {copy.claim}
+              </Button>
             ) : isClaimed ? (
-              <Button variant="outline" size="sm" disabled className="cursor-default">
-                <CheckCircle2 size={14} className="mr-1.5" />{copy.claimed}
+              <Button
+                variant="outline"
+                size="md"
+                disabled
+                className="min-h-11 w-full cursor-default text-base sm:w-auto"
+              >
+                <CheckCircle2 size={17} className="mr-2" />
+                {copy.claimed}
               </Button>
             ) : (
-              <span className="text-xs font-medium text-gray-500">{copy.inProgress}</span>
+              <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-gray-800 bg-black/20 px-4 text-sm font-bold text-gray-400 sm:w-auto">
+                <Clock3 size={16} />
+                {copy.inProgress}
+              </span>
             )}
           </div>
         </div>

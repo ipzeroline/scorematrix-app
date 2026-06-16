@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Brain, Calendar, ChevronRight, Flame, Gauge, ShieldAlert, Sparkles, Users } from "lucide-react";
+import { Activity, AlertTriangle, Brain, Calendar, ChevronRight, Flame, Gauge, ShieldAlert, Sparkles, Target, Users } from "lucide-react";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
@@ -134,6 +134,16 @@ export function AIInsightListClient({
     (sum, insight) => sum + insight.apiSummary.communityVotes,
     0
   );
+  const confidenceValues = insights
+    .map((insight) => insight.confidenceScore)
+    .filter((value): value is number => typeof value === "number");
+  const averageConfidence =
+    confidenceValues.length > 0
+      ? Math.round(
+          confidenceValues.reduce((sum, value) => sum + value, 0) /
+            confidenceValues.length
+        )
+      : null;
   const heroStats = [
     { label: copy.stats.analyzedMatches, value: String(counts.all), icon: Brain, tone: "text-cyan-400" },
     {
@@ -148,6 +158,12 @@ export function AIInsightListClient({
       icon: Gauge,
       tone: "text-cyan-400",
     },
+    {
+      label: copy.stats.averageConfidence,
+      value: formatPercentMetric(averageConfidence),
+      icon: Target,
+      tone: "text-green-400",
+    },
     { label: copy.stats.upsetAlerts, value: String(counts.upsetAlert), icon: ShieldAlert, tone: "text-magenta" },
     {
       label: copy.stats.communityVotes,
@@ -158,254 +174,312 @@ export function AIInsightListClient({
   ];
 
   return (
-    <div className="mx-auto w-full max-w-6xl pb-6">
+    <div className="mx-auto w-full max-w-6xl pb-8">
       <section className="px-3 pt-3">
-        <div className="overflow-hidden rounded-2xl border border-gray-800 bg-[#12121a]">
-          <div className="relative border-b border-gray-800 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_36%),radial-gradient(circle_at_top_right,rgba(217,70,239,0.12),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent)] p-5">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-2xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-400">
+        <div className="relative overflow-hidden rounded-2xl border border-cyan-500/20 bg-[#07080b] shadow-[0_0_40px_rgba(34,211,238,0.05)]">
+          <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400 via-purple-500 to-magenta" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_85%_12%,rgba(225,29,72,0.12),transparent_28%)]" />
+
+          <div className="relative grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-stretch">
+            <div className="flex min-w-0 flex-col justify-between gap-5">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.22em] text-cyan-300">
                   <Sparkles size={14} />
                   {copy.sections.modelSummary}
                 </div>
-                <h1 className="mt-3 font-display text-2xl font-bold text-white sm:text-3xl">
+                <h1 className="mt-4 font-display text-3xl font-black tracking-tight text-white sm:text-4xl">
                   {copy.title}
                 </h1>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+                <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
                   {copy.subtitle}
                 </p>
-                <p className="mt-2 text-sm text-slate-500">{copy.disclaimer}</p>
+                <p className="mt-3 max-w-2xl rounded-xl border border-amber-500/15 bg-amber-500/5 px-3 py-2 text-sm leading-6 text-amber-100/80">
+                  {copy.disclaimer}
+                </p>
               </div>
 
-              {featuredInsight ? (
-                <div className="w-full max-w-sm rounded-xl border border-gray-800 bg-[#0a0a0f]/90 p-4 shadow-[0_0_24px_rgba(34,211,238,0.06)]">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <Badge variant="gold">{copy.labels.featured}</Badge>
-                    <span className="text-sm text-slate-500">
-                      {formatMatchMoment(featuredInsight, locale)}
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {heroStats.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <div
+                      key={stat.label}
+                      className="rounded-xl border border-gray-800 bg-black/35 px-4 py-3"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-semibold text-slate-400">{stat.label}</p>
+                        <Icon size={17} className={stat.tone} />
+                      </div>
+                      <p className="mt-2 font-mono text-2xl font-black text-white">{stat.value}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {featuredInsight ? (
+              <div className="relative overflow-hidden rounded-2xl border border-cyan-500/25 bg-black/55 p-4 shadow-[0_0_26px_rgba(34,211,238,0.08)]">
+                <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400 via-amber-400 to-magenta" />
+                <div className="mb-4 flex items-center justify-between gap-2">
+                  <Badge variant="gold" size="md">{copy.labels.featured}</Badge>
+                  <span className="rounded-full border border-gray-800 bg-[#10121a] px-2.5 py-1 font-mono text-xs font-bold text-slate-400">
+                    {formatMatchMoment(featuredInsight, locale)}
+                  </span>
+                </div>
+
+                <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400">
+                  <ApiLeagueLogo name={featuredInsight.league.name} logo={featuredInsight.league.logo} size="xs" />
+                  <span className="min-w-0 truncate">{featuredInsight.league.name}</span>
+                  <StatusBadge insight={featuredInsight} copy={copy} />
+                </div>
+
+                <div className="grid grid-cols-[minmax(0,1fr)_90px_minmax(0,1fr)] items-center gap-3">
+                  <TeamSide
+                    name={featuredInsight.homeTeam.name}
+                    logo={featuredInsight.homeTeam.logo}
+                    favorite={featuredInsight.favoriteTeam === "home"}
+                  />
+                  <ScoreBlock insight={featuredInsight} featured />
+                  <TeamSide
+                    name={featuredInsight.awayTeam.name}
+                    logo={featuredInsight.awayTeam.logo}
+                    favorite={featuredInsight.favoriteTeam === "away"}
+                    align="right"
+                  />
+                </div>
+
+                <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                  <HeroSignalTile
+                    label={copy.labels.confidence}
+                    value={formatPercentMetric(featuredInsight.confidenceScore)}
+                    icon={Gauge}
+                    tone="text-cyan-300"
+                  />
+                  <HeroSignalTile
+                    label={copy.labels.heat}
+                    value={formatHeatMetric(featuredInsight.heatMeter)}
+                    icon={Flame}
+                    tone="text-amber-300"
+                  />
+                </div>
+
+                <div className="mt-3 rounded-xl border border-gray-800 bg-[#0b0d13] px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-slate-500">{copy.labels.keyFactors}</span>
+                    <span className="min-w-0 truncate text-right font-semibold text-slate-200">
+                      {featuredInsight.keyFactors[0] ?? featuredInsight.apiAdvice ?? featuredInsight.apiWinner ?? "-"}
                     </span>
                   </div>
-                  <p className="mb-1 text-sm text-slate-500">{featuredInsight.league.name}</p>
-                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                    <TeamSide
-                      name={featuredInsight.homeTeam.name}
-                      logo={featuredInsight.homeTeam.logo}
-                      favorite={featuredInsight.favoriteTeam === "home"}
-                    />
-                    <ScoreBlock insight={featuredInsight} />
-                    <TeamSide
-                      name={featuredInsight.awayTeam.name}
-                      logo={featuredInsight.awayTeam.logo}
-                      favorite={featuredInsight.favoriteTeam === "away"}
-                      align="right"
-                    />
-                  </div>
-                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <HeroSignalTile
-                      label={copy.labels.confidence}
-                      value={formatPercentMetric(featuredInsight.confidenceScore)}
-                      icon={Gauge}
-                      tone="text-cyan-400"
-                    />
-                    <HeroSignalTile
-                      label={copy.labels.heat}
-                      value={formatHeatMetric(featuredInsight.heatMeter)}
-                      icon={Flame}
-                      tone="text-amber-400"
-                    />
-                  </div>
-                  <div className="mt-3 rounded-lg border border-gray-800 bg-[#12121a] px-3 py-2">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-500">API advice</span>
-                      <span className="truncate text-right text-slate-300">
-                        {featuredInsight.apiAdvice ?? featuredInsight.apiWinner ?? "-"}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-500">Votes</span>
-                      <span className="text-slate-300">
-                        {featuredInsight.apiSummary.communityVotes.toLocaleString(
-                          localeMap[locale] ?? "th-TH"
-                        )}
-                      </span>
-                    </div>
+                  <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+                    <span className="text-slate-500">{copy.labels.community}</span>
+                    <span className="font-mono font-semibold text-slate-300">
+                      {featuredInsight.apiSummary.communityVotes.toLocaleString(
+                        localeMap[locale] ?? "th-TH"
+                      )}{" "}
+                      {copy.labels.votes}
+                    </span>
                   </div>
                 </div>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
-            {heroStats.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.label}
-                  className="rounded-xl border border-gray-800 bg-[#0a0a0f] px-4 py-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-slate-500">{stat.label}</p>
-                    <Icon size={16} className={stat.tone} />
-                  </div>
-                  <p className="mt-2 text-xl font-semibold text-white">{stat.value}</p>
-                </div>
-              );
-            })}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>
 
-      <div className="sticky top-[64px] z-20 border-b border-gray-800/70 bg-[#0a0a0f]/95 px-3 py-2 backdrop-blur md:top-[72px]">
-        <div className="rounded-xl border border-gray-800 bg-[#12121a] p-1 shadow-[0_0_24px_rgba(34,211,238,0.04)]">
-          <div className="mb-1 flex items-center justify-between px-2 pt-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400/80">
-              {copy.title}
+      <div className="sticky top-[64px] z-20 border-b border-gray-800/70 bg-[#07080b]/95 px-3 py-2 backdrop-blur md:top-[72px]">
+        <div className="rounded-xl border border-gray-800 bg-[#10121a] p-1.5 shadow-[0_0_24px_rgba(34,211,238,0.05)]">
+          <div className="mb-1.5 flex items-center justify-between gap-3 px-2 pt-1">
+            <p className="truncate text-xs font-black uppercase tracking-[0.24em] text-cyan-300">
+              {copy.sections.matchInsights}
             </p>
-            <span className="text-xs text-gray-500">
-              {source === "api" ? "Live feed" : copy.sections.matchInsights}
+            <span className="shrink-0 text-xs text-gray-500">
+              {source === "api" ? copy.labels.generated : copy.sections.modelSummary}
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveFilter(tab.key)}
-              className={`min-w-0 rounded-[8px] px-2 py-2.5 text-center text-sm font-semibold transition-colors ${
-                activeFilter === tab.key
-                  ? "bg-cyan-500/10 text-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.08)]"
-                  : "text-gray-500 hover:bg-white/5 hover:text-gray-200"
-              }`}
-            >
-              <span>{tab.label}</span>
-              <span className="ml-1 text-xs text-gray-500">({tab.count})</span>
-            </button>
-          ))}
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveFilter(tab.key)}
+                className={`min-w-0 rounded-lg px-2 py-3 text-center text-sm font-bold transition-colors ${
+                  activeFilter === tab.key
+                    ? "border border-cyan-400/30 bg-cyan-500/15 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.1)]"
+                    : "border border-transparent text-gray-500 hover:bg-white/5 hover:text-gray-200"
+                }`}
+              >
+                <span className="block truncate">{tab.label}</span>
+                <span className="mt-0.5 block font-mono text-xs text-gray-500">{tab.count}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-4 px-3 py-3">
+      <div className="flex flex-col gap-5 px-3 py-4">
         {filteredInsights.length === 0 ? (
           <EmptyState
             title={source === "error" ? copy.error.title : copy.empty.title}
             description={source === "error" ? copy.error.description : copy.empty.description}
             icon={<AlertTriangle size={40} />}
+            className="rounded-2xl border border-gray-800 bg-[#10121a]"
           />
         ) : (
           groupedInsights.map((group) => (
-            <div key={group.key} className="flex flex-col gap-2">
+            <div key={group.key} className="flex flex-col gap-3">
               <div className="flex items-center gap-2 px-0.5">
-                <Calendar size={14} className="shrink-0 text-cyan-400" />
-                <span className="text-sm font-semibold text-slate-200" suppressHydrationWarning>{group.label}</span>
-                <span className="text-xs text-slate-500">({group.items.length})</span>
+                <Calendar size={16} className="shrink-0 text-cyan-400" />
+                <span className="text-base font-bold text-slate-100" suppressHydrationWarning>{group.label}</span>
+                <span className="font-mono text-xs text-slate-500">({group.items.length})</span>
                 <span className="ml-2 h-px flex-1 bg-gray-800" />
               </div>
               {group.items.map((insight) => (
-            <Card
-              key={insight.id}
-              hover
-              neon={insight.upsetAlert ? "magenta" : insight.status === MatchStatus.LIVE ? "green" : "cyan"}
-              className="p-0"
-            >
-              <Link
-                href={`/${locale}/ai-insight/${insight.matchId}`}
-                className="block rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-              >
-                <div className="mb-2 flex items-center gap-1.5 text-sm text-slate-400">
-                  <ApiLeagueLogo
-                    name={insight.league.name}
-                    logo={insight.league.logo}
-                    size="xs"
-                  />
-                  <span className="truncate">{insight.league.name}</span>
-                  <StatusBadge insight={insight} copy={copy} />
-                  <span className="ml-auto shrink-0 text-sm text-slate-500">
-                    {formatMatchMoment(insight, locale)}
-                  </span>
-                </div>
-
-                <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                  <TeamSide
-                    name={insight.homeTeam.name}
-                    logo={insight.homeTeam.logo}
-                    favorite={insight.favoriteTeam === "home"}
-                  />
-                  <ScoreBlock insight={insight} />
-                  <TeamSide
-                    name={insight.awayTeam.name}
-                    logo={insight.awayTeam.logo}
-                    favorite={insight.favoriteTeam === "away"}
-                    align="right"
-                  />
-                </div>
-
-                <div className="rounded-lg border border-gray-800/80 bg-[#0a0a0f] px-2.5 py-2">
-                  {hasStrengthData(insight) ? (
-                    <StrengthRow insight={insight} />
-                  ) : null}
-                  {hasProbabilityData(insight) ? (
-                    <ProbabilityRow insight={insight} copy={copy} />
-                  ) : null}
-                  {hasHeatData(insight) ? (
-                    <HeatRow insight={insight} copy={copy} />
-                  ) : null}
-                  {!hasStrengthData(insight) && !hasProbabilityData(insight) && !hasHeatData(insight) ? (
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-slate-500">Model data</span>
-                      <span className="text-slate-300">Pending</span>
-                    </div>
-                  ) : null}
-                </div>
-
-                {hasStandingsOrH2H(insight) ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
-                    {hasStandings(insight) ? (
-                      <StandingsRow insight={insight} copy={copy} />
-                    ) : null}
-                    {insight.h2h && insight.h2h.totalMatches > 0 ? (
-                      <H2HRow h2h={insight.h2h} copy={copy} />
-                    ) : null}
-                  </div>
-                ) : null}
-
-                <div className="mt-2 flex items-center gap-2 text-xs font-semibold">
-                  <Badge variant="cyan">
-                    {`${copy.labels.confidence} ${formatPercentMetric(insight.confidenceScore)}`}
-                  </Badge>
-
-                  {insight.categories.includes("upsetAlert") ? (
-                    <Badge variant="magenta" className="border-magenta/25 bg-magenta/10 text-magenta">
-                      {copy.labels.upsetAlert}
-                      {typeof insight.upsetRisk === "number" ? ` ${Math.round(insight.upsetRisk)}%` : ""}
-                    </Badge>
-                  ) : null}
-
-                  {insight.categories.includes("highConfidence") ? (
-                    <Badge variant="green">{copy.filters.highConfidence}</Badge>
-                  ) : null}
-
-                  {insight.favoriteTeam ? (
-                    <Badge variant="cyan">
-                      {`★ ${insight.favoriteTeam === "home" ? insight.homeTeam.name : insight.awayTeam.name}`}
-                    </Badge>
-                  ) : null}
-
-                  <span className="min-w-0 flex-1 truncate text-sm font-normal text-slate-400">
-                    {insight.keyFactors[0] ?? insight.apiAdvice ?? insight.apiWinner ?? "-"}
-                  </span>
-
-                  <ChevronRight size={14} className="shrink-0 text-slate-500" />
-                </div>
-              </Link>
-            </Card>
+                <InsightCard
+                  key={insight.id}
+                  insight={insight}
+                  locale={locale}
+                  copy={copy}
+                />
               ))}
             </div>
           ))
         )}
       </div>
     </div>
+  );
+}
+
+function InsightCard({
+  insight,
+  locale,
+  copy,
+}: {
+  insight: AIInsightListItem;
+  locale: string;
+  copy: ReturnType<typeof getAIInsightPageCopy>;
+}) {
+  const primaryNote = insight.keyFactors[0] ?? insight.apiAdvice ?? insight.apiWinner ?? "-";
+  const cardTone = insight.upsetAlert
+    ? "border-magenta/30 shadow-[0_0_26px_rgba(225,29,72,0.07)]"
+    : insight.status === MatchStatus.LIVE
+      ? "border-green-500/25 shadow-[0_0_26px_rgba(34,197,94,0.06)]"
+      : "border-cyan-500/20 shadow-[0_0_26px_rgba(34,211,238,0.05)]";
+
+  return (
+    <Card
+      hover
+      neon={insight.upsetAlert ? "magenta" : insight.status === MatchStatus.LIVE ? "green" : "cyan"}
+      className={`overflow-hidden p-0 bg-[#0b0d13] ${cardTone}`}
+    >
+      <Link
+        href={`/${locale}/ai-insight/${insight.matchId}`}
+        className="block rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+      >
+        <div className="border-b border-gray-800/80 bg-black/25 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+            <ApiLeagueLogo
+              name={insight.league.name}
+              logo={insight.league.logo}
+              size="xs"
+            />
+            <span className="min-w-0 flex-1 truncate font-semibold">{insight.league.name}</span>
+            <StatusBadge insight={insight} copy={copy} />
+            <span className="rounded-full border border-gray-800 bg-[#10121a] px-2.5 py-1 font-mono text-xs font-bold text-slate-500">
+              {formatMatchMoment(insight, locale)}
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)] items-center gap-3">
+            <TeamSide
+              name={insight.homeTeam.name}
+              logo={insight.homeTeam.logo}
+              favorite={insight.favoriteTeam === "home"}
+            />
+            <ScoreBlock insight={insight} />
+            <TeamSide
+              name={insight.awayTeam.name}
+              logo={insight.awayTeam.logo}
+              favorite={insight.favoriteTeam === "away"}
+              align="right"
+            />
+          </div>
+
+          <div className="mt-4 rounded-xl border border-gray-800/80 bg-black/35 p-3">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-cyan-300">
+                <Activity size={14} />
+                {copy.sections.modelSummary}
+              </div>
+              <span className="font-mono text-xs text-slate-500">
+                {copy.labels.confidence} {formatPercentMetric(insight.confidenceScore)}
+              </span>
+            </div>
+            {hasStrengthData(insight) ? (
+              <StrengthRow insight={insight} />
+            ) : null}
+            {hasProbabilityData(insight) ? (
+              <ProbabilityRow insight={insight} copy={copy} />
+            ) : null}
+            {hasHeatData(insight) ? (
+              <HeatRow insight={insight} copy={copy} />
+            ) : null}
+            {!hasStrengthData(insight) && !hasProbabilityData(insight) && !hasHeatData(insight) ? (
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-slate-500">{copy.sections.modelSummary}</span>
+                <span className="text-slate-300">-</span>
+              </div>
+            ) : null}
+          </div>
+
+          {hasStandingsOrH2H(insight) ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              {hasStandings(insight) ? (
+                <StandingsRow insight={insight} copy={copy} />
+              ) : null}
+              {insight.h2h && insight.h2h.totalMatches > 0 ? (
+                <H2HRow h2h={insight.h2h} copy={copy} />
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge variant="cyan" size="md">
+              {`${copy.labels.confidence} ${formatPercentMetric(insight.confidenceScore)}`}
+            </Badge>
+
+            {insight.categories.includes("upsetAlert") ? (
+              <Badge variant="magenta" size="md" className="border-magenta/25 bg-magenta/10 text-magenta">
+                {copy.labels.upsetAlert}
+                {typeof insight.upsetRisk === "number" ? ` ${Math.round(insight.upsetRisk)}%` : ""}
+              </Badge>
+            ) : null}
+
+            {insight.categories.includes("highConfidence") ? (
+              <Badge variant="green" size="md">{copy.filters.highConfidence}</Badge>
+            ) : null}
+
+            {insight.favoriteTeam ? (
+              <Badge variant="gold" size="md">
+                {insight.favoriteTeam === "home" ? insight.homeTeam.name : insight.awayTeam.name}
+              </Badge>
+            ) : null}
+          </div>
+
+          <div className="mt-3 flex items-center gap-3 rounded-xl border border-gray-800 bg-[#10121a] px-3 py-2.5">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                {copy.labels.keyFactors}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold text-slate-200">{primaryNote}</p>
+            </div>
+            <ChevronRight size={18} className="shrink-0 text-cyan-400" />
+          </div>
+        </div>
+      </Link>
+    </Card>
   );
 }
 
@@ -421,12 +495,12 @@ function HeroSignalTile({
   tone: string;
 }) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-[#12121a] px-3 py-2">
+    <div className="rounded-xl border border-gray-800 bg-[#10121a] px-3 py-2.5">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-slate-500">{label}</p>
-        <Icon size={14} className={tone} />
+        <p className="text-sm font-semibold text-slate-400">{label}</p>
+        <Icon size={15} className={tone} />
       </div>
-      <p className={`mt-1 text-lg font-semibold ${tone}`}>{value}</p>
+      <p className={`mt-1 font-mono text-xl font-black ${tone}`}>{value}</p>
     </div>
   );
 }
@@ -448,25 +522,35 @@ function TeamSide({
     <div
       className={`flex min-w-0 items-center gap-2 ${isRight ? "flex-row-reverse text-right" : ""}`}
     >
-      <ApiTeamLogo name={name} logo={logo} size="sm" />
+      <ApiTeamLogo name={name} logo={logo} size="md" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-semibold text-slate-100">{name}</p>
+        <p className="line-clamp-2 text-sm font-bold text-slate-100">{name}</p>
       </div>
       {favorite ? <span className="shrink-0 text-[12px] text-amber-400">★</span> : null}
     </div>
   );
 }
 
-function ScoreBlock({ insight }: { insight: AIInsightListItem }) {
+function ScoreBlock({
+  insight,
+  featured = false,
+}: {
+  insight: AIInsightListItem;
+  featured?: boolean;
+}) {
   const hasScore = insight.score.home !== null && insight.score.away !== null;
 
   return (
-    <div className="min-w-[40px] text-center">
-      <div className="text-[18px] font-extrabold text-slate-100">
+    <div className="text-center">
+      <div
+        className={`rounded-xl border border-cyan-500/20 bg-black/55 px-3 py-2 font-mono font-black text-white shadow-[inset_0_0_14px_rgba(34,211,238,0.08)] ${
+          featured ? "text-3xl" : "text-xl"
+        }`}
+      >
         {hasScore ? `${insight.score.home} - ${insight.score.away}` : "vs"}
       </div>
       {insight.status === MatchStatus.LIVE && insight.elapsed !== null ? (
-        <div className="text-xs text-green-400">{`${insight.elapsed}'`}</div>
+        <div className="mt-1 font-mono text-xs font-bold text-green-400">{`${insight.elapsed}'`}</div>
       ) : null}
     </div>
   );
@@ -481,24 +565,24 @@ function StrengthRow({ insight }: { insight: AIInsightListItem }) {
       : "-";
 
   return (
-    <div className="mb-1 flex items-center gap-2">
-      <div className="w-[26px] text-center text-[12px] font-bold text-cyan-400">
+    <div className="mb-2 flex items-center gap-2">
+      <div className="w-[30px] text-center font-mono text-sm font-bold text-cyan-400">
         {homeStrength}
       </div>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
         <div
           className="h-full rounded-full bg-cyan-400 transition-all duration-500 shadow-[0_0_10px_rgba(34,211,238,0.3)]"
           style={{ width: `${homeStrength}%` }}
         />
       </div>
-      <div className="w-[30px] text-center text-xs text-slate-500">{gap}</div>
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
+      <div className="w-[34px] text-center font-mono text-xs text-slate-500">{gap}</div>
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
         <div
           className="ml-auto h-full rounded-full bg-magenta transition-all duration-500 shadow-[0_0_10px_rgba(217,70,239,0.25)]"
           style={{ width: `${awayStrength}%` }}
         />
       </div>
-      <div className="w-[26px] text-center text-[12px] font-bold text-magenta">
+      <div className="w-[30px] text-center font-mono text-sm font-bold text-magenta">
         {awayStrength}
       </div>
     </div>
@@ -513,7 +597,7 @@ function ProbabilityRow({
   copy: ReturnType<typeof getAIInsightPageCopy>;
 }) {
   return (
-    <div className="mb-1 grid grid-cols-3 gap-2">
+    <div className="mb-2 grid grid-cols-3 gap-2">
       <ProbabilityCell label={copy.labels.homeWin} value={insight.homeWinProbability} tone="text-cyan-400" />
       <ProbabilityCell label={copy.labels.draw} value={insight.drawProbability} tone="text-amber-400" />
       <ProbabilityCell label={copy.labels.awayWin} value={insight.awayWinProbability} tone="text-magenta" />
@@ -531,9 +615,9 @@ function ProbabilityCell({
   tone: string;
 }) {
   return (
-    <div className="rounded-md border border-gray-800 bg-[#12121a] px-2 py-1.5">
-      <p className="text-xs text-slate-500">{label}</p>
-      <p className={`mt-0.5 text-[12px] font-semibold ${tone}`}>{formatPercentMetric(value)}</p>
+    <div className="rounded-lg border border-gray-800 bg-[#10121a] px-2.5 py-2">
+      <p className="truncate text-xs font-semibold text-slate-500">{label}</p>
+      <p className={`mt-0.5 font-mono text-sm font-black ${tone}`}>{formatPercentMetric(value)}</p>
     </div>
   );
 }
@@ -551,16 +635,16 @@ function HeatRow({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="w-[86px] shrink-0 whitespace-nowrap text-right text-xs text-slate-500">
+      <span className="w-[92px] shrink-0 whitespace-nowrap text-right text-xs font-semibold text-slate-500">
         {getHeatLabel(heat, copy)}
       </span>
-      <div className="h-1 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#1a1a2e]">
         <div
           className={`h-full rounded-full transition-all duration-500 ${heatTone}`}
           style={{ width: `${heat}%` }}
         />
       </div>
-      <span className="w-[36px] text-right text-sm font-bold text-slate-300">
+      <span className="w-[40px] text-right font-mono text-sm font-bold text-slate-300">
         {heat}
       </span>
     </div>

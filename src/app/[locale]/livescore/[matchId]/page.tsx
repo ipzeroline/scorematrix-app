@@ -16,12 +16,15 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
+import type { Metadata } from "next";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { SITE_URL, SITE_NAME } from "@/lib/site";
 import {
   ApiFootballError,
   type ApiFootballEvent,
@@ -40,11 +43,130 @@ import { buildPredictMatchHref } from "@/lib/predict-route";
 import { hasAuthSession } from "@/lib/auth-session-server";
 import { MatchStatus } from "@/types/common";
 import { cn, formatDate, formatTime } from "@/lib/utils";
-
+import MatchTabsClient from "./MatchTabsClient";
 type Props = {
   params: Promise<{ locale: string; matchId: string }>;
   showJsonBox?: boolean;
 };
+
+const SEO_TEMPLATES = {
+  th: {
+    title: (home: string, away: string, league: string) => `วิเคราะห์บอลสด ${home} vs ${away} - ${league} | ผลบอลสด รายชื่อ สถิติ H2H`,
+    description: (home: string, away: string, league: string, score: string) => 
+      `ติดตามรายงานการแข่งขันฟุตบอลสดระหว่าง ${home} พบกับ ${away} ในศึก ${league} ${score ? `ผลการแข่งขันปัจจุบัน: ${score}` : ""} อัปเดตรายชื่อผู้เล่น สถิติการครองบอล การยิงประตู ประวัติการพบกัน H2H และตารางคะแนนล่าสุดที่ ScoreMatrix`,
+  },
+  en: {
+    title: (home: string, away: string, league: string) => `Live Score ${home} vs ${away} - ${league} | Lineups, Stats & H2H`,
+    description: (home: string, away: string, league: string, score: string) => 
+      `Live coverage of ${home} vs ${away} in ${league}. ${score ? `Current Score: ${score}.` : ""} Real-time lineups, match events, team stats, head-to-head records (H2H), and standings at ScoreMatrix.`,
+  },
+  lo: {
+    title: (home: string, away: string, league: string) => `ຜົນບານສົດ ${home} vs ${away} - ${league} | ລາຍຊື່, ສະຖິຕິ & H2H`,
+    description: (home: string, away: string, league: string, score: string) => 
+      `ຕິດຕາມການແຂ່ງຂັນບານສົດລະຫວ່າງ ${home} ພົບກັບ ${away} ໃນເສິກ ${league} ${score ? `ຜົນການແຂ່ງຂັນ: ${score}` : ""} ອັບເດດລາຍຊື່ຜູ້ຫຼິ້ນ ສະຖິຕິ H2H ແລະ ຕາຕະລາງຄະແນນລ້າສຸດທີ່ ScoreMatrix`,
+  },
+  my: {
+    title: (home: string, away: string, league: string) => `တိုက်ရိုက်ရလဒ် ${home} vs ${away} - ${league} | လူစာရင်း၊ စာရင်းအင်းနှင့် H2H`,
+    description: (home: string, away: string, league: string, score: string) => 
+      `${league} တွင် ${home} နှင့် ${away} တို့၏ တိုက်ရိုက်ပွဲစဉ်။ ${score ? `လက်ရှိရလဒ်: ${score}။` : ""} လူစာရင်း၊ စာရင်းအင်း၊ H2H နှင့် ရမှတ်ဇယားများကို ScoreMatrix တွင် ကြည့်ရှုပါ။`,
+  },
+  km: {
+    title: (home: string, away: string, league: string) => `លទ្ធផលបាល់ទាត់បន្តផ្ទាល់ ${home} vs ${away} - ${league} | បញ្ជីឈ្មោះ, ស្ថិតិ និង H2H`,
+    description: (home: string, away: string, league: string, score: string) => 
+      `ការផ្សាយបន្តផ្ទាល់រវាង ${home} និង ${away} ក្នុង ${league}។ ${score ? `លទ្ធផលបច្ចុប្បន្ន: ${score}។` : ""} ស្ថិតិ, បញ្ជីឈ្មោះកីឡាករ, ប្រវត្តិជួបគ្នា H2H និងតារាងពិន្ទុនៅ ScoreMatrix។`,
+  },
+  zh: {
+    title: (home: string, away: string, league: string) => `比分直播 ${home} vs ${away} - ${league} | 阵容、统计数据和历史战绩 H2H`,
+    description: (home: string, away: string, league: string, score: string) => 
+      `${league} 联赛中 ${home} 对阵 ${away} 的实时比分直播。${score ? `当前比分: ${score}。` : ""}实时阵容、比赛事件、球队数据统计、交战历史记录（H2H）以及最新积分榜，尽在 ScoreMatrix。`,
+  }
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale, matchId } = await params;
+  const apiFixtureId = parseApiFixtureId(matchId);
+
+  if (!apiFixtureId) {
+    return {
+      title: "Match Details | ScoreMatrix",
+    };
+  }
+
+  try {
+    const details = await getApiFootballFixtureDetails(apiFixtureId);
+    const { fixture } = details;
+    const home = fixture.home.name;
+    const away = fixture.away.name;
+    const league = fixture.league.name;
+    const score = hasCompleteScore(fixture.score)
+      ? `${fixture.score.home}-${fixture.score.away}`
+      : "";
+
+    const templates = SEO_TEMPLATES[locale as keyof typeof SEO_TEMPLATES] ?? SEO_TEMPLATES.en;
+    const title = templates.title(home, away, league);
+    const description = templates.description(home, away, league, score);
+
+    const pathname = `/${locale}/livescore/${matchId}`;
+    const canonical = `${SITE_URL}${pathname}`;
+    const languages = Object.fromEntries(
+      ["th", "en", "lo", "my", "km", "zh"].map((code) => [code, `${SITE_URL}/${code}/livescore/${matchId}`])
+    );
+
+    return {
+      title,
+      description,
+      alternates: {
+        canonical,
+        languages: {
+          ...languages,
+          "x-default": `${SITE_URL}/th/livescore/${matchId}`,
+        },
+      },
+      openGraph: {
+        title,
+        description,
+        url: canonical,
+        siteName: SITE_NAME,
+        locale,
+        type: "website",
+        images: [
+          ...(fixture.home.logo ? [{
+            url: fixture.home.logo,
+            width: 120,
+            height: 120,
+            alt: `${home} Logo`,
+          }] : []),
+          ...(fixture.away.logo ? [{
+            url: fixture.away.logo,
+            width: 120,
+            height: 120,
+            alt: `${away} Logo`,
+          }] : []),
+        ],
+      },
+    };
+  } catch {
+    return {
+      title: "Match Details | ScoreMatrix",
+    };
+  }
+}
+
+function mapStatusToSchemaOrg(status: MatchStatus): string {
+  switch (status) {
+    case MatchStatus.LIVE:
+      return "https://schema.org/EventActive";
+    case MatchStatus.FINISHED:
+      return "https://schema.org/EventCompleted";
+    case MatchStatus.POSTPONED:
+      return "https://schema.org/EventPostponed";
+    case MatchStatus.CANCELLED:
+      return "https://schema.org/EventCancelled";
+    case MatchStatus.UPCOMING:
+    default:
+      return "https://schema.org/EventScheduled";
+  }
+}
 
 export default async function MatchDetailPage({ params, showJsonBox = false }: Props) {
   const { locale, matchId } = await params;
@@ -113,10 +235,14 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
 
   return (
     <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
-      <Card neon="cyan" className="overflow-hidden p-3 text-center sm:p-4">
+      <Card className="relative overflow-hidden border border-border bg-surface p-4 text-center sm:p-6 shadow-xl">
+        <h1 className="sr-only">
+          {fixture.home.name} vs {fixture.away.name} - {fixture.league.name} ({fixture.league.round}) {t("matchDetail.matchInfo")}
+        </h1>
         <Link
+          id="link-league-detail"
           href={`/${locale}/football/leagues/${fixture.league.apiLeagueId ?? fixture.league.id}`}
-          className="mx-auto mb-3 inline-flex max-w-full items-center gap-2 rounded-lg border border-cyan-500/20 bg-cyan-500/5 px-2.5 py-1.5 text-left transition-colors hover:border-cyan-400/40"
+          className="mx-auto mb-5 inline-flex max-w-full items-center gap-2.5 rounded-full border border-border bg-elevated/40 px-4.5 py-1.5 text-left transition-all duration-150 hover:border-primary/40 hover:bg-elevated/80"
         >
           <ApiLeagueLogo
             name={fixture.league.name}
@@ -124,15 +250,16 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             size="sm"
           />
           <span className="min-w-0">
-            <span className="block truncate text-xs font-bold text-white sm:text-sm">
+            <span className="block truncate text-xs font-black tracking-wider text-white uppercase sm:text-sm">
               {fixture.league.name}
             </span>
-            <span className="block truncate text-[10px] text-gray-500">
+            <span className="block truncate font-mono text-[9px] font-bold tracking-widest text-primary uppercase">
               {fixture.league.round}
             </span>
           </span>
         </Link>
-        <div className="grid grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[minmax(0,1fr)_132px_minmax(0,1fr)] sm:gap-3">
+        
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6 py-4">
           <TeamHeader
             name={fixture.home.name}
             logo={fixture.home.logo}
@@ -145,40 +272,55 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             align="right"
             lineup={homeLineup}
           />
-          <div className="min-w-0 text-center">
-            <div className="mb-1.5 flex justify-center">
+          
+          <div className="min-w-0 text-center flex flex-col justify-center items-center px-1">
+            <div className="mb-2">
               <StatusBadge status={fixture.status} />
             </div>
-            <div className="font-mono text-[26px] font-bold leading-none text-white sm:text-4xl">
-              {hasCompleteScore(fixture.score)
-                ? `${fixture.score.home} - ${fixture.score.away}`
-                : t("common.vs")}
+            
+            <div className="relative inline-flex items-center justify-center rounded-xl border border-border bg-bg/60 px-4.5 py-2 sm:px-6 sm:py-2.5">
+              <span className="absolute left-0 top-1/4 bottom-1/4 w-[2px] rounded-r bg-primary" />
+              <span className="absolute right-0 top-1/4 bottom-1/4 w-[2px] rounded-l bg-magenta" />
+              <span className={cn(
+                "font-display text-[26px] font-black leading-none tracking-wider sm:text-4xl tabular-nums",
+                hasCompleteScore(fixture.score) ? "text-white" : "text-text-secondary"
+              )}>
+                {hasCompleteScore(fixture.score)
+                  ? `${fixture.score.home} - ${fixture.score.away}`
+                  : t("common.vs")}
+              </span>
             </div>
-            {hasCompleteScore(scoreBreakdown.halftime) && (
-              <p className="mt-1 font-mono text-[11px] text-gray-500">
-                HT {scoreBreakdown.halftime.home} : {scoreBreakdown.halftime.away}
-              </p>
+            
+            {(hasCompleteScore(scoreBreakdown.halftime) || hasCompleteScore(scoreBreakdown.penalty)) && (
+              <div className="mt-2.5 flex flex-col gap-0.5 text-[9px] font-bold text-text-muted font-mono tracking-widest uppercase">
+                {hasCompleteScore(scoreBreakdown.halftime) && (
+                  <span>HT {scoreBreakdown.halftime.home} : {scoreBreakdown.halftime.away}</span>
+                )}
+                {hasCompleteScore(scoreBreakdown.penalty) && (
+                  <span className="text-warning font-black">PEN {scoreBreakdown.penalty.home} : {scoreBreakdown.penalty.away}</span>
+                )}
+              </div>
             )}
-            {hasCompleteScore(scoreBreakdown.penalty) && (
-              <p className="mt-0.5 font-mono text-[11px] font-semibold text-amber-300">
-                PEN {scoreBreakdown.penalty.home} : {scoreBreakdown.penalty.away}
-              </p>
-            )}
-            <p className="mt-1.5 break-words font-mono text-[11px] leading-tight text-gray-400 sm:text-[11px]">
-              {formatFixtureDateTime(fixture.kickoffTime, locale)}
-            </p>
+            
+            <div className="mt-3.5 flex items-center justify-center gap-1.5 font-mono text-[9px] font-bold leading-none text-text-muted sm:text-[10px] tracking-wide">
+              <Clock size={11} className="text-primary shrink-0" />
+              <span>{formatFixtureDateTime(fixture.kickoffTime, locale)}</span>
+            </div>
+            
             {fixture.status === MatchStatus.LIVE && fixture.elapsed !== null && (
-              <p className="mt-1 font-mono text-[13px] font-bold text-green-300 sm:text-xs">
-                {fixture.elapsed}
-                {fixture.statusExtra ? `+${fixture.statusExtra}` : ""}&apos;
-              </p>
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-0.5 font-mono text-[10px] font-black text-success shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-success animate-[livePulse_1.5s_infinite]" />
+                <span>{fixture.elapsed}{fixture.statusExtra ? `+${fixture.statusExtra}` : ""}&apos;</span>
+              </div>
             )}
+            
             {fixture.status === MatchStatus.LIVE && (
-              <div className="mt-2">
+              <div className="mt-2.5">
                 <LiveMatchRefresher label={t("matchDetail.liveAutoRefresh")} />
               </div>
             )}
           </div>
+          
           <TeamHeader
             name={fixture.away.name}
             logo={fixture.away.logo}
@@ -191,9 +333,11 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             lineup={awayLineup}
           />
         </div>
+        
         {fixture.status === MatchStatus.UPCOMING && isLoggedIn && new Date(fixture.kickoffTime) > new Date() && (
-          <div className="mt-4 flex justify-center">
+          <div className="mt-5 flex justify-center">
             <Link
+              id="btn-predict-match"
               href={buildPredictMatchHref(
                 locale,
                 buildFixtureSeoSlug(fixture),
@@ -202,7 +346,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               )}
               className="w-full sm:w-auto"
             >
-              <Button variant="gold" size="md" className="w-full sm:w-auto">
+              <Button variant="gold" size="md" className="w-full sm:w-auto font-display font-extrabold uppercase tracking-widest transition-all duration-150 hover:bg-gold-dim">
                 {t("prediction.predictScore")}
               </Button>
             </Link>
@@ -210,172 +354,276 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         )}
       </Card>
 
-      <MatchContextPanel
-        fixture={fixture}
-        fetchedAt={fetchedAt}
-        locale={locale}
+      <MatchTabsClient
+        eventCount={events.length}
         labels={{
-          title: t("matchDetail.matchInfo"),
-          status: t("matchDetail.liveStatus"),
-          kickoff: t("matchDetail.kickoffTime"),
-          elapsed: t("matchDetail.elapsed"),
-          addedTime: t("matchDetail.addedTime"),
-          referee: t("matchDetail.referee"),
-          venue: t("matchDetail.venue"),
-          firstPeriod: t("matchDetail.firstPeriod"),
-          secondPeriod: t("matchDetail.secondPeriod"),
-          lastUpdated: t("matchDetail.lastUpdated"),
-          unavailable: t("matchDetail.unavailable"),
-          statusFirstHalf: t("matchDetail.statusFirstHalf"),
-          statusSecondHalf: t("matchDetail.statusSecondHalf"),
-          statusHalftime: t("matchDetail.statusHalftime"),
-          statusFulltime: t("matchDetail.statusFulltime"),
-          statusExtraTime: t("matchDetail.statusExtraTime"),
-          statusPenalty: t("matchDetail.statusPenalty"),
-          statusPostponed: t("matchDetail.statusPostponed"),
-          statusCancelled: t("matchDetail.statusCancelled"),
-          statusNotStarted: t("matchDetail.statusNotStarted"),
+          overview: t("matchDetail.overview"),
+          stats: t("matchDetail.stats"),
+          lineups: t("matchDetail.lineups"),
+          timeline: t("matchDetail.events"),
         }}
-      />
+        overviewTab={
+          <>
+            <MatchContextPanel
+              fixture={fixture}
+              fetchedAt={fetchedAt}
+              locale={locale}
+              labels={{
+                title: t("matchDetail.matchInfo"),
+                status: t("matchDetail.liveStatus"),
+                kickoff: t("matchDetail.kickoffTime"),
+                elapsed: t("matchDetail.elapsed"),
+                addedTime: t("matchDetail.addedTime"),
+                referee: t("matchDetail.referee"),
+                venue: t("matchDetail.venue"),
+                firstPeriod: t("matchDetail.firstPeriod"),
+                secondPeriod: t("matchDetail.secondPeriod"),
+                lastUpdated: t("matchDetail.lastUpdated"),
+                unavailable: t("matchDetail.unavailable"),
+                statusFirstHalf: t("matchDetail.statusFirstHalf"),
+                statusSecondHalf: t("matchDetail.statusSecondHalf"),
+                statusHalftime: t("matchDetail.statusHalftime"),
+                statusFulltime: t("matchDetail.statusFulltime"),
+                statusExtraTime: t("matchDetail.statusExtraTime"),
+                statusPenalty: t("matchDetail.statusPenalty"),
+                statusPostponed: t("matchDetail.statusPostponed"),
+                statusCancelled: t("matchDetail.statusCancelled"),
+                statusNotStarted: t("matchDetail.statusNotStarted"),
+              }}
+            />
 
-      <PeriodScorePanel
-        scoreBreakdown={scoreBreakdown}
-        status={fixture.statusShort}
-        homeName={fixture.home.name}
-        awayName={fixture.away.name}
-        title={t("matchDetail.scorePeriod")}
-        isUpcoming={fixture.status === MatchStatus.UPCOMING}
-      />
+            <PeriodScorePanel
+              scoreBreakdown={scoreBreakdown}
+              status={fixture.statusShort}
+              homeName={fixture.home.name}
+              awayName={fixture.away.name}
+              title={t("matchDetail.scorePeriod")}
+              isUpcoming={fixture.status === MatchStatus.UPCOMING}
+            />
 
-      <FirstScorerPanel
-        event={getFirstGoalEvent(events)}
-        labels={{
-          title: t("matchDetail.firstScorer"),
-          empty: t("matchDetail.noEventData"),
-          highlight: t("matchDetail.goalHighlight"),
-          minute: t("matchDetail.goalMinute"),
-          assist: t("matchDetail.goalAssist"),
-          type: t("matchDetail.goalType"),
-          detail: t("matchDetail.goalDetail"),
-          related: t("matchDetail.relatedPlayer"),
-          comments: t("matchDetail.goalComments"),
-        }}
+            <FirstScorerPanel
+              event={getFirstGoalEvent(events)}
+              labels={{
+                title: t("matchDetail.firstScorer"),
+                empty: t("matchDetail.noEventData"),
+                highlight: t("matchDetail.goalHighlight"),
+                minute: t("matchDetail.goalMinute"),
+                assist: t("matchDetail.goalAssist"),
+                type: t("matchDetail.goalType"),
+                detail: t("matchDetail.goalDetail"),
+                related: t("matchDetail.relatedPlayer"),
+                comments: t("matchDetail.goalComments"),
+              }}
+            />
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <H2HPanel
+                fixtures={headToHead}
+                homeTeamId={fixture.home.apiTeamId}
+                title={t("matchDetail.h2h")}
+                emptyLabel={t("matchDetail.noH2hData")}
+                labels={{
+                  win: t("matchDetail.h2hWin"),
+                  draw: t("matchDetail.h2hDraw"),
+                  loss: t("matchDetail.h2hLoss"),
+                }}
+              />
+              <StandingPanel
+                standings={standings}
+                homeTeam={fixture.home}
+                awayTeam={fixture.away}
+                title={t("matchDetail.leagueStanding")}
+                emptyLabel={t("matchDetail.noStandingData")}
+                labels={{
+                  rank: t("matchDetail.standingRank"),
+                  points: t("matchDetail.standingPoints"),
+                  played: t("matchDetail.standingPlayed"),
+                  wdl: t("matchDetail.standingWDL"),
+                  goals: t("matchDetail.standingGoals"),
+                  gd: t("matchDetail.standingGD"),
+                  recentForm: t("matchDetail.recentForm"),
+                  split: t("matchDetail.standingSplit"),
+                  home: t("matchDetail.standingHome"),
+                  away: t("matchDetail.standingAway"),
+                }}
+              />
+            </div>
+          </>
+        }
+        statsTab={
+          <>
+            <StatsAnalysisPanel
+              statistics={statistics}
+              lineups={lineups}
+              labels={{
+                title: t("matchDetail.analysisGraph"),
+                empty: t("matchDetail.noTeamStatistics"),
+                balanced: t("matchDetail.balancedStat"),
+              }}
+              statLabels={buildTeamStatLabels(t)}
+            />
+
+            <TeamStatsPanel
+              statistics={statistics}
+              title={t("matchDetail.teamStatistics")}
+              emptyLabel={t("matchDetail.noTeamStatistics")}
+              labels={buildTeamStatLabels(t)}
+            />
+
+            {teamStatistics && (
+              <TeamSeasonStatisticsPanel
+                statistics={teamStatistics}
+                labels={{
+                  title: t("football.teamSeasonStats"),
+                  played: t("football.played"),
+                  wins: t("football.wins"),
+                  draws: t("football.draws"),
+                  losses: t("football.losses"),
+                  goalsFor: t("football.goalsFor"),
+                  goalsAgainst: t("football.goalsAgainst"),
+                  cleanSheets: t("football.cleanSheets"),
+                }}
+              />
+            )}
+          </>
+        }
+        lineupsTab={
+          <>
+            <LineupsPanel
+              lineups={lineups}
+              locale={locale}
+              season={season}
+              labels={{
+                empty: t("matchDetail.noLineupData"),
+                coach: t("matchDetail.coach"),
+                unavailable: t("matchDetail.unavailable"),
+                startingXI: t("matchDetail.startingXI"),
+                substitutes: t("matchDetail.substitutes"),
+                formationPitch: t("matchDetail.formationPitch"),
+                noGridData: t("matchDetail.noGridData"),
+                captain: t("matchDetail.captain"),
+              }}
+              playerStats={playerStats}
+            />
+
+            {teamSquads && (
+              <TeamSquadsPanel
+                squads={teamSquads}
+                locale={locale}
+                season={season}
+                labels={{
+                  title: t("football.squadTitle"),
+                  age: t("football.age"),
+                  unavailable: t("matchDetail.unavailable"),
+                }}
+              />
+            )}
+          </>
+        }
+        timelineTab={
+          <EventsPanel
+            events={events}
+            title={t("matchDetail.matchEvents")}
+            emptyLabel={t("matchDetail.noEventData")}
+            relatedLabel={t("matchDetail.relatedPlayer")}
+            labels={buildEventLabels(t)}
+          />
+        }
       />
 
       {showJsonBox && (
-        <JsonBox
-          title={`GET /soccer/fixtures/${apiFixtureId}`}
-          value={{
-            fetchedAt,
-            fixture,
-            events,
-            lineups,
-            statistics,
-            playerStats,
-            teamStatistics,
-            teamSquads,
-          }}
-        />
+        <div className="mt-4">
+          <JsonBox
+            title={`GET /soccer/fixtures/${apiFixtureId}`}
+            value={{
+              fetchedAt,
+              fixture,
+              events,
+              lineups,
+              statistics,
+              playerStats,
+              teamStatistics,
+              teamSquads,
+            }}
+          />
+        </div>
       )}
 
-      <StatsAnalysisPanel
-        statistics={statistics}
-        lineups={lineups}
-        labels={{
-          title: t("matchDetail.analysisGraph"),
-          empty: t("matchDetail.noTeamStatistics"),
-          balanced: t("matchDetail.balancedStat"),
+      {/* SEO structured data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "SportsEvent",
+                "@id": `${SITE_URL}/${locale}/matches/detail/${matchId}#event`,
+                "name": `${fixture.home.name} vs ${fixture.away.name}`,
+                "description": `${fixture.home.name} vs ${fixture.away.name} in ${fixture.league.name}. Status: ${fixture.statusLong}.`,
+                "startDate": fixture.kickoffTime,
+                "sport": "https://en.wikipedia.org/wiki/Association_football",
+                "eventStatus": mapStatusToSchemaOrg(fixture.status),
+                "homeTeam": {
+                  "@type": "SportsTeam",
+                  "name": fixture.home.name,
+                  "logo": fixture.home.logo,
+                },
+                "awayTeam": {
+                  "@type": "SportsTeam",
+                  "name": fixture.away.name,
+                  "logo": fixture.away.logo,
+                },
+                "location": {
+                  "@type": "Place",
+                  "name": fixture.venue || "TBD",
+                },
+                "superEvent": {
+                  "@type": "SportsEvent",
+                  "name": fixture.league.name,
+                  "sport": "https://en.wikipedia.org/wiki/Association_football",
+                },
+                ...(hasCompleteScore(fixture.score) ? {
+                  "result": {
+                    "@type": "Score",
+                    "value": `${fixture.score.home}-${fixture.score.away}`
+                  }
+                } : {})
+              },
+              {
+                "@type": "BreadcrumbList",
+                "@id": `${SITE_URL}/${locale}/matches/detail/${matchId}#breadcrumb`,
+                "itemListElement": [
+                  {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Home",
+                    "item": `${SITE_URL}/${locale}`
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Matches",
+                    "item": `${SITE_URL}/${locale}/matches`
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": fixture.league.name,
+                    "item": `${SITE_URL}/${locale}/football/leagues/${fixture.league.apiLeagueId ?? fixture.league.id}`
+                  },
+                  {
+                    "@type": "ListItem",
+                    "position": 4,
+                    "name": `${fixture.home.name} vs ${fixture.away.name}`,
+                    "item": `${SITE_URL}/${locale}/matches/detail/${matchId}`
+                  }
+                ]
+              }
+            ]
+          })
         }}
-        statLabels={buildTeamStatLabels(t)}
       />
-
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <EventsPanel
-          events={events}
-          title={t("matchDetail.matchEvents")}
-          emptyLabel={t("matchDetail.noEventData")}
-          relatedLabel={t("matchDetail.relatedPlayer")}
-          labels={buildEventLabels(t)}
-        />
-        <TeamStatsPanel
-          statistics={statistics}
-          title={t("matchDetail.teamStatistics")}
-          emptyLabel={t("matchDetail.noTeamStatistics")}
-          labels={buildTeamStatLabels(t)}
-        />
-      </section>
-      <LineupsPanel lineups={lineups} locale={locale} season={season} labels={{
-        empty: t("matchDetail.noLineupData"),
-        coach: t("matchDetail.coach"),
-        unavailable: t("matchDetail.unavailable"),
-        startingXI: t("matchDetail.startingXI"),
-        substitutes: t("matchDetail.substitutes"),
-        formationPitch: t("matchDetail.formationPitch"),
-        noGridData: t("matchDetail.noGridData"),
-        captain: t("matchDetail.captain"),
-      }} playerStats={playerStats} />
-
-      {teamStatistics ? (
-        <TeamSeasonStatisticsPanel
-          statistics={teamStatistics}
-          labels={{
-            title: t("football.teamSeasonStats"),
-            played: t("football.played"),
-            wins: t("football.wins"),
-            draws: t("football.draws"),
-            losses: t("football.losses"),
-            goalsFor: t("football.goalsFor"),
-            goalsAgainst: t("football.goalsAgainst"),
-            cleanSheets: t("football.cleanSheets"),
-          }}
-        />
-      ) : null}
-
-      {teamSquads ? (
-        <TeamSquadsPanel
-          squads={teamSquads}
-          locale={locale}
-          season={season}
-          labels={{
-            title: t("football.squadTitle"),
-            age: t("football.age"),
-            unavailable: t("matchDetail.unavailable"),
-          }}
-        />
-      ) : null}
-
-      <section className="grid gap-4 lg:grid-cols-2">
-        <H2HPanel
-          fixtures={headToHead}
-          homeTeamId={fixture.home.apiTeamId}
-          title={t("matchDetail.h2h")}
-          emptyLabel={t("matchDetail.noH2hData")}
-          labels={{
-            win: t("matchDetail.h2hWin"),
-            draw: t("matchDetail.h2hDraw"),
-            loss: t("matchDetail.h2hLoss"),
-          }}
-        />
-        <StandingPanel
-          standings={standings}
-          homeTeam={fixture.home}
-          awayTeam={fixture.away}
-          title={t("matchDetail.leagueStanding")}
-          emptyLabel={t("matchDetail.noStandingData")}
-          labels={{
-            rank: t("matchDetail.standingRank"),
-            points: t("matchDetail.standingPoints"),
-            played: t("matchDetail.standingPlayed"),
-            wdl: t("matchDetail.standingWDL"),
-            goals: t("matchDetail.standingGoals"),
-            gd: t("matchDetail.standingGD"),
-            recentForm: t("matchDetail.recentForm"),
-            split: t("matchDetail.standingSplit"),
-            home: t("matchDetail.standingHome"),
-            away: t("matchDetail.standingAway"),
-          }}
-        />
-      </section>
     </MatchDetailShell>
   );
 }
@@ -416,10 +664,10 @@ function FirstScorerPanel({
   };
 }) {
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="border-b border-gray-800 bg-linear-to-r from-green-500/10 via-white/2 to-cyan-500/10 px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-          <ShieldCheck size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+      <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-success">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+          <ShieldCheck size={16} className="shrink-0 text-success" aria-hidden="true" />
           <span className="min-w-0 truncate">{labels.title}</span>
         </h2>
       </div>
@@ -429,28 +677,28 @@ function FirstScorerPanel({
         </div>
       ) : (
         <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(260px,0.8fr)]">
-          <div className="overflow-hidden rounded-2xl border border-green-400/20 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.18),transparent_52%),linear-gradient(135deg,#0a0d13,#111827)] p-4 sm:p-5">
+          <div className="overflow-hidden rounded-xl border border-success/20 bg-success/5 p-4 sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-green-300">
+                <p className="font-mono text-[9px] font-extrabold uppercase tracking-[0.24em] text-success">
                   {labels.highlight}
                 </p>
-                <h3 className="mt-2 truncate text-2xl font-black text-white sm:text-3xl">
+                <h3 className="mt-2 font-display truncate text-2xl font-black text-white sm:text-3xl tracking-wide">
                   {event.player.name ?? event.team.name}
                 </h3>
-                <div className="mt-3 flex min-w-0 items-center gap-3">
+                <div className="mt-4 flex min-w-0 items-center gap-3">
                   <ApiTeamLogo name={event.team.name} logo={event.team.logo} size="md" />
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">{event.team.name}</p>
-                    <p className="truncate text-xs text-gray-400">
+                    <p className="truncate text-sm font-bold text-white">{event.team.name}</p>
+                    <p className="truncate text-xs text-gray-400 font-medium">
                       {translateEventDetail(event.detail, buildEventFallbackLabels())}
                     </p>
                   </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-green-400/25 bg-green-500/10 px-4 py-3 text-center shadow-[0_0_24px_rgba(34,197,94,0.18)]">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-green-200">{labels.minute}</p>
-                <p className="mt-1 font-mono text-2xl font-black text-green-300">
+              <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-center">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-success">{labels.minute}</p>
+                <p className="mt-1 font-mono text-2xl font-black text-success">
                   {event.time.elapsed}{event.time.extra ? `+${event.time.extra}` : ""}&apos;
                 </p>
               </div>
@@ -481,11 +729,11 @@ function FirstScorerMeta({
   multiline?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-[#12121a] px-3 py-3">
-      <p className="truncate font-mono text-[10px] uppercase tracking-wider text-gray-500">
+    <div className="rounded-xl border border-border bg-elevated/40 px-3 py-3">
+      <p className="truncate font-mono text-[10px] uppercase tracking-wider text-text-muted">
         {label}
       </p>
-      <p className={cn("mt-1 text-sm font-semibold text-white", multiline ? "break-words" : "truncate")}>
+      <p className={cn("mt-1 text-sm font-semibold text-text-secondary", multiline ? "break-words" : "truncate")}>
         {value}
       </p>
     </div>
@@ -568,76 +816,76 @@ function MatchContextPanel({
       icon: Radio,
       label: labels.status,
       value: translateFixtureStatus(fixture, labels),
-      tone: "text-green-300",
+      tone: "text-success",
     },
     {
       icon: Clock,
       label: labels.kickoff,
       value: formatFixtureDateTime(fixture.kickoffTime, locale),
-      tone: "text-cyan-300",
+      tone: "text-primary",
     },
     {
       icon: Timer,
       label: labels.elapsed,
       value: elapsedValue,
-      tone: "text-amber-300",
+      tone: "text-warning",
     },
     {
       icon: Timer,
       label: labels.addedTime,
       value: fixture.statusExtra === null ? labels.unavailable : `${fixture.statusExtra}'`,
-      tone: "text-amber-300",
+      tone: "text-warning",
     },
     {
       icon: User,
       label: labels.referee,
       value: fixture.referee ?? labels.unavailable,
-      tone: "text-purple-300",
+      tone: "text-purple-400",
     },
     {
       icon: MapPin,
       label: labels.venue,
       value: fixture.venue || labels.unavailable,
-      tone: "text-magenta-300",
+      tone: "text-magenta",
     },
     {
       icon: Clock,
       label: labels.firstPeriod,
       value: formatUnixTimestamp(fixture.periods.first, labels.unavailable, locale),
-      tone: "text-cyan-300",
+      tone: "text-primary",
     },
     {
       icon: Clock,
       label: labels.secondPeriod,
       value: formatUnixTimestamp(fixture.periods.second, labels.unavailable, locale),
-      tone: "text-gray-400",
+      tone: "text-text-muted",
     },
     {
       icon: Radio,
       label: labels.lastUpdated,
       value: formatFixtureDateTime(fetchedAt, locale),
-      tone: "text-green-300",
+      tone: "text-success",
     },
   ];
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="border-b border-gray-800 bg-white/[0.02] px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-          <Radio size={16} className="shrink-0 text-green-300" aria-hidden="true" />
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+      <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-primary">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+          <Radio size={16} className="shrink-0 text-primary" aria-hidden="true" />
           <span className="min-w-0 truncate">{labels.title}</span>
         </h2>
       </div>
-      <div className="grid gap-px bg-gray-800 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
         {items.map(({ icon: Icon, label, value, tone }) => (
-          <div key={label} className="min-w-0 bg-[#12121a] px-4 py-3">
-            <div className="mb-1 flex items-center gap-2">
-              <Icon size={14} className={cn("shrink-0", tone)} aria-hidden="true" />
-              <span className="min-w-0 truncate text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+          <div key={label} className="min-w-0 bg-surface px-4 py-3.5 hover:bg-elevated transition-colors duration-150">
+            <div className="mb-1.5 flex items-center gap-2">
+              <Icon size={14} className={cn("shrink-0 rounded-full", tone)} aria-hidden="true" />
+              <span className="min-w-0 truncate text-[9px] font-extrabold uppercase tracking-wider text-gray-500 font-display">
                 {label}
               </span>
             </div>
-            <p className="break-words text-xs font-semibold text-white">{value}</p>
+            <p className="break-words text-xs font-bold text-white font-mono">{value}</p>
           </div>
         ))}
       </div>
@@ -700,12 +948,13 @@ function MatchDetailShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-4 overflow-hidden px-3 pb-8 sm:px-0">
+    <div className="mx-auto w-full max-w-5xl space-y-5 px-3 pb-12 sm:px-0">
       <Link
+        id="btn-back-to-matches"
         href={`/${locale}/matches`}
-        className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-white"
+        className="group inline-flex items-center gap-2 rounded-lg border border-border bg-elevated/40 px-3.5 py-2 text-xs font-bold tracking-wider text-text-secondary uppercase transition-all duration-150 hover:border-primary/40 hover:bg-elevated/80 hover:text-white"
       >
-        <ArrowLeft size={14} />
+        <ArrowLeft size={14} className="transition-transform duration-150 group-hover:-translate-x-1" />
         {backLabel}
       </Link>
       {children}
@@ -738,61 +987,66 @@ function TeamHeader({
   lineup?: ApiFootballLineup;
   align?: "left" | "right";
 }) {
-  const kit = getTeamHeaderKitColors(lineup, accent);
   const content = (
     <div
       className={cn(
-        "flex min-w-0 flex-col items-center gap-1.5 sm:gap-2",
-        align === "right" && "sm:items-end",
-        align === "left" && "sm:items-start"
+        "group flex min-w-0 flex-col items-center gap-2.5 transition-all duration-150 sm:gap-3.5",
+        align === "right" ? "sm:flex-row-reverse sm:text-right" : "sm:flex-row sm:text-left"
       )}
     >
-      <TeamShirtLogo name={name} logo={logo} kit={kit} />
-      <h1 className="max-w-full truncate text-[13px] font-bold leading-tight text-white sm:text-sm">
-        {name}
-      </h1>
+      {/* Esports Crest */}
+      <div className="relative flex h-14 w-14 shrink-0 items-center justify-center sm:h-20 sm:w-20">
+        {/* Hexagonal cyber crest */}
+        <div
+          className={cn(
+            "relative flex h-full w-full items-center justify-center border bg-surface p-2 transition-all duration-150 group-hover:scale-105",
+            accent === "cyan"
+              ? "border-primary/30 text-primary group-hover:border-primary"
+              : "border-magenta/30 text-magenta group-hover:border-magenta"
+          )}
+          style={{
+            clipPath: "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)",
+          }}
+        >
+          {/* Logo container */}
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-elevated/40 p-1 border border-border sm:h-12 sm:w-12">
+            {logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logo}
+                alt={name}
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <span className="font-mono text-xs font-black text-white">{name.slice(0, 2).toUpperCase()}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <h2 className="font-display max-w-full truncate text-[13px] font-extrabold tracking-wider text-gray-300 uppercase sm:text-base md:text-lg group-hover:text-primary">
+          {name}
+        </h2>
+        {lineup?.formation ? (
+          <span className="mt-1 inline-block rounded-md border border-border bg-elevated/40 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest text-text-muted uppercase">
+            {lineup.formation}
+          </span>
+        ) : (
+          <span className="mt-1 inline-block rounded-md border border-border bg-elevated/40 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-widest text-text-muted uppercase opacity-0 sm:opacity-100">
+            ROSTER
+          </span>
+        )}
+      </div>
     </div>
   );
 
   if (!href) return content;
 
   return (
-    <Link href={href} className="min-w-0 transition-opacity hover:opacity-80">
+    <Link id={`link-team-${accent}`} href={href} className="min-w-0 block">
       {content}
     </Link>
-  );
-}
-
-function TeamShirtLogo({
-  name,
-  logo,
-  kit,
-}: {
-  name: string;
-  logo: string | null;
-  kit: ResolvedKitColor;
-}) {
-  return (
-    <div className="relative h-12 w-14 sm:h-16 sm:w-20">
-      <div
-        className="absolute inset-0 flex items-center justify-center border shadow-[0_14px_30px_rgba(0,0,0,0.34)]"
-        style={{
-          backgroundColor: kit.primary,
-          borderColor: kit.border,
-          clipPath:
-            "polygon(18% 0%, 35% 0%, 42% 12%, 58% 12%, 65% 0%, 82% 0%, 100% 22%, 84% 38%, 78% 100%, 22% 100%, 16% 38%, 0% 22%)",
-        }}
-      >
-        <span className="grid h-7 w-7 place-items-center rounded-full border border-white/45 bg-white p-1 shadow-[0_4px_12px_rgba(0,0,0,0.3)] sm:h-9 sm:w-9">
-          {logo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt={`${name} logo`} className="h-full w-full object-contain" />
-          ) : (
-            <span className="text-xs font-black text-black">{name.slice(0, 2).toUpperCase()}</span>
-          )}
-        </span>
-      </div>
-    </div>
   );
 }
 
@@ -811,7 +1065,7 @@ function PersonAvatar({
   return (
     <span
       className={cn(
-        "grid shrink-0 place-items-center overflow-hidden rounded-full border border-white/10 bg-[#0a0a0f]",
+        "grid shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-[#0a0a0f]",
         dimension
       )}
     >
@@ -841,9 +1095,9 @@ function EventsPanel({
   labels: EventLabels;
 }) {
   return (
-    <Card className="p-4">
+    <Card className="border border-border bg-surface p-5 shadow-xl">
       <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-white">
-        <ClipboardList size={16} className="shrink-0 text-amber-300" aria-hidden="true" />
+        <ClipboardList size={16} className="shrink-0 text-warning" aria-hidden="true" />
         <span className="min-w-0 truncate">{title}</span>
       </h2>
       {events.length === 0 ? (
@@ -859,7 +1113,7 @@ function EventsPanel({
                 key={`${event.time.elapsed}-${event.type}-${index}`}
                 className={`grid grid-cols-[40px_24px_minmax(0,1fr)] items-center gap-2 rounded-lg border px-2 py-2 sm:grid-cols-[48px_28px_minmax(0,1fr)_128px] sm:gap-3 sm:px-3 ${style.rowClass}`}
               >
-                <span className="font-mono text-xs text-cyan-300">
+                <span className="font-mono text-xs text-primary">
                   {event.time.elapsed}
                   {event.time.extra ? `+${event.time.extra}` : ""}&apos;
                 </span>
@@ -921,9 +1175,9 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
     return {
       label: labels.redCard,
       icon: "R",
-      rowClass: "border-red-500/30 bg-red-500/10",
-      iconClass: "border-red-300/70 bg-red-500 text-white shadow-[0_0_12px_rgba(239,68,68,0.35)]",
-      badgeClass: "border-red-500/40 bg-red-500/15 text-red-200",
+      rowClass: "border-danger/20 bg-danger/10 hover:border-danger/40 hover:bg-danger/20 transition-all duration-150",
+      iconClass: "border-danger/30 bg-danger text-white font-bold",
+      badgeClass: "border-danger/25 bg-danger/10 text-danger",
     };
   }
 
@@ -931,9 +1185,9 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
     return {
       label: labels.yellowCard,
       icon: "Y",
-      rowClass: "border-amber-500/30 bg-amber-500/10",
-      iconClass: "border-amber-200/80 bg-amber-400 text-black shadow-[0_0_12px_rgba(251,191,36,0.35)]",
-      badgeClass: "border-amber-500/40 bg-amber-500/15 text-amber-200",
+      rowClass: "border-warning/20 bg-warning/10 hover:border-warning/40 hover:bg-warning/20 transition-all duration-150",
+      iconClass: "border-warning/30 bg-warning text-black font-bold",
+      badgeClass: "border-warning/25 bg-warning/10 text-warning",
     };
   }
 
@@ -941,9 +1195,9 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
     return {
       label: labels.goal,
       icon: "G",
-      rowClass: "border-green-500/25 bg-green-500/10",
-      iconClass: "border-green-400/50 bg-green-500/20 text-green-200",
-      badgeClass: "border-green-500/40 bg-green-500/15 text-green-200",
+      rowClass: "border-success/20 bg-success/10 hover:border-success/40 hover:bg-success/20 transition-all duration-150",
+      iconClass: "border-success/30 bg-success/20 text-success font-bold",
+      badgeClass: "border-success/25 bg-success/10 text-success",
     };
   }
 
@@ -951,18 +1205,18 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
     return {
       label: labels.substitution,
       icon: "S",
-      rowClass: "border-cyan-500/25 bg-cyan-500/10",
-      iconClass: "border-cyan-300/60 bg-cyan-500/20 text-cyan-200",
-      badgeClass: "border-cyan-500/40 bg-cyan-500/15 text-cyan-200",
+      rowClass: "border-primary/20 bg-primary/10 hover:border-primary/40 hover:bg-primary/20 transition-all duration-150",
+      iconClass: "border-primary/30 bg-primary/20 text-primary font-bold",
+      badgeClass: "border-primary/25 bg-primary/10 text-primary",
     };
   }
 
   return {
     label: translateEventType(type, labels),
     icon: "•",
-    rowClass: "border-gray-800 bg-[#0a0a0f]",
-    iconClass: "border-gray-700 bg-gray-800 text-gray-300",
-    badgeClass: "border-gray-700 bg-gray-800/60 text-gray-300",
+    rowClass: "border-border bg-surface hover:border-border/80 hover:bg-elevated/40 transition-all duration-150",
+    iconClass: "border-border bg-elevated text-text-secondary font-bold",
+    badgeClass: "border-border bg-elevated text-text-secondary",
   };
 }
 
@@ -1029,16 +1283,16 @@ function TeamStatsPanel({
   const awayStats = statistics[1];
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="border-b border-gray-800 bg-gradient-to-r from-cyan-500/10 via-white/[0.02] to-magenta-500/10 px-4 py-4">
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+      <div className="border-b border-border bg-elevated/40 px-4 py-4">
         <div className="flex items-center gap-2">
-          <Table2 size={16} className="shrink-0 text-magenta-300" aria-hidden="true" />
-          <span className="min-w-0 truncate text-sm font-semibold text-white">{title}</span>
+          <Table2 size={16} className="shrink-0 text-primary" aria-hidden="true" />
+          <span className="min-w-0 truncate text-sm font-semibold text-white font-display uppercase tracking-wider">{title}</span>
         </div>
         {homeStats && awayStats ? (
           <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
             <TeamMiniLabel team={homeStats.team} tone="cyan" />
-            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] px-2 font-mono text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-border bg-bg/50 px-2 font-mono text-[10px] font-bold uppercase tracking-widest text-text-secondary">
               vs
             </span>
             <TeamMiniLabel team={awayStats.team} tone="magenta" />
@@ -1050,7 +1304,7 @@ function TeamStatsPanel({
           <EmptyDetail label={emptyLabel} />
         </div>
       ) : (
-        <div className="space-y-3 p-4">
+        <div className="space-y-3.5 p-4">
           {homeStats.statistics.map((stat, index) => {
             const awayValue = awayStats.statistics[index]?.value ?? "-";
             const homeNumber = parseStatNumber(stat.value);
@@ -1063,31 +1317,31 @@ function TeamStatsPanel({
               total && total > 0 && awayNumber !== null ? 100 - homePercent : 50;
 
             return (
-              <div key={stat.type} className="rounded-xl border border-gray-800 bg-[#0a0d13] p-3">
+              <div key={stat.type} className="rounded-xl border border-border bg-elevated/40 p-3 hover:bg-elevated transition-all duration-150">
                 <div className="mb-2 grid grid-cols-[64px_minmax(0,1fr)_64px] items-center gap-2 text-xs">
-                  <span className="truncate font-mono text-sm font-bold text-cyan-300">
+                  <span className="truncate font-mono text-sm font-bold text-primary">
                     {formatStatValue(stat.value)}
                   </span>
-                  <span className="truncate px-1 text-center text-[11px] font-semibold text-gray-400">
+                  <span className="truncate px-1 text-center text-[10px] font-extrabold text-text-secondary uppercase tracking-wider font-display">
                     {translateTeamStat(stat.type, labels)}
                   </span>
-                  <span className="truncate text-right font-mono text-sm font-bold text-magenta-300">
+                  <span className="truncate text-right font-mono text-sm font-bold text-magenta">
                     {formatStatValue(awayValue)}
                   </span>
                 </div>
-                <div className="overflow-hidden rounded-full border border-gray-800 bg-black/30">
-                  <div className="flex h-2.5 w-full">
+                <div className="overflow-hidden rounded-full border border-border bg-bg/50 h-3">
+                  <div className="flex h-full w-full">
                     <div
-                      className="h-full bg-cyan-400"
+                      className="h-full bg-primary"
                       style={{ width: `${homePercent}%` }}
                     />
                     <div
-                      className="h-full bg-magenta-400"
+                      className="h-full bg-magenta"
                       style={{ width: `${awayPercent}%` }}
                     />
                   </div>
                 </div>
-                <div className="mt-1 flex items-center justify-between font-mono text-[10px] text-gray-500">
+                <div className="mt-1 flex items-center justify-between font-mono text-[9px] font-bold text-text-muted tracking-wide">
                   <span>{homePercent}%</span>
                   <span>{awayPercent}%</span>
                 </div>
@@ -1122,18 +1376,18 @@ function StatsAnalysisPanel({
   const awayKitColor = getTeamPrimaryKitColor(lineups[1], "#e879f9");
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="flex flex-col gap-3 border-b border-gray-800 bg-gradient-to-r from-cyan-500/10 via-white/[0.02] to-magenta-500/10 px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+      <div className="flex flex-col gap-3 border-b border-border bg-elevated/40 px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <TrendingUp size={17} className="shrink-0 text-cyan-300" />
-            <h2 className="min-w-0 truncate text-sm font-semibold text-white">{labels.title}</h2>
+            <TrendingUp size={17} className="shrink-0 text-primary font-display" />
+            <h2 className="min-w-0 truncate text-sm font-semibold text-white font-display uppercase tracking-wider">{labels.title}</h2>
           </div>
         </div>
         {homeStats && awayStats ? (
           <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 text-xs sm:flex sm:w-auto sm:flex-nowrap sm:items-center">
             <TeamMiniLabel team={homeStats.team} tone="cyan" />
-            <span className="mt-3 inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-cyan-300/25 bg-white/[0.06] px-2 text-center font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.16)] sm:mt-0">
+            <span className="mt-3 inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-border bg-bg/50 px-2 text-center font-mono text-[9px] font-bold uppercase tracking-wider text-primary sm:mt-0">
               vs
             </span>
             <TeamMiniLabel team={awayStats.team} tone="magenta" />
@@ -1146,25 +1400,25 @@ function StatsAnalysisPanel({
           <EmptyDetail label={labels.empty} />
         </div>
       ) : (
-        <div className="grid gap-3 p-3 sm:p-4 md:grid-cols-2">
+        <div className="grid gap-3.5 p-3 sm:p-4 md:grid-cols-2">
           {rows.map((row) => (
             <div
               key={row.type}
-              className="rounded-xl border border-gray-800 bg-[#08080d] p-3"
+              className="rounded-xl border border-border bg-elevated/40 p-3 hover:bg-elevated transition-all duration-150"
             >
               <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="min-w-[42px] truncate font-mono text-xs font-bold text-cyan-300">
+                <span className="min-w-[42px] truncate font-mono text-sm font-bold text-primary">
                   {row.homeDisplay}
                 </span>
-                <span className="min-w-0 truncate px-2 text-center text-xs font-semibold text-white">
+                <span className="min-w-0 truncate px-2 text-center text-[10px] font-extrabold text-white uppercase tracking-wider font-display">
                   {translateTeamStat(row.type, statLabels)}
                 </span>
-                <span className="min-w-[42px] truncate text-right font-mono text-xs font-bold text-magenta-300">
+                <span className="min-w-[42px] truncate text-right font-mono text-sm font-bold text-magenta">
                   {row.awayDisplay}
                 </span>
               </div>
-              <div className="overflow-hidden rounded-full border border-gray-800 bg-gray-950">
-                <div className="flex h-3 w-full">
+              <div className="overflow-hidden rounded-full border border-border bg-bg/50 h-3">
+                <div className="flex h-full w-full">
                   <div
                     className="h-full"
                     style={{
@@ -1181,7 +1435,7 @@ function StatsAnalysisPanel({
                   />
                 </div>
               </div>
-              <div className="mt-1 flex items-center justify-between font-mono text-[10px] text-gray-500">
+              <div className="mt-1 flex items-center justify-between font-mono text-[9px] font-bold text-text-muted tracking-wide">
                 <span>{row.homePercent}%</span>
                 <span>{row.homePercent === row.awayPercent ? labels.balanced : ""}</span>
                 <span>{row.awayPercent}%</span>
@@ -1298,7 +1552,7 @@ function TeamSeasonStatisticsPanel({
 }) {
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-green-300">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-success">
         {labels.title}
       </h2>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -1316,8 +1570,8 @@ function TeamSeasonStatisticsPanel({
           ] as const;
 
           return (
-            <Card key={stats.team?.id ?? index} className="overflow-hidden p-0">
-              <div className={cn("flex items-center gap-3 border-b border-gray-800 p-4", index === 0 ? "bg-cyan-500/10" : "bg-magenta/10")}>
+            <Card key={stats.team?.id ?? index} className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+              <div className={cn("flex items-center gap-3 border-b border-border p-4", index === 0 ? "bg-primary/10" : "bg-magenta/10")}>
                 <ApiTeamLogo
                   name={stats.team?.name ?? labels.title}
                   logo={stats.team?.logo ?? null}
@@ -1326,12 +1580,12 @@ function TeamSeasonStatisticsPanel({
                 />
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-white">{stats.team?.name}</p>
-                  <p className="text-xs text-gray-500">{stats.form || "-"}</p>
+                  <p className="text-xs text-text-muted">{stats.form || "-"}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
                 {metrics.map(([label, value]) => (
-                  <div key={label} className="rounded-lg border border-gray-800 bg-black/25 p-3">
+                  <div key={label} className="rounded-lg border border-border bg-elevated/40 p-3">
                     <p className="text-[10px] uppercase tracking-wider text-gray-500">{label}</p>
                     <p className="mt-1 font-mono text-lg font-bold text-white">{value}</p>
                   </div>
@@ -1362,7 +1616,7 @@ function TeamSquadsPanel({
 }) {
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-cyan-300">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">
         {labels.title}
       </h2>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -1370,8 +1624,8 @@ function TeamSquadsPanel({
           if (!squad) return null;
 
           return (
-            <Card key={squad.teamId ?? index} className="overflow-hidden p-0">
-              <div className={cn("flex items-center justify-between gap-3 border-b border-gray-800 p-4", index === 0 ? "bg-cyan-500/10" : "bg-magenta/10")}>
+            <Card key={squad.teamId ?? index} className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+              <div className={cn("flex items-center justify-between gap-3 border-b border-border p-4", index === 0 ? "bg-primary/10" : "bg-magenta/10")}>
                 <div className="flex min-w-0 items-center gap-3">
                   <ApiTeamLogo
                     name={squad.team?.name ?? labels.title}
@@ -1383,18 +1637,18 @@ function TeamSquadsPanel({
                 </div>
                 <Badge variant={index === 0 ? "cyan" : "magenta"}>{squad.players.length}</Badge>
               </div>
-              <div className="max-h-[430px] divide-y divide-gray-800 overflow-y-auto">
+              <div className="max-h-[430px] divide-y divide-border overflow-y-auto">
                 {squad.players.map((player) => (
                   <Link
                     key={player.id || player.name}
                     href={`/${locale}/football/players/${player.id}?season=${season}`}
-                    className="grid grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03]"
+                    className="grid grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-elevated/60"
                   >
                     <span
                       className={cn(
                         "flex h-8 w-8 items-center justify-center rounded-full border font-mono text-xs font-bold",
                         index === 0
-                          ? "border-cyan-500/25 bg-cyan-500/10 text-cyan-300"
+                          ? "border-primary/25 bg-primary/10 text-primary"
                           : "border-magenta/25 bg-magenta/10 text-magenta"
                       )}
                     >
@@ -1458,10 +1712,10 @@ function LineupsPanel({
             <Card key={lineup.team.id} className="overflow-hidden p-0">
               <div
                 className={cn(
-                  "flex items-center justify-between gap-3 border-b border-gray-800 px-3 py-3 sm:px-4",
+                  "flex items-center justify-between gap-3 border-b border-border px-3 py-3 sm:px-4",
                   index === 0
-                    ? "bg-cyan-500/10"
-                    : "bg-magenta-500/10"
+                    ? "bg-primary/10"
+                    : "bg-magenta/10"
                 )}
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -1574,13 +1828,19 @@ function FormationPitch({
         <ShieldCheck size={14} className="shrink-0 text-emerald-300" aria-hidden="true" />
         <span className="min-w-0 truncate">{title}</span>
       </h3>
-      <div className="relative min-h-[300px] overflow-hidden rounded-xl border border-emerald-500/20 bg-[linear-gradient(90deg,rgba(16,185,129,0.08)_50%,rgba(16,185,129,0.14)_50%),linear-gradient(0deg,transparent_48%,rgba(255,255,255,0.12)_49%,rgba(255,255,255,0.12)_51%,transparent_52%)] bg-[length:40px_40px,100%_100%] sm:min-h-[360px]">
-        <div className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
-        <div className="absolute inset-x-10 top-4 h-12 rounded-b-xl border-x border-b border-white/10" />
-        <div className="absolute inset-x-10 bottom-4 h-12 rounded-t-xl border-x border-t border-white/10" />
+      <div className="relative min-h-[300px] overflow-hidden rounded-xl border border-border bg-bg/50 bg-[linear-gradient(rgba(30,31,41,0.25)_1px,transparent_1px),linear-gradient(90deg,rgba(30,31,41,0.25)_1px,transparent_1px)] bg-[size:16px_16px] sm:min-h-[360px]">
+        {/* Concentric rings / HUD radar markings */}
+        <div className="absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-transparent pointer-events-none" />
+        <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border bg-transparent pointer-events-none flex items-center justify-center">
+          <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+        </div>
+        
+        {/* Tactical penalty area boundaries */}
+        <div className="absolute inset-x-12 top-0 h-16 rounded-b-xl border-x border-b border-border pointer-events-none" />
+        <div className="absolute inset-x-12 bottom-0 h-16 rounded-t-xl border-x border-t border-border pointer-events-none" />
 
         {players.length === 0 ? (
-          <div className="absolute inset-4 flex items-center justify-center rounded-lg border border-dashed border-white/10 bg-black/20 px-4 text-center text-xs text-gray-500">
+          <div className="absolute inset-4 flex items-center justify-center rounded-lg border border-dashed border-border bg-surface px-4 text-center text-xs text-gray-500">
             {emptyLabel}
           </div>
         ) : (
@@ -1606,7 +1866,7 @@ function FormationPitch({
                   isCaptain={isCaptain}
                   captainLabel={captainLabel}
                 />
-                <p className="mt-0.5 truncate rounded bg-black/55 px-1 text-[8px] font-medium text-white sm:text-[9px]">
+                <p className="mt-1.5 truncate rounded border border-border bg-surface/90 px-1 py-0.5 font-mono text-[8px] font-bold text-gray-300 sm:text-[9px] shadow-sm">
                   {shortenPlayerName(player.name)}
                 </p>
               </div>
@@ -1630,18 +1890,18 @@ function FootballShirt({
   captainLabel: string;
 }) {
   return (
-    <div className="relative mx-auto h-8 w-9 sm:h-9 sm:w-10">
+    <div className="relative mx-auto h-8 w-9 sm:h-9 sm:w-10 group/shirt">
       <div
-        className="absolute inset-0 flex items-center justify-center border font-mono text-[10px] font-black shadow-[0_8px_18px_rgba(0,0,0,0.32)] sm:text-[11px]"
+        className="absolute inset-0 flex items-center justify-center border font-mono text-[10px] font-black shadow-md transition-all duration-150 group-hover/shirt:scale-110 sm:text-[11px]"
         style={{
           backgroundColor: kit.primary,
           borderColor: kit.border,
           color: kit.number,
           clipPath:
-            "polygon(18% 0%, 35% 0%, 42% 12%, 58% 12%, 65% 0%, 82% 0%, 100% 22%, 84% 38%, 78% 100%, 22% 100%, 16% 38%, 0% 22%)",
+            "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)",
         }}
       >
-        <span className="mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+        <span className="mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
           {number ?? "-"}
         </span>
       </div>
@@ -1649,7 +1909,7 @@ function FootballShirt({
         <span
           aria-label={captainLabel}
           title={captainLabel}
-          className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-amber-200 bg-amber-400 px-1 font-mono text-[9px] font-black text-black shadow-[0_0_14px_rgba(251,191,36,0.55)]"
+          className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border border-warning bg-warning px-1 font-mono text-[8px] font-black text-black shadow-sm"
         >
           C
         </span>
@@ -1678,14 +1938,14 @@ function PlayerRow({
   );
 
   return (
-    <div className="grid grid-cols-[32px_minmax(0,1fr)_38px] items-center gap-2 rounded-md border border-gray-800 bg-[#0a0a0f] px-2 py-2 sm:grid-cols-[36px_minmax(0,1fr)_44px]">
+    <div className="grid grid-cols-[32px_minmax(0,1fr)_38px] items-center gap-2 rounded-md border border-border bg-surface/50 px-2 py-2 sm:grid-cols-[36px_minmax(0,1fr)_44px]">
       <span className="font-mono text-xs font-bold text-white">
         {player.number ?? "-"}
       </span>
       {player.id ? (
         <Link
           href={`/${locale}/football/players/${player.id}?season=${season}`}
-          className="min-w-0 transition-colors hover:text-cyan-300"
+          className="min-w-0 transition-colors hover:text-primary"
         >
           {name}
         </Link>
@@ -1694,7 +1954,7 @@ function PlayerRow({
       )}
       <span className="flex items-center justify-end gap-1 text-right text-[10px] text-gray-500">
         {isCaptain && (
-          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-amber-300/60 bg-amber-400/15 px-1 font-mono text-[9px] font-bold text-amber-200">
+          <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-warning/20 bg-warning/10 px-1 font-mono text-[9px] font-bold text-warning">
             C
           </span>
         )}
@@ -1730,21 +1990,6 @@ function getTeamPrimaryKitColor(lineup: ApiFootballLineup | undefined, fallback:
   return normalizeHexColor(lineup?.team.colors?.player?.primary, fallback);
 }
 
-function getTeamHeaderKitColors(
-  lineup: ApiFootballLineup | undefined,
-  accent: "cyan" | "magenta"
-): ResolvedKitColor {
-  const fallback = accent === "cyan"
-    ? { primary: "#22d3ee", number: "#020617", border: "#67e8f9" }
-    : { primary: "#e879f9", number: "#020617", border: "#f0abfc" };
-  const source = lineup?.team.colors?.player;
-
-  return {
-    primary: normalizeHexColor(source?.primary, fallback.primary),
-    number: normalizeHexColor(source?.number, fallback.number),
-    border: normalizeHexColor(source?.border, fallback.border),
-  };
-}
 
 function normalizeHexColor(value: string | null | undefined, fallback: string) {
   if (!value) return fallback;
@@ -1795,39 +2040,39 @@ function PeriodScorePanel({
 
   const periods: { label: string; home: number | null; away: number | null; accent: string; textAccent: string }[] = [];
 
-  if (hasHT) periods.push({ label: "HT", home: scoreBreakdown.halftime.home, away: scoreBreakdown.halftime.away, accent: "border-cyan-500/20 bg-cyan-500/5", textAccent: "text-cyan-300" });
-  if (hasFT) periods.push({ label: "FT", home: scoreBreakdown.fulltime.home, away: scoreBreakdown.fulltime.away, accent: "border-green-500/20 bg-green-500/5", textAccent: "text-green-300" });
-  if (hasET) periods.push({ label: "ET", home: scoreBreakdown.extratime.home, away: scoreBreakdown.extratime.away, accent: "border-amber-500/20 bg-amber-500/5", textAccent: "text-amber-300" });
-  if (hasPEN) periods.push({ label: "PEN", home: scoreBreakdown.penalty.home, away: scoreBreakdown.penalty.away, accent: "border-magenta-500/20 bg-magenta-500/5", textAccent: "text-pink-300" });
+  if (hasHT) periods.push({ label: "HT", home: scoreBreakdown.halftime.home, away: scoreBreakdown.halftime.away, accent: "border-primary/25 bg-primary/5", textAccent: "text-primary border-primary/30" });
+  if (hasFT) periods.push({ label: "FT", home: scoreBreakdown.fulltime.home, away: scoreBreakdown.fulltime.away, accent: "border-success/25 bg-success/5", textAccent: "text-success border-success/30" });
+  if (hasET) periods.push({ label: "ET", home: scoreBreakdown.extratime.home, away: scoreBreakdown.extratime.away, accent: "border-warning/25 bg-warning/5", textAccent: "text-warning border-warning/30" });
+  if (hasPEN) periods.push({ label: "PEN", home: scoreBreakdown.penalty.home, away: scoreBreakdown.penalty.away, accent: "border-magenta/25 bg-magenta/5", textAccent: "text-magenta border-magenta/30" });
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="border-b border-gray-800 bg-white/2 px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-          <Clock size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+      <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-primary">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+          <Clock size={16} className="shrink-0 text-primary" aria-hidden="true" />
           <span>{title}</span>
-          <span className="ml-auto font-mono text-[10px] font-normal text-gray-500 uppercase tracking-wider">{status}</span>
+          <span className="ml-auto font-mono text-[9px] font-bold text-gray-500 uppercase tracking-widest">{status}</span>
         </h2>
       </div>
       <div className="p-4">
-        <div className="mb-3 hidden grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:grid">
-          <span className="truncate text-xs font-semibold text-cyan-200">{homeName}</span>
-          <span className="w-16" />
-          <span className="truncate text-right text-xs font-semibold text-pink-200">{awayName}</span>
+        <div className="mb-3 hidden grid-cols-[1fr_72px_1fr] items-center gap-3 sm:grid text-xs font-bold text-gray-500 font-display uppercase tracking-wider">
+          <span className="truncate text-cyan-400">{homeName}</span>
+          <span className="w-18 text-center">ROUND</span>
+          <span className="truncate text-right text-magenta">{awayName}</span>
         </div>
         <div className="space-y-2">
           {periods.map(({ label, home, away, accent, textAccent }) => (
             <div
               key={label}
-              className={cn("grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center gap-2 rounded-xl border px-3 py-2.5", accent)}
+              className={cn("grid grid-cols-[1fr_72px_1fr] items-center gap-3 rounded-xl border px-4 py-3 shadow-sm transition-all duration-150", accent)}
             >
-              <span className="font-mono text-lg font-black text-cyan-200 sm:text-xl">
+              <span className="font-mono text-xl font-black text-primary sm:text-2xl">
                 {home ?? "-"}
               </span>
-              <span className={cn("text-center font-mono text-[10px] font-bold uppercase tracking-[0.18em]", textAccent)}>
+              <span className={cn("text-center font-mono text-[10px] font-extrabold uppercase tracking-widest rounded-md border bg-bg/60 py-1 px-2", textAccent)}>
                 {label}
               </span>
-              <span className="text-right font-mono text-lg font-black text-pink-200 sm:text-xl">
+              <span className="text-right font-mono text-xl font-black text-magenta sm:text-2xl">
                 {away ?? "-"}
               </span>
             </div>
@@ -1859,10 +2104,10 @@ function H2HPanel({
 }) {
   if (fixtures.length === 0) {
     return (
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-gray-800 bg-white/2 px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <History size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+      <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+        <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-primary">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+            <History size={16} className="shrink-0 text-primary" aria-hidden="true" />
             <span className="min-w-0 truncate">{title}</span>
           </h2>
         </div>
@@ -1883,33 +2128,31 @@ function H2HPanel({
   }
 
   return (
-    <Card className="overflow-hidden p-0">
-      <div className="border-b border-gray-800 bg-linear-to-r from-cyan-500/5 via-white/1 to-transparent px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-          <History size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+      <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-primary">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+          <History size={16} className="shrink-0 text-primary" aria-hidden="true" />
           <span className="min-w-0 truncate">{title}</span>
-          <span className="ml-auto shrink-0 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-cyan-300">
+          <span className="ml-auto shrink-0 rounded-full border border-primary/25 bg-primary/10 px-2 py-0.5 font-mono text-[9px] font-bold text-primary">
             {fixtures.length}
           </span>
         </h2>
       </div>
 
-      {/* W/D/L summary */}
-      <div className="grid grid-cols-3 divide-x divide-gray-800 border-b border-gray-800">
+      <div className="grid grid-cols-3 divide-x divide-border border-b border-border bg-bg/50">
         {[
-          { label: labels.win, value: wins, color: "text-green-300", bg: "bg-green-500/8" },
-          { label: labels.draw, value: draws, color: "text-amber-300", bg: "bg-amber-500/8" },
-          { label: labels.loss, value: losses, color: "text-red-300", bg: "bg-red-500/8" },
+          { label: labels.win, value: wins, color: "text-success", bg: "bg-success/5 hover:bg-success/10 transition-colors duration-150" },
+          { label: labels.draw, value: draws, color: "text-warning", bg: "bg-warning/5 hover:bg-warning/10 transition-colors duration-150" },
+          { label: labels.loss, value: losses, color: "text-danger", bg: "bg-danger/5 hover:bg-danger/10 transition-colors duration-150" },
         ].map(({ label, value, color, bg }) => (
-          <div key={label} className={cn("flex flex-col items-center py-2.5", bg)}>
-            <span className={cn("font-mono text-2xl font-black", color)}>{value}</span>
-            <span className="font-mono text-[10px] font-semibold uppercase tracking-wider text-gray-500">{label}</span>
+          <div key={label} className={cn("flex flex-col items-center py-3 duration-150", bg)}>
+            <span className={cn("font-display text-2xl font-black tracking-tight", color)}>{value}</span>
+            <span className="font-display text-[9px] font-extrabold uppercase tracking-widest text-text-muted mt-0.5">{label}</span>
           </div>
         ))}
       </div>
 
-      {/* Match rows */}
-      <div className="divide-y divide-gray-800/60">
+      <div className="divide-y divide-border max-h-[440px] overflow-y-auto">
         {fixtures.map((match) => {
           const isHomeTeamHome = homeTeamId !== null && match.home.id === homeTeamId;
           const hg = match.goals.home, ag = match.goals.away;
@@ -1917,13 +2160,13 @@ function H2HPanel({
           const hasHT = htH !== null && htA !== null;
 
           let resultChar = "D";
-          let resultStyle = "border-amber-500/30 bg-amber-500/10 text-amber-300";
+          let resultStyle = "border-warning/20 bg-warning/10 text-warning";
           if (hg !== null && ag !== null && hg !== ag) {
             const weWon = isHomeTeamHome ? hg > ag : ag > hg;
             resultChar = weWon ? "W" : "L";
             resultStyle = weWon
-              ? "border-green-500/30 bg-green-500/10 text-green-300"
-              : "border-red-500/30 bg-red-500/10 text-red-300";
+              ? "border-success/20 bg-success/10 text-success"
+              : "border-danger/20 bg-danger/10 text-danger";
           }
 
           const dateStr = match.date
@@ -1931,36 +2174,35 @@ function H2HPanel({
             : "";
 
           return (
-            <div key={match.fixtureId} className="px-3 py-2.5">
-              {/* Meta row */}
-              <div className="mb-2 flex items-center justify-between gap-1">
-                <span className="font-mono text-[10px] text-gray-600">{dateStr}</span>
-                <span className="min-w-0 truncate text-center font-mono text-[10px] text-gray-600">
+            <div key={match.fixtureId} className="px-4 py-3 hover:bg-elevated/40 transition-colors duration-150">
+              <div className="mb-2 flex items-center justify-between gap-1.5">
+                <span className="font-mono text-[9px] font-bold text-gray-600">{dateStr}</span>
+                <span className="min-w-0 truncate text-center font-mono text-[9px] font-bold text-gray-500 uppercase tracking-wider">
                   {match.league.name}{match.league.season ? ` ${match.league.season}` : ""}
                 </span>
                 {homeTeamId !== null && (
-                  <span className={cn("shrink-0 rounded border px-1.5 py-0.5 font-mono text-[10px] font-black", resultStyle)}>
+                  <span className={cn("shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] font-black leading-none", resultStyle)}>
                     {resultChar}
                   </span>
                 )}
               </div>
               {/* Teams + score */}
-              <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center gap-1.5">
-                <div className="flex min-w-0 items-center gap-1.5">
+              <div className="grid grid-cols-[1fr_56px_1fr] items-center gap-2">
+                <div className="flex min-w-0 items-center gap-2">
                   <ApiTeamLogo name={match.home.name} logo={match.home.logo} size="xs" />
                   <span className={cn("truncate text-xs font-semibold", match.home.winner ? "text-white" : "text-gray-400")}>
                     {match.home.name}
                   </span>
                 </div>
-                <div className="flex flex-col items-center">
+                <div className="flex flex-col items-center justify-center">
                   <span className="font-mono text-sm font-black text-white">
                     {hg !== null && ag !== null ? `${hg} - ${ag}` : "- -"}
                   </span>
                   {hasHT && (
-                    <span className="font-mono text-[9px] text-gray-600">{htH} : {htA} HT</span>
+                    <span className="font-mono text-[8px] text-gray-600 mt-0.5">{htH}:{htA} HT</span>
                   )}
                 </div>
-                <div className="flex min-w-0 items-center justify-end gap-1.5">
+                <div className="flex min-w-0 items-center justify-end gap-2">
                   <span className={cn("truncate text-right text-xs font-semibold", match.away.winner ? "text-white" : "text-gray-400")}>
                     {match.away.name}
                   </span>
@@ -1997,10 +2239,10 @@ function StandingPanel({
 
   if (!home && !away) {
     return (
-      <Card className="overflow-hidden p-0">
-        <div className="border-b border-gray-800 bg-white/2 px-4 py-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Medal size={16} className="shrink-0 text-amber-300" aria-hidden="true" />
+      <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
+        <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-warning">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+            <Medal size={16} className="shrink-0 text-warning" aria-hidden="true" />
             <span className="min-w-0 truncate">{title}</span>
           </h2>
         </div>
@@ -2022,36 +2264,36 @@ function StandingPanel({
     { label: labels.gd, hVal: hs.goalsDiff > 0 ? `+${hs.goalsDiff}` : hs.goalsDiff, aVal: as_.goalsDiff > 0 ? `+${as_.goalsDiff}` : as_.goalsDiff },
   ];
   return (
-    <Card className="overflow-hidden p-0">
+    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
       {/* Header */}
-      <div className="border-b border-gray-800 bg-linear-to-r from-amber-500/5 via-white/1 to-transparent px-4 py-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white">
-          <Medal size={16} className="shrink-0 text-amber-300" aria-hidden="true" />
+      <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-warning">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+          <Medal size={16} className="shrink-0 text-warning" aria-hidden="true" />
           <span className="min-w-0 truncate">{title}</span>
           {hs.group && (
-            <span className="ml-auto shrink-0 font-mono text-[10px] text-gray-500">{hs.group}</span>
+            <span className="ml-auto shrink-0 font-mono text-[9px] font-bold text-gray-500 uppercase tracking-widest">{hs.group}</span>
           )}
         </h2>
       </div>
 
       <div className="space-y-4 p-4">
         {/* Team header row */}
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <ApiTeamLogo name={homeTeam.name} logo={homeTeam.logo} size="sm" />
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-white">{homeTeam.name}</p>
               {hs.description && (
-                <p className="truncate font-mono text-[9px] text-cyan-400">{hs.description}</p>
+                <p className="truncate font-mono text-[9px] font-semibold text-cyan-400">{hs.description}</p>
               )}
             </div>
           </div>
-          <span className="shrink-0 font-mono text-[10px] text-gray-600">vs</span>
+          <span className="shrink-0 font-mono text-[10px] font-bold text-gray-600 uppercase tracking-widest">vs</span>
           <div className="flex min-w-0 items-center justify-end gap-2">
             <div className="min-w-0 text-right">
               <p className="truncate text-xs font-bold text-white">{awayTeam.name}</p>
               {as_.description && (
-                <p className="truncate font-mono text-[9px] text-pink-400">{as_.description}</p>
+                <p className="truncate font-mono text-[9px] font-semibold text-pink-400">{as_.description}</p>
               )}
             </div>
             <ApiTeamLogo name={awayTeam.name} logo={awayTeam.logo} size="sm" />
@@ -2059,42 +2301,42 @@ function StandingPanel({
         </div>
 
         {/* Points visual bar */}
-        <div className="rounded-xl border border-gray-800 bg-[#0a0a0f] px-4 py-3">
-          <p className="mb-2 text-center font-mono text-[10px] font-semibold uppercase tracking-wider text-gray-500">Points</p>
-          <div className="mb-1 flex items-center gap-2">
-            <span className="w-8 shrink-0 text-right font-mono text-sm font-black text-cyan-300">{hs.points}</span>
-            <div className="relative flex h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-800">
+        <div className="rounded-xl border border-border bg-bg/50 px-4 py-3">
+          <p className="mb-2 text-center font-display text-[9px] font-extrabold uppercase tracking-widest text-text-muted">Points</p>
+          <div className="mb-1.5 flex items-center gap-2">
+            <span className="w-8 shrink-0 text-right font-mono text-sm font-black text-primary">{hs.points}</span>
+            <div className="relative flex h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-black/40 border border-border">
               <div
-                className="h-full rounded-full bg-linear-to-r from-cyan-500 to-cyan-400"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${(hs.points / maxPts) * 100}%` }}
               />
             </div>
             <div
-              className="relative h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-800"
+              className="relative flex h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-black/40 border border-border"
             >
               <div
-                className="absolute right-0 h-full rounded-full bg-linear-to-l from-pink-500 to-pink-400"
+                className="absolute right-0 h-full rounded-full bg-magenta"
                 style={{ width: `${(as_.points / maxPts) * 100}%` }}
               />
             </div>
-            <span className="w-8 shrink-0 font-mono text-sm font-black text-pink-300">{as_.points}</span>
+            <span className="w-8 shrink-0 font-mono text-sm font-black text-magenta">{as_.points}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="font-mono text-[9px] text-gray-600">Rank #{hs.rank}</span>
-            <span className="font-mono text-[9px] text-gray-600">Rank #{as_.rank}</span>
+          <div className="flex justify-between font-mono text-[9px] font-bold text-gray-600">
+            <span>Rank #{hs.rank}</span>
+            <span>Rank #{as_.rank}</span>
           </div>
         </div>
 
         {/* Comparison rows */}
-        <div className="overflow-hidden rounded-xl border border-gray-800">
+        <div className="overflow-hidden rounded-xl border border-border">
           {cmpRows.map(({ label, hVal, aVal }) => (
             <div
               key={label}
-              className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center border-b border-gray-800/60 bg-[#0a0a0f] px-3 py-2 last:border-0"
+              className="grid grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)] items-center border-b border-border bg-surface px-4 py-2.5 last:border-0 hover:bg-elevated transition-all duration-150"
             >
-              <span className="font-mono text-xs font-bold text-cyan-200">{hVal}</span>
-              <span className="text-center font-mono text-[9px] font-semibold uppercase tracking-wider text-gray-600">{label}</span>
-              <span className="text-right font-mono text-xs font-bold text-pink-200">{aVal}</span>
+              <span className="font-mono text-xs font-bold text-primary">{hVal}</span>
+              <span className="text-center font-display text-[9px] font-bold uppercase tracking-wider text-text-muted">{label}</span>
+              <span className="text-right font-mono text-xs font-bold text-magenta">{aVal}</span>
             </div>
           ))}
         </div>
@@ -2106,25 +2348,25 @@ function StandingPanel({
         </div>
 
         {/* Home / Away split */}
-        <div className="overflow-hidden rounded-xl border border-gray-800">
-          <div className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] border-b border-gray-800 bg-white/2 px-3 py-1.5">
-            <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-cyan-500">{homeTeam.name}</span>
-            <span className="text-center font-mono text-[9px] font-semibold uppercase tracking-wider text-gray-600">{labels.split}</span>
-            <span className="text-right font-mono text-[9px] font-semibold uppercase tracking-wider text-pink-500">{awayTeam.name}</span>
+        <div className="overflow-hidden rounded-xl border border-border">
+          <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] border-b border-border bg-elevated/60 px-4 py-2">
+            <span className="font-display text-[9px] font-extrabold uppercase tracking-widest text-primary">{homeTeam.name}</span>
+            <span className="text-center font-display text-[9px] font-extrabold uppercase tracking-widest text-text-muted">{labels.split}</span>
+            <span className="text-right font-display text-[9px] font-extrabold uppercase tracking-widest text-magenta">{awayTeam.name}</span>
           </div>
           {[
             { label: labels.home, h: hs.home, a: as_.home },
             { label: labels.away, h: hs.away, a: as_.away },
           ].map(({ label, h, a }) => (
-            <div key={label} className="grid grid-cols-[minmax(0,1fr)_56px_minmax(0,1fr)] items-center border-b border-gray-800/50 bg-[#0a0a0f] px-3 py-2 last:border-0">
-              <span className="font-mono text-[10px] text-gray-300">
+            <div key={label} className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center border-b border-border bg-surface px-4 py-2.5 last:border-0 hover:bg-elevated transition-all duration-150">
+              <span className="font-mono text-[10px] text-text-secondary">
                 {h.win}W {h.draw}D {h.lose}L
-                <span className="ml-1 text-gray-600">({h.goals.for}:{h.goals.against})</span>
+                <span className="ml-1.5 text-text-muted font-normal">({h.goals.for}:{h.goals.against})</span>
               </span>
-              <span className="text-center font-mono text-[9px] font-semibold uppercase text-gray-600">{label}</span>
-              <span className="text-right font-mono text-[10px] text-gray-300">
+              <span className="text-center font-display text-[9px] font-bold uppercase tracking-wider text-text-secondary">{label}</span>
+              <span className="text-right font-mono text-[10px] text-text-secondary">
                 {a.win}W {a.draw}D {a.lose}L
-                <span className="ml-1 text-gray-600">({a.goals.for}:{a.goals.against})</span>
+                <span className="ml-1.5 text-text-muted font-normal">({a.goals.for}:{a.goals.against})</span>
               </span>
             </div>
           ))}
@@ -2139,17 +2381,17 @@ function FormPillRow({ form, label, align }: { form: string | null; label: strin
   const chars = form.split("").slice(0, 5);
 
   return (
-    <div className={cn("flex flex-col gap-1", align === "right" && "items-end")}>
-      <span className="font-mono text-[9px] font-semibold uppercase tracking-wider text-gray-600">{label}</span>
-      <div className="flex gap-0.5">
+    <div className={cn("flex flex-col gap-1.5", align === "right" && "items-end")}>
+      <span className="font-display text-[9px] font-extrabold uppercase tracking-widest text-gray-500">{label}</span>
+      <div className="flex gap-1">
         {chars.map((char, i) => (
           <span
             key={i}
             className={cn(
-              "grid h-5 w-5 shrink-0 place-items-center rounded font-mono text-[10px] font-black shadow-sm",
-              char === "W" && "bg-green-500/20 text-green-300 ring-1 ring-green-500/20",
-              char === "D" && "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/20",
-              char === "L" && "bg-red-500/20 text-red-300 ring-1 ring-red-500/20"
+              "grid h-5 w-5 shrink-0 place-items-center rounded font-mono text-[10px] font-black",
+              char === "W" && "bg-success/10 text-success border border-success/20",
+              char === "D" && "bg-warning/10 text-warning border border-warning/20",
+              char === "L" && "bg-danger/10 text-danger border border-danger/20"
             )}
           >
             {char}
@@ -2162,7 +2404,7 @@ function FormPillRow({ form, label, align }: { form: string | null; label: strin
 
 function EmptyDetail({ label }: { label: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-gray-800 p-6 text-center text-sm text-gray-500">
+    <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-text-muted">
       {label}
     </div>
   );

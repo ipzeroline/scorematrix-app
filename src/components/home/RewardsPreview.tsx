@@ -112,10 +112,7 @@ export function RewardsPreview() {
           <span className="rewards-preview-icon grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-pink-400/35 bg-pink-500/10 text-pink-200">
             <Gift size={21} strokeWidth={2.35} aria-hidden="true" />
           </span>
-          <h3
-            className="truncate text-lg font-bold font-display text-white"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
+          <h3 className="truncate text-lg font-bold text-white">
             {t("rewards.title")}
           </h3>
         </div>

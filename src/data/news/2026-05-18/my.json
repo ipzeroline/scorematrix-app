@@ -23,7 +23,7 @@
     "title": "ယနေ့ Football API အချက်အလက် စုစည်းချက်",
     "summary": "ScoreMatrix သည် ယနေ့ API feed မှ Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia အတွင်း ပွဲစဉ် 50 ခုကို ဆွဲယူထားသည်။",
     "content": "ScoreMatrix သတင်းစနစ်သည် နေ့စဉ် API feed ကို အသုံးပြုပြီး စောင့်ကြည့်သင့်သည့် ဘောလုံးအကြောင်းအရာများကို ဦးစားပေးစီစဉ်သည်။ ယနေ့ feed တွင် Premier League Championship, La Liga Iberia, Bundesliga Deutschland, Serie A Italia မှ ပွဲစဉ် 50 ခု ပါဝင်သည်။\n\nအဓိကဒေတာအချက်များမှာ London United vs Mersey City, North London FC vs East London Rovers, Real Catalonia vs Sevilla Sur ဖြစ်ပြီး AI Insights နှင့် Predictions အတွက် လတ်ဆတ်သော ပတ်ဝန်းကျင်အချက်အလက် ပေးသည်။\n\nနေ့စဉ်ဆောင်းပါးများကို ဘာသာစကားအလိုက် JSON အဖြစ် သိမ်းထားသောကြောင့် သတင်းစာမျက်နှာများ မြန်ဆန်၊ ရှာဖွေနိုင်ပြီး locale တစ်ခုချင်းစီအတွက် SEO အဆင်သင့်ဖြစ်သည်။",
-    "image": "/brand/scorematrix-logo.png",
+    "image": "/images/news/data-roundup.jpg",
     "author": "ScoreMatrix Data Desk",
     "category": "feature",
     "publishedAt": "2026-05-18T09:11:50.449Z",

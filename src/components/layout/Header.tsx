@@ -25,6 +25,7 @@ const NAV_LINKS = [
   { href: "/leaderboard", label: "leaderboard" },
   { href: "/missions", label: "missions", authRequired: true },
   { href: "/rewards", label: "rewards", authRequired: true },
+  { href: "/legal/contact", label: "contactTeam" },
 ];
 
 const emptySubscribe = () => () => {};

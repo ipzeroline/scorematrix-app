@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
@@ -305,8 +306,19 @@ export function NewsListClient({
               <Link key={article.id} href={`/${locale}/news/${article.slug}`}>
                 <Card
                   hover
-                  className="h-full flex flex-col p-4 group"
+                  className="group h-full flex flex-col overflow-hidden p-4"
                 >
+                  <div className="-mx-4 -mt-4 mb-4 aspect-[16/9] overflow-hidden rounded-t-xl bg-gray-950">
+                    <Image
+                      src={article.image}
+                      alt={title}
+                      width={640}
+                      height={360}
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+
                   {/* Category badge */}
                   <div className="flex items-center justify-between mb-3">
                     <Badge variant={cat.variant} size="sm">

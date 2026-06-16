@@ -3,9 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, ChevronRight, ListFilter } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { Badge } from "@/components/ui/Badge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
@@ -69,10 +68,12 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Section heading */}
-      <div className="today-matches-heading relative overflow-hidden rounded-xl border border-cyan-500/20 bg-[#081017] px-4 py-3">
+      <div className="today-matches-heading relative overflow-hidden rounded-2xl border border-cyan-300/25 bg-[#081017] px-4 py-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
         <div className="today-matches-heading-scan absolute inset-0" />
-        <div className="relative flex items-center gap-3">
-          <span className="today-matches-icon grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-green-400/30 bg-green-400/10 text-cyan-200">
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-sky-300 to-lime-300" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+          <span className="today-matches-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-200">
             <CalendarDays
               size={20}
               strokeWidth={2.2}
@@ -80,25 +81,32 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
               aria-hidden="true"
             />
           </span>
-          <h2
-            className="font-display text-xl font-bold tracking-normal text-white text-glow-cyan"
-            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-          >
-            {t("dashboard.todayMatches")}
-          </h2>
+            <div className="min-w-0">
+              <h2 className="truncate bg-gradient-to-r from-cyan-200 via-sky-100 to-white bg-clip-text text-xl font-black leading-tight text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.28)]">
+                {t("dashboard.todayMatches")}
+              </h2>
+              <p className="truncate text-xs font-semibold text-cyan-100/70">
+                {t("dashboard.matchCount", { count: matches.length })}
+              </p>
+            </div>
+          </div>
+          <span className="hidden items-center gap-1.5 rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold text-cyan-100 sm:inline-flex">
+            <ListFilter size={14} aria-hidden="true" />
+            {leagueTabs.length}
+          </span>
         </div>
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide rounded-2xl border border-white/10 bg-[#0b111d] p-2">
         {leagueTabs.map((league) => (
           <button
             key={`league-tab-${league.name}`}
             onClick={() => setActiveTab(league.name)}
-            className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium whitespace-nowrap transition-all duration-200 ${
+            className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ${
               activeTab === league.name
-                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30"
-                : "bg-[#12121a] text-gray-400 border border-gray-800 hover:border-gray-600"
+                ? "border-cyan-300/35 bg-cyan-300/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)]"
+                : "border-white/10 bg-black/20 text-gray-400 hover:border-cyan-300/25 hover:text-gray-200"
             }`}
           >
             {league.name !== "All" && (
@@ -109,71 +117,77 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
         ))}
       </div>
 
-      {/* Match grid */}
+      {/* Match List (Table Rows) */}
       {filtered.length === 0 ? (
-        <Card className="border-gray-800/80 p-5 text-sm text-gray-400">
+        <Card className="rounded-2xl border-cyan-300/15 bg-[#0b111d] p-5 text-sm font-semibold text-gray-400">
           {t("livescore.noMatches")}
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#080d16] shadow-[0_18px_55px_rgba(0,0,0,0.28)]">
           {filtered.map((match) => (
-          <Link key={match.id} href={`/${locale}/matches/detail/${match.id}`}>
-            <Card hover className="today-match-card flex h-full flex-col gap-3">
-              {/* League & status */}
-              <div className="flex items-center justify-between gap-2">
-                <Badge variant="default" size="sm" className="min-w-0">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <ApiLeagueLogo
-                      name={match.league}
-                      logo={match.leagueLogo}
-                      size="xs"
-                    />
-                    <span className="truncate">{match.leagueEmoji} {match.league}</span>
-                  </span>
-                </Badge>
-                <StatusBadge
-                  status={match.status}
-                  label={match.statusLabel}
-                  className="shrink-0"
-                />
-              </div>
-
-              {/* Date & time */}
-              <div className="rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-2 text-center">
-                <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-none">
-                  <CalendarDays size={12} className="shrink-0 text-cyan-300" aria-hidden="true" />
-                  <span className="min-w-0 truncate text-[10px] font-medium text-gray-300">
-                    {match.kickoffDate}
-                  </span>
-                  <span className="hidden h-3 w-px bg-cyan-500/25 sm:block" />
-                  <span className="whitespace-nowrap font-mono text-[11px] font-bold text-cyan-300">
-                    {match.kickoffTime}
-                  </span>
-                </div>
-              </div>
-
-              {/* Teams */}
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} />
-                  <span className="text-xs text-gray-300 text-center leading-tight truncate w-full">
-                    {match.homeTeam}
-                  </span>
+            <Link
+              key={match.id}
+              href={`/${locale}/matches/detail/${match.id}`}
+              className="group block border-b border-white/10 px-3.5 py-3 transition-all duration-150 last:border-b-0 hover:bg-cyan-300/[0.06] sm:px-4"
+            >
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                {/* Left: Time and League */}
+                <div className="flex items-center gap-2 sm:gap-3 w-[55px] sm:w-1/4 shrink-0 min-w-0">
+                  <div className="flex flex-col gap-0.5 min-w-[50px] sm:min-w-[70px]">
+                    <span className="text-sm font-black text-cyan-200">
+                      {match.kickoffTime}
+                    </span>
+                    <span className="hidden truncate text-[10px] font-semibold text-gray-500 sm:block">
+                      {match.kickoffDate}
+                    </span>
+                  </div>
+                  <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+                    <ApiLeagueLogo name={match.league} logo={match.leagueLogo} size="xs" />
+                    <span className="max-w-[120px] truncate text-xs font-semibold text-gray-400">
+                      {match.league}
+                    </span>
+                  </div>
                 </div>
 
-                <span className="min-w-12 rounded-md border border-gray-800 bg-black/20 px-2 py-1 text-center font-mono text-sm font-bold text-white">
-                  {formatScore(match, t("common.vs"))}
-                </span>
+                {/* Center: Teams and Score/VS */}
+                <div className="flex items-center justify-center gap-2 sm:gap-3 flex-1 min-w-0 px-1">
+                  {/* Home team */}
+                  <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-right">
+                    <span className="truncate text-xs font-bold text-gray-200 transition-colors group-hover:text-white sm:text-sm">
+                      {match.homeTeam}
+                    </span>
+                    <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="xs" />
+                  </div>
 
-                <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                  <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} />
-                  <span className="text-xs text-gray-300 text-center leading-tight truncate w-full">
-                    {match.awayTeam}
-                  </span>
+                  {/* Score or VS Box */}
+                  <div className="shrink-0 min-w-[54px] sm:min-w-[64px] text-center">
+                    <span className="inline-block rounded-lg border border-cyan-300/20 bg-black/40 px-2 py-1 text-[10px] font-black text-white transition-colors group-hover:border-cyan-300/40 sm:px-2.5 sm:text-xs">
+                      {formatScore(match, t("common.vs"))}
+                    </span>
+                  </div>
+
+                  {/* Away team */}
+                  <div className="flex items-center justify-start gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-left">
+                    <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="xs" />
+                    <span className="truncate text-xs font-bold text-gray-200 transition-colors group-hover:text-white sm:text-sm">
+                      {match.awayTeam}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right: Status and Chevron Link */}
+                <div className="flex items-center justify-end gap-2 sm:gap-3 w-[75px] sm:w-1/4 shrink-0 min-w-0">
+                  <StatusBadge
+                    status={match.status}
+                    label={match.statusLabel}
+                    className="text-[9px] sm:text-[10px] shrink-0"
+                  />
+                  <div className="hidden sm:flex h-6 w-6 items-center justify-center rounded border border-border bg-black/20 group-hover:border-cyan-500/40 group-hover:text-cyan-300 transition-colors">
+                    <ChevronRight size={12} className="text-gray-500 group-hover:text-cyan-300 transition-colors" />
+                  </div>
                 </div>
               </div>
-            </Card>
-          </Link>
+            </Link>
           ))}
         </div>
       )}
