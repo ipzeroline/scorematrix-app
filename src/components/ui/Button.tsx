@@ -36,9 +36,9 @@ const variantClasses: Record<Variant, string> = {
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: "px-2.5 py-1.5 text-[11px] rounded-md",
-  md: "px-3 py-1.5 text-xs rounded-lg",
-  lg: "px-4 py-2 text-[13px] rounded-lg",
+  sm: "min-h-9 px-3 py-2 text-xs rounded-lg",
+  md: "min-h-10 px-3.5 py-2 text-sm rounded-lg",
+  lg: "min-h-11 px-4 py-2.5 text-sm rounded-xl",
 };
 
 export function Button({

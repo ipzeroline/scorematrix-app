@@ -27,25 +27,25 @@ export async function Footer() {
 
   return (
     <footer className="mt-auto border-t border-gray-800/50 bg-[#0a0a0f]">
-      <div className="mx-auto max-w-[1440px] px-4 py-6 pb-20 lg:pb-6">
-        <div className="flex flex-col items-start justify-between gap-6 lg:flex-row">
-          <div className="flex max-w-sm flex-col gap-2">
-            <Logo />
-            <p className="text-xs leading-5 text-gray-500">
+      <div className="mx-auto max-w-[1440px] px-4 py-7 pb-24 lg:pb-7">
+        <div className="flex flex-col items-start justify-between gap-7 lg:flex-row">
+          <div className="flex max-w-sm flex-col gap-3">
+            <Logo size="sm" />
+            <p className="text-sm leading-6 text-gray-400 lg:text-xs lg:leading-5 lg:text-gray-500">
               {t("common.disclaimer")}
             </p>
           </div>
           <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-3 lg:w-auto lg:gap-8">
             <div>
-              <h4 className="text-xs font-semibold text-gray-400 mb-2">
+              <h4 className="mb-2.5 text-sm font-bold text-gray-300 lg:text-xs lg:font-semibold lg:text-gray-400">
                 {t("footer.platform")}
               </h4>
-              <ul className="space-y-1">
+              <ul className="space-y-1.5 lg:space-y-1">
                 {platformLinks.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={`/${locale}${item.href}`}
-                      className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+                      className="text-sm font-medium text-gray-400 transition-colors hover:text-cyan-400 lg:text-xs lg:font-normal lg:text-gray-500"
                     >
                       {item.label}
                     </Link>
@@ -54,15 +54,15 @@ export async function Footer() {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-gray-400 mb-2">
+              <h4 className="mb-2.5 text-sm font-bold text-gray-300 lg:text-xs lg:font-semibold lg:text-gray-400">
                 {t("footer.features")}
               </h4>
-              <ul className="space-y-1">
+              <ul className="space-y-1.5 lg:space-y-1">
                 {featureLinks.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={`/${locale}${item.href}`}
-                      className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+                      className="text-sm font-medium text-gray-400 transition-colors hover:text-cyan-400 lg:text-xs lg:font-normal lg:text-gray-500"
                     >
                       {item.label}
                     </Link>
@@ -71,15 +71,15 @@ export async function Footer() {
               </ul>
             </div>
             <div>
-              <h4 className="text-xs font-semibold text-gray-400 mb-2">
+              <h4 className="mb-2.5 text-sm font-bold text-gray-300 lg:text-xs lg:font-semibold lg:text-gray-400">
                 {t("footer.legal")}
               </h4>
-              <ul className="space-y-1">
+              <ul className="space-y-1.5 lg:space-y-1">
                 {legalLinks.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={`/${locale}${item.href}`}
-                      className="text-xs text-gray-500 hover:text-cyan-400 transition-colors"
+                      className="text-sm font-medium text-gray-400 transition-colors hover:text-cyan-400 lg:text-xs lg:font-normal lg:text-gray-500"
                     >
                       {item.label}
                     </Link>
@@ -89,11 +89,11 @@ export async function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-6 flex flex-col items-start justify-between gap-2 border-t border-gray-800/50 pt-4 sm:flex-row sm:items-center">
-          <p className="text-xs leading-5 text-gray-600">
+        <div className="mt-7 flex flex-col items-start justify-between gap-2 border-t border-gray-800/50 pt-4 sm:flex-row sm:items-center">
+          <p className="text-[13px] leading-5 text-gray-500 lg:text-xs lg:text-gray-600">
             {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
-          <p className="text-xs leading-5 text-gray-600 sm:text-right">
+          <p className="text-[13px] leading-5 text-gray-500 sm:text-right lg:text-xs lg:text-gray-600">
             {t("common.noGambling")}
           </p>
         </div>

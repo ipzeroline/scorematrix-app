@@ -35,11 +35,11 @@ export default async function LocaleLayout({
       <StoreInitializer />
       <ScrollToTop />
       <ToastContainer />
-      <div className="flex min-h-screen flex-col pt-[52px]">
+      <div className="flex min-h-screen flex-col pt-14">
         <Header />
         <div className="flex flex-1 max-w-[1440px] mx-auto w-full">
           <Sidebar />
-          <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-visible px-2.5 py-2.5 pb-[72px] sm:px-3 lg:px-4 lg:py-3 lg:pb-4 [overflow-anchor:none] [scroll-behavior:smooth] [-webkit-overflow-scrolling:touch]">{children}</main>
+          <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-visible px-2.5 py-3 pb-20 sm:px-3 lg:px-4 lg:py-3 lg:pb-4 [overflow-anchor:none] [scroll-behavior:smooth] [-webkit-overflow-scrolling:touch]">{children}</main>
         </div>
         <Footer />
         <MobileBottomNav />

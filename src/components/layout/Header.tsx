@@ -150,11 +150,11 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-800 bg-[#0a0a0f]/95 shadow-[0_8px_24px_rgba(0,0,0,0.32)] backdrop-blur">
-      <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center gap-2 px-2 sm:gap-3 sm:px-3 lg:px-4">
+      <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-1.5 px-2 sm:gap-3 sm:px-3 lg:px-4">
         {/* Mobile hamburger */}
         <button
           type="button"
-          className="lg:hidden p-1.5 text-gray-400 hover:text-white cursor-pointer"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-300 hover:bg-white/5 hover:text-white lg:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label={mobileMenuOpen ? t("closeMenu") : t("openMenu")}
           aria-expanded={mobileMenuOpen}
@@ -172,7 +172,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
               key={link.href}
               href={`/${locale}${link.href}`}
               className={cn(
-                "px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors",
+                "rounded-md px-2.5 py-1.5 text-[13px] font-semibold transition-colors",
                 isActive(link.href)
                   ? "text-cyan-400 bg-cyan-500/10"
                   : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -214,7 +214,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
                 href={`/${locale}${link.href}`}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "px-3 py-2 rounded-lg text-[13px] font-medium transition-colors",
+                  "min-h-11 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
                   isActive(link.href)
                     ? "text-cyan-400 bg-cyan-500/10"
                     : "text-gray-400 hover:text-white hover:bg-white/5"

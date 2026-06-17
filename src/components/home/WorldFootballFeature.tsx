@@ -91,12 +91,12 @@ export function WorldFootballFeature({
           </p>
 
           {/* Interactive World Cup Live Centre */}
-          <div className="mb-3 w-full min-w-0 rounded-lg border border-gray-800/80 bg-black/30 p-2.5 shadow-[0_0_18px_rgba(34,211,238,0.035)] md:p-3">
-            <div className="mb-3 flex border-b border-gray-800/80">
+          <div className="mb-3 w-full min-w-0 rounded-lg border border-gray-800/80 bg-black/30 p-2 shadow-[0_0_18px_rgba(34,211,238,0.035)] md:p-3">
+            <div className="mb-2.5 flex border-b border-gray-800/80">
               <button
                 type="button"
                 onClick={() => setActiveTab("matches")}
-                className={`relative cursor-pointer border-b-2 px-3 pb-2 font-display text-xs font-bold transition-all ${
+                className={`relative min-h-10 cursor-pointer border-b-2 px-3 pb-2 font-display text-sm font-bold transition-all ${
                   activeTab === "matches"
                     ? "text-cyan-400 border-cyan-400"
                     : "text-gray-400 border-transparent hover:text-white"
@@ -110,7 +110,7 @@ export function WorldFootballFeature({
               <button
                 type="button"
                 onClick={() => setActiveTab("standings")}
-                className={`cursor-pointer border-b-2 px-3 pb-2 font-display text-xs font-bold transition-all ${
+                className={`min-h-10 cursor-pointer border-b-2 px-3 pb-2 font-display text-sm font-bold transition-all ${
                   activeTab === "standings"
                     ? "text-cyan-400 border-cyan-400"
                     : "text-gray-400 border-transparent hover:text-white"
@@ -121,37 +121,41 @@ export function WorldFootballFeature({
             </div>
 
             {activeTab === "matches" ? (
-              <div className="flex max-h-[220px] flex-col gap-1.5 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="flex max-h-[232px] flex-col gap-2 overflow-y-auto pr-1 scrollbar-thin">
                 {wcTodayMatches.length > 0 ? (
                   wcTodayMatches.map((match) => (
                     <Link
                       key={match.id}
                       href={`/${locale}/matches/detail/${match.id}`}
-                      className="grid min-w-0 grid-cols-1 gap-1.5 rounded-md border border-gray-800/60 bg-black/20 p-2 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:flex sm:items-center sm:justify-between"
+                      className="grid min-h-[68px] min-w-0 grid-cols-[minmax(0,1fr)_70px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-gray-800/60 bg-black/20 px-2.5 py-2 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)]"
                     >
                       {/* Home team */}
-                      <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <div className="flex min-w-0 items-center gap-2">
                         <ApiTeamLogo name={match.home.name} logo={match.home.logo} size="xs" />
-                        <span className="text-xs font-semibold text-gray-300 truncate">{match.home.name}</span>
+                        <span className="min-w-0 truncate text-sm font-bold text-gray-200">
+                          {match.home.name}
+                        </span>
                       </div>
 
                       {/* Score or time */}
-                      <div className="flex shrink-0 flex-col items-start justify-center px-0 sm:items-center sm:px-3">
-                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-black/50 border border-gray-800 text-white min-w-[56px] text-center">
+                      <div className="flex min-w-0 shrink-0 flex-col items-center justify-center">
+                        <span className="min-w-[62px] rounded-md border border-gray-800 bg-black/55 px-2 py-1 text-center font-mono text-sm font-black leading-none text-white">
                           {formatScore(match.score, formatMatchTimeWithZone(match.kickoffTime))}
                         </span>
-                        <span className="mt-1 flex items-center justify-center">
+                        <span className="mt-1 flex max-w-full items-center justify-center overflow-hidden">
                           <StatusBadge
                             status={match.status}
                             label={match.statusShort ?? undefined}
-                            className="scale-75 origin-top border-none bg-transparent p-0 text-[10px] font-bold"
+                            className="border-none bg-transparent p-0 text-[11px] font-bold leading-none"
                           />
                         </span>
                       </div>
 
                       {/* Away team */}
-                      <div className="flex min-w-0 flex-1 items-center gap-2 text-left sm:justify-end sm:text-right">
-                        <span className="text-xs font-semibold text-gray-300 truncate sm:order-1">{match.away.name}</span>
+                      <div className="flex min-w-0 items-center justify-end gap-2 text-right">
+                        <span className="min-w-0 truncate text-sm font-bold text-gray-200">
+                          {match.away.name}
+                        </span>
                         <ApiTeamLogo name={match.away.name} logo={match.away.logo} size="xs" />
                       </div>
                     </Link>
@@ -251,13 +255,13 @@ export function WorldFootballFeature({
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/${locale}/world-cup-2026`}
-              className="group inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/35 bg-cyan-400/10 px-2.5 py-1.5 text-[11px] font-semibold text-cyan-200 transition-colors duration-150 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white"
+              className="group inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100 transition-colors duration-150 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white"
             >
-              <Rows3 size={16} className="relative" />
-              <span className="relative">{t("ctaGroups")}</span>
+              <Rows3 size={18} className="relative shrink-0" />
+              <span className="relative min-w-0 truncate">{t("ctaGroups")}</span>
               <ArrowRight
-                size={14}
-                className="relative transition-transform duration-300 group-hover:translate-x-1"
+                size={16}
+                className="relative shrink-0 transition-transform duration-300 group-hover:translate-x-1"
               />
             </Link>
           </div>

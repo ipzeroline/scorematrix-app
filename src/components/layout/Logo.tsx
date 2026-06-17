@@ -14,7 +14,7 @@ const logoSize = {
     height: 92,
   },
   md: {
-    shell: "h-9 w-[116px] min-[390px]:w-[132px] sm:h-12 sm:w-[272px]",
+    shell: "h-10 w-[120px] min-[390px]:w-[136px] sm:h-12 sm:w-[272px]",
     width: 544,
     height: 136,
   },

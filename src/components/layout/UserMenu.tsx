@@ -48,6 +48,10 @@ export function UserMenu({
   const logoutUser = useUserStore((s) => s.logout);
   const addToast = useNotificationStore((s) => s.addToast);
   const xpProgress = getLevelXpProgress(xp, level);
+  const compactAuthLabel = COMPACT_AUTH_LABELS[locale] ?? {
+    register: t("auth.register"),
+    login: t("auth.login"),
+  };
 
   const handleLogout = async () => {
     try {
@@ -71,19 +75,20 @@ export function UserMenu({
 
   if (!isLoggedIn) {
     return (
-      <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
         <Link
           href={`/${locale}/auth/register`}
-          className="inline-flex max-w-[76px] items-center justify-center rounded-lg bg-cyan-500 px-2.5 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-cyan-400 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-sm"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-cyan-500 px-3 text-sm font-bold leading-none text-black transition-colors hover:bg-cyan-400 max-[380px]:px-2.5 max-[380px]:text-[13px] sm:px-3.5"
         >
-          <span className="sm:hidden">สมัคร</span>
-          <span className="hidden sm:inline">{t("auth.register")}</span>
+          <span className="whitespace-nowrap sm:hidden">{compactAuthLabel.register}</span>
+          <span className="hidden whitespace-nowrap sm:inline">{t("auth.register")}</span>
         </Link>
         <Link
           href={`/${locale}/auth/login`}
-          className="hidden max-w-[92px] items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-400/50 hover:text-white sm:inline-flex sm:max-w-none sm:border-transparent sm:bg-transparent sm:px-3 sm:py-1.5 sm:text-sm sm:font-medium sm:text-gray-400"
+          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 text-sm font-bold leading-none text-cyan-100 transition-colors hover:border-cyan-400/50 hover:text-white max-[380px]:px-2.5 max-[380px]:text-[13px] sm:border-transparent sm:bg-transparent sm:px-3.5 sm:font-semibold sm:text-gray-300"
         >
-          <span className="truncate">{t("auth.login")}</span>
+          <span className="whitespace-nowrap sm:hidden">{compactAuthLabel.login}</span>
+          <span className="hidden whitespace-nowrap sm:inline">{t("auth.login")}</span>
         </Link>
       </div>
     );
@@ -257,6 +262,15 @@ export function UserMenu({
     </Dropdown>
   );
 }
+
+const COMPACT_AUTH_LABELS: Record<string, { register: string; login: string }> = {
+  th: { register: "สมัคร", login: "เข้าใช้" },
+  en: { register: "Register", login: "Login" },
+  lo: { register: "ສະໝັກ", login: "ເຂົ້າ" },
+  my: { register: "စာရင်းသွင်း", login: "ဝင်ရန်" },
+  km: { register: "ចុះឈ្មោះ", login: "ចូល" },
+  zh: { register: "注册", login: "登录" },
+};
 
 function MemberRankLevel({ rank, level }: { rank: string; level: number }) {
   const t = useTranslations();

@@ -241,31 +241,33 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
 
   return (
     <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
-      <Card className="relative overflow-hidden border border-border bg-surface p-4 text-center sm:p-6 shadow-xl">
+      <Card className="relative overflow-hidden border border-cyan-300/15 bg-[#070b12] p-0 text-center shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_15%,rgba(34,211,238,0.18),transparent_34%),radial-gradient(circle_at_80%_20%,rgba(236,72,153,0.16),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent_32%)]" />
         <h1 className="sr-only">
           {fixture.home.name} vs {fixture.away.name} - {fixture.league.name} ({fixture.league.round}) {t("matchDetail.matchInfo")}
         </h1>
-        <Link
-          id="link-league-detail"
-          href={`/${locale}/football/leagues/${fixture.league.apiLeagueId ?? fixture.league.id}`}
-          className="mx-auto mb-5 inline-flex max-w-full items-center gap-2.5 rounded-full border border-border bg-elevated/40 px-4.5 py-1.5 text-left transition-all duration-150 hover:border-primary/40 hover:bg-elevated/80"
-        >
-          <ApiLeagueLogo
-            name={fixture.league.name}
-            logo={fixture.league.logo}
-            size="sm"
-          />
-          <span className="min-w-0">
-            <span className="block truncate text-xs font-black tracking-wider text-white uppercase sm:text-sm">
-              {fixture.league.name}
+        <div className="relative p-3 sm:p-5">
+          <Link
+            id="link-league-detail"
+            href={`/${locale}/football/leagues/${fixture.league.apiLeagueId ?? fixture.league.id}`}
+            className="mx-auto mb-4 inline-flex max-w-full items-center gap-2.5 rounded-full border border-cyan-300/20 bg-black/35 px-3.5 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-150 hover:border-primary/45 hover:bg-cyan-300/10"
+          >
+            <ApiLeagueLogo
+              name={fixture.league.name}
+              logo={fixture.league.logo}
+              size="sm"
+            />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-black tracking-wide text-white uppercase">
+                {fixture.league.name}
+              </span>
+              <span className="block truncate font-mono text-[11px] font-bold tracking-widest text-primary uppercase">
+                {fixture.league.round}
+              </span>
             </span>
-            <span className="block truncate font-mono text-[9px] font-bold tracking-widest text-primary uppercase">
-              {fixture.league.round}
-            </span>
-          </span>
-        </Link>
+          </Link>
         
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6 py-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 py-2 sm:gap-5 sm:py-4">
           <TeamHeader
             name={fixture.home.name}
             logo={fixture.home.logo}
@@ -284,11 +286,11 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               <StatusBadge status={fixture.status} />
             </div>
             
-            <div className="relative inline-flex items-center justify-center rounded-xl border border-border bg-bg/60 px-4.5 py-2 sm:px-6 sm:py-2.5">
-              <span className="absolute left-0 top-1/4 bottom-1/4 w-[2px] rounded-r bg-primary" />
-              <span className="absolute right-0 top-1/4 bottom-1/4 w-[2px] rounded-l bg-magenta" />
+            <div className="relative inline-flex items-center justify-center rounded-2xl border border-white/10 bg-black/45 px-3 py-2 shadow-[0_0_36px_rgba(34,211,238,0.12),inset_0_1px_0_rgba(255,255,255,0.05)] sm:px-6 sm:py-3">
+              <span className="absolute left-0 top-1/4 bottom-1/4 w-[3px] rounded-r bg-cyan-300" />
+              <span className="absolute right-0 top-1/4 bottom-1/4 w-[3px] rounded-l bg-rose-400" />
               <span className={cn(
-                "font-display text-[26px] font-black leading-none tracking-wider sm:text-4xl tabular-nums",
+                "font-display text-[28px] font-black leading-none tracking-wider sm:text-5xl tabular-nums",
                 hasCompleteScore(fixture.score) ? "text-white" : "text-text-secondary"
               )}>
                 {hasCompleteScore(fixture.score)
@@ -298,7 +300,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             </div>
             
             {(hasCompleteScore(scoreBreakdown.halftime) || hasCompleteScore(scoreBreakdown.penalty)) && (
-              <div className="mt-2.5 flex flex-col gap-0.5 text-[9px] font-bold text-text-muted font-mono tracking-widest uppercase">
+              <div className="mt-2.5 flex flex-col gap-0.5 text-[11px] font-bold text-text-muted font-mono tracking-widest uppercase">
                 {hasCompleteScore(scoreBreakdown.halftime) && (
                   <span>HT {scoreBreakdown.halftime.home} : {scoreBreakdown.halftime.away}</span>
                 )}
@@ -308,13 +310,13 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               </div>
             )}
             
-            <div className="mt-3.5 flex items-center justify-center gap-1.5 font-mono text-[9px] font-bold leading-none text-text-muted sm:text-[10px] tracking-wide">
-              <Clock size={11} className="text-primary shrink-0" />
+            <div className="mt-3 flex max-w-[180px] items-center justify-center gap-1.5 font-mono text-[11px] font-bold leading-tight text-gray-400 tracking-wide sm:max-w-none">
+              <Clock size={12} className="text-primary shrink-0" />
               <span>{formatFixtureDateTime(fixture.kickoffTime, locale)}</span>
             </div>
             
             {fixture.status === MatchStatus.LIVE && fixture.elapsed !== null && (
-              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-0.5 font-mono text-[10px] font-black text-success shadow-sm">
+              <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2.5 py-1 font-mono text-[11px] font-black text-success shadow-sm">
                 <span className="h-1.5 w-1.5 rounded-full bg-success animate-[livePulse_1.5s_infinite]" />
                 <span>{fixture.elapsed}{fixture.statusExtra ? `+${fixture.statusExtra}` : ""}&apos;</span>
               </div>
@@ -358,6 +360,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             </Link>
           </div>
         )}
+        </div>
       </Card>
 
       <MatchTabsClient
@@ -460,7 +463,6 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
           <>
             <StatsAnalysisPanel
               statistics={statistics}
-              lineups={lineups}
               labels={{
                 title: t("matchDetail.analysisGraph"),
                 empty: t("matchDetail.noTeamStatistics"),
@@ -1060,10 +1062,12 @@ function PersonAvatar({
   name,
   photo,
   size,
+  fallback,
 }: {
   name: string;
   photo: string | null;
   size: "xs" | "sm";
+  fallback?: string;
 }) {
   const dimension = size === "xs" ? "h-5 w-5" : "h-7 w-7";
   const textSize = size === "xs" ? "text-[9px]" : "text-[10px]";
@@ -1080,7 +1084,7 @@ function PersonAvatar({
         <img src={photo} alt={name} className="h-full w-full object-cover" />
       ) : (
         <span className={cn("font-mono font-bold text-gray-400", textSize)}>
-          {name.slice(0, 1).toUpperCase()}
+          {fallback ?? name.slice(0, 1).toUpperCase()}
         </span>
       )}
     </span>
@@ -1287,69 +1291,65 @@ function TeamStatsPanel({
 }) {
   const homeStats = statistics[0];
   const awayStats = statistics[1];
+  const rows = buildTeamStatRows(homeStats, awayStats);
 
   return (
-    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
-      <div className="border-b border-border bg-elevated/40 px-4 py-4">
-        <div className="flex items-center gap-2">
-          <Table2 size={16} className="shrink-0 text-primary" aria-hidden="true" />
-          <span className="min-w-0 truncate text-sm font-semibold text-white font-display uppercase tracking-wider">{title}</span>
+    <Card className="overflow-hidden border border-cyan-300/12 bg-[#0b0f18] p-0 shadow-xl">
+      <div className="border-b border-white/10 bg-[#0f1320] px-3 py-4 sm:px-4">
+        <div className="flex items-center gap-2 text-left">
+          <Table2 size={18} className="shrink-0 text-cyan-300" aria-hidden="true" />
+          <span className="min-w-0 truncate text-base font-black text-white font-display sm:text-sm sm:uppercase sm:tracking-wider">{title}</span>
         </div>
         {homeStats && awayStats ? (
-          <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3">
-            <TeamMiniLabel team={homeStats.team} tone="cyan" />
-            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-border bg-bg/50 px-2 font-mono text-[10px] font-bold uppercase tracking-widest text-text-secondary">
+          <div className="mt-4 grid min-w-0 grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-center gap-2 rounded-2xl border border-white/10 bg-black/22 px-2 py-2 sm:grid-cols-[minmax(0,1fr)_52px_minmax(0,1fr)] sm:px-3">
+            <TeamMiniLabel team={homeStats.team} tone="cyan" align="left" />
+            <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 px-2 text-center font-mono text-xs font-black uppercase tracking-wider text-white sm:h-11 sm:min-w-11">
               vs
             </span>
-            <TeamMiniLabel team={awayStats.team} tone="magenta" />
+            <TeamMiniLabel team={awayStats.team} tone="magenta" align="right" />
           </div>
         ) : null}
       </div>
-      {!homeStats || !awayStats ? (
+      {!homeStats || !awayStats || rows.length === 0 ? (
         <div className="p-4">
           <EmptyDetail label={emptyLabel} />
         </div>
       ) : (
-        <div className="space-y-3.5 p-4">
-          {homeStats.statistics.map((stat, index) => {
-            const awayValue = awayStats.statistics[index]?.value ?? "-";
-            const homeNumber = parseStatNumber(stat.value);
-            const awayNumber = parseStatNumber(awayValue);
-            const total =
-              homeNumber !== null && awayNumber !== null ? homeNumber + awayNumber : null;
-            const homePercent =
-              total && total > 0 && homeNumber !== null ? Math.round((homeNumber / total) * 100) : 50;
-            const awayPercent =
-              total && total > 0 && awayNumber !== null ? 100 - homePercent : 50;
+        <div className="grid gap-3 p-3 sm:p-4 xl:grid-cols-2">
+          {rows.map((row) => {
+            const visual = getStatVisual(rowDominance(row.homePercent, row.awayPercent));
 
             return (
-              <div key={stat.type} className="rounded-xl border border-border bg-elevated/40 p-3 hover:bg-elevated transition-all duration-150">
-                <div className="mb-2 grid grid-cols-[64px_minmax(0,1fr)_64px] items-center gap-2 text-xs">
-                  <span className="truncate font-mono text-sm font-bold text-primary">
-                    {formatStatValue(stat.value)}
+              <div
+                key={row.type}
+                className="rounded-xl border border-white/10 bg-[#10131d] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-150 hover:border-cyan-300/20 hover:bg-[#121827]"
+              >
+                <div className="mb-3 grid grid-cols-[64px_minmax(0,1fr)_64px] items-center gap-2 sm:grid-cols-[76px_minmax(0,1fr)_76px]">
+                  <span className="truncate font-mono text-base font-black text-cyan-200 sm:text-lg">
+                    {row.homeDisplay}
                   </span>
-                  <span className="truncate px-1 text-center text-[10px] font-extrabold text-text-secondary uppercase tracking-wider font-display">
-                    {translateTeamStat(stat.type, labels)}
+                  <span className="min-w-0 truncate px-1 text-center text-[12px] font-black uppercase tracking-wide text-gray-100 font-display sm:text-[13px]">
+                    {translateTeamStat(row.type, labels)}
                   </span>
-                  <span className="truncate text-right font-mono text-sm font-bold text-magenta">
-                    {formatStatValue(awayValue)}
+                  <span className="truncate text-right font-mono text-base font-black text-rose-300 sm:text-lg">
+                    {row.awayDisplay}
                   </span>
                 </div>
-                <div className="overflow-hidden rounded-full border border-border bg-bg/50 h-3">
-                  <div className="flex h-full w-full">
+                <div className="h-3.5 overflow-hidden rounded-full border border-white/10 bg-slate-900/80">
+                  <div className="flex h-full w-full gap-0.5 p-0.5">
                     <div
-                      className="h-full bg-primary"
-                      style={{ width: `${homePercent}%` }}
+                      className={cn("h-full rounded-l-full", visual.home)}
+                      style={{ width: `${row.homePercent}%` }}
                     />
                     <div
-                      className="h-full bg-magenta"
-                      style={{ width: `${awayPercent}%` }}
+                      className={cn("h-full rounded-r-full", visual.away)}
+                      style={{ width: `${row.awayPercent}%` }}
                     />
                   </div>
                 </div>
-                <div className="mt-1 flex items-center justify-between font-mono text-[9px] font-bold text-text-muted tracking-wide">
-                  <span>{homePercent}%</span>
-                  <span>{awayPercent}%</span>
+                <div className="mt-2 flex items-center justify-between font-mono text-xs font-black tracking-wide">
+                  <span className="text-cyan-200/80">{row.homePercent}%</span>
+                  <span className="text-rose-200/80">{row.awayPercent}%</span>
                 </div>
               </div>
             );
@@ -1362,12 +1362,10 @@ function TeamStatsPanel({
 
 function StatsAnalysisPanel({
   statistics,
-  lineups,
   labels,
   statLabels,
 }: {
   statistics: ApiFootballTeamStatistics[];
-  lineups: ApiFootballLineup[];
   labels: {
     title: string;
     empty: string;
@@ -1378,22 +1376,20 @@ function StatsAnalysisPanel({
   const homeStats = statistics[0];
   const awayStats = statistics[1];
   const rows = buildAnalysisRows(homeStats, awayStats);
-  const homeKitColor = getTeamPrimaryKitColor(lineups[0], "#22d3ee");
-  const awayKitColor = getTeamPrimaryKitColor(lineups[1], "#e879f9");
 
   return (
-    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
-      <div className="flex flex-col gap-3 border-b border-border bg-elevated/40 px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+    <Card className="overflow-hidden border border-cyan-300/12 bg-[#0b0f18] p-0 shadow-xl">
+      <div className="flex flex-col gap-3 border-b border-white/10 bg-[#0f1320] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <TrendingUp size={17} className="shrink-0 text-primary font-display" />
-            <h2 className="min-w-0 truncate text-sm font-semibold text-white font-display uppercase tracking-wider">{labels.title}</h2>
+            <h2 className="min-w-0 truncate text-base font-black text-white font-display sm:text-sm sm:font-semibold sm:uppercase sm:tracking-wider">{labels.title}</h2>
           </div>
         </div>
         {homeStats && awayStats ? (
-          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 text-xs sm:flex sm:w-auto sm:flex-nowrap sm:items-center">
+          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 text-sm sm:flex sm:w-auto sm:flex-nowrap">
             <TeamMiniLabel team={homeStats.team} tone="cyan" />
-            <span className="mt-3 inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-border bg-bg/50 px-2 text-center font-mono text-[9px] font-bold uppercase tracking-wider text-primary sm:mt-0">
+            <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 px-2 text-center font-mono text-xs font-black uppercase tracking-wider text-white shadow-[0_0_20px_rgba(34,211,238,0.08)]">
               vs
             </span>
             <TeamMiniLabel team={awayStats.team} tone="magenta" />
@@ -1407,47 +1403,47 @@ function StatsAnalysisPanel({
         </div>
       ) : (
         <div className="grid gap-3.5 p-3 sm:p-4 md:grid-cols-2">
-          {rows.map((row) => (
-            <div
-              key={row.type}
-              className="rounded-xl border border-border bg-elevated/40 p-3 hover:bg-elevated transition-all duration-150"
-            >
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <span className="min-w-[42px] truncate font-mono text-sm font-bold text-primary">
-                  {row.homeDisplay}
-                </span>
-                <span className="min-w-0 truncate px-2 text-center text-[10px] font-extrabold text-white uppercase tracking-wider font-display">
-                  {translateTeamStat(row.type, statLabels)}
-                </span>
-                <span className="min-w-[42px] truncate text-right font-mono text-sm font-bold text-magenta">
-                  {row.awayDisplay}
-                </span>
-              </div>
-              <div className="overflow-hidden rounded-full border border-border bg-bg/50 h-3">
-                <div className="flex h-full w-full">
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${row.homePercent}%`,
-                      backgroundColor: homeKitColor,
-                    }}
-                  />
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${row.awayPercent}%`,
-                      backgroundColor: awayKitColor,
-                    }}
-                  />
+          {rows.map((row) => {
+            const visual = getStatVisual(rowDominance(row.homePercent, row.awayPercent));
+
+            return (
+              <div
+                key={row.type}
+                className="rounded-xl border border-white/10 bg-[#10131d] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-150 hover:border-cyan-300/20 hover:bg-[#121827]"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <span className="min-w-[54px] truncate font-mono text-base font-black text-cyan-200 sm:min-w-[64px]">
+                    {row.homeDisplay}
+                  </span>
+                  <span className="min-w-0 truncate px-2 text-center text-[12px] font-black uppercase tracking-wide text-gray-100 font-display sm:text-[13px]">
+                    {translateTeamStat(row.type, statLabels)}
+                  </span>
+                  <span className="min-w-[54px] truncate text-right font-mono text-base font-black text-rose-300 sm:min-w-[64px]">
+                    {row.awayDisplay}
+                  </span>
+                </div>
+                <div className="h-3.5 overflow-hidden rounded-full border border-white/10 bg-slate-900/80">
+                  <div className="flex h-full w-full gap-0.5 p-0.5">
+                    <div
+                      className={cn("h-full rounded-l-full", visual.home)}
+                      style={{ width: `${row.homePercent}%` }}
+                    />
+                    <div
+                      className={cn("h-full rounded-r-full", visual.away)}
+                      style={{ width: `${row.awayPercent}%` }}
+                    />
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between font-mono text-xs font-black tracking-wide">
+                  <span className="text-cyan-200/80">{row.homePercent}%</span>
+                  <span className="truncate px-2 text-center text-[11px] font-bold text-amber-200/85">
+                    {row.homePercent === row.awayPercent ? labels.balanced : ""}
+                  </span>
+                  <span className="text-rose-200/80">{row.awayPercent}%</span>
                 </div>
               </div>
-              <div className="mt-1 flex items-center justify-between font-mono text-[9px] font-bold text-text-muted tracking-wide">
-                <span>{row.homePercent}%</span>
-                <span>{row.homePercent === row.awayPercent ? labels.balanced : ""}</span>
-                <span>{row.awayPercent}%</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </Card>
@@ -1457,16 +1453,65 @@ function StatsAnalysisPanel({
 function TeamMiniLabel({
   team,
   tone,
+  align = "left",
 }: {
   team: ApiFootballTeamStatistics["team"];
   tone: "cyan" | "magenta";
+  align?: "left" | "right";
 }) {
-  return (
-    <span className="flex min-w-0 flex-col items-center justify-center gap-1 px-1 py-1 text-center sm:inline-flex sm:max-w-[170px] sm:flex-row sm:justify-start sm:gap-2 sm:text-left">
-      <ApiTeamLogo name={team.name} logo={team.logo} size="sm" accent={tone} />
-      <span className="min-w-0 max-w-full truncate text-gray-300">{team.name}</span>
+  const logo = <ApiTeamLogo name={team.name} logo={team.logo} size="sm" accent={tone} />;
+  const name = (
+    <span className="min-w-0 max-w-full truncate text-sm font-bold text-gray-100 sm:text-base">
+      {team.name}
     </span>
   );
+
+  return (
+    <span
+      className={cn(
+        "flex min-w-0 items-center gap-2 px-1 py-1",
+        align === "right" ? "justify-end text-right" : "justify-start text-left"
+      )}
+    >
+      {align === "left" ? (
+        <>
+          {logo}
+          {name}
+        </>
+      ) : (
+        <>
+          {name}
+          {logo}
+        </>
+      )}
+    </span>
+  );
+}
+
+function rowDominance(homePercent: number, awayPercent: number) {
+  if (homePercent === awayPercent) return "balanced";
+  return homePercent > awayPercent ? "home" : "away";
+}
+
+function getStatVisual(dominance: "home" | "away" | "balanced") {
+  if (dominance === "home") {
+    return {
+      home: "bg-gradient-to-r from-cyan-400 to-sky-300 shadow-[0_0_12px_rgba(34,211,238,0.28)]",
+      away: "bg-gradient-to-r from-rose-500/70 to-fuchsia-400/70",
+    };
+  }
+
+  if (dominance === "away") {
+    return {
+      home: "bg-gradient-to-r from-cyan-500/70 to-sky-300/70",
+      away: "bg-gradient-to-r from-rose-400 to-fuchsia-300 shadow-[0_0_12px_rgba(244,63,94,0.28)]",
+    };
+  }
+
+  return {
+    home: "bg-gradient-to-r from-cyan-400 to-sky-300",
+    away: "bg-gradient-to-r from-rose-400 to-fuchsia-300",
+  };
 }
 
 type TeamStatLabels = {
@@ -1630,8 +1675,8 @@ function TeamSquadsPanel({
           if (!squad) return null;
 
           return (
-            <Card key={squad.teamId ?? index} className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
-              <div className={cn("flex items-center justify-between gap-3 border-b border-border p-4", index === 0 ? "bg-primary/10" : "bg-magenta/10")}>
+            <Card key={squad.teamId ?? index} className="overflow-hidden border border-cyan-300/12 bg-[#090d16] p-0 shadow-[0_18px_60px_rgba(0,0,0,0.34)]">
+              <div className={cn("flex items-center justify-between gap-3 border-b border-white/10 p-4", index === 0 ? "bg-cyan-400/10" : "bg-rose-500/10")}>
                 <div className="flex min-w-0 items-center gap-3">
                   <ApiTeamLogo
                     name={squad.team?.name ?? labels.title}
@@ -1643,30 +1688,36 @@ function TeamSquadsPanel({
                 </div>
                 <Badge variant={index === 0 ? "cyan" : "magenta"}>{squad.players.length}</Badge>
               </div>
-              <div className="max-h-[430px] divide-y divide-border overflow-y-auto">
+              <div className="divide-y divide-border">
                 {squad.players.map((player) => (
                   <Link
                     key={player.id || player.name}
                     href={`/${locale}/football/players/${player.id}?season=${season}`}
-                    className="grid grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-elevated/60"
+                    className="grid grid-cols-[46px_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-cyan-300/[0.05]"
                   >
-                    <span
-                      className={cn(
-                        "flex h-8 w-8 items-center justify-center rounded-full border font-mono text-xs font-bold",
-                        index === 0
-                          ? "border-primary/25 bg-primary/10 text-primary"
-                          : "border-magenta/25 bg-magenta/10 text-magenta"
-                      )}
-                    >
-                      {player.number ?? "-"}
+                    <span className="relative">
+                      <PersonAvatar
+                        name={player.name}
+                        photo={player.photo}
+                        size="sm"
+                        fallback={player.number != null ? String(player.number) : undefined}
+                      />
+                      <span
+                        className={cn(
+                          "absolute -bottom-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-black bg-[#0a0a0f] px-1 font-mono text-[9px] font-black",
+                          index === 0 ? "text-cyan-300" : "text-rose-300"
+                        )}
+                      >
+                        {player.number ?? "-"}
+                      </span>
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-xs font-semibold text-white">{player.name}</p>
-                      <p className="mt-0.5 truncate text-[10px] text-gray-500">
+                      <p className="truncate text-sm font-bold text-white">{player.name}</p>
+                      <p className="mt-0.5 truncate text-xs font-medium text-gray-500">
                         {player.position ?? labels.unavailable}
                       </p>
                     </div>
-                    <p className="shrink-0 text-right text-[10px] text-gray-600">
+                    <p className="shrink-0 text-right text-xs font-medium text-gray-600">
                       {labels.age}: {player.age ?? "-"}
                     </p>
                   </Link>
@@ -1702,6 +1753,8 @@ function LineupsPanel({
     captain: string;
   };
 }) {
+  const playerPhotos = buildPlayerPhotoMap(playerStats);
+
   return (
     <section className="grid gap-4 lg:grid-cols-2">
       {lineups.length === 0 ? (
@@ -1715,13 +1768,13 @@ function LineupsPanel({
           const substitutes = lineup.substitutes ?? [];
 
           return (
-            <Card key={lineup.team.id} className="overflow-hidden p-0">
+            <Card key={lineup.team.id} className="overflow-hidden border border-cyan-300/12 bg-[#090d16] p-0 shadow-[0_18px_60px_rgba(0,0,0,0.34)]">
               <div
                 className={cn(
-                  "flex items-center justify-between gap-3 border-b border-border px-3 py-3 sm:px-4",
+                  "flex items-center justify-between gap-3 border-b border-white/10 px-3 py-3 sm:px-4",
                   index === 0
-                    ? "bg-primary/10"
-                    : "bg-magenta/10"
+                    ? "bg-cyan-400/10"
+                    : "bg-rose-500/10"
                 )}
               >
                 <div className="flex min-w-0 items-center gap-3">
@@ -1741,7 +1794,7 @@ function LineupsPanel({
                         photo={lineup.coach.photo}
                         size="xs"
                       />
-                      <p className="truncate text-[10px] text-gray-500">
+                      <p className="truncate text-xs font-medium text-gray-400">
                         {labels.coach}: {lineup.coach.name ?? labels.unavailable}
                       </p>
                     </div>
@@ -1759,11 +1812,12 @@ function LineupsPanel({
                   emptyLabel={labels.noGridData}
                   captainIds={captainIds}
                   captainLabel={labels.captain}
+                  playerPhotos={playerPhotos}
                 />
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="min-w-0">
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-gray-300">
                       <ListChecks size={14} className="shrink-0 text-cyan-300" aria-hidden="true" />
                       <span className="min-w-0 truncate">{labels.startingXI}</span>
                     </h3>
@@ -1772,6 +1826,7 @@ function LineupsPanel({
                         <PlayerRow
                           key={`${player.id}-${player.number}`}
                           player={player}
+                          photo={getPlayerPhoto(playerPhotos, player.id)}
                           locale={locale}
                           season={season}
                           isCaptain={isCaptainPlayer(player.id, captainIds)}
@@ -1781,15 +1836,16 @@ function LineupsPanel({
                   </div>
 
                   <div className="min-w-0">
-                    <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-gray-300">
                       <ListPlus size={14} className="shrink-0 text-green-300" aria-hidden="true" />
                       <span className="min-w-0 truncate">{labels.substitutes}</span>
                     </h3>
-                    <div className="max-h-[420px] space-y-2 overflow-y-auto pr-1">
+                    <div className="space-y-2">
                       {substitutes.map(({ player }) => (
                         <PlayerRow
                           key={`${player.id}-${player.number}`}
                           player={player}
+                          photo={getPlayerPhoto(playerPhotos, player.id)}
                           locale={locale}
                           season={season}
                           compact
@@ -1814,12 +1870,14 @@ function FormationPitch({
   emptyLabel,
   captainIds,
   captainLabel,
+  playerPhotos,
 }: {
   lineup: ApiFootballLineup;
   title: string;
   emptyLabel: string;
   captainIds: Set<number>;
   captainLabel: string;
+  playerPhotos: Map<number, string>;
 }) {
   const players = (lineup.startXI ?? [])
     .map(({ player }) => ({
@@ -1858,6 +1916,7 @@ function FormationPitch({
             const left = getHorizontalPitchLeft(position.column, columnCount);
             const kit = getPlayerKitColors(lineup, player.pos);
             const isCaptain = isCaptainPlayer(player.id, captainIds);
+            const photo = getPlayerPhoto(playerPhotos, player.id);
 
             return (
               <div
@@ -1866,9 +1925,11 @@ function FormationPitch({
                 style={{ top: `${top}%`, left: `${left}%` }}
                 title={`${player.number ?? "-"} ${player.name}${isCaptain ? ` (${captainLabel})` : ""}`}
               >
-                <FootballShirt
+                <PitchPlayerAvatar
+                  name={player.name}
                   number={player.number}
-                  kit={kit}
+                  photo={photo}
+                  accent={kit.primary}
                   isCaptain={isCaptain}
                   captainLabel={captainLabel}
                 />
@@ -1884,33 +1945,37 @@ function FormationPitch({
   );
 }
 
-function FootballShirt({
+function PitchPlayerAvatar({
+  name,
   number,
-  kit,
+  photo,
+  accent,
   isCaptain,
   captainLabel,
 }: {
+  name: string;
   number: number | null;
-  kit: ResolvedKitColor;
+  photo: string | null;
+  accent: string;
   isCaptain: boolean;
   captainLabel: string;
 }) {
   return (
-    <div className="relative mx-auto h-8 w-9 sm:h-9 sm:w-10 group/shirt">
-      <div
-        className="absolute inset-0 flex items-center justify-center border font-mono text-[10px] font-black shadow-md transition-all duration-150 group-hover/shirt:scale-110 sm:text-[11px]"
-        style={{
-          backgroundColor: kit.primary,
-          borderColor: kit.border,
-          color: kit.number,
-          clipPath:
-            "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)",
-        }}
-      >
-        <span className="mt-0.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-          {number ?? "-"}
-        </span>
+    <div className="relative mx-auto h-10 w-10 group/player sm:h-12 sm:w-12">
+      <div className="absolute -inset-1 rounded-full opacity-40 blur-md" style={{ backgroundColor: accent }} />
+      <div className="relative h-full w-full overflow-hidden rounded-full border-2 border-white/15 bg-[#080d16] shadow-md transition-transform duration-150 group-hover/player:scale-110">
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt={name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-mono text-xs font-black text-white">
+            {number ?? "-"}
+          </span>
+        )}
       </div>
+      <span className="absolute -bottom-1 left-1/2 flex h-4 min-w-5 -translate-x-1/2 items-center justify-center rounded-full border border-black/50 bg-white px-1 font-mono text-[9px] font-black text-black shadow">
+        {number ?? "-"}
+      </span>
       {isCaptain && (
         <span
           aria-label={captainLabel}
@@ -1926,38 +1991,48 @@ function FootballShirt({
 
 function PlayerRow({
   player,
+  photo,
   locale,
   season,
   compact = false,
   isCaptain = false,
 }: {
   player: ApiFootballLineup["startXI"][number]["player"];
+  photo: string | null;
   locale: string;
   season: number;
   compact?: boolean;
   isCaptain?: boolean;
 }) {
   const name = (
-    <span className={cn("truncate text-white", compact ? "text-xs" : "text-sm")}>
+    <span className={cn("truncate font-bold text-white", compact ? "text-sm" : "text-sm")}>
       {player.name}
     </span>
   );
 
   return (
-    <div className="grid grid-cols-[32px_minmax(0,1fr)_38px] items-center gap-2 rounded-md border border-border bg-surface/50 px-2 py-2 sm:grid-cols-[36px_minmax(0,1fr)_44px]">
-      <span className="font-mono text-xs font-bold text-white">
-        {player.number ?? "-"}
-      </span>
-      {player.id ? (
-        <Link
-          href={`/${locale}/football/players/${player.id}?season=${season}`}
-          className="min-w-0 transition-colors hover:text-primary"
-        >
-          {name}
-        </Link>
-      ) : (
-        name
-      )}
+    <div className="grid grid-cols-[42px_minmax(0,1fr)_44px] items-center gap-2 rounded-lg border border-white/10 bg-[#0f1320] px-2 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-colors hover:border-cyan-300/25 hover:bg-[#121827] sm:grid-cols-[46px_minmax(0,1fr)_48px]">
+      <PersonAvatar
+        name={player.name}
+        photo={photo}
+        size={compact ? "sm" : "sm"}
+        fallback={player.number != null ? String(player.number) : undefined}
+      />
+      <div className="min-w-0">
+        {player.id ? (
+          <Link
+            href={`/${locale}/football/players/${player.id}?season=${season}`}
+            className="block min-w-0 transition-colors hover:text-primary"
+          >
+            {name}
+          </Link>
+        ) : (
+          name
+        )}
+        <span className="mt-0.5 block truncate font-mono text-[11px] font-semibold text-gray-500">
+          #{player.number ?? "-"}
+        </span>
+      </div>
       <span className="flex items-center justify-end gap-1 text-right text-[10px] text-gray-500">
         {isCaptain && (
           <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full border border-warning/20 bg-warning/10 px-1 font-mono text-[9px] font-bold text-warning">
@@ -1992,15 +2067,28 @@ function getPlayerKitColors(
   };
 }
 
-function getTeamPrimaryKitColor(lineup: ApiFootballLineup | undefined, fallback: string) {
-  return normalizeHexColor(lineup?.team.colors?.player?.primary, fallback);
-}
-
-
 function normalizeHexColor(value: string | null | undefined, fallback: string) {
   if (!value) return fallback;
   const hex = value.trim().replace(/^#/, "");
   return /^[0-9a-fA-F]{6}$/.test(hex) ? `#${hex}` : fallback;
+}
+
+function buildPlayerPhotoMap(playerStats: ApiFootballPlayerStats[]) {
+  const photos = new Map<number, string>();
+
+  for (const teamStats of playerStats) {
+    for (const item of teamStats.players ?? []) {
+      if (item.player.id && item.player.photo) {
+        photos.set(item.player.id, item.player.photo);
+      }
+    }
+  }
+
+  return photos;
+}
+
+function getPlayerPhoto(photos: Map<number, string>, playerId: number | null) {
+  return playerId ? photos.get(playerId) ?? null : null;
 }
 
 function getCaptainPlayerIds(teamId: number, playerStats: ApiFootballPlayerStats[]) {
@@ -2158,7 +2246,7 @@ function H2HPanel({
         ))}
       </div>
 
-      <div className="divide-y divide-border max-h-[440px] overflow-y-auto">
+      <div className="divide-y divide-border">
         {fixtures.map((match) => {
           const isHomeTeamHome = homeTeamId !== null && match.home.id === homeTeamId;
           const hg = match.goals.home, ag = match.goals.away;
@@ -2270,109 +2358,99 @@ function StandingPanel({
     { label: labels.gd, hVal: hs.goalsDiff > 0 ? `+${hs.goalsDiff}` : hs.goalsDiff, aVal: as_.goalsDiff > 0 ? `+${as_.goalsDiff}` : as_.goalsDiff },
   ];
   return (
-    <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
-      {/* Header */}
-      <div className="border-b border-border bg-elevated/40 px-4 py-3 border-l-2 border-warning">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
-          <Medal size={16} className="shrink-0 text-warning" aria-hidden="true" />
+    <Card className="overflow-hidden border border-cyan-300/12 bg-[#0b0f18] p-0 shadow-xl">
+      <div className="border-b border-white/10 bg-[#0f1320] px-3 py-4 sm:px-4">
+        <h2 className="flex items-center gap-2 text-base font-black text-white font-display">
+          <Medal size={20} className="shrink-0 text-amber-300" aria-hidden="true" />
           <span className="min-w-0 truncate">{title}</span>
           {hs.group && (
-            <span className="ml-auto shrink-0 font-mono text-[9px] font-bold text-gray-500 uppercase tracking-widest">{hs.group}</span>
+            <span className="ml-auto shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-xs font-black uppercase tracking-wider text-gray-300">
+              {hs.group}
+            </span>
           )}
         </h2>
       </div>
 
-      <div className="space-y-4 p-4">
-        {/* Team header row */}
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <ApiTeamLogo name={homeTeam.name} logo={homeTeam.logo} size="sm" />
-            <div className="min-w-0">
-              <p className="truncate text-xs font-bold text-white">{homeTeam.name}</p>
-              {hs.description && (
-                <p className="truncate font-mono text-[9px] font-semibold text-cyan-400">{hs.description}</p>
-              )}
-            </div>
-          </div>
-          <span className="shrink-0 font-mono text-[10px] font-bold text-gray-600 uppercase tracking-widest">vs</span>
-          <div className="flex min-w-0 items-center justify-end gap-2">
-            <div className="min-w-0 text-right">
-              <p className="truncate text-xs font-bold text-white">{awayTeam.name}</p>
-              {as_.description && (
-                <p className="truncate font-mono text-[9px] font-semibold text-pink-400">{as_.description}</p>
-              )}
-            </div>
-            <ApiTeamLogo name={awayTeam.name} logo={awayTeam.logo} size="sm" />
-          </div>
+      <div className="space-y-4 p-3 sm:p-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_44px_minmax(0,1fr)] items-center gap-2 rounded-2xl border border-white/10 bg-black/22 px-2 py-2 sm:grid-cols-[minmax(0,1fr)_52px_minmax(0,1fr)] sm:px-3">
+          <StandingTeamSummary
+            team={homeTeam}
+            standing={hs}
+            tone="cyan"
+            align="left"
+          />
+          <span className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border border-white/10 bg-black/45 px-2 text-center font-mono text-xs font-black uppercase tracking-wider text-white sm:h-11 sm:min-w-11">
+            vs
+          </span>
+          <StandingTeamSummary
+            team={awayTeam}
+            standing={as_}
+            tone="magenta"
+            align="right"
+          />
         </div>
 
-        {/* Points visual bar */}
-        <div className="rounded-xl border border-border bg-bg/50 px-4 py-3">
-          <p className="mb-2 text-center font-display text-[9px] font-extrabold uppercase tracking-widest text-text-muted">Points</p>
-          <div className="mb-1.5 flex items-center gap-2">
-            <span className="w-8 shrink-0 text-right font-mono text-sm font-black text-primary">{hs.points}</span>
-            <div className="relative flex h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-black/40 border border-border">
+        <div className="rounded-2xl border border-white/10 bg-[#10131d] p-3.5">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <span className="font-mono text-lg font-black text-cyan-200">{hs.points}</span>
+            <span className="text-center text-sm font-black uppercase tracking-wide text-gray-100">{labels.points}</span>
+            <span className="font-mono text-lg font-black text-rose-300">{as_.points}</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="h-3.5 overflow-hidden rounded-full border border-white/10 bg-slate-900/80">
               <div
-                className="h-full rounded-full bg-primary"
+                className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-sky-300 shadow-[0_0_12px_rgba(34,211,238,0.28)]"
                 style={{ width: `${(hs.points / maxPts) * 100}%` }}
               />
             </div>
-            <div
-              className="relative flex h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-black/40 border border-border"
-            >
+            <div className="relative h-3.5 overflow-hidden rounded-full border border-white/10 bg-slate-900/80">
               <div
-                className="absolute right-0 h-full rounded-full bg-magenta"
+                className="absolute right-0 h-full rounded-full bg-gradient-to-r from-rose-400 to-fuchsia-300 shadow-[0_0_12px_rgba(244,63,94,0.28)]"
                 style={{ width: `${(as_.points / maxPts) * 100}%` }}
               />
             </div>
-            <span className="w-8 shrink-0 font-mono text-sm font-black text-magenta">{as_.points}</span>
           </div>
-          <div className="flex justify-between font-mono text-[9px] font-bold text-gray-600">
-            <span>Rank #{hs.rank}</span>
-            <span>Rank #{as_.rank}</span>
+          <div className="mt-2 flex justify-between font-mono text-xs font-black text-gray-400">
+            <span>#{hs.rank}</span>
+            <span>#{as_.rank}</span>
           </div>
         </div>
 
-        {/* Comparison rows */}
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="grid gap-2">
           {cmpRows.map(({ label, hVal, aVal }) => (
             <div
               key={label}
-              className="grid grid-cols-[minmax(0,1fr)_86px_minmax(0,1fr)] items-center border-b border-border bg-surface px-4 py-2.5 last:border-0 hover:bg-elevated transition-all duration-150"
+              className="grid min-h-14 grid-cols-[minmax(0,1fr)_92px_minmax(0,1fr)] items-center rounded-xl border border-white/10 bg-[#10131d] px-3 py-2.5 transition-colors hover:border-cyan-300/20 hover:bg-[#121827] sm:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)]"
             >
-              <span className="font-mono text-xs font-bold text-primary">{hVal}</span>
-              <span className="text-center font-display text-[9px] font-bold uppercase tracking-wider text-text-muted">{label}</span>
-              <span className="text-right font-mono text-xs font-bold text-magenta">{aVal}</span>
+              <span className="truncate font-mono text-base font-black text-cyan-200">{hVal}</span>
+              <span className="min-w-0 truncate px-2 text-center text-xs font-black uppercase tracking-wide text-gray-300 sm:text-sm">{label}</span>
+              <span className="truncate text-right font-mono text-base font-black text-rose-300">{aVal}</span>
             </div>
           ))}
         </div>
 
-        {/* Form pills */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+        <div className="grid grid-cols-2 gap-3">
           <FormPillRow form={hs.form} label={labels.recentForm} align="left" />
           <FormPillRow form={as_.form} label={labels.recentForm} align="right" />
         </div>
 
-        {/* Home / Away split */}
-        <div className="overflow-hidden rounded-xl border border-border">
-          <div className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] border-b border-border bg-elevated/60 px-4 py-2">
-            <span className="font-display text-[9px] font-extrabold uppercase tracking-widest text-primary">{homeTeam.name}</span>
-            <span className="text-center font-display text-[9px] font-extrabold uppercase tracking-widest text-text-muted">{labels.split}</span>
-            <span className="text-right font-display text-[9px] font-extrabold uppercase tracking-widest text-magenta">{awayTeam.name}</span>
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#10131d]">
+          <div className="grid grid-cols-[minmax(0,1fr)_78px_minmax(0,1fr)] border-b border-white/10 bg-white/[0.03] px-3 py-3 sm:grid-cols-[minmax(0,1fr)_100px_minmax(0,1fr)]">
+            <span className="truncate text-sm font-black uppercase tracking-wide text-cyan-200">{homeTeam.name}</span>
+            <span className="text-center text-xs font-black uppercase tracking-wide text-gray-300">{labels.split}</span>
+            <span className="truncate text-right text-sm font-black uppercase tracking-wide text-rose-300">{awayTeam.name}</span>
           </div>
           {[
             { label: labels.home, h: hs.home, a: as_.home },
             { label: labels.away, h: hs.away, a: as_.away },
           ].map(({ label, h, a }) => (
-            <div key={label} className="grid grid-cols-[minmax(0,1fr)_64px_minmax(0,1fr)] items-center border-b border-border bg-surface px-4 py-2.5 last:border-0 hover:bg-elevated transition-all duration-150">
-              <span className="font-mono text-[10px] text-text-secondary">
-                {h.win}W {h.draw}D {h.lose}L
-                <span className="ml-1.5 text-text-muted font-normal">({h.goals.for}:{h.goals.against})</span>
+            <div key={label} className="grid grid-cols-[minmax(0,1fr)_78px_minmax(0,1fr)] items-center border-b border-white/10 px-3 py-3 last:border-0 sm:grid-cols-[minmax(0,1fr)_100px_minmax(0,1fr)]">
+              <span className="truncate font-mono text-xs font-bold text-gray-300 sm:text-sm">
+                {h.win}W {h.draw}D {h.lose}L <span className="text-gray-500">({h.goals.for}:{h.goals.against})</span>
               </span>
-              <span className="text-center font-display text-[9px] font-bold uppercase tracking-wider text-text-secondary">{label}</span>
-              <span className="text-right font-mono text-[10px] text-text-secondary">
-                {a.win}W {a.draw}D {a.lose}L
-                <span className="ml-1.5 text-text-muted font-normal">({a.goals.for}:{a.goals.against})</span>
+              <span className="text-center text-xs font-black uppercase tracking-wide text-gray-300">{label}</span>
+              <span className="truncate text-right font-mono text-xs font-bold text-gray-300 sm:text-sm">
+                {a.win}W {a.draw}D {a.lose}L <span className="text-gray-500">({a.goals.for}:{a.goals.against})</span>
               </span>
             </div>
           ))}
@@ -2382,19 +2460,59 @@ function StandingPanel({
   );
 }
 
+function StandingTeamSummary({
+  team,
+  standing,
+  tone,
+  align,
+}: {
+  team: ApiFootballFixture["home"];
+  standing: ApiFootballFixtureTeamStanding;
+  tone: "cyan" | "magenta";
+  align: "left" | "right";
+}) {
+  const logo = <ApiTeamLogo name={team.name} logo={team.logo} size="sm" accent={tone} />;
+  const content = (
+    <div className={cn("min-w-0", align === "right" && "text-right")}>
+      <p className="truncate text-sm font-black text-white sm:text-base">{team.name}</p>
+      {standing.description && (
+        <p className={cn("truncate text-xs font-bold", tone === "cyan" ? "text-cyan-300" : "text-rose-300")}>
+          {standing.description}
+        </p>
+      )}
+    </div>
+  );
+
+  return (
+    <div className={cn("flex min-w-0 items-center gap-2", align === "right" ? "justify-end" : "justify-start")}>
+      {align === "left" ? (
+        <>
+          {logo}
+          {content}
+        </>
+      ) : (
+        <>
+          {content}
+          {logo}
+        </>
+      )}
+    </div>
+  );
+}
+
 function FormPillRow({ form, label, align }: { form: string | null; label: string; align: "left" | "right" }) {
   if (!form) return null;
   const chars = form.split("").slice(0, 5);
 
   return (
-    <div className={cn("flex flex-col gap-1.5", align === "right" && "items-end")}>
-      <span className="font-display text-[9px] font-extrabold uppercase tracking-widest text-gray-500">{label}</span>
+    <div className={cn("flex flex-col gap-2", align === "right" && "items-end")}>
+      <span className="text-xs font-black uppercase tracking-wide text-gray-300">{label}</span>
       <div className="flex gap-1">
         {chars.map((char, i) => (
           <span
             key={i}
             className={cn(
-              "grid h-5 w-5 shrink-0 place-items-center rounded font-mono text-[10px] font-black",
+              "grid h-9 w-9 shrink-0 place-items-center rounded-lg border font-mono text-sm font-black",
               char === "W" && "bg-success/10 text-success border border-success/20",
               char === "D" && "bg-warning/10 text-warning border border-warning/20",
               char === "L" && "bg-danger/10 text-danger border border-danger/20"
@@ -2424,30 +2542,76 @@ function buildAnalysisRows(
   homeStats?: ApiFootballTeamStatistics,
   awayStats?: ApiFootballTeamStatistics
 ) {
+  return buildTeamStatRows(homeStats, awayStats).filter(
+    (row) => row.homeNumber !== null && row.awayNumber !== null
+  );
+}
+
+function buildTeamStatRows(
+  homeStats?: ApiFootballTeamStatistics,
+  awayStats?: ApiFootballTeamStatistics
+) {
   if (!homeStats || !awayStats) return [];
 
-  return homeStats.statistics
-    .map((homeStat) => {
-      const awayStat = awayStats.statistics.find((item) => item.type === homeStat.type);
-      const homeValue = parseStatNumber(homeStat.value);
-      const awayValue = parseStatNumber(awayStat?.value ?? null);
+  const rows = new Map<
+    string,
+    {
+      type: string;
+      homeRaw: string | number | null;
+      awayRaw: string | number | null;
+    }
+  >();
 
-      if (homeValue === null || awayValue === null) return null;
+  for (const stat of homeStats.statistics) {
+    const key = normalizeTeamStatKey(stat.type);
+    rows.set(key, {
+      type: stat.type,
+      homeRaw: stat.value,
+      awayRaw: null,
+    });
+  }
 
-      const total = homeValue + awayValue;
-      const homePercent = total > 0 ? Math.round((homeValue / total) * 100) : 50;
-      const awayPercent = total > 0 ? 100 - homePercent : 50;
+  for (const stat of awayStats.statistics) {
+    const key = normalizeTeamStatKey(stat.type);
+    const existing = rows.get(key);
 
-      return {
-        type: homeStat.type,
-        homeDisplay: formatStatValue(homeStat.value),
-        awayDisplay: formatStatValue(awayStat?.value ?? null),
-        homePercent: clamp(homePercent, 4, 96),
-        awayPercent: clamp(awayPercent, 4, 96),
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item))
-    .slice(0, 12);
+    if (existing) {
+      existing.awayRaw = stat.value;
+    } else {
+      rows.set(key, {
+        type: stat.type,
+        homeRaw: null,
+        awayRaw: stat.value,
+      });
+    }
+  }
+
+  return Array.from(rows.values()).map((row) => {
+    const homeNumber = parseStatNumber(row.homeRaw);
+    const awayNumber = parseStatNumber(row.awayRaw);
+    const hasBothNumbers = homeNumber !== null && awayNumber !== null;
+    const total = hasBothNumbers ? homeNumber + awayNumber : 0;
+    const homePercent =
+      hasBothNumbers && total > 0 ? Math.round((homeNumber / total) * 100) : 50;
+    const awayPercent =
+      hasBothNumbers && total > 0 ? 100 - homePercent : 50;
+
+    return {
+      type: row.type,
+      homeRaw: row.homeRaw,
+      awayRaw: row.awayRaw,
+      homeNumber,
+      awayNumber,
+      homeDisplay: formatStatValue(row.homeRaw),
+      awayDisplay: formatStatValue(row.awayRaw),
+      homePercent: clamp(homePercent, 4, 96),
+      awayPercent: clamp(awayPercent, 4, 96),
+    };
+  });
+}
+
+function normalizeTeamStatKey(type: string) {
+  return type.toLowerCase().replace(/[\s_-]+/g, " ").trim();
 }
 
 function parseStatNumber(value: string | number | null | undefined) {

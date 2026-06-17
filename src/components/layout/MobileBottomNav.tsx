@@ -39,7 +39,7 @@ export function MobileBottomNav({ initialHasAuthSession = false }: MobileBottomN
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-800 bg-[#0a0a0f]/95 shadow-[0_-8px_24px_rgba(0,0,0,0.32)] safe-area-bottom backdrop-blur lg:hidden">
-      <div className="mx-auto flex h-[60px] max-w-md items-center justify-between px-1.5">
+      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-1.5">
         {BOTTOM_LINKS.map((link) => {
           const Icon = link.icon;
           const locked = Boolean(link.authRequired && !effectiveIsLoggedIn);
@@ -53,12 +53,12 @@ export function MobileBottomNav({ initialHasAuthSession = false }: MobileBottomN
               href={href}
               aria-label={locked ? `${t(link.label)} locked` : undefined}
               className={cn(
-                "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
+                "flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
                 active ? "text-cyan-400" : locked ? "text-amber-300/70" : "text-gray-500"
               )}
             >
-              <Icon size={18} className="shrink-0" />
-              <span className="max-w-[70px] truncate text-[9px] font-semibold leading-none">
+              <Icon size={20} className="shrink-0" />
+              <span className="max-w-[76px] truncate text-[11px] font-bold leading-tight">
                 {t(link.label)}
               </span>
             </Link>

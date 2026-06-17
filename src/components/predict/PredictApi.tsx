@@ -463,29 +463,29 @@ export function PredictApi() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8 px-4 sm:px-0">
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_420px]">
         <Card
           neon="cyan"
-          className="relative overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/15 via-[#0c0d12] to-purple-500/10 p-6 md:p-8"
+          className="relative overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/12 via-[#0c0d12] to-purple-500/8 p-4 md:p-5"
         >
           {/* Futuristic grid background decoration */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,26,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,26,0.5)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative flex max-w-2xl flex-col gap-5">
+          <div className="relative flex min-h-0 flex-col justify-center gap-3">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-cyan-400">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-cyan-300">
                 <Sparkles size={11} className="animate-pulse" />
                 {t("prediction.title")} HUB
               </div>
-              <h1 className="font-display text-3xl font-black text-white md:text-5xl tracking-tight mt-3">
+              <h1 className="mt-3 font-display text-3xl font-black tracking-tight text-white md:text-4xl">
                 {t("prediction.title")}
               </h1>
-              <p className="mt-3 max-w-xl text-xs sm:text-sm leading-relaxed text-gray-400">
+              <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-gray-400 md:text-[15px]">
                 ทายสกอร์การแข่งขันล่วงหน้าเพื่อรับแต้ม แข่งขันชิงความเป็นหนึ่งบนลีดเดอร์บอร์ด และปลดล็อกรางวัลสุดพิเศษ!
               </p>
             </div>
-            <div className="flex flex-wrap gap-2.5 pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
               <Button
                 size="sm"
                 neon
@@ -510,7 +510,7 @@ export function PredictApi() {
                     })();
                   }
                 }}
-                className="cursor-pointer font-bold tracking-wide"
+                className="min-h-10 cursor-pointer font-bold tracking-wide"
               >
                 กติกาการให้คะแนน
               </Button>
@@ -518,10 +518,11 @@ export function PredictApi() {
           </div>
         </Card>
 
-        <Card className="grid gap-2 border-cyan-300/10 bg-[#090b10] p-3 shadow-[0_18px_60px_rgba(0,0,0,0.28)] sm:grid-cols-2 lg:grid-cols-1">
+        <Card className="grid grid-cols-2 gap-2 border-cyan-300/10 bg-[#090b10] p-2.5 shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
           {[
             {
               label: "การทายทั้งหมด",
+              shortLabel: "ทั้งหมด",
               value: effectiveIsLoggedIn ? stats.total : 0,
               color: "text-cyan-400",
               indicatorBg: "bg-cyan-500",
@@ -530,6 +531,7 @@ export function PredictApi() {
             },
             {
               label: "ทายถูกต้อง",
+              shortLabel: "ถูก",
               value: effectiveIsLoggedIn ? stats.correct : 0,
               color: "text-green-400",
               indicatorBg: "bg-green-500",
@@ -538,6 +540,7 @@ export function PredictApi() {
             },
             {
               label: "ความแม่นยำ",
+              shortLabel: "แม่นยำ",
               value: effectiveIsLoggedIn ? `${stats.accuracy}%` : "0%",
               color: "text-amber-400",
               indicatorBg: "bg-amber-500",
@@ -546,35 +549,35 @@ export function PredictApi() {
             },
             {
               label: "แต้มสะสมจากทายผล",
+              shortLabel: "แต้ม",
               value: effectiveIsLoggedIn ? stats.points.toLocaleString() : "0",
               color: "text-emerald-400",
               indicatorBg: "bg-emerald-500",
               glowColor: "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
               icon: Trophy,
             },
-          ].map((item, index) => {
+          ].map((item) => {
             const Icon = item.icon;
 
             return (
               <div
                 key={item.label}
-                className={cn(
-                  "group relative flex min-h-[86px] items-center justify-between gap-4 overflow-hidden rounded-2xl border border-white/10 bg-[#0c111a] p-4 transition-colors hover:border-cyan-300/25",
-                  index === 3 && "sm:col-span-2 lg:col-span-1"
-                )}
+                title={item.label}
+                aria-label={`${item.label}: ${item.value}`}
+                className="group relative flex min-h-[64px] items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-[#0c111a] p-3 transition-colors hover:border-cyan-300/25"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.03]", item.color)}>
-                    <Icon size={19} />
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.03]", item.color)}>
+                    <Icon size={17} />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-sm font-black leading-6 text-white">
-                      {item.label}
+                    <p className="truncate text-sm font-black leading-5 text-white">
+                      {item.shortLabel}
                     </p>
-                    <span className={cn("mt-1 block h-1 w-10 rounded-full", item.indicatorBg, item.glowColor)} />
+                    <span className={cn("mt-1 block h-1 w-8 rounded-full", item.indicatorBg, item.glowColor)} />
                   </div>
                 </div>
-                <p className={cn("shrink-0 font-mono text-3xl font-black leading-none", item.color)}>
+                <p className={cn("shrink-0 font-mono text-2xl font-black leading-none md:text-3xl", item.color)}>
                   {item.value}
                 </p>
               </div>
