@@ -466,7 +466,7 @@ export function PredictApi() {
       <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_420px]">
         <Card
           neon="cyan"
-          className="relative overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/12 via-[#0c0d12] to-purple-500/8 p-4 md:p-5"
+          className="relative overflow-hidden border-cyan-300/20 bg-gradient-to-br from-cyan-400/10 via-[#08111b] to-blue-500/10 p-4 md:p-5"
         >
           {/* Futuristic grid background decoration */}
           <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,26,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,26,0.5)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
@@ -588,7 +588,7 @@ export function PredictApi() {
 
       <Card className="relative overflow-hidden border-cyan-300/15 bg-[#07080b] p-0 shadow-[0_18px_70px_rgba(0,0,0,0.32)]">
         {/* Esports accent line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
+        <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500/70" />
 
         {/* Card Header containing Tabs */}
         <div className="mt-[2px] flex flex-col border-b border-cyan-300/10 bg-gradient-to-r from-[#0d111a] via-[#07080b] to-[#0d111a] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -679,9 +679,9 @@ export function PredictApi() {
                   <div>
                     {groupedMatches.map((group) => (
                       <div key={group.key}>
-                        <div className="relative overflow-hidden border-b border-cyan-300/10 bg-gradient-to-r from-cyan-300/[0.14] via-[#0b1018] to-fuchsia-400/[0.08] px-4 py-3.5 sm:px-5">
-                          <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-300 via-fuchsia-400 to-amber-300" />
-                          <div className="absolute right-0 top-0 h-full w-40 bg-[linear-gradient(135deg,transparent_0%,rgba(34,211,238,0.08)_42%,transparent_43%,transparent_58%,rgba(217,70,239,0.08)_59%,transparent_100%)]" />
+                        <div className="relative overflow-hidden border-b border-cyan-300/10 bg-gradient-to-r from-cyan-300/[0.12] via-[#0b111a] to-blue-500/[0.08] px-4 py-3.5 sm:px-5">
+                          <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-300 via-sky-400 to-blue-500" />
+                          <div className="absolute right-0 top-0 h-full w-40 bg-[linear-gradient(135deg,transparent_0%,rgba(34,211,238,0.08)_42%,transparent_43%,transparent_58%,rgba(59,130,246,0.08)_59%,transparent_100%)]" />
                           <div className="relative flex min-w-0 items-center justify-between gap-3">
                             <div className="flex min-w-0 items-center gap-3">
                               <div className="relative">
@@ -698,13 +698,13 @@ export function PredictApi() {
                                 <div className="flex min-w-0 items-center gap-2">
                                   <Trophy
                                     size={14}
-                                    className="shrink-0 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.35)]"
+                                    className="shrink-0 text-cyan-200 drop-shadow-[0_0_8px_rgba(34,211,238,0.35)]"
                                   />
                                   <p className="min-w-0 truncate text-base font-black uppercase tracking-widest text-white">
                                     {group.league.name}
                                   </p>
                                 </div>
-                                <div className="mt-1 h-0.5 w-20 rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-transparent" />
+                                <div className="mt-1 h-0.5 w-20 rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-transparent" />
                               </div>
                             </div>
                             <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-cyan-300/20 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100 shadow-[inset_0_0_18px_rgba(34,211,238,0.08)]">
@@ -1635,7 +1635,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
               accent="magenta"
             />
           </div>
-          <span className="truncate text-sm font-extrabold tracking-wide text-gray-300 transition-colors group-hover:text-magenta-300">
+          <span className="truncate text-sm font-extrabold tracking-wide text-gray-300 transition-colors group-hover:text-violet-300">
             {match.away.name}
           </span>
         </div>
@@ -1652,7 +1652,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
               <Link
                 href={predictMatchHref}
                 onClick={(event) => event.stopPropagation()}
-                className="inline-flex h-8 items-center justify-center rounded-xl bg-gradient-to-r from-amber-400 to-yellow-300 px-3 text-[10px] font-black uppercase tracking-wide text-black shadow-md shadow-amber-500/15 transition-all duration-200 hover:scale-[1.02] hover:from-amber-300 hover:to-yellow-200"
+                className="inline-flex h-8 items-center justify-center rounded-xl border border-cyan-200/30 bg-gradient-to-r from-cyan-300 to-sky-400 px-3 text-[10px] font-black uppercase tracking-wide text-[#031018] shadow-md shadow-cyan-500/15 transition-all duration-200 hover:scale-[1.02] hover:from-cyan-200 hover:to-sky-300"
               >
                 {t("prediction.predictScore")}
               </Link>
@@ -1716,12 +1716,12 @@ const PredictMatchRow = memo(function PredictMatchRow({
 
           <div className="min-w-0">
             <div className="mb-1.5 flex justify-center">
-              <ApiTeamLogo
-                name={match.away.name}
-                logo={match.away.logo}
-                size="sm"
-                accent="magenta"
-              />
+            <ApiTeamLogo
+              name={match.away.name}
+              logo={match.away.logo}
+              size="sm"
+              accent="magenta"
+            />
             </div>
             <span className="block truncate text-center text-sm font-black leading-tight text-gray-300">
               {match.away.name}
@@ -1744,7 +1744,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
                 <Link
                   href={predictMatchHref}
                   onClick={(event) => event.stopPropagation()}
-                  className="inline-flex h-8 items-center justify-center rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 px-3 text-xs font-black uppercase tracking-wide text-black transition-colors"
+                  className="inline-flex h-8 items-center justify-center rounded-lg border border-cyan-200/30 bg-gradient-to-r from-cyan-300 to-sky-400 px-3 text-xs font-black uppercase tracking-wide text-[#031018] transition-colors"
                 >
                   {t("prediction.predictScore")}
                 </Link>
