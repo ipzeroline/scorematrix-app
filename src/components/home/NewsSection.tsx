@@ -51,33 +51,33 @@ export function NewsSection({ articles }: NewsSectionProps) {
   const latestArticles = articles.slice(0, 6);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="news-section-heading relative overflow-hidden rounded-xl border border-amber-500/20 bg-[#130f0a] px-4 py-3">
+    <div className="flex flex-col gap-3">
+      <div className="news-section-heading relative overflow-hidden rounded-lg border border-amber-500/20 bg-[#130f0a] px-3 py-2.5">
         <div className="news-section-heading-ticker absolute inset-0" />
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="news-section-icon grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-amber-400/35 bg-amber-400/10 text-amber-200">
+            <span className="news-section-icon grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-amber-400/35 bg-amber-400/10 text-amber-200">
               <Newspaper
-                size={20}
+                size={17}
                 strokeWidth={2.3}
                 className="drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]"
                 aria-hidden="true"
               />
             </span>
-            <h2 className="truncate text-xl font-bold tracking-normal text-white">
+            <h2 className="truncate text-base font-bold tracking-normal text-white md:text-lg">
               {t("dashboard.latestNews")}
             </h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <Sparkles
-              size={18}
+              size={15}
               strokeWidth={2.2}
               className="shrink-0 text-rose-300 drop-shadow-[0_0_8px_rgba(251,113,133,0.65)]"
               aria-hidden="true"
             />
             <Link
               href={`/${locale}/news`}
-              className="whitespace-nowrap text-xs font-medium text-amber-300 transition-colors hover:text-amber-200"
+              className="whitespace-nowrap text-[11px] font-semibold text-amber-300 transition-colors hover:text-amber-200"
             >
               {t("common.viewAll")} &rarr;
             </Link>
@@ -85,7 +85,7 @@ export function NewsSection({ articles }: NewsSectionProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {latestArticles.map((article) => {
           const meta = categoryMeta[article.category];
           const CategoryIcon = meta.icon;
@@ -99,10 +99,10 @@ export function NewsSection({ articles }: NewsSectionProps) {
             >
               <Card
                 hover
-                className="news-article-card relative flex h-full flex-col gap-3 overflow-hidden"
+                className="news-article-card relative flex h-full flex-col gap-2.5 overflow-hidden"
               >
                 <div className="news-article-card-sheen absolute inset-0" />
-                <div className="relative -mx-4 -mt-4 mb-1 aspect-[16/9] overflow-hidden rounded-t-xl bg-gray-950">
+                <div className="relative -mx-3 -mt-3 mb-1 aspect-[16/8.5] overflow-hidden rounded-t-lg bg-gray-950">
                   <Image
                     src={article.image}
                     alt={title}
@@ -127,12 +127,12 @@ export function NewsSection({ articles }: NewsSectionProps) {
                 </div>
 
                 {/* Title */}
-                <h3 className="relative text-base font-semibold text-white leading-snug line-clamp-2">
+                <h3 className="relative line-clamp-2 text-sm font-semibold leading-snug text-white">
                   {title}
                 </h3>
 
                 {/* Summary */}
-                <p className="relative text-xs text-gray-400 leading-relaxed line-clamp-2">
+                <p className="relative line-clamp-2 text-[11px] leading-5 text-gray-400">
                   {summary}
                 </p>
 

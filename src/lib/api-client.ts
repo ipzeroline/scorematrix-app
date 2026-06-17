@@ -80,7 +80,7 @@ const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
 
 export const AUTH_SESSION_EXPIRED_EVENT = "scorematrix:auth-session-expired";
 
-let refreshTokenRequest: Promise<string | null> | null = null;
+let refreshTokenRequest: Promise<boolean> | null = null;
 let authSessionExpiredDispatched = false;
 
 export function getApiBaseUrl() {
@@ -204,11 +204,11 @@ export async function apiRequest<T, B = unknown>(
 
   const payload = await parseApiResponse(response);
   if (shouldRefreshAuth(path, response, options, payload)) {
-    const token = await refreshAccessToken(options);
-    if (token) {
+    const refreshed = await refreshAccessToken(options);
+    if (refreshed) {
       return apiRequest<T, B>(method, path, body, {
         ...options,
-        token,
+        token: null,
         authRefreshAttempted: true,
         headers: withoutAuthorization(options.headers),
       });
@@ -249,11 +249,11 @@ export async function apiRawRequest<T, B = unknown>(
 
   const payload = await parseApiResponse(response);
   if (shouldRefreshAuth(path, response, options, payload)) {
-    const token = await refreshAccessToken(options);
-    if (token) {
+    const refreshed = await refreshAccessToken(options);
+    if (refreshed) {
       return apiRawRequest<T, B>(method, path, body, {
         ...options,
-        token,
+        token: null,
         authRefreshAttempted: true,
         headers: withoutAuthorization(options.headers),
       });
@@ -451,18 +451,10 @@ async function requestRefreshedAccessToken(options: ApiRequestOptions) {
 
   if (!response.ok || !isApiSuccess<AuthRefreshData>(payload)) {
     expireAuthSession();
-    return null;
+    return false;
   }
 
-  const accessToken = payload.data?.accessToken ?? payload.data?.tokens?.accessToken;
-
-  if (!accessToken) {
-    expireAuthSession();
-    return null;
-  }
-
-  setStoredAuthTokens(accessToken, getStoredRefreshSession() === "persistent");
-  return accessToken;
+  return true;
 }
 
 function expireAuthSession() {

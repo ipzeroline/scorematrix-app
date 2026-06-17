@@ -6,6 +6,7 @@ import {
   getRefreshToken,
   getRememberedAuthSession,
   isSameOriginMutation,
+  setAccessSession,
   setRefreshSession,
   stripRefreshToken,
 } from "@/lib/auth-session-server";
@@ -38,8 +39,11 @@ export async function POST(request: Request) {
 
   if (!response.ok || !tokens.accessToken) {
     await clearRefreshSession();
-  } else if (tokens.refreshToken) {
-    await setRefreshSession(tokens.refreshToken, remember);
+  } else {
+    await setAccessSession(tokens.accessToken, remember);
+    if (tokens.refreshToken) {
+      await setRefreshSession(tokens.refreshToken, remember);
+    }
   }
 
   return Response.json(stripRefreshToken(payload), {

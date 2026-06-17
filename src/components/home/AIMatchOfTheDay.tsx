@@ -28,13 +28,13 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
   return (
     <Card
       neon="cyan"
-      className="relative overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-[#0c0d12] via-[#0e1017] to-cyan-950/20 p-0 shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+      className="relative overflow-hidden border border-cyan-500/25 bg-gradient-to-br from-[#0c0d12] via-[#0e1017] to-cyan-950/15 p-0 shadow-[0_3px_18px_rgba(0,0,0,0.48)]"
     >
       {/* Dynamic top edge accent line */}
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-magenta-500 to-cyan-500" />
-      <div className="relative p-5 md:p-6">
+      <div className="relative p-3.5 md:p-4">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-4 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <Badge variant="default" size="sm" className="min-w-0 bg-[#151620] border-border text-gray-300">
               <span className="flex min-w-0 items-center gap-1.5">
@@ -49,7 +49,7 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
               </span>
             </Badge>
           </div>
-          <div className="shrink-0 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1.5">
+          <div className="shrink-0 rounded-lg border border-cyan-500/15 bg-cyan-500/[0.07] px-2.5 py-1">
             <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 leading-none">
               <CalendarDays size={12} className="shrink-0 text-cyan-300" aria-hidden="true" />
               <span className="min-w-0 truncate text-[10px] font-medium text-gray-300">
@@ -64,30 +64,30 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
         </div>
 
         {/* Teams & confidence matchup */}
-        <div className="flex items-center justify-between gap-4 mb-6 bg-black/20 rounded-xl border border-border/40 p-4">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-black/20 p-3">
           {/* Home team */}
           <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
-            <div className="p-2 bg-surface rounded-lg border border-border">
+            <div className="rounded-lg border border-border bg-surface p-1.5">
               <ApiTeamLogo name={homeTeam} logo={insight.teams.home.logo} size="lg" />
             </div>
-            <span className="text-sm font-bold text-gray-100 text-center leading-tight truncate w-full">
+            <span className="w-full truncate text-center text-xs font-bold leading-tight text-gray-100 md:text-[13px]">
               {homeTeam}
             </span>
           </div>
 
           {/* VS & Confidence score */}
           <div className="flex flex-col items-center justify-center shrink-0">
-            <div className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full border-2 border-dashed border-cyan-500/40 bg-black/60 shadow-[0_4px_16px_rgba(0,0,0,0.5)]">
+            <div className="relative flex h-20 w-20 flex-col items-center justify-center rounded-full border border-dashed border-cyan-500/40 bg-black/60 shadow-[0_3px_12px_rgba(0,0,0,0.45)] md:h-[88px] md:w-[88px]">
               {/* Pulsing analyzer indicator */}
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
               </span>
               
-              <span className="text-3xl font-extrabold font-mono text-cyan-400 tracking-tighter leading-none">
+              <span className="font-mono text-2xl font-extrabold leading-none tracking-tighter text-cyan-400">
                 {confidenceScore}%
               </span>
-              <span className="text-[8px] text-cyan-400/60 uppercase tracking-widest mt-1 font-bold">
+              <span className="mt-0.5 text-[7px] font-bold uppercase tracking-wide text-cyan-400/60">
                 {t("aiInsight.confidenceScore")}
               </span>
             </div>
@@ -95,25 +95,25 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
           </div>
 
           {/* Away team */}
-          <div className="flex flex-col items-center gap-2 flex-1 min-w-0">
-            <div className="p-2 bg-surface rounded-lg border border-border">
+          <div className="flex flex-1 min-w-0 flex-col items-center gap-2">
+            <div className="rounded-lg border border-border bg-surface p-1.5">
               <ApiTeamLogo name={awayTeam} logo={insight.teams.away.logo} size="lg" />
             </div>
-            <span className="text-sm font-bold text-gray-100 text-center leading-tight truncate w-full">
+            <span className="w-full truncate text-center text-xs font-bold leading-tight text-gray-100 md:text-[13px]">
               {awayTeam}
             </span>
           </div>
         </div>
 
         {/* Win probability stacked horizontal bar */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center text-xs font-semibold text-gray-400 mb-2.5">
+        <div className="mb-4">
+          <div className="mb-2 flex items-center justify-between text-[11px] font-semibold text-gray-400">
             <span>{t("aiInsight.probability")}</span>
             <span className="font-mono text-cyan-400">{confidenceScore}% {t("aiInsight.confidenceScore")}</span>
           </div>
           
           {/* Stacked bar */}
-          <div className="h-3 w-full rounded-full overflow-hidden flex bg-gray-800">
+          <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-800">
             <div 
               style={{ width: `${homeWinProbability}%` }} 
               className="bg-cyan-500 transition-all duration-500" 
@@ -132,35 +132,35 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
           </div>
 
           {/* Legends */}
-          <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+          <div className="mt-2.5 grid grid-cols-3 gap-2 text-center">
             <div className="flex flex-col items-center">
-              <span className="flex items-center gap-1.5 text-xs text-gray-300 font-medium truncate max-w-full">
+              <span className="flex max-w-full items-center gap-1.5 truncate text-[11px] font-medium text-gray-300">
                 <span className="h-2 w-2 rounded-full bg-cyan-500 shrink-0" />
                 <span className="truncate">{homeTeam}</span>
               </span>
-              <span className="font-mono text-[11px] font-bold text-cyan-400 mt-0.5">{homeWinProbability}%</span>
+              <span className="mt-0.5 font-mono text-[10px] font-bold text-cyan-400">{homeWinProbability}%</span>
             </div>
             <div className="flex flex-col items-center border-x border-border/40">
-              <span className="flex items-center gap-1.5 text-xs text-gray-300 font-medium">
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-gray-300">
                 <span className="h-2 w-2 rounded-full bg-gray-600 shrink-0" />
                 <span>{t("prediction.draw")}</span>
               </span>
-              <span className="font-mono text-[11px] font-bold text-gray-400 mt-0.5">{drawProbability}%</span>
+              <span className="mt-0.5 font-mono text-[10px] font-bold text-gray-400">{drawProbability}%</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="flex items-center gap-1.5 text-xs text-gray-300 font-medium truncate max-w-full">
+              <span className="flex max-w-full items-center gap-1.5 truncate text-[11px] font-medium text-gray-300">
                 <span className="h-2 w-2 rounded-full bg-magenta-500 shrink-0" />
                 <span className="truncate">{awayTeam}</span>
               </span>
-              <span className="font-mono text-[11px] font-bold text-magenta-400 mt-0.5">{awayWinProbability}%</span>
+              <span className="mt-0.5 font-mono text-[10px] font-bold text-magenta-400">{awayWinProbability}%</span>
             </div>
           </div>
         </div>
 
         {/* Key factors */}
         {(insight.keyFactors.length > 0 || insight.apiAdvice) && (
-          <div className="mb-6">
-            <h4 className="text-sm font-semibold text-white mb-2.5">
+          <div className="mb-4">
+            <h4 className="mb-2 text-[13px] font-semibold text-white">
               {t("aiInsight.keyFactors")}
             </h4>
             {insight.keyFactors.length > 0 && (
@@ -168,7 +168,7 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
                 {insight.keyFactors.slice(0, 4).map((factor, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-2 text-xs text-gray-400"
+                    className="flex items-start gap-2 text-[11px] leading-5 text-gray-400"
                   >
                     <span className="text-cyan-400 mt-0.5">&#8226;</span>
                     {factor}
@@ -177,7 +177,7 @@ export function AIMatchOfTheDay({ insight }: AIMatchOfTheDayProps) {
               </ul>
             )}
             {insight.apiAdvice && (
-              <div className="mt-4 rounded-xl border border-cyan-500/20 bg-cyan-950/20 p-3.5 text-xs leading-relaxed text-gray-300">
+              <div className="mt-3 rounded-lg border border-cyan-500/20 bg-cyan-950/20 p-3 text-xs leading-relaxed text-gray-300">
                 <div className="flex items-center gap-2 mb-1.5 font-bold text-cyan-400 uppercase tracking-wider text-[10px]">
                   <Brain size={12} className="text-cyan-400 animate-pulse" />
                   <span>AI Recommendation</span>

@@ -3,6 +3,7 @@ import {
   extractAuthTokens,
   getBackendApiUrl,
   isSameOriginMutation,
+  setAccessSession,
   setRefreshSession,
   stripRefreshToken,
 } from "@/lib/auth-session-server";
@@ -22,10 +23,11 @@ export async function POST(request: Request) {
     cache: "no-store",
   });
   const payload = await response.json();
-  const { refreshToken } = extractAuthTokens(payload);
+  const { accessToken, refreshToken } = extractAuthTokens(payload);
 
-  if (response.ok && refreshToken) {
-    await setRefreshSession(refreshToken, true);
+  if (response.ok) {
+    if (accessToken) await setAccessSession(accessToken, true);
+    if (refreshToken) await setRefreshSession(refreshToken, true);
   }
 
   return Response.json(stripRefreshToken(payload), {

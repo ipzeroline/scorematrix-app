@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useId } from "react";
 import { cn } from "@/lib/utils";
 
 interface DropdownProps {
@@ -18,6 +18,7 @@ export function Dropdown({
   containerClassName,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
+  const triggerId = useId();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,13 +31,35 @@ export function Dropdown({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
+
   return (
     <div ref={ref} className={cn("relative", containerClassName)}>
-      <div onClick={() => setOpen(!open)} className="cursor-pointer">
+      <button
+        id={triggerId}
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="cursor-pointer rounded-lg text-left focus:outline-none focus:ring-2 focus:ring-cyan-400/40"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
         {trigger}
-      </div>
+      </button>
       {open && (
         <div
+          role="menu"
+          aria-labelledby={triggerId}
           className={cn(
             "absolute top-full mt-2 rounded-xl border border-gray-800 bg-[#1a1a2e] shadow-2xl py-1 min-w-[180px] z-50 animate-slide-up",
             align === "right" ? "right-0" : "left-0",
@@ -67,6 +90,8 @@ export function DropdownItem({
   return (
     <button
       onClick={onClick}
+      type="button"
+      role="menuitem"
       className={cn(
         "w-full text-left px-4 py-2 text-sm transition-colors cursor-pointer",
         active && "bg-cyan-500/10 text-cyan-400",

@@ -1,5 +1,5 @@
 import { getDataApiUrl } from "@/lib/backend-api-urls";
-import { isSameOriginMutation } from "@/lib/auth-session-server";
+import { getAccessToken, isSameOriginMutation } from "@/lib/auth-session-server";
 import { NO_CACHE_HEADERS } from "@/lib/no-cache";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,7 @@ async function proxyDataRequest(request: Request, context: DataProxyContext) {
 
   const response = await fetch(backendUrl, {
     method: request.method,
-    headers: buildProxyHeaders(request),
+    headers: await buildProxyHeaders(request),
     body: ["GET", "HEAD"].includes(request.method) ? undefined : await readRequestBody(request),
     cache: "no-store",
     redirect: "manual",
@@ -61,7 +61,7 @@ async function proxyDataRequest(request: Request, context: DataProxyContext) {
   });
 }
 
-function buildProxyHeaders(request: Request) {
+async function buildProxyHeaders(request: Request) {
   const headers = new Headers();
 
   for (const name of [
@@ -75,6 +75,11 @@ function buildProxyHeaders(request: Request) {
   ]) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
+  }
+
+  if (!headers.has("authorization")) {
+    const accessToken = await getAccessToken();
+    if (accessToken) headers.set("authorization", `Bearer ${accessToken}`);
   }
 
   return headers;

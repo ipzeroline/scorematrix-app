@@ -24,6 +24,10 @@
     "noGambling": "不可提现。不涉及真钱赌博。",
     "loading": "加载中...",
     "error": "出现错误",
+    "errorDescription": "此部分暂时无法加载。请重试。",
+    "notFound": "页面未找到",
+    "notFoundDescription": "该页面可能已移动、删除或不存在。",
+    "backHome": "返回首页",
     "retry": "重试",
     "save": "保存",
     "cancel": "取消",
@@ -70,7 +74,9 @@
     "events": "活动",
     "contactTeam": "联系我们",
     "stats": "统计",
-    "notifications": "通知"
+    "notifications": "通知",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单"
   },
   "auth": {
     "login": "登录",

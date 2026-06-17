@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { getArticleBySlug } from "@/lib/news-generator";
 import { NewsDetailClient } from "@/components/news/NewsDetailClient";
 
@@ -7,9 +8,13 @@ type Props = {
   params: Promise<{ locale: string; slug: string }>;
 };
 
+const getArticleBySlugCached = cache((slug: string, locale: string) =>
+  getArticleBySlug(slug, locale)
+);
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
-  const article = await getArticleBySlug(slug, locale);
+  const article = await getArticleBySlugCached(slug, locale);
 
   if (!article) {
     return { title: "Article Not Found" };
@@ -56,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NewsDetailPage({ params }: Props) {
   const { locale, slug } = await params;
-  const article = await getArticleBySlug(slug, locale);
+  const article = await getArticleBySlugCached(slug, locale);
 
   if (!article) {
     notFound();

@@ -18,8 +18,8 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-gray-800 bg-[#12121a] p-4",
-        hover && "hover:border-gray-700 hover:bg-[#1a1a2e] transition-all duration-200 cursor-pointer",
+        "rounded-lg border border-gray-800 bg-[#111722] p-3",
+        hover && "transition-colors duration-150 hover:border-gray-700 hover:bg-[#151d2a] cursor-pointer",
         glass && "glass",
         neon === "cyan" && "hover:border-cyan-500/30 hover:shadow-[0_0_15px_rgba(34,211,238,0.1)]",
         neon === "magenta" && "hover:border-magenta-500/30 hover:shadow-[0_0_15px_rgba(217,70,239,0.1)]",

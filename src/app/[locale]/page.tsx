@@ -109,9 +109,21 @@ export default async function Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "dashboard" });
   const seo = getHomeSeoContent(locale);
-  const cookieStore = await cookies();
-  const liveResult = await loadLiveFixtures();
-  const todayFixtures = await loadTodayFixtures();
+  const [
+    cookieStore,
+    liveResult,
+    todayFixtures,
+    wcGroups,
+    latestArticles,
+    aiInsight,
+  ] = await Promise.all([
+    cookies(),
+    loadLiveFixtures(),
+    loadTodayFixtures(),
+    getWorldCupGroups(),
+    getLatestArticles(locale, 3),
+    loadFeaturedAIInsight(),
+  ]);
   const homepageFixtures = sortFixtures(todayFixtures)
     .filter((fixture) => {
       if (getFixtureStatusGroup(fixture) === MatchStatus.LIVE) {
@@ -120,9 +132,6 @@ export default async function Page({ params }: Props) {
 
       return getFixtureStatusGroup(fixture) === MatchStatus.UPCOMING;
     });
-  const wcGroups = await getWorldCupGroups();
-  const latestArticles = await getLatestArticles(locale, 3);
-  const aiInsight = await loadFeaturedAIInsight();
 
   const wcTodayMatches = sortFixtures(todayFixtures).filter(
     (fixture) =>
@@ -155,26 +164,26 @@ export default async function Page({ params }: Props) {
       {/* AI Match of the Day */}
       {aiInsight && (
         <section>
-          <div className="relative mb-4 overflow-hidden rounded-xl border border-border bg-surface px-4 py-3">
+          <div className="relative mb-3 overflow-hidden rounded-lg border border-border bg-surface px-3 py-2.5">
             {/* Top edge accent gradient line for the featured section */}
             <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
 
             <div className="relative flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
                   <Brain
-                    size={20}
+                    size={17}
                     strokeWidth={2}
                     aria-hidden="true"
                   />
                 </span>
-                <h2 className="text-lg font-extrabold tracking-normal text-white">
+                <h2 className="text-base font-extrabold tracking-normal text-white md:text-lg">
                   {t("aiMatchOfTheDay")}
                 </h2>
               </div>
 
               {/* Featured Badge */}
-              <span className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-0.5 text-[10px] font-bold text-cyan-300 uppercase tracking-widest">
+              <span className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[9px] font-bold text-cyan-300 uppercase tracking-wide">
                 {featuredBadgeCopy[locale] || "Featured"}
               </span>
             </div>
@@ -191,7 +200,7 @@ export default async function Page({ params }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-8 pb-8">
+    <div className="flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden pb-5 lg:gap-5">
       {/* Hero Banner */}
       <section>
         <HeroBanner />
@@ -208,26 +217,26 @@ export default async function Page({ params }: Props) {
       {/* Main Content (Matches, AI, News) */}
       {mainContent}
 
-      <section className="rounded-xl border border-gray-800 bg-[#0a0a0f] p-5 md:p-6">
+      <section className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3.5 md:p-4">
         <div className="max-w-4xl">
-          <p className="text-sm md:text-base font-semibold leading-relaxed tracking-normal text-cyan-300">
+          <p className="text-xs font-semibold leading-relaxed tracking-normal text-cyan-300 md:text-[13px]">
             {t("seoContent.eyebrow")}
           </p>
-          <h2 className="mt-2 font-display text-2xl md:text-3xl font-bold leading-tight text-white">
+          <h2 className="mt-1.5 font-display text-lg font-bold leading-tight text-white md:text-xl">
             {t("seoContent.title")}
           </h2>
-          <p className="mt-3 text-base leading-7 text-gray-300">
+          <p className="mt-2 text-xs leading-5 text-gray-300 md:text-sm">
             {t("seoContent.description")}
           </p>
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-3">
+        <div className="mt-3 grid gap-2.5 md:grid-cols-3">
           {["predictions", "liveScores", "rewards"].map((key) => (
-            <div key={key} className="border-l border-cyan-500/30 pl-4">
-              <h3 className="text-sm font-semibold text-white">
+            <div key={key} className="border-l border-cyan-500/30 pl-3">
+              <h3 className="text-[13px] font-semibold text-white">
                 {t(`seoContent.cards.${key}.title`)}
               </h3>
-              <p className="mt-2 text-xs leading-5 text-gray-500">
+              <p className="mt-1.5 text-[11px] leading-5 text-gray-500">
                 {t(`seoContent.cards.${key}.text`)}
               </p>
             </div>
@@ -235,25 +244,25 @@ export default async function Page({ params }: Props) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-cyan-300/15 bg-[#0b111d] p-5 md:p-6">
+      <section className="rounded-lg border border-cyan-300/15 bg-[#0b111d] p-3.5 md:p-4">
         <div className="max-w-4xl">
-          <p className="text-sm font-black uppercase tracking-wide text-cyan-300">
+          <p className="text-xs font-black uppercase tracking-wide text-cyan-300">
             ScoreMatrix
           </p>
-          <h2 className="mt-2 text-2xl font-black leading-tight text-white md:text-3xl">
+          <h2 className="mt-1.5 text-lg font-black leading-tight text-white md:text-xl">
             {seo.faqTitle}
           </h2>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-3">
+        <div className="mt-3 grid gap-2.5 md:grid-cols-3">
           {seo.faqs.map((faq) => (
             <article
               key={faq.question}
-              className="rounded-2xl border border-white/10 bg-black/20 p-4"
+              className="rounded-lg border border-white/10 bg-black/20 p-3"
             >
-              <h3 className="text-base font-black leading-6 text-white">
+              <h3 className="text-sm font-black leading-5 text-white">
                 {faq.question}
               </h3>
-              <p className="mt-2 text-sm font-semibold leading-6 text-gray-400">
+              <p className="mt-1.5 text-xs font-semibold leading-5 text-gray-400">
                 {faq.answer}
               </p>
             </article>

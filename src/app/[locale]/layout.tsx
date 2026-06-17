@@ -1,6 +1,5 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/layout/Header";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -9,10 +8,6 @@ import { Footer } from "@/components/layout/Footer";
 import { StoreInitializer } from "@/components/shared/StoreInitializer";
 import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { ToastContainer } from "@/components/ui/ToastContainer";
-import {
-  AUTH_TOKEN_COOKIE_NAME,
-  REFRESH_TOKEN_COOKIE_NAME,
-} from "@/lib/auth-guard";
 import { LOCALE_CODES, type LocaleCode } from "@/i18n";
 
 function isLocale(value: string): value is LocaleCode {
@@ -34,24 +29,20 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages({ locale });
-  const cookieStore = await cookies();
-  const hasAuthSession =
-    cookieStore.has(AUTH_TOKEN_COOKIE_NAME) ||
-    cookieStore.has(REFRESH_TOKEN_COOKIE_NAME);
 
   return (
     <NextIntlClientProvider key={locale} locale={locale} messages={messages}>
-      <StoreInitializer hasAuthSession={hasAuthSession} />
+      <StoreInitializer />
       <ScrollToTop />
       <ToastContainer />
-      <div className="flex min-h-screen flex-col pt-14">
-        <Header initialHasAuthSession={hasAuthSession} />
+      <div className="flex min-h-screen flex-col pt-[52px]">
+        <Header />
         <div className="flex flex-1 max-w-[1440px] mx-auto w-full">
-          <Sidebar initialHasAuthSession={hasAuthSession} />
-          <main className="flex-1 min-w-0 p-4 pb-20 lg:pb-4 [overflow-anchor:none] [scroll-behavior:smooth] [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch]">{children}</main>
+          <Sidebar />
+          <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-visible px-2.5 py-2.5 pb-[72px] sm:px-3 lg:px-4 lg:py-3 lg:pb-4 [overflow-anchor:none] [scroll-behavior:smooth] [-webkit-overflow-scrolling:touch]">{children}</main>
         </div>
         <Footer />
-        <MobileBottomNav initialHasAuthSession={hasAuthSession} />
+        <MobileBottomNav />
       </div>
     </NextIntlClientProvider>
   );

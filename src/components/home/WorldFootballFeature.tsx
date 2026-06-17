@@ -54,11 +54,11 @@ export function WorldFootballFeature({
   };
 
   return (
-    <section className="relative overflow-hidden rounded-xl border border-gray-800 bg-[#0b0f16] md:rounded-2xl">
+    <section className="relative max-w-full overflow-hidden rounded-xl border border-gray-800 bg-[#0b0f16]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(34,211,238,0.16),transparent_30%),radial-gradient(circle_at_80%_30%,rgba(245,158,11,0.12),transparent_28%),radial-gradient(circle_at_45%_90%,rgba(16,185,129,0.12),transparent_32%)]" />
-      <div className="relative grid gap-4 p-4 md:grid-cols-[minmax(0,1fr)_390px] md:gap-6 md:p-6 lg:p-7">
+      <div className="relative grid min-w-0 gap-3 p-3 md:grid-cols-[minmax(0,1fr)_320px] md:gap-4 md:p-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex min-w-0 flex-col justify-center">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
             <Badge variant="gold" size="sm" className="md:px-3 md:py-1 md:text-xs">
               {t("eyebrow")}
             </Badge>
@@ -67,20 +67,36 @@ export function WorldFootballFeature({
             </Badge>
           </div>
 
-          <h2 className="font-display text-xl font-bold leading-tight text-white md:text-3xl">
+          <h2
+            className="min-w-0 max-w-full truncate font-display text-base font-bold leading-tight text-white sm:overflow-visible sm:whitespace-normal md:text-xl"
+            style={{
+              width: "min(100%, calc(100vw - 4.5rem))",
+              overflowWrap: "anywhere",
+              whiteSpace: "normal",
+              wordBreak: "break-word",
+            }}
+          >
             {t("title")}
           </h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-400 md:mt-3 md:text-base mb-5">
+          <p
+            className="mb-3 mt-1.5 hidden max-w-full truncate text-xs leading-5 text-gray-400 sm:block sm:overflow-visible sm:whitespace-normal md:max-w-2xl md:text-[13px]"
+            style={{
+              width: "min(100%, calc(100vw - 4.5rem))",
+              overflowWrap: "anywhere",
+              whiteSpace: "normal",
+              wordBreak: "break-word",
+            }}
+          >
             {t("description")}
           </p>
 
           {/* Interactive World Cup Live Centre */}
-          <div className="w-full rounded-xl border border-gray-800/80 bg-black/30 p-4 shadow-[0_0_24px_rgba(34,211,238,0.04)] mb-5">
-            <div className="flex border-b border-gray-800/80 mb-4">
+          <div className="mb-3 w-full min-w-0 rounded-lg border border-gray-800/80 bg-black/30 p-2.5 shadow-[0_0_18px_rgba(34,211,238,0.035)] md:p-3">
+            <div className="mb-3 flex border-b border-gray-800/80">
               <button
                 type="button"
                 onClick={() => setActiveTab("matches")}
-                className={`pb-2 px-4 font-display text-sm font-bold border-b-2 transition-all relative cursor-pointer ${
+                className={`relative cursor-pointer border-b-2 px-3 pb-2 font-display text-xs font-bold transition-all ${
                   activeTab === "matches"
                     ? "text-cyan-400 border-cyan-400"
                     : "text-gray-400 border-transparent hover:text-white"
@@ -94,7 +110,7 @@ export function WorldFootballFeature({
               <button
                 type="button"
                 onClick={() => setActiveTab("standings")}
-                className={`pb-2 px-4 font-display text-sm font-bold border-b-2 transition-all cursor-pointer ${
+                className={`cursor-pointer border-b-2 px-3 pb-2 font-display text-xs font-bold transition-all ${
                   activeTab === "standings"
                     ? "text-cyan-400 border-cyan-400"
                     : "text-gray-400 border-transparent hover:text-white"
@@ -105,22 +121,22 @@ export function WorldFootballFeature({
             </div>
 
             {activeTab === "matches" ? (
-              <div className="flex flex-col gap-2 max-h-[260px] overflow-y-auto pr-1 scrollbar-thin">
+              <div className="flex max-h-[220px] flex-col gap-1.5 overflow-y-auto pr-1 scrollbar-thin">
                 {wcTodayMatches.length > 0 ? (
                   wcTodayMatches.map((match) => (
                     <Link
                       key={match.id}
                       href={`/${locale}/matches/detail/${match.id}`}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-gray-800/60 bg-black/20 hover:bg-black/40 hover:border-cyan-500/35 hover:shadow-[0_0_12px_rgba(34,211,238,0.1)] transition-all duration-200"
+                      className="grid min-w-0 grid-cols-1 gap-1.5 rounded-md border border-gray-800/60 bg-black/20 p-2 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:flex sm:items-center sm:justify-between"
                     >
                       {/* Home team */}
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className="flex min-w-0 flex-1 items-center gap-2">
                         <ApiTeamLogo name={match.home.name} logo={match.home.logo} size="xs" />
                         <span className="text-xs font-semibold text-gray-300 truncate">{match.home.name}</span>
                       </div>
 
                       {/* Score or time */}
-                      <div className="flex flex-col items-center px-3 shrink-0">
+                      <div className="flex shrink-0 flex-col items-start justify-center px-0 sm:items-center sm:px-3">
                         <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-black/50 border border-gray-800 text-white min-w-[56px] text-center">
                           {formatScore(match.score, formatMatchTimeWithZone(match.kickoffTime))}
                         </span>
@@ -134,15 +150,15 @@ export function WorldFootballFeature({
                       </div>
 
                       {/* Away team */}
-                      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end text-right">
-                        <span className="text-xs font-semibold text-gray-300 truncate">{match.away.name}</span>
+                      <div className="flex min-w-0 flex-1 items-center gap-2 text-left sm:justify-end sm:text-right">
+                        <span className="text-xs font-semibold text-gray-300 truncate sm:order-1">{match.away.name}</span>
                         <ApiTeamLogo name={match.away.name} logo={match.away.logo} size="xs" />
                       </div>
                     </Link>
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
-                    <Calendar className="h-8 w-8 text-gray-700 mb-2" />
+                    <Calendar className="mb-2 h-7 w-7 text-gray-700" />
                     <p className="text-xs font-medium">{t("noMatches")}</p>
                     <Link
                       href={`/${locale}/world-cup-2026`}
@@ -154,7 +170,7 @@ export function WorldFootballFeature({
                 )}
               </div>
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2.5">
                 {/* Group selector pills */}
                 <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
                   {wcGroups.map((group) => (
@@ -162,7 +178,7 @@ export function WorldFootballFeature({
                       key={group.id}
                       type="button"
                       onClick={() => setSelectedGroupId(group.id)}
-                      className={`grid place-items-center h-7 w-7 rounded font-mono text-[11px] font-black border transition-all shrink-0 cursor-pointer ${
+                      className={`grid h-6 w-6 shrink-0 cursor-pointer place-items-center rounded border font-mono text-[10px] font-black transition-all ${
                         selectedGroupId === group.id
                           ? "border-cyan-400 bg-cyan-400 text-black shadow-[0_0_8px_rgba(34,211,238,0.25)]"
                           : "border-gray-800 bg-black/45 text-gray-400 hover:border-gray-700 hover:text-white"
@@ -176,14 +192,14 @@ export function WorldFootballFeature({
                 {/* Standings table */}
                 {selectedGroup && (
                   <div className="overflow-hidden rounded-lg border border-gray-800 bg-black/10">
-                    <table className="w-full text-left border-collapse text-xs">
+                    <table className="w-full border-collapse text-left text-[11px]">
                       <thead>
                         <tr className="border-b border-gray-800 text-[10px] uppercase font-bold text-gray-500 bg-white/[0.01]">
-                          <th className="py-2 px-3 w-8 text-center">#</th>
-                          <th className="py-2 px-2">{tWc("team")}</th>
-                          <th className="py-2 px-2 w-10 text-center">{tWc("played")}</th>
-                          <th className="py-2 px-2 w-10 text-center">{tWc("goalDifference")}</th>
-                          <th className="py-2 px-3 w-12 text-center text-cyan-400 font-bold">{tWc("points")}</th>
+                          <th className="w-8 px-2 py-1.5 text-center">#</th>
+                          <th className="px-2 py-1.5">{tWc("team")}</th>
+                          <th className="w-9 px-2 py-1.5 text-center">{tWc("played")}</th>
+                          <th className="w-9 px-2 py-1.5 text-center">{tWc("goalDifference")}</th>
+                          <th className="w-10 px-2 py-1.5 text-center font-bold text-cyan-400">{tWc("points")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -192,10 +208,10 @@ export function WorldFootballFeature({
                             key={team.name}
                             className="border-b border-gray-900/60 last:border-0 hover:bg-white/[0.02] transition-colors"
                           >
-                            <td className="py-2 px-3 text-center font-mono font-bold text-gray-500">
+                            <td className="px-2 py-1.5 text-center font-mono font-bold text-gray-500">
                               {idx + 1}
                             </td>
-                            <td className="py-2 px-2 font-medium">
+                            <td className="px-2 py-1.5 font-medium">
                               {team.providerId ? (
                                 <Link
                                   href={`/${locale}/football/teams/${team.providerId}`}
@@ -211,15 +227,15 @@ export function WorldFootballFeature({
                                 </div>
                               )}
                             </td>
-                            <td className="py-2 px-2 text-center font-mono text-gray-400">
+                            <td className="px-2 py-1.5 text-center font-mono text-gray-400">
                               {team.played ?? 0}
                             </td>
-                            <td className="py-2 px-2 text-center font-mono text-gray-400">
+                            <td className="px-2 py-1.5 text-center font-mono text-gray-400">
                               {team.goalDifference != null && team.goalDifference > 0
                                 ? `+${team.goalDifference}`
                                 : team.goalDifference ?? 0}
                             </td>
-                            <td className="py-2 px-3 text-center font-mono font-bold text-cyan-300">
+                            <td className="px-2 py-1.5 text-center font-mono font-bold text-cyan-300">
                               {team.points ?? 0}
                             </td>
                           </tr>
@@ -235,7 +251,7 @@ export function WorldFootballFeature({
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/${locale}/world-cup-2026`}
-              className="group inline-flex items-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-200 transition-all duration-200 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white"
+              className="group inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/35 bg-cyan-400/10 px-2.5 py-1.5 text-[11px] font-semibold text-cyan-200 transition-colors duration-150 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white"
             >
               <Rows3 size={16} className="relative" />
               <span className="relative">{t("ctaGroups")}</span>
@@ -248,13 +264,13 @@ export function WorldFootballFeature({
         </div>
 
         {/* Right Panel: Globe & Host Info Showcase */}
-        <div className="relative min-h-[310px] overflow-hidden rounded-xl border border-gray-800 bg-[#070a10] md:min-h-[430px]">
+        <div className="relative min-h-[240px] overflow-hidden rounded-lg border border-gray-800 bg-[#070a10] md:min-h-[320px]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_22%,rgba(245,158,11,0.24),transparent_24%),radial-gradient(circle_at_22%_68%,rgba(239,68,68,0.18),transparent_25%),radial-gradient(circle_at_78%_66%,rgba(16,185,129,0.2),transparent_27%),linear-gradient(rgba(34,211,238,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.06)_1px,transparent_1px)] bg-[size:100%_100%,100%_100%,100%_100%,32px_32px,32px_32px]" />
-          <div className="absolute left-1/2 top-[43%] h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.22),rgba(34,211,238,0.14)_26%,rgba(16,185,129,0.12)_52%,rgba(10,10,15,0.92)_76%)] shadow-[0_0_50px_rgba(34,211,238,0.22)] world-football-globe md:top-[45%] md:h-64 md:w-64 md:shadow-[0_0_70px_rgba(34,211,238,0.24)]" />
-          <div className="absolute left-1/2 top-[43%] h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-cyan-300/22 world-football-orbit md:top-[45%] md:h-72 md:w-72" />
-          <div className="absolute left-1/2 top-[43%] h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-amber-300/18 world-football-orbit-slow md:top-[45%] md:h-[23rem] md:w-[23rem]" />
+          <div className="absolute left-1/2 top-[43%] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.22),rgba(34,211,238,0.14)_26%,rgba(16,185,129,0.12)_52%,rgba(10,10,15,0.92)_76%)] shadow-[0_0_42px_rgba(34,211,238,0.2)] world-football-globe md:top-[45%] md:h-52 md:w-52 md:shadow-[0_0_58px_rgba(34,211,238,0.22)]" />
+          <div className="absolute left-1/2 top-[43%] h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-cyan-300/22 world-football-orbit md:top-[45%] md:h-60 md:w-60" />
+          <div className="absolute left-1/2 top-[43%] h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-amber-300/18 world-football-orbit-slow md:top-[45%] md:h-72 md:w-72" />
           <div className="absolute inset-x-8 bottom-7 h-16 rounded-full bg-[radial-gradient(ellipse,rgba(34,211,238,0.22),transparent_70%)] blur-xl md:bottom-8 md:h-20" />
-          <div className="world-cup-logo-aura absolute left-1/2 top-[43%] z-10 flex h-52 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/10 bg-black/20 p-1.5 shadow-[0_0_38px_rgba(245,158,11,0.22)] md:top-[47%] md:h-[22rem] md:w-64 md:rounded-3xl md:p-2 md:shadow-[0_0_55px_rgba(245,158,11,0.24)]">
+          <div className="world-cup-logo-aura absolute left-1/2 top-[43%] z-10 flex h-44 w-32 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/10 bg-black/20 p-1.5 shadow-[0_0_34px_rgba(245,158,11,0.2)] md:top-[47%] md:h-64 md:w-48 md:p-2 md:shadow-[0_0_46px_rgba(245,158,11,0.22)]">
             <div className="absolute -inset-1 rounded-2xl bg-[conic-gradient(from_140deg,rgba(239,68,68,0.16),rgba(34,211,238,0.2),rgba(16,185,129,0.18),rgba(245,158,11,0.16),rgba(239,68,68,0.16))] opacity-80 blur-sm world-cup-logo-ring md:rounded-3xl" />
             <div className="absolute inset-0 rounded-2xl bg-[linear-gradient(120deg,transparent,rgba(255,255,255,0.22),transparent)] world-cup-logo-shine md:rounded-3xl" />
             <Image

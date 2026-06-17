@@ -24,6 +24,10 @@
     "noGambling": "No cash withdrawal. No real money gambling.",
     "loading": "Loading...",
     "error": "Something went wrong",
+    "errorDescription": "This section could not be loaded right now. Please try again.",
+    "notFound": "Page not found",
+    "notFoundDescription": "The page may have moved, been removed, or does not exist.",
+    "backHome": "Back home",
     "retry": "Retry",
     "save": "Save",
     "cancel": "Cancel",
@@ -70,7 +74,9 @@
     "events": "Events",
     "contactTeam": "Contact Us",
     "stats": "Statistics",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "auth": {
     "login": "Log In",

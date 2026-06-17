@@ -7,7 +7,6 @@ import {
   ApiClientError,
   clearStoredAuthToken,
   getStoredAuthToken,
-  setStoredAuthTokens,
   suppressAuthSessionExpired,
   type ApiSuccess,
   type ApiRequestOptions,
@@ -337,21 +336,11 @@ export async function registerApp(
   body: RegisterAppRequest,
   options: ApiRequestOptions & { remember?: boolean; persistToken?: boolean } = {}
 ) {
-  const response = await localAuthPost<RegisterAppData | ApiSuccess<RegisterAppData>, RegisterAppRequest>(
+  return localAuthPost<RegisterAppData | ApiSuccess<RegisterAppData>, RegisterAppRequest>(
     "/api/auth/register",
     body,
     withBodyLocale(body, options)
   );
-  const tokens = extractAuthTokens(response);
-
-  if (options.persistToken !== false && tokens?.accessToken) {
-    setStoredAuthTokens(
-      tokens.accessToken,
-      options.remember ?? true
-    );
-  }
-
-  return response;
 }
 
 export async function login(
@@ -363,20 +352,8 @@ export async function login(
     body,
     options
   );
-  const token = response.data?.access_token ?? response.data?.tokens?.accessToken;
   if (response.data?.user) {
     response.data.user = normalizeCurrentUserData(response.data.user) as NonNullable<LoginData["user"]>;
-  }
-
-  if (!token) {
-    throw new Error("Login response did not include an access token");
-  }
-
-  if (options.persistToken !== false) {
-    setStoredAuthTokens(
-      token,
-      options.remember ?? body.rememberMe ?? true
-    );
   }
 
   return response;
@@ -543,10 +520,6 @@ function withBodyLocale<T extends { language?: string; locale?: string }>(
     ...options,
     locale: options?.locale ?? body.language ?? body.locale,
   };
-}
-
-function extractAuthTokens(response: RegisterAppData | ApiSuccess<RegisterAppData>) {
-  return "success" in response ? response.data?.tokens : response.tokens;
 }
 
 function normalizeCurrentUserResponse(response: CurrentUserResponse): CurrentUserResponse {

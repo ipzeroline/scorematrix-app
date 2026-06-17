@@ -21,13 +21,14 @@ export function Modal({
   size = "md",
 }: ModalProps) {
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
     if (open) {
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [open]);
 

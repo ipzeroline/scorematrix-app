@@ -450,14 +450,14 @@ export function PredictApi() {
   }, [selectedPrediction]);
 
   useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+
     if (selectedPrediction) {
       document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
     }
 
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, [selectedPrediction]);
 
@@ -1136,7 +1136,7 @@ export function PredictApi() {
                             <div className="text-sm font-semibold text-white truncate">{tier.name}</div>
                             <div className="mt-1 text-xs text-gray-400 wrap-break-word whitespace-normal">{tier.description}</div>
                           </div>
-                          <div className="text-right text-sm font-mono text-white min-w-22">
+                          <div className="min-w-[5.5rem] text-right font-mono text-sm text-white">
                             <div>Base: {tier.basePoints}</div>
                             <div>Bonus: {tier.bonusPoints}</div>
                             <div className="font-semibold">Total: {tier.totalPoints}</div>

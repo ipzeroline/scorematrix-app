@@ -36,8 +36,9 @@ Locale shell:
 - Valid locales from `src/i18n.ts`: `th`, `en`, `lo`, `my`, `km`, `zh`
 - Default locale: `th`
 - Layout wraps pages with `NextIntlClientProvider`, `Header`, `Sidebar`, `Footer`, `MobileBottomNav`, `ToastContainer`
-- Locale layout reads auth cookies with `cookies()` and passes the initial session hint to `Header`, so locale routes are dynamic and the navbar does not flash guest auth buttons before Zustand rehydrates.
+- Locale layout no longer reads auth cookies, avoiding a layout-level dynamic runtime dependency. Header session state is hydrated through the lightweight same-origin `/api/auth/session` probe and member BFF calls. Do not add `generateStaticParams()` at the locale layout level unless every child route can be safely prerendered for all locales.
 - Locale layout reserves top padding for the fixed `Header`; mobile footer navigation is fixed at the viewport bottom.
+- Locale routes include shared skeleton loading, member-route skeleton loading, retryable error, and localized not-found fallbacks.
 
 Main pages:
 
@@ -77,14 +78,14 @@ API routes:
 - `next.config.ts`
   - Uses `next-intl/plugin` with `./src/i18n/request.ts`
   - Disables `poweredByHeader`
-  - Disables Next.js image optimization caching and allows remote images from `https://media.api-sports.io`
+  - Enables Next.js image optimization with AVIF/WebP output and allows remote images from `https://media.api-sports.io`
   - Disables generated ETags
-  - Adds security headers globally: DNS prefetch, nosniff, strict referrer policy, HSTS, frame denial, restricted permissions policy, and cross-origin opener policy
-  - Applies no-store headers to dynamic app/API data routes while leaving public/static/media assets cacheable
-- `src/app/layout.tsx` forces dynamic rendering, `force-no-store` fetch behavior, and zero revalidation for every App Router page.
+  - Adds security headers globally: DNS prefetch, nosniff, strict referrer policy, HSTS, frame denial, restricted permissions policy, cross-origin opener policy, and a baseline CSP compatible with the current inline JSON-LD/Tailwind usage
+  - Applies no-store headers only to protected member routes, auth pages, realtime match/live score routes, auth/data APIs, and football data APIs while leaving general public locale pages and static/media assets cacheable
+- `src/app/layout.tsx` no longer forces global dynamic/no-store behavior. Individual locale pages, API routes, and realtime football routes keep explicit dynamic/no-store settings where freshness is required.
 - `src/app/layout.tsx`
   - Imports `src/styles/globals.css`
-  - Uses `Inter` from `next/font/google`, plus custom `@font-face` `AuraSans` (Noto Sans Thai subset) as the primary font for all languages
+  - Uses `Inter` and `Noto_Sans_Thai` from `next/font/google`; global CSS maps the generated font variables into the project font stack
   - Defines base metadata and JSON-LD website schema
 - `src/lib/json-ld.ts` provides `serializeJsonLd()` for structured-data scripts so `<` is escaped before insertion through `dangerouslySetInnerHTML`.
 - `src/app/globals.css` exists but is not imported by the active root layout
@@ -189,7 +190,7 @@ Local API modules:
 
 - `src/lib/backend-api-urls.ts`: server-only URL builder for the two backend env variables; strips duplicate leading/trailing namespace segments before producing URLs with exactly one `/soccer` or `/scorm`.
 - `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, access-token cookie helpers, locale headers, and expired-token refresh-and-retry through same-origin `POST /api/auth/refresh`. General data requests use same-origin `/api/data/**`, which proxies to `API_DATA_BASE_URL`. Auth token cookie name is `scorematrix-auth-token` and its persistent cookie cap matches the 15-minute access-token lifetime; the browser-readable `scorematrix-refresh-session` cookie is only a non-secret remember-me marker. Generic 401, token-expired, and missing-token payloads receive one refresh/retry attempt, allowing legacy refresh cookies to migrate to HttpOnly on their next rotation. If refresh fails, it clears client auth state, asks the auth BFF to clear the HttpOnly refresh cookie, and dispatches a client session-expired event.
-- `src/lib/auth-session-server.ts`: server-only auth BFF helpers for scorm backend requests, same-origin mutation checks, refresh-token extraction/redaction, and rotating `scorematrix-refresh-token` HttpOnly/Secure/SameSite=Strict cookie management. Refresh cookies are capped at the backend refresh-token lifetime of one hour.
+- `src/lib/auth-session-server.ts`: server-only auth BFF helpers for scorm backend requests, same-origin mutation checks, token extraction/redaction, and rotating `scorematrix-auth-token` plus `scorematrix-refresh-token` HttpOnly/Secure/SameSite=Strict cookie management. Access cookies are capped at 15 minutes and refresh cookies at one hour.
 - `src/lib/auth-guard.ts`: shared auth route guard. Protected routes include leaderboard, missions, events, rewards, stats, affiliate, leagues, profile, wallet, settings, and notifications.
 - `src/lib/auth-api.ts`: typed wrappers for auth/member endpoints from the API reference. `GET/PATCH /users/me` responses are normalized from production snake_case stats/preferences into the camelCase fields used by the UI.
 - `src/lib/checkins-api.ts`: typed wrapper for `GET /checkins/rewards` and `POST /checkins`; the homepage `DailyCheckIn` loads the daily reward schedule from the backend, submits check-ins before updating local streak/points, and shows backend error messages through toast and inline copy.
@@ -205,8 +206,9 @@ Local API modules:
 - `src/lib/stats-api.ts`: typed wrapper for `GET /stats/accuracy`; the `/stats` dashboard maps API `overall`, `trend`, and `leagueBreakdown` data into the existing summary cards and charts.
 - `src/lib/soccer-api.ts`: typed client wrapper for local `/api/football/teams`, which proxies soccer backend `GET /teams`; the local route returns normalized `teams` groups for favorite-team selection while preserving the backend `data` payload.
 - `src/components/auth/FavoriteTeamSelect.tsx`: grouped team selector for registration, grouped by league and showing league/team logos.
-- `src/app/[locale]/(public)/auth/register/page.tsx`: server wrapper for the register route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/RegisterAction JSON-LD, and renders `RegisterClient`. `RegisterClient` submits through same-origin `POST /api/auth/register`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, and the client loads favorite teams from `GET /teams`.
-- `src/app/[locale]/(public)/auth/login/page.tsx`: server wrapper for the login route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/LoginAction JSON-LD, and renders `LoginClient`. `LoginClient` submits through same-origin `POST /api/auth/login`; the BFF stores the refresh token as HttpOnly while `auth-api` stores the returned access token, then the client updates `useUserStore` and redirects to locale home or `next` target.
+- `src/app/[locale]/(public)/auth/register/page.tsx`: server wrapper for the register route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/RegisterAction JSON-LD, and renders `RegisterClient`. `RegisterClient` submits through same-origin `POST /api/auth/register`; the BFF stores access and refresh tokens as HttpOnly cookies, strips tokens from browser-visible JSON, and the client loads favorite teams from `GET /teams`.
+- `src/app/[locale]/(public)/auth/login/page.tsx`: server wrapper for the login route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/LoginAction JSON-LD, and renders `LoginClient`. `LoginClient` submits through same-origin `POST /api/auth/login`; the BFF stores access and refresh tokens as HttpOnly cookies, strips tokens from browser-visible JSON, then the client updates `useUserStore` and redirects to locale home or `next` target.
+- `src/app/api/auth/session/route.ts`: no-store same-origin session probe used by the header to discover HttpOnly-cookie sessions without making the locale layout dynamic.
 - `src/components/layout/UserMenu.tsx`: profile dropdown logout calls same-origin `POST /api/auth/logout`, which forwards backend logout and clears the HttpOnly refresh session; the client then clears its access token/user store and redirects to locale home.
 - `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login after a 3-second delay with `next` set to the current URL.
 - `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.

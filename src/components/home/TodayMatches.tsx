@@ -66,31 +66,31 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       : matches.filter((m) => m.league === activeTab);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* Section heading */}
-      <div className="today-matches-heading relative overflow-hidden rounded-2xl border border-cyan-300/25 bg-[#081017] px-4 py-3.5 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+      <div className="today-matches-heading relative overflow-hidden rounded-lg border border-cyan-300/20 bg-[#081017] px-3 py-2.5 shadow-[0_12px_34px_rgba(0,0,0,0.24)]">
         <div className="today-matches-heading-scan absolute inset-0" />
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-sky-300 to-lime-300" />
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-          <span className="today-matches-icon grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-200">
+          <span className="today-matches-icon grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-cyan-300/30 bg-cyan-300/10 text-cyan-200">
             <CalendarDays
-              size={20}
+              size={17}
               strokeWidth={2.2}
               className="drop-shadow-[0_0_8px_rgba(34,211,238,0.75)]"
               aria-hidden="true"
             />
           </span>
             <div className="min-w-0">
-              <h2 className="truncate bg-gradient-to-r from-cyan-200 via-sky-100 to-white bg-clip-text text-xl font-black leading-tight text-transparent drop-shadow-[0_0_14px_rgba(34,211,238,0.28)]">
+              <h2 className="truncate bg-gradient-to-r from-cyan-200 via-sky-100 to-white bg-clip-text text-base font-black leading-tight text-transparent drop-shadow-[0_0_12px_rgba(34,211,238,0.22)] md:text-lg">
                 {t("dashboard.todayMatches")}
               </h2>
-              <p className="truncate text-xs font-semibold text-cyan-100/70">
+              <p className="truncate text-[11px] font-semibold text-cyan-100/70">
                 {t("dashboard.matchCount", { count: matches.length })}
               </p>
             </div>
           </div>
-          <span className="hidden items-center gap-1.5 rounded-xl border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold text-cyan-100 sm:inline-flex">
+          <span className="hidden items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/10 px-2.5 py-1 text-[11px] font-bold text-cyan-100 sm:inline-flex">
             <ListFilter size={14} aria-hidden="true" />
             {leagueTabs.length}
           </span>
@@ -98,12 +98,12 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide rounded-2xl border border-white/10 bg-[#0b111d] p-2">
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide rounded-lg border border-white/10 bg-[#0b111d] p-1">
         {leagueTabs.map((league) => (
           <button
             key={`league-tab-${league.name}`}
             onClick={() => setActiveTab(league.name)}
-            className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-bold whitespace-nowrap transition-colors duration-150 ${
               activeTab === league.name
                 ? "border-cyan-300/35 bg-cyan-300/15 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.12)]"
                 : "border-white/10 bg-black/20 text-gray-400 hover:border-cyan-300/25 hover:text-gray-200"
@@ -119,22 +119,22 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
 
       {/* Match List (Table Rows) */}
       {filtered.length === 0 ? (
-        <Card className="rounded-2xl border-cyan-300/15 bg-[#0b111d] p-5 text-sm font-semibold text-gray-400">
+        <Card className="rounded-lg border-cyan-300/15 bg-[#0b111d] p-4 text-xs font-semibold text-gray-400">
           {t("livescore.noMatches")}
         </Card>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#080d16] shadow-[0_18px_55px_rgba(0,0,0,0.28)]">
+        <div className="overflow-hidden rounded-lg border border-cyan-300/15 bg-[#080d16] shadow-[0_12px_36px_rgba(0,0,0,0.24)]">
           {filtered.map((match) => (
             <Link
               key={match.id}
               href={`/${locale}/matches/detail/${match.id}`}
-              className="group block border-b border-white/10 px-3.5 py-3 transition-all duration-150 last:border-b-0 hover:bg-cyan-300/[0.06] sm:px-4"
+              className="group block border-b border-white/10 px-2.5 py-2 transition-colors duration-150 last:border-b-0 hover:bg-cyan-300/[0.06] sm:px-3"
             >
-              <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <div className="grid min-w-0 grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-1.5 sm:flex sm:justify-between sm:gap-3">
                 {/* Left: Time and League */}
-                <div className="flex items-center gap-2 sm:gap-3 w-[55px] sm:w-1/4 shrink-0 min-w-0">
+                <div className="flex min-w-0 shrink-0 items-center gap-2 sm:w-1/4 sm:gap-3">
                   <div className="flex flex-col gap-0.5 min-w-[50px] sm:min-w-[70px]">
-                    <span className="text-sm font-black text-cyan-200">
+                    <span className="text-[11px] font-black text-cyan-200 sm:text-xs">
                       {match.kickoffTime}
                     </span>
                     <span className="hidden truncate text-[10px] font-semibold text-gray-500 sm:block">
@@ -150,18 +150,18 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                 </div>
 
                 {/* Center: Teams and Score/VS */}
-                <div className="flex items-center justify-center gap-2 sm:gap-3 flex-1 min-w-0 px-1">
+                  <div className="flex min-w-0 flex-1 items-center justify-center gap-1 px-1 sm:gap-2.5">
                   {/* Home team */}
                   <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-right">
-                    <span className="truncate text-xs font-bold text-gray-200 transition-colors group-hover:text-white sm:text-sm">
+                    <span className="truncate text-[10px] font-bold text-gray-200 transition-colors group-hover:text-white sm:text-[13px]">
                       {match.homeTeam}
                     </span>
                     <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="xs" />
                   </div>
 
                   {/* Score or VS Box */}
-                  <div className="shrink-0 min-w-[54px] sm:min-w-[64px] text-center">
-                    <span className="inline-block rounded-lg border border-cyan-300/20 bg-black/40 px-2 py-1 text-[10px] font-black text-white transition-colors group-hover:border-cyan-300/40 sm:px-2.5 sm:text-xs">
+                  <div className="shrink-0 min-w-[48px] text-center sm:min-w-[58px]">
+                    <span className="inline-block rounded-md border border-cyan-300/20 bg-black/40 px-1.5 py-0.5 text-[10px] font-black text-white transition-colors group-hover:border-cyan-300/40 sm:px-2 sm:text-[11px]">
                       {formatScore(match, t("common.vs"))}
                     </span>
                   </div>
@@ -169,18 +169,18 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                   {/* Away team */}
                   <div className="flex items-center justify-start gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-left">
                     <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="xs" />
-                    <span className="truncate text-xs font-bold text-gray-200 transition-colors group-hover:text-white sm:text-sm">
+                    <span className="truncate text-[10px] font-bold text-gray-200 transition-colors group-hover:text-white sm:text-[13px]">
                       {match.awayTeam}
                     </span>
                   </div>
                 </div>
 
                 {/* Right: Status and Chevron Link */}
-                <div className="flex items-center justify-end gap-2 sm:gap-3 w-[75px] sm:w-1/4 shrink-0 min-w-0">
+                <div className="hidden min-w-0 shrink-0 items-center justify-end gap-2 sm:flex sm:w-1/4 sm:gap-3">
                   <StatusBadge
                     status={match.status}
                     label={match.statusLabel}
-                    className="text-[9px] sm:text-[10px] shrink-0"
+                    className="text-[9px] shrink-0"
                   />
                   <div className="hidden sm:flex h-6 w-6 items-center justify-center rounded border border-border bg-black/20 group-hover:border-cyan-500/40 group-hover:text-cyan-300 transition-colors">
                     <ChevronRight size={12} className="text-gray-500 group-hover:text-cyan-300 transition-colors" />

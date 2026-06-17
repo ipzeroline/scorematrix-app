@@ -9,6 +9,7 @@ import {
 import { getDataApiUrl } from "@/lib/backend-api-urls";
 
 const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60;
+const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
 
 export type AuthTokens = {
   accessToken?: string;
@@ -82,9 +83,15 @@ export function stripRefreshToken(payload: unknown) {
   const sanitized = structuredClone(payload);
   if (!isRecord(sanitized.data)) return sanitized;
 
+  delete sanitized.data.accessToken;
+  delete sanitized.data.access_token;
   delete sanitized.data.refreshToken;
+  delete sanitized.data.refresh_token;
   if (isRecord(sanitized.data.tokens)) {
+    delete sanitized.data.tokens.accessToken;
+    delete sanitized.data.tokens.access_token;
     delete sanitized.data.tokens.refreshToken;
+    delete sanitized.data.tokens.refresh_token;
   }
 
   return sanitized;
@@ -127,8 +134,25 @@ export async function setRefreshSession(refreshToken: string, remember: boolean)
   );
 }
 
+export async function setAccessSession(accessToken: string, remember: boolean) {
+  const cookieStore = await cookies();
+  cookieStore.set(AUTH_TOKEN_COOKIE_NAME, accessToken, {
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    httpOnly: true,
+    priority: "high",
+    maxAge: remember ? ACCESS_TOKEN_MAX_AGE_SECONDS : undefined,
+  });
+}
+
+export async function getAccessToken() {
+  return (await cookies()).get(AUTH_TOKEN_COOKIE_NAME)?.value ?? null;
+}
+
 export async function clearRefreshSession() {
   const cookieStore = await cookies();
+  cookieStore.delete(AUTH_TOKEN_COOKIE_NAME);
   cookieStore.delete(REFRESH_TOKEN_COOKIE_NAME);
   cookieStore.delete(REFRESH_SESSION_COOKIE_NAME);
 }

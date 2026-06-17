@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { cache } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -44,6 +45,11 @@ import { hasAuthSession } from "@/lib/auth-session-server";
 import { MatchStatus } from "@/types/common";
 import { cn, formatDate, formatTime } from "@/lib/utils";
 import MatchTabsClient from "./MatchTabsClient";
+
+const getFixtureDetailsCached = cache((apiFixtureId: number) =>
+  getApiFootballFixtureDetails(apiFixtureId)
+);
+
 type Props = {
   params: Promise<{ locale: string; matchId: string }>;
   showJsonBox?: boolean;
@@ -93,7 +99,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   try {
-    const details = await getApiFootballFixtureDetails(apiFixtureId);
+    const details = await getFixtureDetailsCached(apiFixtureId);
     const { fixture } = details;
     const home = fixture.home.name;
     const away = fixture.away.name;
@@ -206,7 +212,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
   let loadErrorMessage: string | undefined;
 
   try {
-    const details = await getApiFootballFixtureDetails(apiFixtureId);
+    const details = await getFixtureDetailsCached(apiFixtureId);
     const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown } = details;
     const season = fixture.league.season ?? new Date().getFullYear();
 

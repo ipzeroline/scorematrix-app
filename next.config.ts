@@ -32,6 +32,11 @@ const securityHeaders = [
     key: "Cross-Origin-Opener-Policy",
     value: "same-origin",
   },
+  {
+    key: "Content-Security-Policy",
+    value:
+      "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; img-src 'self' https: data: blob:; font-src 'self' data:; connect-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'",
+  },
 ];
 
 const noStoreHeaders = [
@@ -54,7 +59,6 @@ const nextConfig: NextConfig = {
   generateEtags: false,
   images: {
     formats: ["image/avif", "image/webp"],
-    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -69,11 +73,16 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       {
-        source: "/",
+        source:
+          "/(th|en|lo|my|km|zh)/(leaderboard|missions|events|rewards|stats|affiliate|leagues|profile|settings|wallet|notifications)/:path*",
         headers: [...securityHeaders, ...noStoreHeaders],
       },
       {
-        source: "/(th|en|lo|my|km|zh)/:path*",
+        source: "/(th|en|lo|my|km|zh)/(livescore|matches)/:path*",
+        headers: [...securityHeaders, ...noStoreHeaders],
+      },
+      {
+        source: "/(th|en|lo|my|km|zh)/auth/:path*",
         headers: [...securityHeaders, ...noStoreHeaders],
       },
       {

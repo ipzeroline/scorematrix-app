@@ -112,6 +112,15 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   useEffect(() => {
     let active = true;
 
+    if (!serverAuthHint && !isLoggedIn) {
+      fetch("/api/auth/session", { cache: "no-store" })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((payload: { authenticated?: boolean } | null) => {
+          if (active && payload?.authenticated) setServerAuthHint(true);
+        })
+        .catch(() => {});
+    }
+
     queueMicrotask(() => {
       if (!active) return;
       refreshMemberInfo().catch(() => {
@@ -122,7 +131,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
     return () => {
       active = false;
     };
-  }, [refreshMemberInfo]);
+  }, [isLoggedIn, refreshMemberInfo, serverAuthHint]);
 
   useEffect(() => {
     const handleWalletRefresh = () => {
@@ -140,12 +149,16 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
     pathname.includes(`/${locale}${href}`);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-800 bg-[#0a0a0f] shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-      <div className="mx-auto flex h-14 w-full max-w-[1440px] items-center gap-2 px-2 sm:gap-4 sm:px-4">
+    <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-800 bg-[#0a0a0f]/95 shadow-[0_8px_24px_rgba(0,0,0,0.32)] backdrop-blur">
+      <div className="mx-auto flex h-[52px] w-full max-w-[1440px] items-center gap-2 px-2 sm:gap-3 sm:px-3 lg:px-4">
         {/* Mobile hamburger */}
         <button
-          className="lg:hidden p-1.5 text-gray-400 hover:text-white cursor-pointer sm:p-2"
+          type="button"
+          className="lg:hidden p-1.5 text-gray-400 hover:text-white cursor-pointer"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? t("closeMenu") : t("openMenu")}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-main-menu"
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -153,13 +166,13 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
         <Logo />
 
         {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-1 ml-4">
+        <nav className="hidden lg:flex items-center gap-0.5 ml-2">
           {visibleNavLinks.map((link) => (
             <Link
               key={link.href}
               href={`/${locale}${link.href}`}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+                "px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors",
                 isActive(link.href)
                   ? "text-cyan-400 bg-cyan-500/10"
                   : "text-gray-400 hover:text-white hover:bg-white/5"
@@ -193,7 +206,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <nav className="lg:hidden border-t border-gray-800 bg-[#12121a] p-4 animate-slide-up">
+        <nav id="mobile-main-menu" className="lg:hidden border-t border-gray-800 bg-[#111722] p-2.5 animate-slide-up">
           <div className="flex flex-col gap-1">
             {visibleNavLinks.map((link) => (
               <Link
@@ -201,7 +214,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
                 href={`/${locale}${link.href}`}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "px-3 py-2 rounded-lg text-[13px] font-medium transition-colors",
                   isActive(link.href)
                     ? "text-cyan-400 bg-cyan-500/10"
                     : "text-gray-400 hover:text-white hover:bg-white/5"

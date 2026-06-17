@@ -11,7 +11,7 @@ const BOTTOM_LINKS = [
   { href: "", label: "home", icon: Home },
   { href: "/livescore", label: "livescoreShort", icon: Activity },
   { href: "/predict", label: "predict", icon: Target },
-  { href: "/leaderboard", label: "rankShort", icon: Trophy },
+  { href: "/leaderboard", label: "rankShort", icon: Trophy, authRequired: true },
   { href: "/rewards", label: "rewards", icon: Gift, authRequired: true },
 ];
 
@@ -32,30 +32,33 @@ export function MobileBottomNav({ initialHasAuthSession = false }: MobileBottomN
   );
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const effectiveIsLoggedIn = initialHasAuthSession || (isMounted && isLoggedIn);
-  const visibleLinks = BOTTOM_LINKS.filter((link) => !link.authRequired || effectiveIsLoggedIn);
-
   const isActive = (href: string) => {
     if (href === "") return pathname === `/${locale}`;
     return pathname.startsWith(`/${locale}${href}`);
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-800 bg-[#0a0a0f] shadow-[0_-10px_30px_rgba(0,0,0,0.35)] safe-area-bottom lg:hidden">
-      <div className="mx-auto flex h-16 max-w-md items-center justify-between px-1.5">
-        {visibleLinks.map((link) => {
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gray-800 bg-[#0a0a0f]/95 shadow-[0_-8px_24px_rgba(0,0,0,0.32)] safe-area-bottom backdrop-blur lg:hidden">
+      <div className="mx-auto flex h-[60px] max-w-md items-center justify-between px-1.5">
+        {BOTTOM_LINKS.map((link) => {
           const Icon = link.icon;
-          const active = isActive(link.href);
+          const locked = Boolean(link.authRequired && !effectiveIsLoggedIn);
+          const active = !locked && isActive(link.href);
+          const href = locked
+            ? `/${locale}/auth/login?next=${encodeURIComponent(`/${locale}${link.href}`)}`
+            : `/${locale}${link.href}`;
           return (
             <Link
               key={link.href}
-              href={`/${locale}${link.href}`}
+              href={href}
+              aria-label={locked ? `${t(link.label)} locked` : undefined}
               className={cn(
                 "flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-1 py-1 transition-colors",
-                active ? "text-cyan-400" : "text-gray-500"
+                active ? "text-cyan-400" : locked ? "text-amber-300/70" : "text-gray-500"
               )}
             >
-              <Icon size={20} className="shrink-0" />
-              <span className="max-w-[76px] truncate text-[10px] font-medium leading-none">
+              <Icon size={18} className="shrink-0" />
+              <span className="max-w-[70px] truncate text-[9px] font-semibold leading-none">
                 {t(link.label)}
               </span>
             </Link>

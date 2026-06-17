@@ -74,14 +74,14 @@ export function UserMenu({
       <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
         <Link
           href={`/${locale}/auth/register`}
-          className="inline-flex max-w-[72px] items-center justify-center rounded-lg bg-cyan-500 px-2.5 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-cyan-400 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-sm"
+          className="inline-flex max-w-[76px] items-center justify-center rounded-lg bg-cyan-500 px-2.5 py-1.5 text-xs font-semibold text-black transition-colors hover:bg-cyan-400 sm:max-w-none sm:px-3 sm:py-1.5 sm:text-sm"
         >
           <span className="sm:hidden">สมัคร</span>
           <span className="hidden sm:inline">{t("auth.register")}</span>
         </Link>
         <Link
           href={`/${locale}/auth/login`}
-          className="inline-flex max-w-[92px] items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-400/50 hover:text-white sm:max-w-none sm:border-transparent sm:bg-transparent sm:px-3 sm:py-1.5 sm:text-sm sm:font-medium sm:text-gray-400"
+          className="hidden max-w-[92px] items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-2.5 py-1.5 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-400/50 hover:text-white sm:inline-flex sm:max-w-none sm:border-transparent sm:bg-transparent sm:px-3 sm:py-1.5 sm:text-sm sm:font-medium sm:text-gray-400"
         >
           <span className="truncate">{t("auth.login")}</span>
         </Link>
