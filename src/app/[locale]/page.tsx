@@ -30,6 +30,7 @@ import {
   AUTH_TOKEN_COOKIE_NAME,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "@/lib/auth-guard";
+import { getHomepageBanners } from "@/lib/banners-api";
 import { MatchStatus } from "@/types/common";
 import { getWorldCupGroups } from "./world-cup-2026/page";
 
@@ -116,6 +117,7 @@ export default async function Page({ params }: Props) {
     wcGroups,
     latestArticles,
     aiInsight,
+    banners,
   ] = await Promise.all([
     cookies(),
     loadLiveFixtures(),
@@ -123,6 +125,7 @@ export default async function Page({ params }: Props) {
     getWorldCupGroups(),
     getLatestArticles(locale, 3),
     loadFeaturedAIInsight(),
+    getHomepageBanners(),
   ]);
   const homepageFixtures = sortFixtures(todayFixtures)
     .filter((fixture) => {
@@ -203,7 +206,7 @@ export default async function Page({ params }: Props) {
     <div className="flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden pb-5 lg:gap-5">
       {/* Hero Banner */}
       <section>
-        <HeroBanner />
+        <HeroBanner banners={banners} />
       </section>
 
       {/* Daily Check-in (Full Width) */}
