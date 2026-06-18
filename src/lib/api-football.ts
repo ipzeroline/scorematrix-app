@@ -738,6 +738,17 @@ export interface GetFixtureDetailsResult {
 
 export type ApiFootballAIInsightGroup = "live" | "highConfidence" | "upsetAlert";
 
+export interface ApiFootballPredictedScore {
+  home: number | string | null;
+  away: number | string | null;
+  source?: string | null;
+  confidence?: number | null;
+  raw?: {
+    homeXg?: number | null;
+    awayXg?: number | null;
+  } | null;
+}
+
 export interface ApiFootballAIInsight {
   provider_id: number;
   status: {
@@ -779,6 +790,8 @@ export interface ApiFootballAIInsight {
     name: string;
     comment: string | null;
   } | null;
+  predictedScore?: ApiFootballPredictedScore | null;
+  apiPredictedGoals?: { home: number | string | null; away: number | string | null } | null;
   generatedAt: string | null;
   standings?: {
     home: ApiFootballAIInsightStanding | null;
@@ -975,7 +988,8 @@ export interface ApiFootballAIInsightDetail {
   apiUnderOver: string | null;
   apiWinOrDraw: boolean | null;
   apiWinner: { id: number | null; name: string | null; comment: string | null } | null;
-  apiPredictedGoals: { home: number | string | null; away: number | string | null } | null;
+  predictedScore?: ApiFootballPredictedScore | null;
+  apiPredictedGoals?: { home: number | string | null; away: number | string | null } | null;
   headToHead?: {
     fixtureId: number;
     date: string;
@@ -1123,8 +1137,33 @@ export async function getApiFootballAIInsightDetail(
 
   return {
     ...data,
+    predictedScore: data.predictedScore ?? normalizeLegacyPredictedScore(data.apiPredictedGoals),
+    apiPredictedGoals: data.apiPredictedGoals ?? normalizeLegacyPredictedGoals(data.predictedScore),
     standings: normalizeInsightStandings(data.standings),
     fixture,
+  };
+}
+
+function normalizeLegacyPredictedScore(
+  value: ApiFootballAIInsightDetail["apiPredictedGoals"]
+): ApiFootballPredictedScore | null {
+  if (!value) return null;
+  return {
+    home: value.home,
+    away: value.away,
+    source: null,
+    confidence: null,
+    raw: null,
+  };
+}
+
+function normalizeLegacyPredictedGoals(
+  value: ApiFootballPredictedScore | null | undefined
+): NonNullable<ApiFootballAIInsightDetail["apiPredictedGoals"]> | null {
+  if (!value) return null;
+  return {
+    home: value.home,
+    away: value.away,
   };
 }
 

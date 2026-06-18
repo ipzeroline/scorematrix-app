@@ -252,7 +252,7 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     probabilityBreakdown: "ความน่าจะเป็นผลการแข่งขัน",
     heatMeter: "เกมสูสีแค่ไหน",
     homeAdvantage: "เจ้าบ้านได้เปรียบ",
-    likelyScore: "สกอร์ที่คาด",
+    likelyScore: "สกอร์ที่คาดว่า",
     apiAdvice: "คำแนะนำจากโมเดล",
     winnerLean: "ทีมที่โมเดลเอนเอียง",
     winnerNote: "หมายเหตุผู้ชนะ",
@@ -538,8 +538,8 @@ export function formatScorePrediction(
   if (!value) return null;
   const home = normalizePredictedGoalValue(value.home);
   const away = normalizePredictedGoalValue(value.away);
-  if (home === null || away === null) return null;
-  return `${home} : ${away}`;
+  if (home === null && away === null) return null;
+  return `${home ?? "?"} : ${away ?? "?"}`;
 }
 
 export function formatNumber(value: number | null | undefined, locale: string) {

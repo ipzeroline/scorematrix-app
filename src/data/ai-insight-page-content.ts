@@ -29,6 +29,10 @@ export type AIInsightPageCopy = {
       heatLow: string;
       heatMid: string;
       heatHigh: string;
+      likelyScore: string;
+      predictedSource: string;
+      predictedConfidence: string;
+      expectedGoals: string;
       homeWin: string;
     draw: string;
     awayWin: string;
@@ -99,6 +103,10 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       heatLow: "🔥 ขาดลอย",
       heatMid: "🔥 เหนือกว่า",
       heatHigh: "🔥 สูสี",
+      likelyScore: "สกอร์ที่คาดว่า",
+      predictedSource: "แหล่งที่มา",
+      predictedConfidence: "ความมั่นใจสกอร์",
+      expectedGoals: "xG",
       homeWin: "เจ้าบ้านชนะ",
       draw: "เสมอ",
       awayWin: "ทีมเยือนชนะ",
@@ -174,6 +182,10 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       heatLow: "🔥 One-sided",
       heatMid: "🔥 Edge",
       heatHigh: "🔥 Tight",
+      likelyScore: "Projected score",
+      predictedSource: "Source",
+      predictedConfidence: "Score confidence",
+      expectedGoals: "xG",
       homeWin: "Home win",
       draw: "Draw",
       awayWin: "Away win",
@@ -242,6 +254,10 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       heatLow: "🔥 ຂາດລອຍ",
       heatMid: "🔥 ເໜືອກວ່າ",
       heatHigh: "🔥 ສູສີ",
+      likelyScore: "ສະກໍທີ່ຄາດ",
+      predictedSource: "ແຫຼ່ງຂໍ້ມູນ",
+      predictedConfidence: "ຄວາມໝັ້ນໃຈສະກໍ",
+      expectedGoals: "xG",
       homeWin: "ເຈົ້າບ້ານຊະນະ",
       draw: "ສະເໝີ",
       awayWin: "ທີມຢາມຊະນະ",
@@ -294,6 +310,10 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       heatLow: "🔥 အသာစီး",
       heatMid: "🔥 သာလွန်",
       heatHigh: "🔥 สูสี",
+      likelyScore: "ခန့်မှန်းစကอร์",
+      predictedSource: "Source",
+      predictedConfidence: "စကอร์ယုံကြည်မှု",
+      expectedGoals: "xG",
       homeWin: "အိမ်ရှင်နိုင်",
       draw: "သရေ",
       awayWin: "ဧည့်သည်နိုင်",
@@ -346,6 +366,10 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       heatLow: "🔥 ម្ខាងជាង",
       heatMid: "🔥 លើសបន្តិច",
       heatHigh: "🔥 ប្រកៀក",
+      likelyScore: "ពិន្ទុរំពឹងទុក",
+      predictedSource: "ប្រភព",
+      predictedConfidence: "ទំនុកចិត្តពិន្ទុ",
+      expectedGoals: "xG",
       homeWin: "ម្ចាស់ផ្ទះឈ្នះ",
       draw: "ស្មើ",
       awayWin: "ភ្ញៀវឈ្នះ",
@@ -398,6 +422,10 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       heatLow: "🔥 一边倒",
       heatMid: "🔥 略占优",
       heatHigh: "🔥 势均力敌",
+      likelyScore: "预测比分",
+      predictedSource: "来源",
+      predictedConfidence: "比分信心",
+      expectedGoals: "xG",
       homeWin: "主胜",
       draw: "平局",
       awayWin: "客胜",

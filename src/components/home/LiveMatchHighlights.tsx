@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { Activity, ChevronRight, RefreshCw } from "lucide-react";
+import { Activity, ChevronRight, RefreshCw, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -54,6 +54,8 @@ export function LiveMatchHighlights({
         .map(mapFixtureToLiveMatch),
     [currentFixtures]
   );
+  const leagueGroups = useMemo(() => groupLiveMatchesByLeague(displayMatches), [displayMatches]);
+  const labels = getBoardLabels(locale);
 
   const refreshFixtures = useCallback(async (showLoading = false) => {
     if (showLoading) setIsRefreshing(true);
@@ -147,72 +149,120 @@ export function LiveMatchHighlights({
           {t("livescore.noMatches")}
         </Card>
       ) : displayMatches.length > 0 ? (
-        <div className="overflow-hidden rounded-lg border border-lime-300/20 bg-[#080d16] shadow-[0_12px_36px_rgba(0,0,0,0.28)]">
-          {displayMatches.map((match) => (
-            <Link
-              key={match.id}
-              href={`/${locale}/livescore/match/${match.id}`}
-              className="group block border-b border-white/10 px-2.5 py-2 transition-colors duration-150 last:border-b-0 hover:bg-lime-300/[0.06] sm:px-3"
-            >
-              <div className="grid min-w-0 grid-cols-[40px_minmax(0,1fr)_44px] items-center gap-1.5 sm:flex sm:justify-between sm:gap-3">
-                {/* Left: Live Indicator & League */}
-                <div className="flex min-w-0 shrink-0 items-center gap-2 sm:w-1/4 sm:gap-3">
-                  {/* Live Indicator (green blinking dot + minute) */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="relative flex h-1.5 w-1.5 shrink-0">
-                      <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping" />
-                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
-                    </span>
-                    <span className="text-[11px] font-black text-lime-300 animate-pulse">
-                      {match.minute}&apos;
-                    </span>
-                  </div>
-                  <div className="hidden sm:flex items-center gap-1.5 min-w-0">
-                    <ApiLeagueLogo name={match.league} logo={match.leagueLogo} size="xs" />
-                    <span className="max-w-[120px] truncate text-xs font-semibold text-gray-400">
-                      {match.league}
-                    </span>
-                  </div>
-                </div>
+        <div className="overflow-hidden rounded-xl border border-lime-300/20 bg-[#070b12] shadow-[0_18px_44px_rgba(0,0,0,0.34)]">
+          <div className="hidden grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-lime-300/10 bg-[#0a101a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white md:grid">
+            <span className="pl-1">{labels.time}</span>
+            <span className="pr-3 text-right">{labels.home}</span>
+            <span className="text-center">{labels.vs}</span>
+            <span className="pl-3 text-left">{labels.away}</span>
+            <span className="pr-4 text-right">{labels.detail}</span>
+          </div>
 
-                {/* Center: Teams and Live Score */}
-                  <div className="flex min-w-0 flex-1 items-center justify-center gap-1 px-1 sm:gap-2.5">
-                  {/* Home team */}
-                  <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-right">
-                    <span className="truncate text-[10px] font-bold text-gray-200 transition-colors group-hover:text-white sm:text-[13px]">
-                      {match.homeTeam}
+          {leagueGroups.map((group) => (
+            <div key={group.name} className="border-b border-lime-300/10 last:border-b-0">
+              <div className="relative overflow-hidden border-b border-lime-300/10 bg-[linear-gradient(90deg,rgba(18,44,31,0.78),rgba(10,17,28,0.94)_62%,rgba(70,51,13,0.36))] px-5 py-3">
+                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-lime-300 via-cyan-300 to-amber-300" />
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-lime-300/20 bg-lime-300/[0.04] shadow-[0_0_20px_rgba(190,242,100,0.08)]">
+                      <ApiLeagueLogo name={group.name} logo={group.logo} size="sm" />
                     </span>
-                    <ApiTeamLogo name={match.homeTeam} logo={match.homeCrest} size="xs" />
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Trophy size={15} className="shrink-0 text-amber-300" />
+                        <h3 className="truncate text-sm font-black uppercase tracking-[0.08em] text-white md:text-[15px]">
+                          {group.name}
+                        </h3>
+                      </div>
+                      <div className="mt-1.5 h-px w-28 max-w-full rounded-full bg-gradient-to-r from-lime-300 via-cyan-300 to-transparent" />
+                    </div>
                   </div>
-
-                  {/* Live Score Box */}
-                  <div className="shrink-0 min-w-[52px] text-center sm:min-w-[64px]">
-                    <span className="inline-block rounded-md border border-lime-300/30 bg-lime-300/10 px-1.5 py-0.5 text-[11px] font-black text-lime-200 shadow-[0_0_10px_rgba(16,185,129,0.08)] transition-colors group-hover:border-lime-300/50 sm:px-2.5 sm:text-xs">
-                      {match.homeScore} - {match.awayScore}
-                    </span>
-                  </div>
-
-                  {/* Away team */}
-                  <div className="flex items-center justify-start gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-left">
-                    <ApiTeamLogo name={match.awayTeam} logo={match.awayCrest} size="xs" />
-                    <span className="truncate text-[10px] font-bold text-gray-200 transition-colors group-hover:text-white sm:text-[13px]">
-                      {match.awayTeam}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right: Live Status and Chevron Link */}
-                <div className="hidden min-w-0 shrink-0 items-center justify-end gap-2 sm:flex sm:w-1/4 sm:gap-3">
-                  <StatusBadge
-                    status={match.status}
-                    className="text-[9px] shrink-0 bg-green-500/15 text-green-300 border border-green-500/20"
-                  />
-                  <div className="hidden sm:flex h-6 w-6 items-center justify-center rounded border border-border bg-black/20 group-hover:border-green-500/30 group-hover:text-green-300 transition-colors">
-                    <ChevronRight size={12} className="text-gray-500 group-hover:text-green-300 transition-colors" />
-                  </div>
+                  <span className="shrink-0 rounded-lg border border-lime-300/20 bg-[#0b1624]/80 px-2.5 py-1.5 text-xs font-black text-lime-100">
+                    {group.matches.length} {labels.matches}
+                  </span>
                 </div>
               </div>
-            </Link>
+
+              {group.matches.map((match) => (
+                <Link
+                  key={match.id}
+                  href={`/${locale}/livescore/match/${match.id}`}
+                  className="group block border-b border-white/[0.06] bg-[#07090d] transition-colors duration-150 last:border-b-0 hover:bg-[#101a18]"
+                >
+                  <div className="hidden min-w-0 grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 md:grid">
+                    <div className="flex min-w-0 flex-col items-start justify-center gap-1 md:pl-1">
+                      <span className="inline-flex items-center gap-1.5 font-mono text-xs font-black tracking-wider text-lime-300">
+                        <span className="relative flex h-2 w-2 shrink-0">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400" />
+                        </span>
+                        {match.minute}&apos;
+                      </span>
+                      <StatusBadge
+                        status={match.status}
+                        className="w-fit shrink-0 border border-green-500/20 bg-green-500/15 text-[8px] text-green-300"
+                      />
+                    </div>
+
+                    <LiveTeamCell name={match.homeTeam} logo={match.homeCrest} align="right" />
+
+                    <div className="text-center">
+                      <span className="inline-flex min-w-[58px] items-center justify-center rounded-lg border border-lime-300/30 bg-lime-300/10 px-2.5 py-1.5 font-mono text-xs font-black tracking-wider text-lime-100 shadow-[0_0_18px_rgba(190,242,100,0.08)]">
+                        {match.homeScore} - {match.awayScore}
+                      </span>
+                      <span className="mt-1 hidden text-[10px] font-bold uppercase tracking-wider text-slate-500 md:block">
+                        LIVE
+                      </span>
+                    </div>
+
+                    <LiveTeamCell name={match.awayTeam} logo={match.awayCrest} align="left" className="hidden md:flex" />
+
+                    <div className="flex justify-end">
+                      <span className="grid h-8 w-8 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100 transition-colors group-hover:border-lime-200/50 group-hover:bg-lime-300/15">
+                        <ChevronRight size={14} />
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-l-4 border-l-lime-500/30 px-3.5 py-4 md:hidden">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-base font-black leading-none text-lime-300">
+                          <span className="relative flex h-2 w-2 shrink-0">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400" />
+                          </span>
+                          {match.minute}&apos;
+                        </div>
+                        <div className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                          LIVE
+                        </div>
+                      </div>
+                      <StatusBadge
+                        status={match.status}
+                        className="shrink-0 border border-green-500/20 bg-green-500/15 text-[10px] text-green-300"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-[minmax(0,1fr)_58px_minmax(0,1fr)] items-center gap-2.5">
+                      <LiveMobileTeamCell name={match.homeTeam} logo={match.homeCrest} />
+                      <div className="flex justify-center">
+                        <span className="grid min-h-10 min-w-12 place-items-center rounded-xl border border-lime-300/30 bg-lime-300/10 px-2 font-mono text-xs font-black text-lime-100">
+                          {match.homeScore}-{match.awayScore}
+                        </span>
+                      </div>
+                      <LiveMobileTeamCell name={match.awayTeam} logo={match.awayCrest} />
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-end border-t border-white/[0.06] pt-3">
+                      <span className="grid h-8 w-8 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100">
+                        <ChevronRight size={14} />
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           ))}
         </div>
       ) : null}
@@ -233,5 +283,91 @@ function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
     league: fixture.league.name,
     leagueLogo: fixture.league.logo,
     status: fixture.status,
+  };
+}
+
+function groupLiveMatchesByLeague(matches: LiveMatch[]) {
+  const groups = new Map<string, { name: string; logo: string | null; matches: LiveMatch[] }>();
+
+  for (const match of matches) {
+    if (!groups.has(match.league)) {
+      groups.set(match.league, {
+        name: match.league,
+        logo: match.leagueLogo,
+        matches: [],
+      });
+    }
+    groups.get(match.league)?.matches.push(match);
+  }
+
+  return [...groups.values()];
+}
+
+function LiveTeamCell({
+  name,
+  logo,
+  align,
+  className = "",
+}: {
+  name: string;
+  logo: string;
+  align: "left" | "right";
+  className?: string;
+}) {
+  const isRight = align === "right";
+
+  return (
+    <div className={`min-w-0 items-center gap-2 ${isRight ? "justify-end text-right" : "justify-start text-left"} flex ${className}`}>
+      {isRight ? (
+        <>
+          <span className="truncate text-sm font-black tracking-wide text-slate-200 transition-colors group-hover:text-white">
+            {name}
+          </span>
+          <ApiTeamLogo name={name} logo={logo} size="xs" />
+        </>
+      ) : (
+        <>
+          <ApiTeamLogo name={name} logo={logo} size="xs" />
+          <span className="truncate text-sm font-black tracking-wide text-slate-200 transition-colors group-hover:text-white">
+            {name}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function LiveMobileTeamCell({ name, logo }: { name: string; logo: string }) {
+  return (
+    <div className="min-w-0">
+      <div className="mb-1.5 flex justify-center">
+        <ApiTeamLogo name={name} logo={logo} size="sm" />
+      </div>
+      <span className="block truncate text-center text-sm font-black leading-tight text-slate-100">
+        {name}
+      </span>
+    </div>
+  );
+}
+
+function getBoardLabels(locale: string) {
+  if (locale === "th") {
+    return {
+      time: "เวลา",
+      home: "เจ้าบ้าน",
+      vs: "VS",
+      away: "ทีมเยือน",
+      detail: "รายละเอียด",
+      matches: "คู่",
+    };
+  }
+
+  return {
+    time: "Time",
+    home: "Home",
+    vs: "VS",
+    away: "Away",
+    detail: "Details",
+    matches: "matches",
   };
 }

@@ -4,6 +4,7 @@ import {
   getApiFootballAIInsights,
   type ApiFootballAIInsight,
   type ApiFootballAIInsightGroup,
+  type ApiFootballPredictedScore,
   type GetAIInsightsResult,
 } from "@/lib/api-football";
 import { getAIInsightSeoContent } from "@/data/ai-insight-seo-content";
@@ -158,6 +159,10 @@ function mapAIInsights(response: GetAIInsightsResult) {
       const existing = insights.get(insight.provider_id);
       if (existing) {
         if (!existing.categories.includes(group)) existing.categories.push(group);
+        existing.predictedScore =
+          existing.predictedScore ??
+          insight.predictedScore ??
+          normalizeLegacyPredictedScore(insight.apiPredictedGoals);
         return;
       }
       insights.set(insight.provider_id, mapAIInsight(insight, group));
@@ -231,6 +236,8 @@ function mapAIInsight(
     },
     apiAdvice: insight.apiAdvice,
     apiWinner: insight.apiWinner?.name ?? null,
+    predictedScore:
+      insight.predictedScore ?? normalizeLegacyPredictedScore(insight.apiPredictedGoals),
     upsetAlert: insight.upsetAlert,
     generatedAt: insight.generatedAt ?? insight.starts_at,
     standings: insight.standings
@@ -260,6 +267,19 @@ function mapAIInsight(
           avgGoals: insight.h2hSummary.avgGoals,
         }
       : null,
+  };
+}
+
+function normalizeLegacyPredictedScore(
+  value: ApiFootballAIInsight["apiPredictedGoals"]
+): ApiFootballPredictedScore | null {
+  if (!value) return null;
+  return {
+    home: value.home,
+    away: value.away,
+    source: null,
+    confidence: null,
+    raw: null,
   };
 }
 

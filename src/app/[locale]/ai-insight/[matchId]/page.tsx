@@ -22,8 +22,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import type { ProgressBarColor } from "@/components/ui/ProgressBar";
 import AIInsightDetailTabs from "./AIInsightDetailTabs";
 import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import {
@@ -361,6 +359,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
       .headToHead ?? [];
   const structuredData = buildStructuredData(locale, matchId, fixture, insight);
   const matchEdge = getMatchEdge(fixture, insight, details, ui);
+  const predictedScoreLabel = formatScorePrediction(insight.apiPredictedGoals);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5 px-3 pb-8 sm:px-4 md:px-6">
@@ -436,6 +435,22 @@ export default async function AIInsightDetailPage({ params }: Props) {
               <div className="mt-2 font-mono text-4xl font-black tracking-[0.14em] text-white sm:text-5xl">
                 {formatScore(fixture.score.home)}:{formatScore(fixture.score.away)}
               </div>
+              {predictedScoreLabel ? (
+                <div className="mt-3 w-full rounded-xl border border-cyan-300/18 bg-cyan-300/[0.055] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-200">
+                      <Crosshair size={12} className="shrink-0 text-cyan-300" />
+                      <span className="truncate">{details.likelyScore}</span>
+                    </span>
+                    <span className="font-mono text-2xl font-black text-cyan-100">{predictedScoreLabel}</span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-1.5 text-[10px]">
+                    <PredictedScoreMeta label={details.sourceApi} value={formatPredictionSource(insight.predictedScore?.source)} />
+                    <PredictedScoreMeta label={copy.labels.confidence} value={formatPercent(insight.predictedScore?.confidence)} />
+                    <PredictedScoreMeta label="xG" value={formatPredictedXg(insight.predictedScore?.raw)} />
+                  </div>
+                </div>
+              ) : null}
               <div className="mt-3 flex flex-col items-center justify-center gap-2 text-[10px] text-gray-400 sm:flex-row sm:flex-wrap sm:text-[11px]">
                 <HeroStatusBadge fixture={fixture} copy={copy} details={details} />
                 <span className="inline-flex items-center gap-1 whitespace-nowrap">
@@ -534,11 +549,14 @@ export default async function AIInsightDetailPage({ params }: Props) {
                   {matchEdge.label}
                 </span>
               </div>
-              <div className="space-y-4">
-                <ProbabilityRow label={fixture.home.name} value={insight.homeWinProbability} color="cyan" />
-                <ProbabilityRow label={copy.labels.draw} value={insight.drawProbability} color="purple" />
-                <ProbabilityRow label={fixture.away.name} value={insight.awayWinProbability} color="magenta" />
-              </div>
+              <ProbabilityStack
+                homeLabel={fixture.home.name}
+                drawLabel={copy.labels.draw}
+                awayLabel={fixture.away.name}
+                homeValue={insight.homeWinProbability}
+                drawValue={insight.drawProbability}
+                awayValue={insight.awayWinProbability}
+              />
             </div>
           </div>
           {Math.abs((insight.homeWinProbability ?? 0) - (insight.drawProbability ?? 0)) < 5 ? (
@@ -556,9 +574,8 @@ export default async function AIInsightDetailPage({ params }: Props) {
               </span>
             </p>
           ) : null}
-          <div className="grid gap-3 border-t border-white/10 bg-black/20 p-5 sm:grid-cols-2 sm:p-6">
+          <div className="grid gap-3 border-t border-white/10 bg-black/20 p-5 sm:p-6">
             <PredictionInfo label={details.winnerLean} value={insight.apiWinner?.name} />
-            <PredictionInfo label={details.likelyScore} value={formatScorePrediction(insight.apiPredictedGoals)} />
           </div>
         </Card>
 
@@ -903,6 +920,28 @@ function hasCompleteScore(fixture: ApiFootballFixture) {
   return typeof fixture.score.home === "number" && typeof fixture.score.away === "number";
 }
 
+function PredictedScoreMeta({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-cyan-300/10 bg-[#050b13]/75 px-2 py-1.5 text-left">
+      <p className="truncate text-slate-500">{label}</p>
+      <p className="mt-0.5 truncate font-mono font-bold text-slate-200">{value}</p>
+    </div>
+  );
+}
+
+function formatPredictionSource(value: string | null | undefined) {
+  return value ? value.replaceAll("_", " ") : "-";
+}
+
+function formatPredictedXg(
+  value: NonNullable<ApiFootballAIInsightDetail["predictedScore"]>["raw"] | undefined
+) {
+  if (!value) return "-";
+  const home = typeof value.homeXg === "number" ? value.homeXg.toFixed(2) : "-";
+  const away = typeof value.awayXg === "number" ? value.awayXg.toFixed(2) : "-";
+  return `${home} / ${away}`;
+}
+
 // ---------------------------------------------------------------------------
 // Page-local components (hero, stat card, strength summary, verdict, etc.)
 // ---------------------------------------------------------------------------
@@ -928,6 +967,7 @@ function TeamHero({
     <div
       className={cn(
         "relative flex min-h-[180px] flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-black/25 p-4",
+        favorite && "border-amber-300/25 bg-[linear-gradient(135deg,rgba(245,158,11,0.10),rgba(8,18,32,0.38)_42%,rgba(0,0,0,0.24))] shadow-[0_0_34px_rgba(245,158,11,0.08)]",
         alignment === "right" && "sm:flex-row-reverse sm:text-right"
       )}
     >
@@ -963,15 +1003,30 @@ function TeamHero({
         </div>
       </div>
       {favorite ? (
-        <span className="mt-4 inline-flex w-fit items-center gap-1 rounded-lg border border-warning/25 bg-warning/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-warning">
-          <Trophy size={12} />
-          {favoriteLabel}
-        </span>
+        <div
+          className={cn(
+            "mt-4 flex items-center gap-2 rounded-xl border border-amber-300/25 bg-black/30 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
+            alignment === "right" && "sm:flex-row-reverse"
+          )}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-300/25 bg-amber-300/10 text-amber-200 shadow-[0_0_16px_rgba(245,158,11,0.14)]">
+            <Trophy size={15} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-black text-amber-100">{favoriteLabel}</p>
+            <p className="mt-0.5 truncate text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-200/60">
+              AI edge
+            </p>
+          </div>
+          <span className="h-2 w-2 shrink-0 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.8)]" />
+        </div>
       ) : (
-        <span className="mt-4 inline-flex w-fit items-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-text-muted">
-          <Swords size={12} />
-          {contenderLabel}
-        </span>
+        <div className="mt-4 rounded-xl border border-cyan-300/10 bg-cyan-300/[0.035] px-3 py-2">
+          <span className="inline-flex max-w-full items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <Swords size={12} className="shrink-0 text-cyan-300/70" />
+            <span className="truncate">{contenderLabel}</span>
+          </span>
+        </div>
       )}
     </div>
   );
@@ -1051,24 +1106,67 @@ function AIVerdictCard({
   );
 }
 
-function ProbabilityRow({
-  label,
-  value,
-  color,
+function ProbabilityStack({
+  homeLabel,
+  drawLabel,
+  awayLabel,
+  homeValue,
+  drawValue,
+  awayValue,
 }: {
-  label: string;
-  value: number | null;
-  color: ProgressBarColor;
+  homeLabel: string;
+  drawLabel: string;
+  awayLabel: string;
+  homeValue: number | null;
+  drawValue: number | null;
+  awayValue: number | null;
 }) {
+  const home = clampProbability(homeValue);
+  const draw = clampProbability(drawValue);
+  const away = clampProbability(awayValue);
+
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="truncate text-sm font-black text-gray-100">{label}</span>
-        <span className="font-mono text-sm font-black text-white">{formatPercent(value)}</span>
+    <div>
+      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-white/[0.04]">
+        <div className="bg-gradient-to-r from-cyan-400 to-cyan-300" style={{ width: `${home}%` }} />
+        <div className="bg-gradient-to-r from-amber-300 to-orange-400" style={{ width: `${draw}%` }} />
+        <div className="bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${away}%` }} />
       </div>
-      <ProgressBar value={value ?? 0} color={color} size="lg" className="w-full" />
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <ProbabilityStackLegend label={homeLabel} value={home} dot="bg-cyan-300" tone="text-cyan-200" />
+        <ProbabilityStackLegend label={drawLabel} value={draw} dot="bg-amber-300" tone="text-amber-300" bordered />
+        <ProbabilityStackLegend label={awayLabel} value={away} dot="bg-violet-400" tone="text-violet-300" />
+      </div>
     </div>
   );
+}
+
+function ProbabilityStackLegend({
+  label,
+  value,
+  dot,
+  tone,
+  bordered = false,
+}: {
+  label: string;
+  value: number;
+  dot: string;
+  tone: string;
+  bordered?: boolean;
+}) {
+  return (
+    <div className={`flex min-w-0 flex-col items-center ${bordered ? "border-x border-cyan-300/10" : ""}`}>
+      <span className="flex max-w-full items-center gap-1.5 truncate text-[11px] font-semibold text-slate-300">
+        <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} />
+        <span className="truncate">{label}</span>
+      </span>
+      <span className={`mt-0.5 font-mono text-[10px] font-bold ${tone}`}>{value}%</span>
+    </div>
+  );
+}
+
+function clampProbability(value: number | null) {
+  return Math.max(0, Math.min(100, Math.round(value ?? 0)));
 }
 
 function KeyFactorsPanel({
