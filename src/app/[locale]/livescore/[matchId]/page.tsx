@@ -207,16 +207,17 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         scoreBreakdown: ApiFootballScoreBreakdown;
         season: number;
         fetchedAt: string;
+        rawPayload: unknown;
       }
     | undefined;
   let loadErrorMessage: string | undefined;
 
   try {
     const details = await getFixtureDetailsCached(apiFixtureId);
-    const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown } = details;
+    const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, rawPayload } = details;
     const season = fixture.league.season ?? new Date().getFullYear();
 
-    matchDetails = { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt: details.fetchedAt };
+    matchDetails = { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt: details.fetchedAt, rawPayload };
   } catch (error) {
     loadErrorMessage =
       error instanceof ApiFootballError
@@ -235,7 +236,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
     );
   }
 
-  const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt } = matchDetails;
+  const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt, rawPayload } = matchDetails;
   const homeLineup = lineups.find((lineup) => lineup.team.id === fixture.home.apiTeamId) ?? lineups[0];
   const awayLineup = lineups.find((lineup) => lineup.team.id === fixture.away.apiTeamId) ?? lineups[1];
 
@@ -401,6 +402,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               }}
             />
 
+            <ApiDataCoveragePanel rawPayload={rawPayload} />
+
             <PeriodScorePanel
               scoreBreakdown={scoreBreakdown}
               status={fixture.statusShort}
@@ -542,16 +545,22 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
       {showJsonBox && (
         <div className="mt-4">
           <JsonBox
-            title={`GET /soccer/fixtures/${apiFixtureId}`}
+            title={`GET /fixtures/${apiFixtureId}`}
             value={{
-              fetchedAt,
-              fixture,
-              events,
-              lineups,
-              statistics,
-              playerStats,
-              teamStatistics,
-              teamSquads,
+              rawPayload,
+              normalized: {
+                fetchedAt,
+                fixture,
+                events,
+                lineups,
+                statistics,
+                playerStats,
+                teamStatistics,
+                teamSquads,
+                headToHead,
+                standings,
+                scoreBreakdown,
+              },
             }}
           />
         </div>
@@ -899,6 +908,98 @@ function MatchContextPanel({
       </div>
     </Card>
   );
+}
+
+function ApiDataCoveragePanel({ rawPayload }: { rawPayload: unknown }) {
+  const summary = buildApiDataCoverage(rawPayload);
+  if (!summary) return null;
+
+  return (
+    <Card className="overflow-hidden border border-cyan-300/12 bg-[#0b0f18] p-0 shadow-xl">
+      <div className="border-b border-white/10 bg-[#0f1320] px-4 py-3 border-l-2 border-cyan-300">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
+          <ListChecks size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+          <span className="min-w-0 truncate">API DATA</span>
+        </h2>
+      </div>
+      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
+        {summary.sources.map((item) => (
+          <div key={item.label} className="min-w-0 bg-surface px-4 py-3.5">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">
+                {item.label}
+              </span>
+              <span className={cn(
+                "shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase",
+                item.status === "available"
+                  ? "border-success/30 bg-success/10 text-success"
+                  : "border-amber-300/25 bg-amber-300/10 text-amber-200"
+              )}>
+                {item.status}
+              </span>
+            </div>
+            <p className="truncate font-mono text-xs font-bold text-white">{item.source || "-"}</p>
+            <p className="mt-1 truncate font-mono text-[10px] font-semibold text-gray-500">{item.syncedAt || "-"}</p>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-px bg-border sm:grid-cols-2">
+        {summary.meta.map((item) => (
+          <div key={item.label} className="min-w-0 bg-surface px-4 py-3">
+            <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{item.label}</p>
+            <p className="mt-1 break-words font-mono text-xs font-bold text-white">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function buildApiDataCoverage(rawPayload: unknown) {
+  const data = getPayloadData(rawPayload);
+  if (!data) return null;
+
+  const sourceKeys = ["events", "lineups", "statistics", "players"] as const;
+  const sources = sourceKeys.map((key) => ({
+    label: key,
+    status: readString(data[`${key}_status`]) ?? (Array.isArray(data[key]) && data[key].length > 0 ? "available" : "missing"),
+    source: readString(data[`${key}_source`]),
+    syncedAt: readString(data[`${key}_synced_at`]),
+  }));
+
+  const headToHead = isRecord(data.headToHead) ? data.headToHead : null;
+  const teamStatistics = isRecord(data.team_statistics) ? data.team_statistics : null;
+  const teamSquads = isRecord(data.team_squads) ? data.team_squads : null;
+  const standings = isRecord(data.standings) ? data.standings : null;
+
+  const meta = [
+    { label: "provider_id", value: String(data.provider_id ?? "-") },
+    { label: "status_short", value: readString(data.status_short) ?? "-" },
+    { label: "hydrated_at", value: readString(data.hydrated_at) ?? "-" },
+    { label: "head_to_head", value: headToHead ? `${readArray(headToHead.fixtures).length} fixtures${headToHead.filtered_out !== undefined ? `, filtered ${headToHead.filtered_out}` : ""}` : "-" },
+    { label: "standings", value: standings ? "home / away" : "-" },
+    { label: "team_statistics", value: teamStatistics ? `${readString(teamStatistics.hydrated_at) ?? "available"}` : "-" },
+    { label: "team_squads", value: teamSquads ? "home / away squads available" : "-" },
+  ];
+
+  return { sources, meta };
+}
+
+function getPayloadData(rawPayload: unknown) {
+  if (!isRecord(rawPayload)) return null;
+  return isRecord(rawPayload.data) ? rawPayload.data : rawPayload;
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function readArray(value: unknown) {
+  return Array.isArray(value) ? value : [];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
 function translateFixtureStatus(
@@ -1618,7 +1719,14 @@ function TeamSeasonStatisticsPanel({
             [labels.goalsFor, stats.goals.for.total.total],
             [labels.goalsAgainst, stats.goals.against.total.total],
             [labels.cleanSheets, stats.clean_sheet.total],
+            ["Failed to score", stats.failed_to_score.total],
+            ["Avg goals for", stats.goals.for.average.total],
+            ["Avg goals against", stats.goals.against.average.total],
+            ["Penalty scored", formatPenaltyStat(stats.penalty?.scored)],
+            ["Penalty missed", formatPenaltyStat(stats.penalty?.missed)],
           ] as const;
+          const streak = stats.biggest?.streak;
+          const lineups = stats.lineups ?? [];
 
           return (
             <Card key={stats.team?.id ?? index} className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
@@ -1642,11 +1750,55 @@ function TeamSeasonStatisticsPanel({
                   </div>
                 ))}
               </div>
+              <div className="grid gap-2 border-t border-border p-4 sm:grid-cols-2">
+                <div className="rounded-lg border border-border bg-elevated/40 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500">Biggest streak</p>
+                  <p className="mt-1 font-mono text-sm font-bold text-white">
+                    W {streak?.wins ?? 0} / D {streak?.draws ?? 0} / L {streak?.loses ?? 0}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-elevated/40 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500">Formations</p>
+                  <p className="mt-1 break-words font-mono text-sm font-bold text-white">
+                    {lineups.length > 0
+                      ? lineups.map((lineup) => `${lineup.formation ?? "-"} (${lineup.played ?? 0})`).join(", ")
+                      : "-"}
+                  </p>
+                </div>
+                <CardBucket title="Yellow cards" bucket={stats.cards?.yellow} />
+                <CardBucket title="Red cards" bucket={stats.cards?.red} />
+              </div>
             </Card>
           );
         })}
       </div>
     </section>
+  );
+}
+
+function formatPenaltyStat(value: { total: number | null; percentage: string | null } | undefined) {
+  if (!value) return "-";
+  return `${value.total ?? 0} (${value.percentage ?? "0%"})`;
+}
+
+function CardBucket({
+  title,
+  bucket,
+}: {
+  title: string;
+  bucket: Record<string, { total: number | null; percentage: string | null }> | undefined;
+}) {
+  const entries = Object.entries(bucket ?? {}).filter(([, value]) => value.total !== null);
+
+  return (
+    <div className="rounded-lg border border-border bg-elevated/40 p-3">
+      <p className="text-[10px] uppercase tracking-wider text-gray-500">{title}</p>
+      <p className="mt-1 break-words font-mono text-sm font-bold text-white">
+        {entries.length > 0
+          ? entries.map(([minute, value]) => `${minute}: ${value.total} (${value.percentage ?? "-"})`).join(", ")
+          : "-"}
+      </p>
+    </div>
   );
 }
 
@@ -2433,6 +2585,19 @@ function StandingPanel({
           <FormPillRow form={hs.form} label={labels.recentForm} align="left" />
           <FormPillRow form={as_.form} label={labels.recentForm} align="right" />
         </div>
+
+        {(hs.update || as_.update) && (
+          <div className="grid gap-2 rounded-xl border border-white/10 bg-[#10131d] px-3 py-3 sm:grid-cols-2">
+            <div className="min-w-0">
+              <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{homeTeam.name} update</p>
+              <p className="mt-1 truncate font-mono text-xs font-bold text-cyan-200">{hs.update ?? "-"}</p>
+            </div>
+            <div className="min-w-0 sm:text-right">
+              <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{awayTeam.name} update</p>
+              <p className="mt-1 truncate font-mono text-xs font-bold text-rose-300">{as_.update ?? "-"}</p>
+            </div>
+          </div>
+        )}
 
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#10131d]">
           <div className="grid grid-cols-[minmax(0,1fr)_78px_minmax(0,1fr)] border-b border-white/10 bg-white/[0.03] px-3 py-3 sm:grid-cols-[minmax(0,1fr)_100px_minmax(0,1fr)]">

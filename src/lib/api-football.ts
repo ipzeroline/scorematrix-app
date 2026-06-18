@@ -401,11 +401,28 @@ export interface ApiFootballTeamSeasonStats {
       draws: number | null;
       loses: number | null;
     };
+    wins?: {
+      home: string | null;
+      away: string | null;
+    };
+    loses?: {
+      home: string | null;
+      away: string | null;
+    };
   };
   lineups?: {
     formation: string | null;
     played: number | null;
   }[];
+  penalty?: {
+    scored?: { total: number | null; percentage: string | null };
+    missed?: { total: number | null; percentage: string | null };
+    total?: number | null;
+  };
+  cards?: {
+    yellow?: Record<string, { total: number | null; percentage: string | null }>;
+    red?: Record<string, { total: number | null; percentage: string | null }>;
+  };
 }
 
 interface StatSplit {
@@ -711,6 +728,7 @@ export interface ApiFootballFixtureTeamStanding {
   all: ApiFootballStandingRecord;
   home: ApiFootballStandingRecord;
   away: ApiFootballStandingRecord;
+  update: string | null;
 }
 
 export interface GetFixtureDetailsResult {
@@ -734,6 +752,7 @@ export interface GetFixtureDetailsResult {
     away: ApiFootballFixtureTeamStanding | null;
   } | null;
   scoreBreakdown: ApiFootballScoreBreakdown;
+  rawPayload: unknown;
 }
 
 export type ApiFootballAIInsightGroup = "live" | "highConfidence" | "upsetAlert";
@@ -1310,6 +1329,7 @@ export async function getApiFootballFixtureDetails(
     headToHead: details.headToHead as ApiFootballH2HFixture[],
     standings: details.standings as GetFixtureDetailsResult["standings"],
     scoreBreakdown: details.scoreBreakdown as ApiFootballScoreBreakdown,
+    rawPayload: payload,
   };
 }
 

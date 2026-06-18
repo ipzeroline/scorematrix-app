@@ -68,6 +68,7 @@ type RawTeamStanding = {
   all?: RawStandingRecord | null;
   home?: RawStandingRecord | null;
   away?: RawStandingRecord | null;
+  update?: string | null;
 };
 
 type RawFixtureDetail = {
@@ -547,6 +548,7 @@ function normalizeTeamStanding(entry: RawTeamStanding | null | undefined) {
     all: normalizeStandingRecord(entry.all),
     home: normalizeStandingRecord(entry.home),
     away: normalizeStandingRecord(entry.away),
+    update: entry.update ?? null,
   };
 }
 
