@@ -111,7 +111,6 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                     </span>
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
-                        <Trophy size={15} className="shrink-0 text-amber-300" />
                         <h3 className="truncate text-sm font-black uppercase tracking-[0.08em] text-white md:text-[15px]">
                           {group.name}
                         </h3>

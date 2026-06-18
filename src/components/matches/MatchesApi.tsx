@@ -25,7 +25,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Trophy,
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -921,10 +920,6 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
                 </div>
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center gap-2">
-                    <Trophy
-                      size={14}
-                      className="shrink-0 text-amber-300 drop-shadow-[0_0_8px_rgba(251,191,36,0.35)]"
-                    />
                     <p className="min-w-0 truncate text-base font-black uppercase tracking-widest text-white">
                       {group.label}
                     </p>

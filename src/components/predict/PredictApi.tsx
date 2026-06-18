@@ -696,10 +696,6 @@ export function PredictApi() {
                               </div>
                               <div className="min-w-0">
                                 <div className="flex min-w-0 items-center gap-2">
-                                  <Trophy
-                                    size={14}
-                                    className="shrink-0 text-cyan-200 drop-shadow-[0_0_8px_rgba(34,211,238,0.35)]"
-                                  />
                                   <p className="min-w-0 truncate text-base font-black uppercase tracking-widest text-white">
                                     {group.league.name}
                                   </p>

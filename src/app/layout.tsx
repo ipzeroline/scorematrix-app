@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Thai } from "next/font/google";
+import Script from "next/script";
 import { DEFAULT_LOCALE } from "@/i18n";
 import { serializeJsonLd } from "@/lib/json-ld";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
@@ -72,6 +73,18 @@ export default async function RootLayout({
       className={`${inter.variable} ${notoSansThai.variable} h-full`}
     >
       <body className="min-h-full bg-[#0a0a0f] text-[#e2e8f0] antialiased">
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DKXPM9NX5R"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-DKXPM9NX5R');
+          `}
+        </Script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
