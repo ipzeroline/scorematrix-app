@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -8,12 +8,18 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PointsBadge } from "@/components/shared/PointsBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { ApiClientError } from "@/lib/api-client";
 import {
   getCurrentUser,
   type CurrentUserData,
   type CurrentUserResponse,
+  changePassword,
 } from "@/lib/auth-api";
 import { useUserStore } from "@/stores/user-store";
+import { useNotificationStore } from "@/stores/notification-store";
 import { useShallow } from "zustand/react/shallow";
 import {
   Activity,
@@ -27,6 +33,8 @@ import {
   TrendingUp,
   WalletCards,
   Zap,
+  Key,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -49,6 +57,84 @@ export default function ProfilePage() {
   );
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
+
+  const tAuth = useTranslations("auth");
+  const tCommon = useTranslations("common");
+  const addToast = useNotificationStore((state) => state.addToast);
+
+  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwTouched, setPwTouched] = useState({ password: false, confirmPassword: false });
+  const [pwSubmitting, setPwSubmitting] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwServerError, setPwServerError] = useState("");
+
+  const pwErrors = useMemo(() => {
+    const errs = { password: "", confirmPassword: "" };
+
+    if (pwTouched.password || newPassword) {
+      if (!newPassword) errs.password = tAuth("passwordRequired");
+      else if (newPassword.length < 8) errs.password = tAuth("passwordMinLength");
+      else if (newPassword.length > 100) errs.password = tAuth("passwordMaxLength");
+      else if (!/[A-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+        errs.password = tAuth("passwordStrengthHint");
+      }
+    }
+
+    if (pwTouched.confirmPassword || confirmPassword) {
+      if (confirmPassword && newPassword !== confirmPassword) {
+        errs.confirmPassword = tAuth("passwordMismatch");
+      }
+    }
+
+    return errs;
+  }, [newPassword, confirmPassword, pwTouched, tAuth]);
+
+  const pwHasErrors = !!pwErrors.password || !!pwErrors.confirmPassword;
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwTouched({ password: true, confirmPassword: true });
+    setPwServerError("");
+
+    if (pwHasErrors || !newPassword || !confirmPassword) return;
+
+    setPwSubmitting(true);
+    try {
+      await changePassword(
+        {
+          password: newPassword,
+          password_confirmation: confirmPassword,
+        },
+        { locale }
+      );
+
+      setPwSuccess(true);
+      addToast({
+        type: "success",
+        title: tAuth("resetPasswordSuccess"),
+      });
+      setNewPassword("");
+      setConfirmPassword("");
+      setPwTouched({ password: false, confirmPassword: false });
+    } catch (err) {
+      let message = tAuth("resetPasswordFailed");
+      if (err instanceof ApiClientError) {
+        message = err.message || message;
+      } else if (err instanceof Error) {
+        message = err.message || message;
+      }
+      setPwServerError(message);
+      addToast({
+        type: "error",
+        title: tAuth("resetPasswordFailed"),
+        message,
+      });
+    } finally {
+      setPwSubmitting(false);
+    }
+  };
   const [profileMeta, setProfileMeta] = useState({
     avatarUrl: null as string | null,
     createdAt: "",
@@ -285,6 +371,18 @@ export default function ProfilePage() {
                 <BarChart3 size={18} />
                 {t("fullStats")}
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setChangePasswordOpen(true);
+                  setPwSuccess(false);
+                  setPwServerError("");
+                }}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-purple-400/25 bg-purple-500/10 px-4 text-base font-black text-purple-200 transition-colors hover:border-purple-300/50 hover:bg-purple-500/15 cursor-pointer"
+              >
+                <Key size={18} />
+                {tAuth("resetPasswordTitle")}
+              </button>
             </div>
           </div>
 
@@ -383,6 +481,98 @@ export default function ProfilePage() {
           </Link>
         </div>
       </Card>
+
+      <Modal
+        open={changePasswordOpen}
+        onClose={() => setChangePasswordOpen(false)}
+        title={tAuth("resetPasswordTitle")}
+        size="md"
+      >
+        {pwSuccess ? (
+          <div className="space-y-4 py-4 text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10 text-green-400">
+              <CheckCircle2 size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-white">{tAuth("resetPasswordSuccess")}</h3>
+            <p className="text-sm text-gray-400">
+              {tAuth("resetPasswordSuccess")}
+            </p>
+            <Button
+              className="w-full mt-2"
+              onClick={() => setChangePasswordOpen(false)}
+              neon
+            >
+              {tCommon("close")}
+            </Button>
+          </div>
+        ) : (
+          <form onSubmit={handleChangePassword} className="space-y-4 pt-2">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-300">
+                  {tAuth("password")}
+                </label>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setPwServerError("");
+                  }}
+                  onBlur={() => setPwTouched((prev) => ({ ...prev, password: true }))}
+                  error={pwErrors.password}
+                  autoComplete="new-password"
+                  maxLength={100}
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold text-gray-300">
+                  {tAuth("confirmPassword")}
+                </label>
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setPwServerError("");
+                  }}
+                  onBlur={() => setPwTouched((prev) => ({ ...prev, confirmPassword: true }))}
+                  error={pwErrors.confirmPassword}
+                  autoComplete="new-password"
+                  maxLength={100}
+                />
+              </div>
+            </div>
+
+            {pwServerError && (
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
+                {pwServerError}
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setChangePasswordOpen(false)}
+                className="flex-1 min-h-11 rounded-xl border border-white/10 bg-white/5 text-sm font-black text-white transition-colors hover:bg-white/10 cursor-pointer"
+              >
+                {tCommon("cancel")}
+              </button>
+              <Button
+                type="submit"
+                loading={pwSubmitting}
+                className="flex-1"
+                neon
+              >
+                {tAuth("resetPasswordButton")}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

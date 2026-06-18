@@ -10,6 +10,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: [
         "/*/auth/forgot-password",
+        "/*/auth/reset-password",
         "/*/affiliate",
         "/*/events",
         "/*/leaderboard",

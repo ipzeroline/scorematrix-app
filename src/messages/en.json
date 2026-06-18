@@ -191,7 +191,12 @@
     "sendResetLink": "Send reset link",
     "rememberedPassword": "Remembered your password?",
     "referralCode": "Referral code",
-    "referralCodeHint": "If a friend invited you, their code will be applied here so both accounts can receive rewards after qualification."
+    "referralCodeHint": "If a friend invited you, their code will be applied here so both accounts can receive rewards after qualification.",
+    "resetPasswordTitle": "Reset Password",
+    "resetPasswordSubtitle": "Set a new password for your account",
+    "resetPasswordSuccess": "Password reset successfully. Please login with your new password.",
+    "resetPasswordFailed": "Could not reset password. The link may have expired or is invalid.",
+    "resetPasswordButton": "Save New Password"
   },
   "wallet": {
     "title": "Wallet & Points",
