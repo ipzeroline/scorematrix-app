@@ -30,6 +30,23 @@ export function Avatar({
   className,
 }: AvatarProps) {
   if (src) {
+    if (src.startsWith("data:") || src.startsWith("blob:")) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={fallback || ""}
+          width={imageSizes[size]}
+          height={imageSizes[size]}
+          className={cn(
+            "rounded-full object-cover border border-gray-700",
+            sizeClasses[size],
+            className
+          )}
+        />
+      );
+    }
+
     return (
       <Image
         src={src}

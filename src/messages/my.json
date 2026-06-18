@@ -661,7 +661,28 @@
     "noPredictedMatchesTitle": "No predicted matches",
     "noPredictedMatchesDescription": "No matches with predicted status were found in this list yet.",
     "submittedAt": "တင်သွင်းသည့်အချိန်",
-    "lockedAt": "သော့ခတ်ထားသောအချိန်"
+    "lockedAt": "သော့ခတ်ထားသောအချိန်",
+    "historyTotal": "{total} predictions",
+    "historySearch": "Prediction history ရှာရန်",
+    "historyDate": "Prediction date",
+    "historyLimit": "တစ်မျက်နှာလျှင်",
+    "historyLimitOption": "{limit} items",
+    "historyReset": "Filters reset",
+    "historyStatus": {
+      "all": "All",
+      "pending": "Pending",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "historyUnavailableTitle": "History မဖွင့်နိုင်ပါ",
+    "historyUnavailableDescription": "Filter ပြောင်းပါ သို့မဟုတ် ထပ်မံ reload လုပ်ပါ။",
+    "noPredictionsAfterFilter": "ဒီ filters နဲ့ကိုက်ညီတဲ့ prediction history မရှိပါ။",
+    "historySubmittedStatus": "Submitted / Status",
+    "historyMatch": "Match",
+    "historyScoreColumn": "Predicted / Actual",
+    "historyPaginationSummary": "Showing {start}-{end} of {total}",
+    "previousPage": "Previous",
+    "nextPage": "Next"
   },
   "aiInsight": {
     "title": "AI ခွဲခြမ်းစိတ်ဖြာမှု",

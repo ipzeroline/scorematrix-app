@@ -48,6 +48,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
   const [loadedMemberInfoKey, setLoadedMemberInfoKey] = useState<string | null>(null);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const username = useUserStore((s) => s.username);
+  const avatarUrl = useUserStore((s) => s.avatarUrl);
   const freePoints = useUserStore((s) => s.freePoints);
   const premiumCredits = useUserStore((s) => s.premiumCredits);
   const xp = useUserStore((s) => s.xp);
@@ -94,6 +95,9 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
           displayName:
             pickStringValue(profile.displayName, profile.display_name, profile.name) ??
             currentUser.displayName,
+          avatarUrl:
+            pickStringValue(profile.avatarUrl, profile.avatar_url, profile.imageUrl, profile.image_url, profile.avatar) ??
+            currentUser.avatarUrl,
         });
         syncWallet(stripUndefined(nextStats));
         setServerAuthHint(true);
@@ -194,6 +198,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
         <UserMenu
           isLoggedIn={effectiveIsLoggedIn}
           username={username}
+          avatar={avatarUrl || null}
           freePoints={freePoints}
           premiumCredits={premiumCredits}
           rank={rank}

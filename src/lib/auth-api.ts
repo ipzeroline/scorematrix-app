@@ -158,6 +158,10 @@ export type CurrentUserData = {
   favoriteTeam?: string | null;
   favoriteTeamId?: string | number | null;
   avatarUrl?: string | null;
+  avatar_url?: string | null;
+  imageUrl?: string | null;
+  image_url?: string | null;
+  avatar?: string | null;
   bio?: string | null;
   role?: string | null;
   country?: string | null;
@@ -272,11 +276,17 @@ export type UploadProfileAvatarResponse = {
   message?: string;
   url?: string;
   avatarUrl?: string;
+  avatar_url?: string;
   imageUrl?: string;
+  image_url?: string;
+  avatar?: string;
   data?: {
     url?: string;
     avatarUrl?: string;
+    avatar_url?: string;
     imageUrl?: string;
+    image_url?: string;
+    avatar?: string;
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -468,15 +478,65 @@ export async function updateUserPreferences(
   return normalizeCurrentUserResponse(response);
 }
 
-export function uploadProfileAvatar(file: File, options?: ApiRequestOptions) {
+export async function uploadProfileAvatar(file: File, options?: ApiRequestOptions) {
   const body = new FormData();
   body.append("file", file);
 
-  return apiPostFormRaw<UploadProfileAvatarResponse>(
-    "/users/me/avatar",
+  try {
+    return await apiPostFormRaw<UploadProfileAvatarResponse>(
+      "/users/me/avatar",
+      body,
+      options
+    );
+  } catch (error) {
+    if (error instanceof ApiClientError && error.status === 404) {
+      return uploadProfileAvatarThroughApp(file, options);
+    }
+
+    throw error;
+  }
+}
+
+async function uploadProfileAvatarThroughApp(
+  file: File,
+  options?: ApiRequestOptions
+) {
+  if (typeof window === "undefined") {
+    throw new ApiClientError("Avatar upload endpoint not found", 404);
+  }
+
+  const body = new FormData();
+  body.append("file", file);
+
+  const locale = options?.locale ?? undefined;
+  const headers = new Headers(options?.headers);
+  headers.set("Accept", "application/json");
+  if (locale) {
+    headers.set("Accept-Language", locale);
+    headers.set("Content-Language", locale);
+    headers.set("X-Locale", locale);
+    headers.set("X-App-Locale", locale);
+  }
+
+  const response = await fetch("/api/profile/avatar", {
+    method: "POST",
+    headers,
     body,
-    options
-  );
+    signal: options?.signal,
+    cache: "no-store",
+  });
+  const payload = await parseJsonResponse(response);
+
+  if (!response.ok) {
+    throw new ApiClientError(
+      getPayloadMessage(payload) ?? response.statusText,
+      response.status,
+      getPayloadCode(payload),
+      payload
+    );
+  }
+
+  return payload as UploadProfileAvatarResponse;
 }
 
 export function updateMemberProfile(
@@ -546,6 +606,13 @@ function normalizeCurrentUserData(user: CurrentUserData): CurrentUserData {
     ...user,
     username: pickValue(user.username, user.user_name),
     displayName: pickValue(user.displayName, user.display_name, user.name),
+    avatarUrl: pickValue(
+      user.avatarUrl,
+      user.avatar_url,
+      user.imageUrl,
+      user.image_url,
+      user.avatar
+    ),
     favoriteTeamId: pickValue(user.favoriteTeamId, user.favoriteTeam, user.favorite_team),
     locale: pickValue(user.locale, user.language),
     playerType: pickValue(user.playerType, user.player_type),
@@ -636,6 +703,35 @@ function booleanValue(value: boolean | number | null | undefined) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+async function parseJsonResponse(response: Response) {
+  const text = await response.text();
+  if (!text) return undefined;
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    throw new ApiClientError("Invalid API response", response.status, undefined, text);
+  }
+}
+
+function getPayloadMessage(payload: unknown) {
+  if (!isRecord(payload)) return undefined;
+  const message = payload.message;
+  if (typeof message === "string") return message;
+  const error = payload.error;
+  if (isRecord(error) && typeof error.message === "string") return error.message;
+  return undefined;
+}
+
+function getPayloadCode(payload: unknown) {
+  if (!isRecord(payload)) return undefined;
+  const code = payload.code;
+  if (typeof code === "string") return code;
+  const error = payload.error;
+  if (isRecord(error) && typeof error.code === "string") return error.code;
+  return undefined;
 }
 
 async function localAuthPost<T, B>(

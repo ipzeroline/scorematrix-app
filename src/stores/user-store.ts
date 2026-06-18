@@ -6,6 +6,7 @@ interface UserState {
   userId: string;
   username: string;
   displayName: string;
+  avatarUrl: string;
   email: string;
   phone: string;
   birthYear: string;
@@ -60,7 +61,7 @@ interface UserActions {
   addReferralEarnings: (amount: number) => void;
   setReferralCode: (code: string) => void;
   syncWallet: (wallet: Partial<Pick<UserState, 'freePoints' | 'premiumCredits' | 'xp' | 'level' | 'rank'>>) => void;
-  updateProfile: (profile: Partial<Pick<UserState, 'displayName' | 'email' | 'phone' | 'birthYear' | 'country' | 'favoriteTeam' | 'playerType' | 'language' | 'marketingConsent'>>) => void;
+  updateProfile: (profile: Partial<Pick<UserState, 'displayName' | 'avatarUrl' | 'email' | 'phone' | 'birthYear' | 'country' | 'favoriteTeam' | 'playerType' | 'language' | 'marketingConsent'>>) => void;
 }
 
 const defaultPreferences: UserState['preferences'] = {
@@ -77,6 +78,7 @@ const initialState: UserState = {
   userId: '',
   username: '',
   displayName: '',
+  avatarUrl: '',
   email: '',
   phone: '',
   birthYear: '',
@@ -117,6 +119,7 @@ export const useUserStore = create<UserState & UserActions>()(
           userId: user.id,
           username: user.username,
           displayName: user.displayName,
+          avatarUrl: '',
         }),
 
       logout: () =>
@@ -125,6 +128,7 @@ export const useUserStore = create<UserState & UserActions>()(
           userId: '',
           username: '',
           displayName: '',
+          avatarUrl: '',
           email: '',
           phone: '',
           birthYear: '',

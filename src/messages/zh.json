@@ -661,7 +661,28 @@
     "noPredictedMatchesTitle": "暂无已预测比赛",
     "noPredictedMatchesDescription": "当前列表里还没有带已预测状态的比赛。",
     "submittedAt": "提交时间",
-    "lockedAt": "锁定时间"
+    "lockedAt": "锁定时间",
+    "historyTotal": "共 {total} 条",
+    "historySearch": "搜索预测历史",
+    "historyDate": "预测日期",
+    "historyLimit": "每页数量",
+    "historyLimitOption": "{limit} 条",
+    "historyReset": "重置筛选",
+    "historyStatus": {
+      "all": "全部",
+      "pending": "待定",
+      "won": "已赢",
+      "lost": "已输"
+    },
+    "historyUnavailableTitle": "无法加载历史",
+    "historyUnavailableDescription": "请更换筛选条件或重新加载。",
+    "noPredictionsAfterFilter": "没有符合筛选条件的预测历史。",
+    "historySubmittedStatus": "提交时间 / 状态",
+    "historyMatch": "比赛",
+    "historyScoreColumn": "预测 / 实际",
+    "historyPaginationSummary": "显示 {start}-{end} / {total}",
+    "previousPage": "上一页",
+    "nextPage": "下一页"
   },
   "aiInsight": {
     "title": "AI 分析",

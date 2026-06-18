@@ -671,7 +671,28 @@
     "noPredictedMatchesTitle": "No predicted matches",
     "noPredictedMatchesDescription": "No matches with predicted status were found in this list yet.",
     "submittedAt": "ផ្ញើនៅ",
-    "lockedAt": "ចាក់សោនៅ"
+    "lockedAt": "ចាក់សោនៅ",
+    "historyTotal": "{total} predictions",
+    "historySearch": "Search prediction history",
+    "historyDate": "Prediction date",
+    "historyLimit": "Items per page",
+    "historyLimitOption": "{limit} items",
+    "historyReset": "Reset filters",
+    "historyStatus": {
+      "all": "All",
+      "pending": "Pending",
+      "won": "Won",
+      "lost": "Lost"
+    },
+    "historyUnavailableTitle": "Unable to load history",
+    "historyUnavailableDescription": "Try another filter or reload again.",
+    "noPredictionsAfterFilter": "No prediction history matches these filters.",
+    "historySubmittedStatus": "Submitted / Status",
+    "historyMatch": "Match",
+    "historyScoreColumn": "Predicted / Actual",
+    "historyPaginationSummary": "Showing {start}-{end} of {total}",
+    "previousPage": "Previous",
+    "nextPage": "Next"
   },
   "aiInsight": {
     "title": "វិភាគ AI",

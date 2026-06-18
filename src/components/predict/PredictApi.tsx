@@ -21,9 +21,11 @@ import { useUserStore } from "@/stores/user-store";
 import {
   Brain,
   CheckCheck,
+  ChevronLeft,
   ChevronRight,
   ExternalLink,
   LogIn,
+  Search,
   ShieldCheck,
   Sparkles,
   Trophy,
@@ -59,6 +61,13 @@ type PredictableMatchApiItem = {
   starts_at?: string | null;
   is_live?: boolean | null;
   is_terminal?: boolean | null;
+  hasPredicted?: boolean | null;
+  has_predicted?: boolean | null;
+  alreadyPredicted?: boolean | null;
+  already_predicted?: boolean | null;
+  userPrediction?: unknown;
+  user_prediction?: unknown;
+  prediction?: unknown;
   league?: {
     id?: number | string | null;
     name?: string | null;
@@ -74,6 +83,7 @@ type PredictableMatch = {
   kickoffTime: string;
   isLive: boolean;
   isTerminal: boolean;
+  hasPredicted: boolean;
   status: MatchStatus;
   statusLabel: string;
   league: {
@@ -96,10 +106,21 @@ type PredictableMatch = {
 
 type PredictionHistoryApiResponse = {
   data?: PredictionHistoryApiItem[];
+  pagination?: PredictionHistoryPaginationApi | null;
+};
+
+type PredictionHistoryPaginationApi = {
+  page?: number | string | null;
+  limit?: number | string | null;
+  total?: number | string | null;
+  totalPages?: number | string | null;
+  total_pages?: number | string | null;
 };
 
 type PredictionHistoryApiItem = {
   id?: string | number | null;
+  fixtureId?: string | number | null;
+  fixture_id?: string | number | null;
   matchId?: string | number | null;
   match_id?: string | number | null;
   predictedHomeScore?: number | null;
@@ -200,6 +221,15 @@ type PredictionHistoryItem = {
   scoring: ScoringApiBreakdown | null;
 };
 
+type PredictionHistoryStatusFilter = "all" | "pending" | "won" | "lost";
+
+type PredictionHistoryPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
 type PlayerProfileResponse = {
   data?: {
     name?: unknown;
@@ -278,6 +308,19 @@ export function PredictApi() {
   const [matchesRequestFailed, setMatchesRequestFailed] = useState(false);
   const [history, setHistory] = useState<PredictionHistoryItem[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyRequestFailed, setHistoryRequestFailed] = useState(false);
+  const [historyStatusFilter, setHistoryStatusFilter] =
+    useState<PredictionHistoryStatusFilter>("all");
+  const [historyDateFilter, setHistoryDateFilter] = useState("");
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyLimit, setHistoryLimit] = useState(20);
+  const [historyPagination, setHistoryPagination] =
+    useState<PredictionHistoryPagination>({
+      page: 1,
+      limit: 20,
+      total: 0,
+      totalPages: 1,
+    });
   const [selectedPrediction, setSelectedPrediction] =
     useState<PredictionHistoryItem | null>(null);
   const [loadingPlayer, setLoadingPlayer] = useState(false);
@@ -307,12 +350,12 @@ export function PredictApi() {
   );
 
   const stats = useMemo(() => {
-    const total = history.length;
+    const total = historyPagination.total || history.length;
     const correct = history.filter((item) => item.result === "correct").length;
     const points = history.reduce((sum, item) => sum + item.points, 0);
-    const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const accuracy = history.length > 0 ? Math.round((correct / history.length) * 100) : 0;
     return { total, correct, points, accuracy };
-  }, [history]);
+  }, [history, historyPagination.total]);
 
   const handleSelectPrediction = (item: PredictionHistoryItem) => {
     setPlayerName(null);
@@ -324,6 +367,28 @@ export function PredictApi() {
     setSelectedPrediction(null);
     setPlayerName(null);
     setLoadingPlayer(false);
+  };
+
+  const updateHistoryStatusFilter = (nextStatus: PredictionHistoryStatusFilter) => {
+    setHistoryStatusFilter(nextStatus);
+    setHistoryPage(1);
+  };
+
+  const updateHistoryDateFilter = (nextDate: string) => {
+    setHistoryDateFilter(nextDate);
+    setHistoryPage(1);
+  };
+
+  const updateHistoryLimit = (nextLimit: number) => {
+    setHistoryLimit(nextLimit);
+    setHistoryPage(1);
+  };
+
+  const resetHistoryFilters = () => {
+    setHistoryStatusFilter("all");
+    setHistoryDateFilter("");
+    setHistoryLimit(20);
+    setHistoryPage(1);
   };
 
   useEffect(() => {
@@ -368,26 +433,52 @@ export function PredictApi() {
   }, [isLoggedIn, locale]);
 
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      return;
+    }
 
     let cancelled = false;
 
     const loadHistory = async () => {
       setLoadingHistory(true);
+      setHistoryRequestFailed(false);
 
       try {
+        const query = new URLSearchParams({
+          page: String(historyPage),
+          limit: String(historyLimit),
+        });
+
+        if (historyStatusFilter !== "all") {
+          query.set("status", historyStatusFilter);
+        }
+
+        if (isValidDateFilter(historyDateFilter)) {
+          query.set("date", historyDateFilter);
+        }
+
         const response = await apiGetRaw<PredictionHistoryApiResponse>(
-          "/predictions",
+          `/predictions?${query.toString()}`,
           { locale }
         );
 
         if (!cancelled) {
           setHistory(normalizePredictionHistory(response.data, matches));
+          setHistoryPagination(
+            normalizeHistoryPagination(response.pagination, historyPage, historyLimit)
+          );
         }
       } catch (error) {
         if (!cancelled && !isAuthSessionExpiredError(error)) {
           console.error("Error loading prediction history:", error);
           setHistory([]);
+          setHistoryRequestFailed(true);
+          setHistoryPagination({
+            page: historyPage,
+            limit: historyLimit,
+            total: 0,
+            totalPages: 1,
+          });
         }
       } finally {
         if (!cancelled) {
@@ -401,7 +492,15 @@ export function PredictApi() {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn, locale, matches]);
+  }, [
+    historyDateFilter,
+    historyLimit,
+    historyPage,
+    historyStatusFilter,
+    isLoggedIn,
+    locale,
+    matches,
+  ]);
 
   useEffect(() => {
     if (!selectedPrediction || !selectedPrediction.firstScorerPlayerId) return;
@@ -602,7 +701,7 @@ export function PredictApi() {
               {
                 key: "history",
                 label: t("prediction.predictionHistory"),
-                count: effectiveIsLoggedIn ? history.length : undefined,
+                count: effectiveIsLoggedIn ? historyPagination.total : undefined,
               },
             ]}
             activeTab={tab}
@@ -617,7 +716,7 @@ export function PredictApi() {
             ) : (
               effectiveIsLoggedIn && (
                 <Badge variant="green" size="sm" className="font-bold tracking-wide">
-                  ทายแล้ว {history.length} คู่
+                  {t("prediction.historyTotal", { total: historyPagination.total })}
                 </Badge>
               )
             )}
@@ -713,7 +812,8 @@ export function PredictApi() {
                         </div>
                         <div className="divide-y divide-white/[0.06]">
                           {group.matches.map((match, index) => {
-                            const hasPredicted = predictedMatchIds.has(match.id);
+                            const hasPredicted =
+                              match.hasPredicted || predictedMatchIds.has(match.id);
                             const predictMatchHref = buildPredictMatchHref(
                               locale,
                               match.id,
@@ -743,6 +843,69 @@ export function PredictApi() {
             </div>
           ) : (
             <div className="space-y-3">
+              {effectiveIsLoggedIn ? (
+                <div className="rounded-2xl border border-cyan-300/10 bg-[#080d14] p-3">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <label className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-cyan-300">
+                        <Search size={13} />
+                        {t("prediction.historySearch")}
+                      </label>
+                      <div className="grid gap-2 sm:grid-cols-[1fr_180px_120px]">
+                        <div className="flex min-w-0 flex-wrap gap-2">
+                          {(["all", "pending", "won", "lost"] as const).map((status) => (
+                            <button
+                              key={status}
+                              type="button"
+                              onClick={() => updateHistoryStatusFilter(status)}
+                              className={cn(
+                                "min-h-9 rounded-lg border px-3 text-xs font-black uppercase tracking-wide transition-colors",
+                                historyStatusFilter === status
+                                  ? "border-cyan-300 bg-cyan-300/15 text-cyan-100"
+                                  : "border-white/10 bg-white/[0.03] text-gray-400 hover:border-cyan-300/30 hover:text-cyan-200"
+                              )}
+                            >
+                              {t(`prediction.historyStatus.${status}`)}
+                            </button>
+                          ))}
+                        </div>
+
+                        <input
+                          type="date"
+                          value={historyDateFilter}
+                          onChange={(event) => updateHistoryDateFilter(event.target.value)}
+                          className="min-h-9 rounded-lg border border-white/10 bg-black/30 px-3 text-sm font-semibold text-gray-200 outline-none transition-colors [color-scheme:dark] hover:border-cyan-300/30 focus:border-cyan-300/50"
+                          aria-label={t("prediction.historyDate")}
+                        />
+
+                        <select
+                          value={historyLimit}
+                          onChange={(event) => updateHistoryLimit(Number(event.target.value))}
+                          className="min-h-9 rounded-lg border border-white/10 bg-black/30 px-3 text-sm font-semibold text-gray-200 outline-none transition-colors [color-scheme:dark] hover:border-cyan-300/30 focus:border-cyan-300/50"
+                          aria-label={t("prediction.historyLimit")}
+                        >
+                          {[20, 50].map((limit) => (
+                            <option key={limit} value={limit}>
+                              {t("prediction.historyLimitOption", { limit })}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={resetHistoryFilters}
+                      className="self-start lg:self-auto"
+                    >
+                      {t("prediction.historyReset")}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
+
               {!effectiveIsLoggedIn ? (
                 <EmptyState
                   title={t("prediction.predictionHistory")}
@@ -780,35 +943,52 @@ export function PredictApi() {
                     ))}
                   </div>
                 </div>
+              ) : historyRequestFailed ? (
+                <EmptyState
+                  title={t("prediction.historyUnavailableTitle")}
+                  description={t("prediction.historyUnavailableDescription")}
+                />
               ) : history.length === 0 ? (
                 <EmptyState
                   title={t("prediction.noPredictions")}
-                  description={t("prediction.startPredictingHistory")}
+                  description={
+                    historyStatusFilter !== "all" || historyDateFilter
+                      ? t("prediction.noPredictionsAfterFilter")
+                      : t("prediction.startPredictingHistory")
+                  }
                 />
               ) : (
-                <div className="overflow-hidden rounded-xl border border-gray-800/70 bg-[#07080b]">
-                  {/* Desktop Table Header */}
-                  <div className="hidden md:grid grid-cols-[130px_140px_1fr_120px_1fr_120px] items-center gap-2 px-5 py-2.5 bg-[#0d0e14] border-b border-gray-800/80 text-[10px] uppercase font-extrabold tracking-widest text-gray-500">
-                    <div className="pl-1">เวลาส่งทาย / สถานะ</div>
-                    <div>แมตช์ที่ทาย</div>
-                    <div className="text-right pr-5">{t("football.table.home")}</div>
-                    <div className="text-center">ทาย / ผลจริง</div>
-                    <div className="text-left pl-5">{t("football.table.away")}</div>
-                    <div className="text-right pr-4">แต้มที่ได้รับ</div>
+                <>
+                  <div className="overflow-hidden rounded-xl border border-gray-800/70 bg-[#07080b]">
+                    {/* Desktop Table Header */}
+                    <div className="hidden md:grid grid-cols-[130px_140px_1fr_120px_1fr_120px] items-center gap-2 px-5 py-2.5 bg-[#0d0e14] border-b border-gray-800/80 text-[10px] uppercase font-extrabold tracking-widest text-gray-500">
+                      <div className="pl-1">{t("prediction.historySubmittedStatus")}</div>
+                      <div>{t("prediction.historyMatch")}</div>
+                      <div className="text-right pr-5">{t("football.table.home")}</div>
+                      <div className="text-center">{t("prediction.historyScoreColumn")}</div>
+                      <div className="text-left pl-5">{t("football.table.away")}</div>
+                      <div className="text-right pr-4">{t("prediction.pointsEarned")}</div>
+                    </div>
+                    <div className="divide-y divide-gray-800/30">
+                      {history.map((item, index) => (
+                        <HistoryMatchRow
+                          key={item.id}
+                          item={item}
+                          index={index}
+                          locale={locale}
+                          t={t}
+                          onClick={() => handleSelectPrediction(item)}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="divide-y divide-gray-800/30">
-                    {history.map((item, index) => (
-                      <HistoryMatchRow
-                        key={item.id}
-                        item={item}
-                        index={index}
-                        locale={locale}
-                        t={t}
-                        onClick={() => handleSelectPrediction(item)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                  <HistoryPaginationControls
+                    pagination={historyPagination}
+                    loading={loadingHistory}
+                    t={t}
+                    onPageChange={setHistoryPage}
+                  />
+                </>
               )}
             </div>
           )}
@@ -1231,7 +1411,9 @@ function normalizePredictionHistory(
 
   return data
     .map((item, index) => {
-      const matchId = toSegment(item.matchId ?? item.match_id);
+      const matchId = toSegment(
+        item.fixtureId ?? item.fixture_id ?? item.matchId ?? item.match_id
+      );
       if (!matchId) return null;
 
       const match = matches.find((entry) => entry.id === matchId);
@@ -1315,6 +1497,33 @@ function normalizePredictionHistory(
     .filter((item): item is PredictionHistoryItem => item !== null);
 }
 
+function normalizeHistoryPagination(
+  pagination: PredictionHistoryPaginationApi | null | undefined,
+  fallbackPage: number,
+  fallbackLimit: number
+): PredictionHistoryPagination {
+  const page = clampPositiveInteger(
+    toNullableNumber(pagination?.page),
+    fallbackPage
+  );
+  const limit = clampInteger(
+    toNullableNumber(pagination?.limit),
+    fallbackLimit,
+    1,
+    50
+  );
+  const total = Math.max(0, Math.trunc(toNullableNumber(pagination?.total) ?? 0));
+  const totalPages = Math.max(
+    1,
+    Math.trunc(
+      toNullableNumber(pagination?.totalPages ?? pagination?.total_pages) ??
+        Math.ceil(total / Math.max(1, limit))
+    )
+  );
+
+  return { page, limit, total, totalPages };
+}
+
 function normalizePredictableMatches(
   data: PredictableMatchApiItem[] | undefined
 ): PredictableMatch[] {
@@ -1343,6 +1552,14 @@ function normalizePredictableMatches(
       kickoffTime,
       isLive: item.is_live === true,
       isTerminal: item.is_terminal === true,
+      hasPredicted:
+        item.hasPredicted === true ||
+        item.has_predicted === true ||
+        item.alreadyPredicted === true ||
+        item.already_predicted === true ||
+        (item.userPrediction !== null && item.userPrediction !== undefined) ||
+        (item.user_prediction !== null && item.user_prediction !== undefined) ||
+        (item.prediction !== null && item.prediction !== undefined),
       status,
       statusLabel: buildPredictableStatusLabel(item),
       league: {
@@ -1435,11 +1652,25 @@ function toNullableNumber(value: number | string | null | undefined) {
   return Number.isFinite(number) ? number : null;
 }
 
+function clampPositiveInteger(value: number | null, fallback: number) {
+  return clampInteger(value, fallback, 1, Number.MAX_SAFE_INTEGER);
+}
+
+function clampInteger(value: number | null, fallback: number, min: number, max: number) {
+  const nextValue = Math.trunc(value ?? fallback);
+  if (!Number.isFinite(nextValue)) return fallback;
+  return Math.min(max, Math.max(min, nextValue));
+}
+
+function isValidDateFilter(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
 function mapPredictionHistoryResult(status: string | null | undefined) {
   const normalized = String(status ?? "").trim().toLowerCase();
 
   if (normalized === "pending") return "pending";
-  if (normalized === "correct" || normalized === "winner") return "correct";
+  if (normalized === "won" || normalized === "correct" || normalized === "winner") return "correct";
   if (normalized === "partial") return "partial";
   if (normalized === "void") return "void";
   return "incorrect";
@@ -1532,6 +1763,62 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function toNonEmptyString(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function HistoryPaginationControls({
+  pagination,
+  loading,
+  t,
+  onPageChange,
+}: {
+  pagination: PredictionHistoryPagination;
+  loading: boolean;
+  t: ReturnType<typeof useTranslations>;
+  onPageChange: (page: number) => void;
+}) {
+  const start = pagination.total === 0
+    ? 0
+    : (pagination.page - 1) * pagination.limit + 1;
+  const end = Math.min(pagination.total, pagination.page * pagination.limit);
+  const canGoPrevious = pagination.page > 1;
+  const canGoNext = pagination.page < pagination.totalPages;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#080d14] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm font-semibold text-gray-400">
+        {t("prediction.historyPaginationSummary", {
+          start,
+          end,
+          total: pagination.total,
+        })}
+      </p>
+      <div className="flex items-center justify-between gap-2 sm:justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!canGoPrevious || loading}
+          onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
+        >
+          <ChevronLeft size={14} />
+          {t("prediction.previousPage")}
+        </Button>
+        <span className="min-w-20 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-center font-mono text-xs font-black text-cyan-200">
+          {pagination.page}/{pagination.totalPages}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={!canGoNext || loading}
+          onClick={() => onPageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+        >
+          {t("prediction.nextPage")}
+          <ChevronRight size={14} />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 const PredictMatchRow = memo(function PredictMatchRow({

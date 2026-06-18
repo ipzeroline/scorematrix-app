@@ -67,6 +67,7 @@ export default function EditProfilePage() {
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [serverError, setServerError] = useState("");
   const [saved, setSaved] = useState(false);
@@ -94,19 +95,29 @@ export default function EditProfilePage() {
         const profile = extractCurrentUser(response);
         if (!profile) return;
 
+        const currentUser = useUserStore.getState();
+        const apiAvatarUrl = pickString(
+          profile.avatarUrl,
+          profile.avatar_url,
+          profile.imageUrl,
+          profile.image_url,
+          profile.avatar
+        );
         const nextForm = {
           displayName: pickString(profile.displayName, profile.name) ?? "",
           bio: pickString(profile.bio) ?? "",
           favoriteTeamId: pickString(profile.favoriteTeamId) ?? "",
           locale: pickString(profile.locale, profile.language) ?? locale,
-          avatarUrl: pickString(profile.avatarUrl) ?? "",
+          avatarUrl: apiAvatarUrl ?? "",
         };
 
         setForm(nextForm);
+        setAvatarPreviewUrl(apiAvatarUrl ?? currentUser.avatarUrl ?? null);
         useUserStore.setState({
           displayName: nextForm.displayName,
           favoriteTeam: nextForm.favoriteTeamId,
           language: nextForm.locale,
+          avatarUrl: apiAvatarUrl ?? currentUser.avatarUrl,
         });
       })
       .catch((error) => {
@@ -149,7 +160,7 @@ export default function EditProfilePage() {
     }
     if (touched.avatarUrl || form.avatarUrl) {
       if (form.avatarUrl.length > 500) e.avatarUrl = profileT("avatarUrlMaxLength");
-      if (form.avatarUrl && !isHttpUrl(form.avatarUrl)) {
+      if (form.avatarUrl && !isValidAvatarUrl(form.avatarUrl)) {
         e.avatarUrl = profileT("avatarUrlInvalid");
       }
     }
@@ -179,12 +190,13 @@ export default function EditProfilePage() {
           bio: optionalTrimmed(form.bio),
           favoriteTeamId: optionalTrimmed(form.favoriteTeamId),
           locale: optionalTrimmed(form.locale),
-          avatarUrl: optionalTrimmed(form.avatarUrl),
+          avatarUrl: normalizeAvatarUrlForSave(form.avatarUrl),
         },
         { locale: form.locale }
       );
       const profile = extractCurrentUser(response);
 
+      const currentAvatarUrl = useUserStore.getState().avatarUrl;
       useUserStore.setState({
         displayName:
           pickString(profile?.displayName, profile?.name) ??
@@ -192,6 +204,9 @@ export default function EditProfilePage() {
         favoriteTeam:
           pickString(profile?.favoriteTeamId) ?? form.favoriteTeamId,
         language: pickString(profile?.locale, profile?.language) ?? form.locale,
+        avatarUrl:
+          pickString(profile?.avatarUrl, profile?.avatar_url, profile?.imageUrl, profile?.image_url, profile?.avatar) ??
+          (currentAvatarUrl || form.avatarUrl),
       });
       setSaved(true);
       addToast({
@@ -233,6 +248,7 @@ export default function EditProfilePage() {
     setServerError("");
 
     try {
+      const localPreviewUrl = await readFileAsDataUrl(file);
       const response = await uploadProfileAvatar(file, { locale: form.locale });
       const url = extractUploadedAvatarUrl(response);
       if (!url) {
@@ -240,10 +256,13 @@ export default function EditProfilePage() {
       }
 
       update("avatarUrl", url);
+      setAvatarPreviewUrl(localPreviewUrl);
+      useUserStore.setState({ avatarUrl: localPreviewUrl });
       addToast({
         type: "success",
         title: profileT("avatarUploaded"),
       });
+      router.refresh();
     } catch (error) {
       const message = getProfileErrorMessage(error);
       setServerError(message);
@@ -317,7 +336,7 @@ export default function EditProfilePage() {
             </label>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <Avatar
-                src={form.avatarUrl || null}
+                src={avatarPreviewUrl || form.avatarUrl || null}
                 fallback={user.username}
                 size="xl"
                 className="ring-2 ring-cyan-500/30"
@@ -434,6 +453,10 @@ function optionalTrimmed(value: string) {
   return trimmed || undefined;
 }
 
+function isValidAvatarUrl(value: string) {
+  return isHttpUrl(value) || isRootRelativeUrl(value);
+}
+
 function isHttpUrl(value: string) {
   try {
     const url = new URL(value);
@@ -443,14 +466,49 @@ function isHttpUrl(value: string) {
   }
 }
 
+function isRootRelativeUrl(value: string) {
+  return value.startsWith("/") && !value.startsWith("//") && !/[\s\\]/.test(value);
+}
+
+function normalizeAvatarUrlForSave(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (isHttpUrl(trimmed)) return trimmed;
+  if (typeof window !== "undefined" && isRootRelativeUrl(trimmed)) {
+    return new URL(trimmed, window.location.origin).toString();
+  }
+  return trimmed;
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+      reject(new Error("Unable to read image preview"));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Unable to read image preview"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function extractUploadedAvatarUrl(response: UploadProfileAvatarResponse) {
   return pickString(
     response.avatarUrl,
+    response.avatar_url,
     response.url,
     response.imageUrl,
+    response.image_url,
+    response.avatar,
     response.data?.avatarUrl,
+    response.data?.avatar_url,
     response.data?.url,
-    response.data?.imageUrl
+    response.data?.imageUrl,
+    response.data?.image_url,
+    response.data?.avatar
   );
 }
 

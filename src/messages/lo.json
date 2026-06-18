@@ -661,7 +661,28 @@
     "noPredictedMatchesTitle": "No predicted matches",
     "noPredictedMatchesDescription": "No matches with predicted status were found in this list yet.",
     "submittedAt": "ສົ່ງເມື່ອ",
-    "lockedAt": "ລັອກເມື່ອ"
+    "lockedAt": "ລັອກເມື່ອ",
+    "historyTotal": "{total} ລາຍການ",
+    "historySearch": "ຄົ້ນຫາປະຫວັດການທາຍຜົນ",
+    "historyDate": "ວັນທີທາຍ",
+    "historyLimit": "ຈຳນວນຕໍ່ໜ້າ",
+    "historyLimitOption": "{limit} ລາຍການ",
+    "historyReset": "ລ້າງຕົວກອງ",
+    "historyStatus": {
+      "all": "ທັງໝົດ",
+      "pending": "ລໍຖ້າ",
+      "won": "ຊະນະ",
+      "lost": "ແພ້"
+    },
+    "historyUnavailableTitle": "ຍັງໂຫຼດປະຫວັດບໍ່ໄດ້",
+    "historyUnavailableDescription": "ລອງປ່ຽນຕົວກອງ ຫຼືໂຫຼດໃໝ່ອີກຄັ້ງ.",
+    "noPredictionsAfterFilter": "ບໍ່ພົບປະຫວັດທີ່ກົງກັບຕົວກອງນີ້.",
+    "historySubmittedStatus": "ເວລາສົ່ງ / ສະຖານະ",
+    "historyMatch": "ແມຕຊ໌",
+    "historyScoreColumn": "ທາຍ / ຜົນຈິງ",
+    "historyPaginationSummary": "ສະແດງ {start}-{end} ຈາກ {total}",
+    "previousPage": "ກ່ອນໜ້າ",
+    "nextPage": "ຕໍ່ໄປ"
   },
   "aiInsight": {
     "title": "AI ວິເຄາະ",

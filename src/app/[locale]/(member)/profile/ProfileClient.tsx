@@ -44,6 +44,7 @@ export default function ProfilePage() {
     useShallow((s) => ({
       username: s.username,
       displayName: s.displayName,
+      avatarUrl: s.avatarUrl,
       freePoints: s.freePoints,
       premiumCredits: s.premiumCredits,
       level: s.level,
@@ -173,6 +174,9 @@ export default function ProfilePage() {
           displayName:
             pickString(profile.name, profile.displayName, profile.display_name) ??
             currentUser.displayName,
+          avatarUrl:
+            pickString(profile.avatarUrl, profile.avatar_url, profile.imageUrl, profile.image_url, profile.avatar) ??
+            currentUser.avatarUrl,
           email: pickString(profile.email) ?? currentUser.email,
           phone: pickString(profile.phone, profile.tel) ?? currentUser.phone,
           birthYear:
@@ -268,7 +272,14 @@ export default function ProfilePage() {
           },
         });
         setProfileMeta({
-          avatarUrl: pickNullableString(profile.avatarUrl),
+          avatarUrl:
+            pickNullableString(
+              profile.avatarUrl,
+              profile.avatar_url,
+              profile.imageUrl,
+              profile.image_url,
+              profile.avatar
+            ) ?? currentUser.avatarUrl,
           createdAt: pickString(profile.createdAt) ?? "",
         });
       })
@@ -294,6 +305,7 @@ export default function ProfilePage() {
   const memberSince = profileMeta.createdAt
     ? formatMemberSince(profileMeta.createdAt, locale)
     : "Jan 2026";
+  const profileAvatarUrl = profileMeta.avatarUrl ?? profileUser.avatarUrl ?? null;
 
   const stats = [
     { label: t("predictions"), value: profileUser.totalPredictions.toString(), icon: Target, tone: "text-cyan-300" },
@@ -312,7 +324,7 @@ export default function ProfilePage() {
               <div className="relative mx-auto shrink-0 sm:mx-0">
                 <div className="absolute -inset-2 rounded-full bg-cyan-400/15 blur-xl" />
                 <Avatar
-                  src={profileMeta.avatarUrl}
+                  src={profileAvatarUrl}
                   fallback={profileUser.username.slice(0, 2).toUpperCase()}
                   size="xl"
                   className="relative ring-2 ring-cyan-400/40"
@@ -659,8 +671,8 @@ function pickString(...values: unknown[]) {
   return undefined;
 }
 
-function pickNullableString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value : null;
+function pickNullableString(...values: unknown[]) {
+  return pickString(...values) ?? null;
 }
 
 function pickNumber(...values: unknown[]) {

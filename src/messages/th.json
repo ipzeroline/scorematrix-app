@@ -661,7 +661,28 @@
     "noPredictedMatchesTitle": "ยังไม่มีคู่ที่ทายแล้ว",
     "noPredictedMatchesDescription": "ยังไม่พบคู่ที่มีสถานะทายแล้วในรายการนี้",
     "submittedAt": "ส่งคำทายเมื่อ",
-    "lockedAt": "ล็อกคำทายเมื่อ"
+    "lockedAt": "ล็อกคำทายเมื่อ",
+    "historyTotal": "ทั้งหมด {total} รายการ",
+    "historySearch": "ค้นหาประวัติการทำนายผล",
+    "historyDate": "วันที่ทาย",
+    "historyLimit": "จำนวนต่อหน้า",
+    "historyLimitOption": "{limit} รายการ",
+    "historyReset": "ล้างตัวกรอง",
+    "historyStatus": {
+      "all": "ทั้งหมด",
+      "pending": "รอผล",
+      "won": "ชนะ",
+      "lost": "แพ้"
+    },
+    "historyUnavailableTitle": "ยังโหลดประวัติไม่ได้",
+    "historyUnavailableDescription": "ลองเปลี่ยนตัวกรองหรือโหลดใหม่อีกครั้ง",
+    "noPredictionsAfterFilter": "ไม่พบประวัติที่ตรงกับตัวกรองนี้",
+    "historySubmittedStatus": "เวลาส่งทาย / สถานะ",
+    "historyMatch": "แมตช์ที่ทาย",
+    "historyScoreColumn": "ทาย / ผลจริง",
+    "historyPaginationSummary": "แสดง {start}-{end} จาก {total} รายการ",
+    "previousPage": "ก่อนหน้า",
+    "nextPage": "ถัดไป"
   },
   "aiInsight": {
     "title": "AI วิเคราะห์",
