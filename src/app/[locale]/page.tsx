@@ -203,7 +203,7 @@ export default async function Page({ params }: Props) {
   );
 
   return (
-    <div className="flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden pb-5 lg:gap-5">
+    <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-4 overflow-x-hidden px-4 pb-5 sm:px-0 lg:gap-5">
       {/* Hero Banner */}
       <section>
         <HeroBanner banners={banners} />

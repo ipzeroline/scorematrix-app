@@ -102,23 +102,23 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
 
           {leagueGroups.map((group) => (
             <div key={group.name} className="border-b border-cyan-300/10 last:border-b-0">
-              <div className="relative overflow-hidden border-b border-cyan-300/10 bg-[linear-gradient(90deg,rgba(8,37,44,0.78),rgba(15,14,27,0.92)_62%,rgba(72,18,74,0.38))] px-5 py-3">
+              <div className="relative overflow-hidden border-b border-cyan-300/10 bg-[linear-gradient(90deg,rgba(8,37,44,0.78),rgba(15,14,27,0.92)_62%,rgba(72,18,74,0.38))] px-3 py-2.5 sm:px-5 sm:py-3">
                 <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-cyan-300 via-fuchsia-400 to-amber-300" />
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-300/[0.04] shadow-[0_0_20px_rgba(34,211,238,0.08)]">
+                <div className="flex items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-300/[0.04] shadow-[0_0_20px_rgba(34,211,238,0.08)] sm:h-10 sm:w-10">
                       <ApiLeagueLogo name={group.name} logo={group.logo} size="sm" />
                     </span>
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
-                        <h3 className="truncate text-sm font-black uppercase tracking-[0.08em] text-white md:text-[15px]">
+                        <h3 className="truncate text-[13px] font-black uppercase tracking-[0.06em] text-white sm:text-sm md:text-[15px]">
                           {group.name}
                         </h3>
                       </div>
-                      <div className="mt-1.5 h-px w-28 max-w-full rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-transparent" />
+                      <div className="mt-1 h-px w-24 max-w-full rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-transparent sm:mt-1.5 sm:w-28" />
                     </div>
                   </div>
-                  <span className="shrink-0 rounded-lg border border-cyan-300/20 bg-[#0b1624]/80 px-2.5 py-1.5 text-xs font-black text-cyan-100">
+                  <span className="shrink-0 rounded-lg border border-cyan-300/20 bg-[#0b1624]/80 px-2 py-1 text-[11px] font-black text-cyan-100 sm:px-2.5 sm:py-1.5 sm:text-xs">
                     {group.matches.length} {labels.matches}
                   </span>
                 </div>
@@ -160,10 +160,10 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                     </div>
                   </div>
 
-                  <div className="border-l-4 border-l-cyan-500/20 px-3.5 py-4 md:hidden">
-                    <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="border-l-2 border-l-cyan-500/25 px-3 py-2.5 md:hidden">
+                    <div className="mb-2 flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="whitespace-nowrap font-mono text-base font-black leading-none text-cyan-200">
+                        <div className="whitespace-nowrap font-mono text-sm font-black leading-none text-cyan-200">
                           {match.kickoffTime}
                         </div>
                         <div className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
@@ -173,23 +173,20 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                       <StatusBadge
                         status={match.status}
                         label={match.statusLabel}
-                        className="shrink-0 text-[10px]"
+                        className="shrink-0 text-[9px]"
                       />
                     </div>
 
-                    <div className="grid grid-cols-[minmax(0,1fr)_58px_minmax(0,1fr)] items-center gap-2.5">
+                    <div className="grid grid-cols-[minmax(0,1fr)_48px_minmax(0,1fr)_30px] items-center gap-2">
                       <MobileTeamCell name={match.homeTeam} logo={match.homeCrest} />
                       <div className="flex justify-center">
-                        <span className="grid min-h-10 min-w-12 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-300/[0.055] px-2 font-mono text-xs font-black uppercase text-cyan-100">
+                        <span className="grid min-h-8 min-w-10 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.055] px-1.5 font-mono text-[11px] font-black uppercase text-cyan-100">
                           {formatScore(match, t("common.vs"))}
                         </span>
                       </div>
                       <MobileTeamCell name={match.awayTeam} logo={match.awayCrest} />
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-end border-t border-white/[0.06] pt-3">
                       <span className="grid h-8 w-8 place-items-center rounded-lg border border-cyan-300/25 bg-cyan-300/10 text-cyan-100">
-                        <ChevronRight size={14} />
+                        <ChevronRight size={13} />
                       </span>
                     </div>
                   </div>
@@ -275,10 +272,10 @@ function TeamCell({
 function MobileTeamCell({ name, logo }: { name: string; logo: string }) {
   return (
     <div className="min-w-0">
-      <div className="mb-1.5 flex justify-center">
-        <ApiTeamLogo name={name} logo={logo} size="sm" />
+      <div className="mb-1 flex justify-center">
+        <ApiTeamLogo name={name} logo={logo} size="xs" />
       </div>
-      <span className="block truncate text-center text-sm font-black leading-tight text-slate-100">
+      <span className="block truncate text-center text-xs font-black leading-tight text-slate-100">
         {name}
       </span>
     </div>

@@ -160,23 +160,23 @@ export function LiveMatchHighlights({
 
           {leagueGroups.map((group) => (
             <div key={group.name} className="border-b border-lime-300/10 last:border-b-0">
-              <div className="relative overflow-hidden border-b border-lime-300/10 bg-[linear-gradient(90deg,rgba(18,44,31,0.78),rgba(10,17,28,0.94)_62%,rgba(70,51,13,0.36))] px-5 py-3">
+              <div className="relative overflow-hidden border-b border-lime-300/10 bg-[linear-gradient(90deg,rgba(18,44,31,0.78),rgba(10,17,28,0.94)_62%,rgba(70,51,13,0.36))] px-3 py-2.5 sm:px-5 sm:py-3">
                 <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-lime-300 via-cyan-300 to-amber-300" />
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex min-w-0 items-center gap-4">
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-lime-300/20 bg-lime-300/[0.04] shadow-[0_0_20px_rgba(190,242,100,0.08)]">
+                <div className="flex items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-lime-300/20 bg-lime-300/[0.04] shadow-[0_0_20px_rgba(190,242,100,0.08)] sm:h-10 sm:w-10">
                       <ApiLeagueLogo name={group.name} logo={group.logo} size="sm" />
                     </span>
                     <div className="min-w-0">
                       <div className="flex min-w-0 items-center gap-2">
-                        <h3 className="truncate text-sm font-black uppercase tracking-[0.08em] text-white md:text-[15px]">
+                        <h3 className="truncate text-[13px] font-black uppercase tracking-[0.06em] text-white sm:text-sm md:text-[15px]">
                           {group.name}
                         </h3>
                       </div>
-                      <div className="mt-1.5 h-px w-28 max-w-full rounded-full bg-gradient-to-r from-lime-300 via-cyan-300 to-transparent" />
+                      <div className="mt-1 h-px w-24 max-w-full rounded-full bg-gradient-to-r from-lime-300 via-cyan-300 to-transparent sm:mt-1.5 sm:w-28" />
                     </div>
                   </div>
-                  <span className="shrink-0 rounded-lg border border-lime-300/20 bg-[#0b1624]/80 px-2.5 py-1.5 text-xs font-black text-lime-100">
+                  <span className="shrink-0 rounded-lg border border-lime-300/20 bg-[#0b1624]/80 px-2 py-1 text-[11px] font-black text-lime-100 sm:px-2.5 sm:py-1.5 sm:text-xs">
                     {group.matches.length} {labels.matches}
                   </span>
                 </div>
@@ -223,10 +223,10 @@ export function LiveMatchHighlights({
                     </div>
                   </div>
 
-                  <div className="border-l-4 border-l-lime-500/30 px-3.5 py-4 md:hidden">
-                    <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="border-l-2 border-l-lime-500/35 px-3 py-2.5 md:hidden">
+                    <div className="mb-2 flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-base font-black leading-none text-lime-300">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-sm font-black leading-none text-lime-300">
                           <span className="relative flex h-2 w-2 shrink-0">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400" />
@@ -239,23 +239,20 @@ export function LiveMatchHighlights({
                       </div>
                       <StatusBadge
                         status={match.status}
-                        className="shrink-0 border border-green-500/20 bg-green-500/15 text-[10px] text-green-300"
+                        className="shrink-0 border border-green-500/20 bg-green-500/15 text-[9px] text-green-300"
                       />
                     </div>
 
-                    <div className="grid grid-cols-[minmax(0,1fr)_58px_minmax(0,1fr)] items-center gap-2.5">
+                    <div className="grid grid-cols-[minmax(0,1fr)_48px_minmax(0,1fr)_30px] items-center gap-2">
                       <LiveMobileTeamCell name={match.homeTeam} logo={match.homeCrest} />
                       <div className="flex justify-center">
-                        <span className="grid min-h-10 min-w-12 place-items-center rounded-xl border border-lime-300/30 bg-lime-300/10 px-2 font-mono text-xs font-black text-lime-100">
+                        <span className="grid min-h-8 min-w-10 place-items-center rounded-lg border border-lime-300/30 bg-lime-300/10 px-1.5 font-mono text-[11px] font-black text-lime-100">
                           {match.homeScore}-{match.awayScore}
                         </span>
                       </div>
                       <LiveMobileTeamCell name={match.awayTeam} logo={match.awayCrest} />
-                    </div>
-
-                    <div className="mt-3 flex items-center justify-end border-t border-white/[0.06] pt-3">
                       <span className="grid h-8 w-8 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100">
-                        <ChevronRight size={14} />
+                        <ChevronRight size={13} />
                       </span>
                     </div>
                   </div>
@@ -339,10 +336,10 @@ function LiveTeamCell({
 function LiveMobileTeamCell({ name, logo }: { name: string; logo: string }) {
   return (
     <div className="min-w-0">
-      <div className="mb-1.5 flex justify-center">
-        <ApiTeamLogo name={name} logo={logo} size="sm" />
+      <div className="mb-1 flex justify-center">
+        <ApiTeamLogo name={name} logo={logo} size="xs" />
       </div>
-      <span className="block truncate text-center text-sm font-black leading-tight text-slate-100">
+      <span className="block truncate text-center text-xs font-black leading-tight text-slate-100">
         {name}
       </span>
     </div>
