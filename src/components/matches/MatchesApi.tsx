@@ -38,6 +38,7 @@ import { useUserStore } from "@/stores/user-store";
 import { MatchStatus } from "@/types/common";
 import {
   cn,
+  formatDate,
   formatTime,
   getThailandDateKey,
   THAILAND_TIME_ZONE,
@@ -82,6 +83,7 @@ type MatchTableLabels = {
   postponed: string;
   cancelled: string;
   time: string;
+  dateTime: string;
   home: string;
   score: string;
   away: string;
@@ -186,6 +188,7 @@ export function MatchesApi({
       postponed: t("status.postponed"),
       cancelled: t("status.cancelled"),
       time: t("football.table.time"),
+      dateTime: `${t("matches.dateFilter")} / ${t("football.table.time")}`,
       home: t("football.table.home"),
       score: t("football.table.score"),
       away: t("football.table.away"),
@@ -668,7 +671,7 @@ function MatchesBoardSkeleton() {
           {Array.from({ length: 6 }, (_, index) => (
             <div
               key={index}
-              className="grid min-h-12 grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3"
+              className="grid min-h-12 grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3"
             >
               <Skeleton className="h-4 w-12 rounded" />
               <div className="flex items-center gap-2 justify-end">
@@ -896,8 +899,8 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
   return (
     <section className="overflow-hidden rounded-xl border border-gray-800/70 bg-[#07080b]">
       {/* Desktop Table Header */}
-      <div className="hidden md:grid grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white">
-        <div className="pl-1">{labels.time}</div>
+      <div className="hidden md:grid grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white">
+        <div className="pl-1">{labels.dateTime}</div>
         <div className="text-right pr-3">{labels.home}</div>
         <div className="text-center">{labels.vs}</div>
         <div className="text-left pl-3">{labels.away}</div>
@@ -979,6 +982,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
     [match, locale]
   );
   const matchTime = useMemo(() => formatMatchTime(match, locale), [match, locale]);
+  const matchDate = useMemo(() => formatMatchDate(match, locale), [match, locale]);
   const statusGroup = useMemo(() => getFixtureStatusGroup(match), [match]);
   const statusLabel = useMemo(
     () => getFixtureStatusLabel(match, labels.statusLabels),
@@ -1016,7 +1020,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
       {/* Desktop Grid Row */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 transition-all duration-200 border-l-2",
+          "hidden md:grid grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 transition-all duration-200 border-l-2",
           statusGroup === MatchStatus.LIVE
             ? "border-l-green-500 bg-gradient-to-r from-green-500/[0.04] via-transparent to-transparent"
             : statusGroup === MatchStatus.UPCOMING
@@ -1028,6 +1032,9 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
       >
         {/* Column 1: Time / Status */}
         <div className="flex flex-col justify-center items-start pl-1">
+          <span className="whitespace-nowrap text-[10px] font-bold leading-none text-gray-500">
+            {matchDate}
+          </span>
           <span className="font-mono text-xs font-black tracking-wider text-cyan-200">
             {matchTime}
           </span>
@@ -1143,6 +1150,9 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
+            <div className="mb-1 truncate text-xs font-bold leading-none text-gray-500">
+              {matchDate}
+            </div>
             <div className="whitespace-nowrap text-base font-black leading-none text-cyan-200">
               {matchTime}
             </div>
@@ -1299,4 +1309,8 @@ function getMatchStatusDetail(
 
 function formatMatchTime(match: ApiFootballFixture, locale: string) {
   return formatTime(match.kickoffTime, locale);
+}
+
+function formatMatchDate(match: ApiFootballFixture, locale: string) {
+  return formatDate(match.kickoffTime, locale);
 }

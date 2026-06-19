@@ -190,7 +190,6 @@ export default function EditProfilePage() {
           bio: optionalTrimmed(form.bio),
           favoriteTeamId: optionalTrimmed(form.favoriteTeamId),
           locale: optionalTrimmed(form.locale),
-          avatarUrl: normalizeAvatarUrlForSave(form.avatarUrl),
         },
         { locale: form.locale }
       );
@@ -249,7 +248,11 @@ export default function EditProfilePage() {
 
     try {
       const localPreviewUrl = await readFileAsDataUrl(file);
-      const response = await uploadProfileAvatar(file, { locale: form.locale });
+      const previousAvatarUrl = form.avatarUrl || useUserStore.getState().avatarUrl || null;
+      const response = await uploadProfileAvatar(file, {
+        locale: form.locale,
+        previousAvatarUrl,
+      });
       const url = extractUploadedAvatarUrl(response);
       if (!url) {
         throw new Error(profileT("avatarUploadMissingUrl"));
@@ -257,7 +260,7 @@ export default function EditProfilePage() {
 
       update("avatarUrl", url);
       setAvatarPreviewUrl(localPreviewUrl);
-      useUserStore.setState({ avatarUrl: localPreviewUrl });
+      useUserStore.setState({ avatarUrl: url });
       addToast({
         type: "success",
         title: profileT("avatarUploaded"),
@@ -334,6 +337,9 @@ export default function EditProfilePage() {
             <label className="mb-3 block text-sm font-medium text-gray-400">
               {profileT("profileImage")}
             </label>
+            <p className="mb-3 text-xs leading-5 text-gray-500">
+              {profileT("profileImageHint")}
+            </p>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <Avatar
                 src={avatarPreviewUrl || form.avatarUrl || null}
@@ -468,16 +474,6 @@ function isHttpUrl(value: string) {
 
 function isRootRelativeUrl(value: string) {
   return value.startsWith("/") && !value.startsWith("//") && !/[\s\\]/.test(value);
-}
-
-function normalizeAvatarUrlForSave(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return undefined;
-  if (isHttpUrl(trimmed)) return trimmed;
-  if (typeof window !== "undefined" && isRootRelativeUrl(trimmed)) {
-    return new URL(trimmed, window.location.origin).toString();
-  }
-  return trimmed;
 }
 
 function readFileAsDataUrl(file: File) {

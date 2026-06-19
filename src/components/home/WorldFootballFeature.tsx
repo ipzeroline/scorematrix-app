@@ -8,7 +8,7 @@ import { ArrowRight, Calendar, MapPinned, Rows3 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatMatchTimeWithZone } from "@/lib/utils";
+import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 import {
   worldCupGroups as mockWorldCupGroups,
   type WorldCupGroup,
@@ -141,6 +141,9 @@ export function WorldFootballFeature({
                       <div className="flex min-w-0 shrink-0 flex-col items-center justify-center">
                         <span className="min-w-[62px] rounded-md border border-gray-800 bg-black/55 px-2 py-1 text-center font-mono text-sm font-black leading-none text-white">
                           {formatScore(match.score, formatMatchTimeWithZone(match.kickoffTime))}
+                        </span>
+                        <span className="mt-1 max-w-full truncate text-[10px] font-bold leading-none text-gray-500">
+                          {formatDate(match.kickoffTime, locale)}
                         </span>
                         <span className="mt-1 flex max-w-full items-center justify-center overflow-hidden">
                           <StatusBadge

@@ -15,7 +15,7 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types/common";
 import { buildPredictMatchHref } from "@/lib/predict-route";
-import { cn, formatTime } from "@/lib/utils";
+import { cn, formatDate, formatTime } from "@/lib/utils";
 import { apiGetRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { useUserStore } from "@/stores/user-store";
 import {
@@ -738,7 +738,7 @@ export function PredictApi() {
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div
                         key={index}
-                        className="grid min-h-12 grid-cols-[82px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 px-5 py-2.5"
+                        className="grid min-h-12 grid-cols-[118px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 px-5 py-2.5"
                       >
                         <Skeleton className="h-4 w-12 rounded" />
                         <div className="flex items-center gap-2 justify-end">
@@ -768,8 +768,10 @@ export function PredictApi() {
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#07080b] shadow-[0_14px_44px_rgba(0,0,0,0.24)]">
                   {/* Desktop Table Header */}
-                  <div className="hidden md:grid grid-cols-[82px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-gray-300">
-                    <div className="pl-1">{t("football.table.time")}</div>
+                  <div className="hidden md:grid grid-cols-[118px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-gray-300">
+                    <div className="pl-1">
+                      {t("matches.dateFilter")} / {t("football.table.time")}
+                    </div>
                     <div className="text-right pr-3">{t("football.table.home")}</div>
                     <div className="text-center">VS</div>
                     <div className="text-left pl-3">{t("football.table.away")}</div>
@@ -1839,6 +1841,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
   predictMatchHref: string;
 }) {
   const router = useRouter();
+  const matchDate = formatDate(match.kickoffTime, locale);
   const matchTime = formatTime(match.kickoffTime, locale);
   const statusGroup = match.status;
   const statusLabel = match.statusLabel;
@@ -1859,7 +1862,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
       {/* Desktop Grid Row */}
       <div
         className={cn(
-          "hidden min-h-[62px] grid-cols-[82px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 border-l-2 px-5 py-2 transition-all duration-200 md:grid",
+          "hidden min-h-[68px] grid-cols-[118px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 border-l-2 px-5 py-2 transition-all duration-200 md:grid",
           hasPredicted
             ? "border-l-emerald-400 bg-gradient-to-r from-emerald-400/[0.08] via-[#0b1118] to-[#090b10]"
             : "border-l-cyan-400/30 group-hover:border-l-cyan-300",
@@ -1869,6 +1872,9 @@ const PredictMatchRow = memo(function PredictMatchRow({
       >
         {/* Column 1: Time / Status */}
         <div className="flex flex-col items-start justify-center gap-1 pl-1">
+          <span className="whitespace-nowrap text-[10px] font-bold leading-none text-gray-500">
+            {matchDate}
+          </span>
           <span className="whitespace-nowrap text-xs font-black leading-none tracking-wide text-cyan-200">
             {matchTime}
           </span>
@@ -1967,6 +1973,9 @@ const PredictMatchRow = memo(function PredictMatchRow({
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="min-w-0">
+            <div className="mb-1 text-xs font-bold leading-none text-gray-500">
+              {matchDate}
+            </div>
             <div className="whitespace-nowrap text-base font-black leading-none text-cyan-200">
               {matchTime}
             </div>

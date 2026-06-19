@@ -326,8 +326,8 @@ export default function ProfilePage() {
                 <Avatar
                   src={profileAvatarUrl}
                   fallback={profileUser.username.slice(0, 2).toUpperCase()}
-                  size="xl"
-                  className="relative ring-2 ring-cyan-400/40"
+                  size="2xl"
+                  className="relative p-1 ring-2 ring-cyan-400/40"
                 />
               </div>
               <div className="min-w-0 flex-1 text-center sm:text-left">

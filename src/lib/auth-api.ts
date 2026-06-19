@@ -292,6 +292,10 @@ export type UploadProfileAvatarResponse = {
   [key: string]: unknown;
 };
 
+type UploadProfileAvatarOptions = ApiRequestOptions & {
+  previousAvatarUrl?: string | null;
+};
+
 export type CurrentUserResponse =
   | CurrentUserData
   | {
@@ -478,9 +482,15 @@ export async function updateUserPreferences(
   return normalizeCurrentUserResponse(response);
 }
 
-export async function uploadProfileAvatar(file: File, options?: ApiRequestOptions) {
+export async function uploadProfileAvatar(
+  file: File,
+  options?: UploadProfileAvatarOptions
+) {
   const body = new FormData();
   body.append("file", file);
+  if (options?.previousAvatarUrl) {
+    body.append("previousAvatarUrl", options.previousAvatarUrl);
+  }
 
   try {
     return await apiPostFormRaw<UploadProfileAvatarResponse>(
@@ -499,7 +509,7 @@ export async function uploadProfileAvatar(file: File, options?: ApiRequestOption
 
 async function uploadProfileAvatarThroughApp(
   file: File,
-  options?: ApiRequestOptions
+  options?: UploadProfileAvatarOptions
 ) {
   if (typeof window === "undefined") {
     throw new ApiClientError("Avatar upload endpoint not found", 404);
@@ -507,6 +517,9 @@ async function uploadProfileAvatarThroughApp(
 
   const body = new FormData();
   body.append("file", file);
+  if (options?.previousAvatarUrl) {
+    body.append("previousAvatarUrl", options.previousAvatarUrl);
+  }
 
   const locale = options?.locale ?? undefined;
   const headers = new Headers(options?.headers);

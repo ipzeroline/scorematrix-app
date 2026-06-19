@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import {
   BarChart3,
+  Eye,
   Lightbulb,
   Newspaper,
   Sparkles,
@@ -39,6 +40,13 @@ function localizeField(article: NewsArticle, field: "title" | "summary", locale:
   const value = article[field];
   if (typeof value === "string") return value;
   return value[locale] ?? value.en ?? "";
+}
+
+function formatViewCount(value: number, locale: string) {
+  return new Intl.NumberFormat(locale, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
 }
 
 interface NewsSectionProps {
@@ -91,6 +99,10 @@ export function NewsSection({ articles }: NewsSectionProps) {
           const CategoryIcon = meta.icon;
           const title = localizeField(article, "title", locale);
           const summary = localizeField(article, "summary", locale);
+          const viewCount =
+            typeof article.viewCount === "number" && Number.isFinite(article.viewCount)
+              ? Math.max(0, Math.trunc(article.viewCount))
+              : null;
           return (
             <Link
               key={article.id}
@@ -141,9 +153,17 @@ export function NewsSection({ articles }: NewsSectionProps) {
                   <span className="text-[11px] text-gray-500">
                     {article.author}
                   </span>
-                  <span className="text-[11px] text-gray-600">
-                    {article.readTime} {t("news.minRead")}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-2 text-[11px] text-gray-600">
+                    {viewCount !== null ? (
+                      <span className="inline-flex items-center gap-1 rounded-md border border-cyan-300/10 bg-cyan-300/[0.04] px-1.5 py-0.5 text-cyan-100/75">
+                        <Eye size={12} strokeWidth={2.2} aria-hidden="true" />
+                        {formatViewCount(viewCount, locale)} {t("news.views")}
+                      </span>
+                    ) : null}
+                    <span>
+                      {article.readTime} {t("news.minRead")}
+                    </span>
+                  </div>
                 </div>
               </Card>
             </Link>

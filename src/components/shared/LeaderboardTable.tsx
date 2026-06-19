@@ -94,7 +94,8 @@ export function LeaderboardTable({
                 <Avatar
                   src={entry.avatar}
                   fallback={entry.username}
-                  size="sm"
+                  size="md"
+                  className={isHighlighted ? "border-cyan-400/35 ring-1 ring-cyan-300/25" : "border-gray-700"}
                 />
                 <span
                   className={cn(

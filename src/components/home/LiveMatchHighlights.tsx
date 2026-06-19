@@ -11,6 +11,7 @@ import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types";
 import type { ApiFootballFixture } from "@/lib/api-football";
+import { formatDate } from "@/lib/utils";
 
 interface LiveMatch {
   id: string;
@@ -21,6 +22,7 @@ interface LiveMatch {
   homeScore: number;
   awayScore: number;
   minute: number;
+  kickoffDate: string;
   league: string;
   leagueLogo: string | null;
   status: MatchStatus;
@@ -51,8 +53,8 @@ export function LiveMatchHighlights({
     () =>
       currentFixtures
         .filter((fixture) => fixture.status === MatchStatus.LIVE)
-        .map(mapFixtureToLiveMatch),
-    [currentFixtures]
+        .map((fixture) => mapFixtureToLiveMatch(fixture, locale)),
+    [currentFixtures, locale]
   );
   const leagueGroups = useMemo(() => groupLiveMatchesByLeague(displayMatches), [displayMatches]);
   const labels = getBoardLabels(locale);
@@ -150,8 +152,8 @@ export function LiveMatchHighlights({
         </Card>
       ) : displayMatches.length > 0 ? (
         <div className="overflow-hidden rounded-xl border border-lime-300/20 bg-[#070b12] shadow-[0_18px_44px_rgba(0,0,0,0.34)]">
-          <div className="hidden grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-lime-300/10 bg-[#0a101a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white md:grid">
-            <span className="pl-1">{labels.time}</span>
+          <div className="hidden grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-lime-300/10 bg-[#0a101a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white md:grid">
+            <span className="pl-1">{labels.dateTime}</span>
             <span className="pr-3 text-right">{labels.home}</span>
             <span className="text-center">{labels.vs}</span>
             <span className="pl-3 text-left">{labels.away}</span>
@@ -188,8 +190,11 @@ export function LiveMatchHighlights({
                   href={`/${locale}/livescore/match/${match.id}`}
                   className="group block border-b border-white/[0.06] bg-[#07090d] transition-colors duration-150 last:border-b-0 hover:bg-[#101a18]"
                 >
-                  <div className="hidden min-w-0 grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 md:grid">
+                  <div className="hidden min-w-0 grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 md:grid">
                     <div className="flex min-w-0 flex-col items-start justify-center gap-1 md:pl-1">
+                      <span className="whitespace-nowrap text-[10px] font-bold leading-none text-slate-500">
+                        {match.kickoffDate}
+                      </span>
                       <span className="inline-flex items-center gap-1.5 font-mono text-xs font-black tracking-wider text-lime-300">
                         <span className="relative flex h-2 w-2 shrink-0">
                           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
@@ -226,6 +231,9 @@ export function LiveMatchHighlights({
                   <div className="border-l-2 border-l-lime-500/35 px-3 py-2.5 md:hidden">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <div className="min-w-0">
+                        <div className="mb-1 truncate text-xs font-bold leading-none text-slate-500">
+                          {match.kickoffDate}
+                        </div>
                         <div className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-sm font-black leading-none text-lime-300">
                           <span className="relative flex h-2 w-2 shrink-0">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
@@ -266,7 +274,7 @@ export function LiveMatchHighlights({
   );
 }
 
-function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
+function mapFixtureToLiveMatch(fixture: ApiFootballFixture, locale = "en-US"): LiveMatch {
   return {
     id: String(fixture.apiFixtureId ?? fixture.id),
     homeTeam: fixture.home.name,
@@ -276,6 +284,7 @@ function mapFixtureToLiveMatch(fixture: ApiFootballFixture): LiveMatch {
     homeScore: fixture.score.home ?? 0,
     awayScore: fixture.score.away ?? 0,
     minute: fixture.elapsed ?? 0,
+    kickoffDate: formatDate(fixture.kickoffTime, locale),
     league: fixture.league.name,
     leagueLogo: fixture.league.logo,
     status: fixture.status,
@@ -350,6 +359,7 @@ function getBoardLabels(locale: string) {
   if (locale === "th") {
     return {
       time: "เวลา",
+      dateTime: "วัน / เวลา",
       home: "เจ้าบ้าน",
       vs: "VS",
       away: "ทีมเยือน",
@@ -360,6 +370,7 @@ function getBoardLabels(locale: string) {
 
   return {
     time: "Time",
+    dateTime: "Date / Time",
     home: "Home",
     vs: "VS",
     away: "Away",

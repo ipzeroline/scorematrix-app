@@ -92,8 +92,8 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
         </Card>
       ) : (
         <div className="overflow-hidden rounded-xl border border-cyan-300/15 bg-[#070b12] shadow-[0_18px_44px_rgba(0,0,0,0.32)]">
-          <div className="hidden grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-cyan-300/10 bg-[#0a101a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white md:grid">
-            <span className="pl-1">{labels.time}</span>
+          <div className="hidden grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-cyan-300/10 bg-[#0a101a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white md:grid">
+            <span className="pl-1">{labels.dateTime}</span>
             <span className="pr-3 text-right">{labels.home}</span>
             <span className="text-center">{labels.vs}</span>
             <span className="pl-3 text-left">{labels.away}</span>
@@ -130,8 +130,13 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                   href={`/${locale}/matches/detail/${match.id}`}
                   className="group block border-b border-white/[0.06] bg-[#07090d] transition-colors duration-150 last:border-b-0 hover:bg-[#111826]"
                 >
-                  <div className="hidden min-w-0 grid-cols-[82px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 md:grid">
+                  <div className="hidden min-w-0 grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 md:grid">
                     <div className="flex min-w-0 flex-col items-start justify-center gap-1 md:pl-1">
+                      {match.kickoffDate ? (
+                        <span className="whitespace-nowrap text-[10px] font-bold leading-none text-slate-500">
+                          {match.kickoffDate}
+                        </span>
+                      ) : null}
                       <span className="font-mono text-xs font-black tracking-wider text-cyan-200">{match.kickoffTime}</span>
                       <StatusBadge
                         status={match.status}
@@ -163,6 +168,11 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
                   <div className="border-l-2 border-l-cyan-500/25 px-3 py-2.5 md:hidden">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <div className="min-w-0">
+                        {match.kickoffDate ? (
+                          <div className="mb-1 truncate text-xs font-bold leading-none text-slate-500">
+                            {match.kickoffDate}
+                          </div>
+                        ) : null}
                         <div className="whitespace-nowrap font-mono text-sm font-black leading-none text-cyan-200">
                           {match.kickoffTime}
                         </div>
@@ -286,6 +296,7 @@ function getBoardLabels(locale: string) {
   if (locale === "th") {
     return {
       time: "เวลา",
+      dateTime: "วัน / เวลา",
       home: "เจ้าบ้าน",
       vs: "VS",
       away: "ทีมเยือน",
@@ -296,6 +307,7 @@ function getBoardLabels(locale: string) {
 
   return {
     time: "Time",
+    dateTime: "Date / Time",
     home: "Home",
     vs: "VS",
     away: "Away",

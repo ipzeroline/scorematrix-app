@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { cache } from "react";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   Clock,
   ClipboardList,
   History,
@@ -10,11 +11,13 @@ import {
   ListPlus,
   MapPin,
   Medal,
+  MonitorCheck,
   Radio,
   ShieldCheck,
   Table2,
   Timer,
   TrendingUp,
+  Trophy,
   User,
 } from "lucide-react";
 import type { Metadata } from "next";
@@ -239,6 +242,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
   const { fixture, events, lineups, statistics, playerStats, teamStatistics, teamSquads, headToHead, standings, scoreBreakdown, season, fetchedAt, rawPayload } = matchDetails;
   const homeLineup = lineups.find((lineup) => lineup.team.id === fixture.home.apiTeamId) ?? lineups[0];
   const awayLineup = lineups.find((lineup) => lineup.team.id === fixture.away.apiTeamId) ?? lineups[1];
+  const hasPlayerStats = playerStats.some((teamStats) => (teamStats.players?.length ?? 0) > 0);
+  const matchResult = getMatchResultState(fixture);
 
   return (
     <MatchDetailShell locale={locale} backLabel={t("matchDetail.backToMatches")}>
@@ -280,6 +285,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             accent="cyan"
             align="right"
             lineup={homeLineup}
+            resultState={matchResult.home}
+            winnerLabel={t("matchDetail.winnerLabel")}
           />
           
           <div className="min-w-0 text-center flex flex-col justify-center items-center px-1">
@@ -299,6 +306,31 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                   : t("common.vs")}
               </span>
             </div>
+
+            {matchResult.summary && (
+              <div
+                className={cn(
+                  "mt-3 inline-flex max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-center text-xs font-black shadow-[0_0_20px_rgba(250,204,21,0.12)]",
+                  matchResult.summary.kind === "winner"
+                    ? "border-amber-300/35 bg-amber-300/10 text-amber-100"
+                    : "border-white/15 bg-white/[0.04] text-gray-200"
+                )}
+              >
+                {matchResult.summary.kind === "winner" && (
+                  <Trophy size={14} className="shrink-0 text-amber-300" aria-hidden="true" />
+                )}
+                <span className="min-w-0 truncate">
+                  {matchResult.summary.kind === "winner"
+                    ? t("matchDetail.winnerSummary", {
+                        team: matchResult.summary.team,
+                        score: matchResult.summary.score,
+                      })
+                    : t("matchDetail.drawSummary", {
+                        score: matchResult.summary.score,
+                      })}
+                </span>
+              </div>
+            )}
             
             {(hasCompleteScore(scoreBreakdown.halftime) || hasCompleteScore(scoreBreakdown.penalty)) && (
               <div className="mt-2.5 flex flex-col gap-0.5 text-[11px] font-bold text-text-muted font-mono tracking-widest uppercase">
@@ -340,6 +372,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
             }
             accent="magenta"
             lineup={awayLineup}
+            resultState={matchResult.away}
+            winnerLabel={t("matchDetail.winnerLabel")}
           />
         </div>
         
@@ -413,6 +447,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
 
             <FirstScorerPanel
               event={getFirstGoalEvent(events)}
+              eventLabels={buildEventLabels(t)}
               labels={{
                 title: t("matchDetail.firstScorer"),
                 empty: t("matchDetail.noEventData"),
@@ -491,6 +526,18 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                   goalsFor: t("football.goalsFor"),
                   goalsAgainst: t("football.goalsAgainst"),
                   cleanSheets: t("football.cleanSheets"),
+                  failedToScore: t("matchDetail.failedToScore"),
+                  avgGoalsFor: t("matchDetail.avgGoalsFor"),
+                  avgGoalsAgainst: t("matchDetail.avgGoalsAgainst"),
+                  penaltyScored: t("matchDetail.penaltyScored"),
+                  penaltyMissed: t("matchDetail.penaltyMissed"),
+                  biggestStreak: t("matchDetail.biggestStreak"),
+                  formations: t("matchDetail.formations"),
+                  yellowCardBuckets: t("matchDetail.yellowCardBuckets"),
+                  redCardBuckets: t("matchDetail.redCardBuckets"),
+                  streakWins: t("matchDetail.streakWins"),
+                  streakDraws: t("matchDetail.streakDraws"),
+                  streakLosses: t("matchDetail.streakLosses"),
                 }}
               />
             )}
@@ -515,7 +562,25 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               playerStats={playerStats}
             />
 
-            {teamSquads && (
+            {hasPlayerStats ? (
+              <FixturePlayerStatsPanel
+                playerStats={playerStats}
+                locale={locale}
+                season={season}
+                labels={{
+                  title: t("football.squadTitle"),
+                  unavailable: t("football.unavailableValue"),
+                  jerseyNumber: t("football.jerseyNumber"),
+                  minutes: t("football.totalMinutes"),
+                  rating: t("football.averageRating"),
+                  goalsAssists: t("football.goalsAssists"),
+                  shots: t("matchDetail.shots"),
+                  passAccuracy: t("football.passAccuracy"),
+                  cards: t("football.cardsRecord"),
+                  substitute: t("matchDetail.substitutes"),
+                }}
+              />
+            ) : teamSquads && (
               <TeamSquadsPanel
                 squads={teamSquads}
                 locale={locale}
@@ -663,9 +728,11 @@ function JsonBox({ title, value }: { title: string; value: unknown }) {
 
 function FirstScorerPanel({
   event,
+  eventLabels,
   labels,
 }: {
   event: ApiFootballEvent | null;
+  eventLabels: EventLabels;
   labels: {
     title: string;
     empty: string;
@@ -706,7 +773,7 @@ function FirstScorerPanel({
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-white">{event.team.name}</p>
                     <p className="truncate text-xs text-gray-400 font-medium">
-                      {translateEventDetail(event.detail, buildEventFallbackLabels())}
+                      {translateEventDetail(event.detail, eventLabels)}
                     </p>
                   </div>
                 </div>
@@ -720,11 +787,11 @@ function FirstScorerPanel({
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <FirstScorerMeta label={labels.assist} value={event.assist.name ?? "-"} />
-              <FirstScorerMeta label={labels.type} value={event.type} />
+              <FirstScorerMeta label={labels.type} value={translateEventType(event.type, eventLabels)} />
             </div>
           </div>
           <div className="grid gap-3">
-            <FirstScorerMeta label={labels.detail} value={event.detail || "-"} />
+            <FirstScorerMeta label={labels.detail} value={translateEventDetail(event.detail, eventLabels)} />
             <FirstScorerMeta label={labels.related} value={event.assist.name ?? "-"} />
             <FirstScorerMeta label={labels.comments} value={event.comments ?? "-"} multiline />
           </div>
@@ -987,6 +1054,57 @@ function buildTeamDetailHref(teamId: number, leagueId: number | null, season: nu
   return `/football/teams/${teamId}?${query.toString()}`;
 }
 
+type HeroTeamResultState = "winner" | "loser" | "draw" | null;
+
+function getMatchResultState(fixture: ApiFootballFixture): {
+  home: HeroTeamResultState;
+  away: HeroTeamResultState;
+  summary:
+    | { kind: "winner"; team: string; score: string }
+    | { kind: "draw"; score: string }
+    | null;
+} {
+  if (fixture.status !== MatchStatus.FINISHED || !hasCompleteScore(fixture.score)) {
+    return { home: null, away: null, summary: null };
+  }
+
+  const scoreHome = fixture.score.home ?? 0;
+  const scoreAway = fixture.score.away ?? 0;
+  const score = `${scoreHome}-${scoreAway}`;
+  const homeWon =
+    fixture.home.winner === true ||
+    (fixture.home.winner === null &&
+      fixture.away.winner === null &&
+      scoreHome > scoreAway);
+  const awayWon =
+    fixture.away.winner === true ||
+    (fixture.home.winner === null &&
+      fixture.away.winner === null &&
+      scoreAway > scoreHome);
+
+  if (homeWon) {
+    return {
+      home: "winner",
+      away: "loser",
+      summary: { kind: "winner", team: fixture.home.name, score },
+    };
+  }
+
+  if (awayWon) {
+    return {
+      home: "loser",
+      away: "winner",
+      summary: { kind: "winner", team: fixture.away.name, score },
+    };
+  }
+
+  return {
+    home: "draw",
+    away: "draw",
+    summary: { kind: "draw", score },
+  };
+}
+
 function TeamHeader({
   name,
   logo,
@@ -994,6 +1112,8 @@ function TeamHeader({
   accent,
   lineup,
   align = "left",
+  resultState = null,
+  winnerLabel,
 }: {
   name: string;
   logo: string | null;
@@ -1001,12 +1121,17 @@ function TeamHeader({
   accent: "cyan" | "magenta";
   lineup?: ApiFootballLineup;
   align?: "left" | "right";
+  resultState?: HeroTeamResultState;
+  winnerLabel?: string;
 }) {
+  const isWinner = resultState === "winner";
+  const isLoser = resultState === "loser";
   const content = (
     <div
       className={cn(
         "group flex min-w-0 flex-col items-center gap-2.5 transition-all duration-150 sm:gap-3.5",
-        align === "right" ? "sm:flex-row-reverse sm:text-right" : "sm:flex-row sm:text-left"
+        align === "right" ? "sm:flex-row-reverse sm:text-right" : "sm:flex-row sm:text-left",
+        isLoser && "opacity-70"
       )}
     >
       {/* Esports Crest */}
@@ -1015,14 +1140,21 @@ function TeamHeader({
         <div
           className={cn(
             "relative flex h-full w-full items-center justify-center border bg-surface p-2 transition-all duration-150 group-hover:scale-105",
-            accent === "cyan"
-              ? "border-primary/30 text-primary group-hover:border-primary"
-              : "border-magenta/30 text-magenta group-hover:border-magenta"
+            isWinner
+              ? "border-amber-300/70 text-amber-200 shadow-[0_0_30px_rgba(250,204,21,0.32)]"
+              : accent === "cyan"
+                ? "border-primary/30 text-primary group-hover:border-primary"
+                : "border-magenta/30 text-magenta group-hover:border-magenta"
           )}
           style={{
             clipPath: "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)",
           }}
         >
+          {isWinner && (
+            <span className="absolute -top-1 left-1/2 z-20 flex h-6 w-6 -translate-x-1/2 items-center justify-center rounded-full border border-amber-200/50 bg-amber-300 text-black shadow-[0_0_18px_rgba(250,204,21,0.4)]">
+              <Trophy size={13} strokeWidth={2.6} aria-hidden="true" />
+            </span>
+          )}
           {/* Logo container */}
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-elevated/40 p-1 border border-border sm:h-12 sm:w-12">
             {logo ? (
@@ -1040,7 +1172,16 @@ function TeamHeader({
       </div>
 
       <div className="min-w-0 flex-1">
-        <h2 className="font-display max-w-full truncate text-[13px] font-extrabold tracking-wider text-gray-300 uppercase sm:text-base md:text-lg group-hover:text-primary">
+        {isWinner && winnerLabel ? (
+          <span className="mb-1 inline-flex items-center gap-1 rounded-full border border-amber-300/35 bg-amber-300/10 px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-widest text-amber-200">
+            <Trophy size={10} aria-hidden="true" />
+            {winnerLabel}
+          </span>
+        ) : null}
+        <h2 className={cn(
+          "font-display max-w-full truncate text-[13px] font-extrabold tracking-wider uppercase sm:text-base md:text-lg",
+          isWinner ? "text-amber-100 drop-shadow-[0_0_12px_rgba(250,204,21,0.35)]" : "text-gray-300 group-hover:text-primary"
+        )}>
           {name}
         </h2>
         {lineup?.formation ? (
@@ -1128,14 +1269,14 @@ function EventsPanel({
             return (
               <div
                 key={`${event.time.elapsed}-${event.type}-${index}`}
-                className={`grid grid-cols-[40px_24px_minmax(0,1fr)] items-center gap-2 rounded-lg border px-2 py-2 sm:grid-cols-[48px_28px_minmax(0,1fr)_128px] sm:gap-3 sm:px-3 ${style.rowClass}`}
+                className={`grid grid-cols-[42px_38px_minmax(0,1fr)] items-center gap-2 rounded-xl border px-2.5 py-2.5 sm:grid-cols-[52px_44px_minmax(0,1fr)_136px] sm:gap-3 sm:px-3 ${style.rowClass}`}
               >
                 <span className="font-mono text-xs text-primary">
                   {event.time.elapsed}
                   {event.time.extra ? `+${event.time.extra}` : ""}&apos;
                 </span>
                 <span
-                  className={`flex h-6 w-5 items-center justify-center rounded-sm border text-[11px] font-bold ${style.iconClass}`}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg border text-[15px] font-black shadow-[0_0_18px_rgba(255,255,255,0.06)] sm:h-10 sm:w-10 ${style.iconClass}`}
                   aria-label={style.label}
                   title={style.label}
                 >
@@ -1191,9 +1332,9 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
   if (normalized.includes("red card")) {
     return {
       label: labels.redCard,
-      icon: "R",
+      icon: <CardEventIcon tone="red" />,
       rowClass: "border-danger/20 bg-danger/10 hover:border-danger/40 hover:bg-danger/20 transition-all duration-150",
-      iconClass: "border-danger/30 bg-danger text-white font-bold",
+      iconClass: "border-danger/35 bg-danger/10 text-danger",
       badgeClass: "border-danger/25 bg-danger/10 text-danger",
     };
   }
@@ -1201,9 +1342,9 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
   if (normalized.includes("yellow card")) {
     return {
       label: labels.yellowCard,
-      icon: "Y",
+      icon: <CardEventIcon tone="yellow" />,
       rowClass: "border-warning/20 bg-warning/10 hover:border-warning/40 hover:bg-warning/20 transition-all duration-150",
-      iconClass: "border-warning/30 bg-warning text-black font-bold",
+      iconClass: "border-warning/35 bg-warning/10 text-warning",
       badgeClass: "border-warning/25 bg-warning/10 text-warning",
     };
   }
@@ -1211,20 +1352,31 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
   if (type === "Goal") {
     return {
       label: labels.goal,
-      icon: "G",
-      rowClass: "border-success/20 bg-success/10 hover:border-success/40 hover:bg-success/20 transition-all duration-150",
-      iconClass: "border-success/30 bg-success/20 text-success font-bold",
-      badgeClass: "border-success/25 bg-success/10 text-success",
+      icon: <GoalEventIcon />,
+      rowClass:
+        "border-success/45 bg-[linear-gradient(90deg,rgba(34,197,94,0.18),rgba(250,204,21,0.08),rgba(34,197,94,0.06))] shadow-[0_0_28px_rgba(34,197,94,0.18),inset_3px_0_0_rgba(34,197,94,0.95)] hover:border-success/70 hover:bg-success/20 transition-all duration-150",
+      iconClass: "border-success/55 bg-success/15 text-success shadow-[0_0_24px_rgba(34,197,94,0.28)]",
+      badgeClass: "border-success/45 bg-success/20 text-success shadow-[0_0_16px_rgba(34,197,94,0.18)]",
     };
   }
 
   if (normalized.includes("substitution")) {
     return {
       label: labels.substitution,
-      icon: "S",
+      icon: <ArrowLeftRight size={18} strokeWidth={2.5} aria-hidden="true" />,
       rowClass: "border-primary/20 bg-primary/10 hover:border-primary/40 hover:bg-primary/20 transition-all duration-150",
-      iconClass: "border-primary/30 bg-primary/20 text-primary font-bold",
+      iconClass: "border-primary/40 bg-primary/15 text-primary",
       badgeClass: "border-primary/25 bg-primary/10 text-primary",
+    };
+  }
+
+  if (type.toLowerCase() === "var" || normalized.includes("var")) {
+    return {
+      label: labels.var,
+      icon: <MonitorCheck size={18} strokeWidth={2.5} aria-hidden="true" />,
+      rowClass: "border-purple-400/20 bg-purple-400/10 hover:border-purple-400/40 hover:bg-purple-400/20 transition-all duration-150",
+      iconClass: "border-purple-400/40 bg-purple-400/15 text-purple-300",
+      badgeClass: "border-purple-400/25 bg-purple-400/10 text-purple-300",
     };
   }
 
@@ -1237,6 +1389,31 @@ function eventStyle(type: string, detail: string, labels: EventLabels) {
   };
 }
 
+function GoalEventIcon() {
+  return (
+    <span className="relative grid h-8 w-8 place-items-center" aria-hidden="true">
+      <span className="absolute inset-0 rounded-full border border-success/50 bg-success/10 animate-[livePulse_1.6s_infinite]" />
+      <span className="relative text-[24px] leading-none drop-shadow-[0_0_8px_rgba(34,197,94,0.75)]">
+        ⚽
+      </span>
+    </span>
+  );
+}
+
+function CardEventIcon({ tone }: { tone: "yellow" | "red" }) {
+  return (
+    <span
+      className={cn(
+        "block h-6 w-4 rotate-6 rounded-[3px] border shadow-[0_0_14px_currentColor]",
+        tone === "yellow"
+          ? "border-yellow-200 bg-yellow-300 text-yellow-300"
+          : "border-red-200 bg-red-500 text-red-500"
+      )}
+      aria-hidden="true"
+    />
+  );
+}
+
 function getFirstGoalEvent(events: ApiFootballEvent[]) {
   return (
     [...events]
@@ -1247,18 +1424,6 @@ function getFirstGoalEvent(events: ApiFootballEvent[]) {
           (left.time.extra ?? 0) - (right.time.extra ?? 0)
       )[0] ?? null
   );
-}
-
-function buildEventFallbackLabels(): EventLabels {
-  return {
-    goal: "Goal",
-    substitution: "Substitution",
-    yellowCard: "Yellow card",
-    redCard: "Red card",
-    card: "Card",
-    var: "VAR",
-    unknown: "Unknown",
-  };
 }
 
 function translateEventType(type: string, labels: EventLabels) {
@@ -1282,6 +1447,7 @@ function translateEventDetail(detail: string, labels: EventLabels) {
   if (normalized.includes("yellow card")) return labels.yellowCard;
   if (normalized.includes("substitution")) return labels.substitution;
   if (normalized.includes("goal")) return labels.goal;
+  if (normalized.includes("var")) return labels.var;
   return detail || labels.unknown;
 }
 
@@ -1606,6 +1772,18 @@ function TeamSeasonStatisticsPanel({
     goalsFor: string;
     goalsAgainst: string;
     cleanSheets: string;
+    failedToScore: string;
+    avgGoalsFor: string;
+    avgGoalsAgainst: string;
+    penaltyScored: string;
+    penaltyMissed: string;
+    biggestStreak: string;
+    formations: string;
+    yellowCardBuckets: string;
+    redCardBuckets: string;
+    streakWins: string;
+    streakDraws: string;
+    streakLosses: string;
   };
 }) {
   return (
@@ -1625,11 +1803,11 @@ function TeamSeasonStatisticsPanel({
             [labels.goalsFor, stats.goals.for.total.total],
             [labels.goalsAgainst, stats.goals.against.total.total],
             [labels.cleanSheets, stats.clean_sheet.total],
-            ["Failed to score", stats.failed_to_score.total],
-            ["Avg goals for", stats.goals.for.average.total],
-            ["Avg goals against", stats.goals.against.average.total],
-            ["Penalty scored", formatPenaltyStat(stats.penalty?.scored)],
-            ["Penalty missed", formatPenaltyStat(stats.penalty?.missed)],
+            [labels.failedToScore, stats.failed_to_score.total],
+            [labels.avgGoalsFor, stats.goals.for.average.total],
+            [labels.avgGoalsAgainst, stats.goals.against.average.total],
+            [labels.penaltyScored, formatPenaltyStat(stats.penalty?.scored)],
+            [labels.penaltyMissed, formatPenaltyStat(stats.penalty?.missed)],
           ] as const;
           const streak = stats.biggest?.streak;
           const lineups = stats.lineups ?? [];
@@ -1658,21 +1836,21 @@ function TeamSeasonStatisticsPanel({
               </div>
               <div className="grid gap-2 border-t border-border p-4 sm:grid-cols-2">
                 <div className="rounded-lg border border-border bg-elevated/40 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500">Biggest streak</p>
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500">{labels.biggestStreak}</p>
                   <p className="mt-1 font-mono text-sm font-bold text-white">
-                    W {streak?.wins ?? 0} / D {streak?.draws ?? 0} / L {streak?.loses ?? 0}
+                    {labels.streakWins} {streak?.wins ?? 0} / {labels.streakDraws} {streak?.draws ?? 0} / {labels.streakLosses} {streak?.loses ?? 0}
                   </p>
                 </div>
                 <div className="rounded-lg border border-border bg-elevated/40 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-gray-500">Formations</p>
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500">{labels.formations}</p>
                   <p className="mt-1 break-words font-mono text-sm font-bold text-white">
                     {lineups.length > 0
                       ? lineups.map((lineup) => `${lineup.formation ?? "-"} (${lineup.played ?? 0})`).join(", ")
                       : "-"}
                   </p>
                 </div>
-                <CardBucket title="Yellow cards" bucket={stats.cards?.yellow} />
-                <CardBucket title="Red cards" bucket={stats.cards?.red} />
+                <CardBucket title={labels.yellowCardBuckets} bucket={stats.cards?.yellow} />
+                <CardBucket title={labels.redCardBuckets} bucket={stats.cards?.red} />
               </div>
             </Card>
           );
@@ -1694,18 +1872,217 @@ function CardBucket({
   title: string;
   bucket: Record<string, { total: number | null; percentage: string | null }> | undefined;
 }) {
-  const entries = Object.entries(bucket ?? {}).filter(([, value]) => value.total !== null);
+  const entries = Object.entries(bucket ?? {})
+    .filter(([, value]) => value.total !== null)
+    .sort(([left], [right]) => getBucketStartMinute(left) - getBucketStartMinute(right));
 
   return (
     <div className="rounded-lg border border-border bg-elevated/40 p-3">
-      <p className="text-[10px] uppercase tracking-wider text-gray-500">{title}</p>
-      <p className="mt-1 break-words font-mono text-sm font-bold text-white">
-        {entries.length > 0
-          ? entries.map(([minute, value]) => `${minute}: ${value.total} (${value.percentage ?? "-"})`).join(", ")
-          : "-"}
-      </p>
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="text-[10px] uppercase tracking-wider text-gray-500">{title}</p>
+        {entries.length > 0 ? (
+          <span className="rounded-full border border-white/10 bg-black/30 px-2 py-0.5 font-mono text-[10px] font-black text-white">
+            {entries.reduce((sum, [, value]) => sum + (value.total ?? 0), 0)}
+          </span>
+        ) : null}
+      </div>
+      {entries.length === 0 ? (
+        <p className="mt-1 font-mono text-sm font-bold text-white">-</p>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {entries.map(([minute, value]) => (
+            <div
+              key={minute}
+              className="rounded-md border border-white/10 bg-black/25 px-2.5 py-2"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-xs font-black text-white">{minute}</span>
+                <span className="font-mono text-sm font-black text-cyan-200">{value.total}</span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div
+                  className="h-full rounded-full bg-cyan-300"
+                  style={{ width: value.percentage ?? "0%" }}
+                />
+              </div>
+              <p className="mt-1 text-right font-mono text-[10px] font-bold text-gray-400">
+                {value.percentage ?? "-"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+function getBucketStartMinute(bucket: string) {
+  const parsed = Number.parseInt(bucket.split("-")[0] ?? "", 10);
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function FixturePlayerStatsPanel({
+  playerStats,
+  locale,
+  season,
+  labels,
+}: {
+  playerStats: ApiFootballPlayerStats[];
+  locale: string;
+  season: number;
+  labels: {
+    title: string;
+    unavailable: string;
+    jerseyNumber: string;
+    minutes: string;
+    rating: string;
+    goalsAssists: string;
+    shots: string;
+    passAccuracy: string;
+    cards: string;
+    substitute: string;
+  };
+}) {
+  const teams = playerStats.filter((teamStats) => (teamStats.players?.length ?? 0) > 0);
+
+  if (teams.length === 0) return null;
+
+  return (
+    <section>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-primary">
+        {labels.title}
+      </h2>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {teams.map((teamStats, index) => (
+          <Card
+            key={teamStats.team.id || teamStats.team.name || index}
+            className="overflow-hidden border border-cyan-300/12 bg-[#090d16] p-0 shadow-[0_18px_60px_rgba(0,0,0,0.34)]"
+          >
+            <div className={cn("flex items-center justify-between gap-3 border-b border-white/10 p-4", index === 0 ? "bg-cyan-400/10" : "bg-rose-500/10")}>
+              <div className="flex min-w-0 items-center gap-3">
+                <ApiTeamLogo
+                  name={teamStats.team.name}
+                  logo={teamStats.team.logo}
+                  size="sm"
+                  accent={index === 0 ? "cyan" : "magenta"}
+                />
+                <p className="truncate text-sm font-bold text-white">{teamStats.team.name}</p>
+              </div>
+              <Badge variant={index === 0 ? "cyan" : "magenta"}>{teamStats.players.length}</Badge>
+            </div>
+            <div className="divide-y divide-border">
+              {teamStats.players.map((entry) => (
+                <FixturePlayerStatsRow
+                  key={entry.player.id || entry.player.name}
+                  entry={entry}
+                  locale={locale}
+                  season={season}
+                  labels={labels}
+                />
+              ))}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FixturePlayerStatsRow({
+  entry,
+  locale,
+  season,
+  labels,
+}: {
+  entry: ApiFootballPlayerStats["players"][number];
+  locale: string;
+  season: number;
+  labels: {
+    unavailable: string;
+    jerseyNumber: string;
+    minutes: string;
+    rating: string;
+    goalsAssists: string;
+    shots: string;
+    passAccuracy: string;
+    cards: string;
+    substitute: string;
+  };
+}) {
+  const stat = entry.statistics[0];
+  const number = stat?.games.number ?? null;
+  const position = stat?.games.position ?? labels.unavailable;
+  const playerName = (
+    <span className="block truncate text-sm font-bold text-white">
+      {entry.player.name}
+    </span>
+  );
+  const statItems = [
+    [labels.minutes, formatPlayerStatValue(stat?.games?.minutes)],
+    [labels.rating, formatPlayerStatValue(stat?.games?.rating)],
+    [labels.goalsAssists, `${formatPlayerStatValue(stat?.goals?.total)}/${formatPlayerStatValue(stat?.goals?.assists)}`],
+    [labels.shots, `${formatPlayerStatValue(stat?.shots?.on)}/${formatPlayerStatValue(stat?.shots?.total)}`],
+    [labels.passAccuracy, formatPlayerStatValue(stat?.passes?.accuracy)],
+    [labels.cards, `${formatPlayerStatValue(stat?.cards?.yellow)}/${formatPlayerStatValue(stat?.cards?.red)}`],
+  ] as const;
+
+  return (
+    <div className="grid gap-3 px-4 py-3 transition-colors hover:bg-cyan-300/[0.05]">
+      <div className="grid grid-cols-[46px_minmax(0,1fr)_auto] items-center gap-3">
+        <span className="relative">
+          <PersonAvatar
+            name={entry.player.name}
+            photo={entry.player.photo}
+            size="sm"
+            fallback={number != null ? String(number) : undefined}
+          />
+          <span className="absolute -bottom-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full border border-black bg-[#0a0a0f] px-1 font-mono text-[9px] font-black text-cyan-300">
+            {number ?? "-"}
+          </span>
+        </span>
+        <div className="min-w-0">
+          {entry.player.id ? (
+            <Link
+              href={`/${locale}/football/players/${entry.player.id}?season=${season}`}
+              className="block min-w-0 transition-colors hover:text-primary"
+            >
+              {playerName}
+            </Link>
+          ) : (
+            playerName
+          )}
+          <p className="mt-0.5 truncate text-xs font-medium text-gray-500">
+            {labels.jerseyNumber}: {number ?? "-"} · {position}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1.5">
+          {stat?.games.captain ? (
+            <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full border border-warning/25 bg-warning/10 px-1.5 font-mono text-[10px] font-black text-warning">
+              C
+            </span>
+          ) : null}
+          {stat?.games.substitute ? (
+            <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-1 font-mono text-[10px] font-black text-cyan-200">
+              {labels.substitute}
+            </span>
+          ) : null}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        {statItems.map(([label, value]) => (
+          <div key={label} className="rounded-md border border-white/10 bg-black/25 px-2.5 py-2">
+            <p className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-500">{label}</p>
+            <p className="mt-1 font-mono text-sm font-black text-white">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function formatPlayerStatValue(value: number | string | null | undefined) {
+  if (value === null || value === undefined || value === "") return "-";
+  return String(value);
 }
 
 function TeamSquadsPanel({

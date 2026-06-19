@@ -167,11 +167,32 @@ function formatRankRange(rankRange: [number, number]) {
   return start === end ? `#${start}` : `#${start}-${end}`;
 }
 
+function getCurrentEntryAvatar(
+  entry: LeaderboardEntry,
+  currentUserId: string | undefined,
+  profileAvatarUrl: string
+) {
+  if (entry.userId !== currentUserId) return entry.avatar;
+  return entry.avatar || profileAvatarUrl || null;
+}
+
+function getCurrentEntryName(
+  entry: LeaderboardEntry,
+  currentUserId: string | undefined,
+  profileName: string
+) {
+  if (entry.userId !== currentUserId) return entry.username;
+  return entry.username || profileName;
+}
+
 export default function LeaderboardPage() {
   const { locale } = useParams<{ locale: string }>();
   const copy = getLeaderboardPageCopy(locale);
   const [period, setPeriod] = useState<LeaderboardPeriodQuery>("daily");
   const userId = useUserStore((state) => state.userId);
+  const profileAvatarUrl = useUserStore((state) => state.avatarUrl);
+  const profileUsername = useUserStore((state) => state.username);
+  const profileDisplayName = useUserStore((state) => state.displayName);
   const [leaderboard, setLeaderboard] = useState<LeaderboardViewData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
@@ -207,6 +228,10 @@ export default function LeaderboardPage() {
   const currentUser =
     leaderboard?.userEntry ??
     (userId ? entries.find((entry) => entry.userId === userId) : undefined);
+  const profileName = profileDisplayName || profileUsername;
+  const activeCurrentUserId = currentUser?.userId || userId || undefined;
+  const currentUserAvatar = currentUser?.avatar || profileAvatarUrl || null;
+  const currentUserName = currentUser?.username || profileName;
   const nextRankEntry =
     currentUser && currentUser.rank > 1
       ? entries.find((entry) => entry.rank === currentUser.rank - 1)
@@ -341,14 +366,14 @@ export default function LeaderboardPage() {
                   <RankBadge rank={currentUser.rank} />
                   <div className="flex min-w-0 items-center gap-3">
                     <Avatar
-                      src={currentUser.avatar}
-                      fallback={currentUser.username}
-                      size="lg"
-                      className="border-cyan-500/35"
+                      src={currentUserAvatar}
+                      fallback={currentUserName}
+                      size="xl"
+                      className="border-cyan-500/35 ring-1 ring-cyan-400/25"
                     />
                     <div className="min-w-0">
                       <p className="truncate text-base font-black text-white">
-                        {currentUser.username}{" "}
+                        {currentUserName}{" "}
                         <span className="text-cyan-300">({copy.labels.you})</span>
                       </p>
                       <p className="mt-1 text-sm font-semibold text-gray-400">
@@ -424,6 +449,9 @@ export default function LeaderboardPage() {
                     key={leaderboardRowKey(entry)}
                     entry={entry}
                     copy={copy}
+                    currentUserId={activeCurrentUserId}
+                    profileAvatarUrl={profileAvatarUrl}
+                    profileName={profileName}
                   />
                 ))
               )}
@@ -519,7 +547,9 @@ export default function LeaderboardPage() {
                       key={leaderboardRowKey(entry)}
                       entry={entry}
                       copy={copy}
-                      currentUserId={currentUser?.userId}
+                      currentUserId={activeCurrentUserId}
+                      profileAvatarUrl={profileAvatarUrl}
+                      profileName={profileName}
                     />
                   ))}
                 </div>
@@ -551,7 +581,17 @@ export default function LeaderboardPage() {
                       </thead>
                       <tbody>
                         {entries.map((entry) => {
-                          const isCurrentUser = entry.userId === currentUser?.userId;
+                          const isCurrentUser = entry.userId === activeCurrentUserId;
+                          const entryAvatar = getCurrentEntryAvatar(
+                            entry,
+                            activeCurrentUserId,
+                            profileAvatarUrl
+                          );
+                          const entryName = getCurrentEntryName(
+                            entry,
+                            activeCurrentUserId,
+                            profileName
+                          );
 
                           return (
                             <tr
@@ -568,9 +608,10 @@ export default function LeaderboardPage() {
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-3">
                                   <Avatar
-                                    src={entry.avatar}
-                                    fallback={entry.username}
-                                    size="sm"
+                                    src={entryAvatar}
+                                    fallback={entryName}
+                                    size="md"
+                                    className="border-cyan-500/20"
                                   />
                                   <div className="min-w-0">
                                     <p
@@ -580,7 +621,7 @@ export default function LeaderboardPage() {
                                           : "text-white"
                                       }`}
                                     >
-                                      {entry.username}
+                                      {entryName}
                                     </p>
                                     {isCurrentUser && (
                                       <p className="text-xs font-semibold text-cyan-400">
@@ -686,11 +727,19 @@ function MiniMetric({
 function PodiumCard({
   entry,
   copy,
+  currentUserId,
+  profileAvatarUrl,
+  profileName,
 }: {
   entry: LeaderboardEntry;
   copy: ReturnType<typeof getLeaderboardPageCopy>;
+  currentUserId?: string;
+  profileAvatarUrl: string;
+  profileName: string;
 }) {
   const isChampion = entry.rank === 1;
+  const avatar = getCurrentEntryAvatar(entry, currentUserId, profileAvatarUrl);
+  const username = getCurrentEntryName(entry, currentUserId, profileName);
 
   return (
     <Card
@@ -707,10 +756,10 @@ function PodiumCard({
       <div className="flex items-center gap-3">
         <RankBadge rank={entry.rank} />
         <Avatar
-          src={entry.avatar}
-          fallback={entry.username}
-          size="lg"
-          className={isChampion ? "border-amber-400/50" : "border-cyan-500/25"}
+          src={avatar}
+          fallback={username}
+          size={isChampion ? "xl" : "lg"}
+          className={isChampion ? "border-amber-400/50 ring-1 ring-amber-300/35" : "border-cyan-500/25 ring-1 ring-cyan-400/20"}
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -720,7 +769,7 @@ function PodiumCard({
               <Medal size={16} className="text-gray-400" />
             )}
             <p className="truncate text-base font-black text-white">
-              {entry.username}
+              {username}
             </p>
           </div>
           <p className="mt-1 text-sm font-semibold text-gray-400">
@@ -745,12 +794,18 @@ function MobileRankCard({
   entry,
   copy,
   currentUserId,
+  profileAvatarUrl,
+  profileName,
 }: {
   entry: LeaderboardEntry;
   copy: ReturnType<typeof getLeaderboardPageCopy>;
   currentUserId?: string;
+  profileAvatarUrl: string;
+  profileName: string;
 }) {
   const isCurrentUser = entry.userId === currentUserId;
+  const avatar = getCurrentEntryAvatar(entry, currentUserId, profileAvatarUrl);
+  const username = getCurrentEntryName(entry, currentUserId, profileName);
 
   return (
     <Card
@@ -762,10 +817,15 @@ function MobileRankCard({
     >
       <div className="flex items-center gap-3">
         <RankBadge rank={entry.rank} />
-        <Avatar src={entry.avatar} fallback={entry.username} size="md" />
+        <Avatar
+          src={avatar}
+          fallback={username}
+          size="lg"
+          className={isCurrentUser ? "border-cyan-400/35 ring-1 ring-cyan-300/25" : "border-gray-700"}
+        />
         <div className="min-w-0 flex-1">
           <p className={`truncate text-base font-black ${isCurrentUser ? "text-cyan-200" : "text-white"}`}>
-            {entry.username}
+            {username}
           </p>
           <p className="mt-1 text-sm font-semibold text-gray-400">
             {copy.labels.level} {entry.level}

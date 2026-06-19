@@ -235,7 +235,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                               <span className="font-mono text-sm font-bold text-cyan-300">
                                 {formatTime(match.kickoffTime, locale)}
                               </span>
-                              <span className="text-[10px] text-gray-500 font-medium truncate hidden sm:block">
+                              <span className="text-[10px] text-gray-500 font-medium truncate">
                                 {formatDate(match.kickoffTime, locale)}
                               </span>
                             </div>

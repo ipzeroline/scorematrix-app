@@ -5,7 +5,7 @@ import { User } from "lucide-react";
 interface AvatarProps {
   src?: string | null;
   fallback?: string;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl";
   className?: string;
 }
 
@@ -14,6 +14,7 @@ const sizeClasses = {
   md: "w-9 h-9 text-sm",
   lg: "w-12 h-12 text-base",
   xl: "w-16 h-16 text-xl",
+  "2xl": "w-24 h-24 text-2xl",
 };
 
 const imageSizes = {
@@ -21,6 +22,7 @@ const imageSizes = {
   md: 36,
   lg: 48,
   xl: 64,
+  "2xl": 96,
 };
 
 export function Avatar({
@@ -39,7 +41,7 @@ export function Avatar({
           width={imageSizes[size]}
           height={imageSizes[size]}
           className={cn(
-            "rounded-full object-cover border border-gray-700",
+            "rounded-full object-contain border border-gray-700 bg-[#0a0a0f] p-[2px]",
             sizeClasses[size],
             className
           )}
@@ -55,7 +57,7 @@ export function Avatar({
         height={imageSizes[size]}
         unoptimized
         className={cn(
-          "rounded-full object-cover border border-gray-700",
+          "rounded-full object-contain border border-gray-700 bg-[#0a0a0f] p-[2px]",
           sizeClasses[size],
           className
         )}
