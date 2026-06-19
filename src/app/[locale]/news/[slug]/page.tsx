@@ -32,6 +32,22 @@ function getWordCount(content: string) {
   return content.trim().split(/\s+/).filter(Boolean).length;
 }
 
+function getArticleParagraphs(content: string) {
+  return content
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+}
+
+function getArticleKeyPoints(summary: string, content: string) {
+  const points = [summary, ...getArticleParagraphs(content)]
+    .map((point) => point.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  return [...new Set(points)];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const article = await getArticleBySlugCached(slug, locale);
@@ -114,13 +130,16 @@ export default async function NewsDetailPage({ params }: Props) {
   const image = absoluteUrl(article.image || "/brand/scorematrix-logo.png");
   const keywords = article.keywords?.length ? article.keywords : article.tags;
   const articleSection = article.category === "analysis" ? "Football Analysis" : "Football News";
+  const keyPoints = getArticleKeyPoints(summary, content);
   const jsonLd = [
     {
       "@context": "https://schema.org",
       "@type": article.category === "analysis" ? "AnalysisNewsArticle" : "NewsArticle",
       "@id": `${canonical}#article`,
       headline: title,
+      alternativeHeadline: summary,
       description: summary,
+      abstract: summary,
       url: canonical,
       mainEntityOfPage: {
         "@type": "WebPage",
@@ -154,6 +173,10 @@ export default async function NewsDetailPage({ params }: Props) {
       wordCount: getWordCount(content),
       isAccessibleForFree: true,
       inLanguage: locale,
+      mentions: keywords.slice(0, 8).map((keyword) => ({
+        "@type": "Thing",
+        name: keyword,
+      })),
       about: keywords.slice(0, 6).map((keyword) => ({
         "@type": "Thing",
         name: keyword,
@@ -163,6 +186,17 @@ export default async function NewsDetailPage({ params }: Props) {
         interactionType: "https://schema.org/ReadAction",
         userInteractionCount: article.viewCount,
       },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "@id": `${canonical}#key-points`,
+      name: `${title} key points`,
+      itemListElement: keyPoints.map((point, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: point,
+      })),
     },
     {
       "@context": "https://schema.org",

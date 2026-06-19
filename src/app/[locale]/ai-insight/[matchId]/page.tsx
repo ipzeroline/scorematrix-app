@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Activity,
-  BarChart3,
   Clock3,
   Crosshair,
   Flame,
@@ -29,6 +28,7 @@ import {
   type ApiFootballAIInsightDetail,
   type ApiFootballFixture,
   getApiFootballAIInsightDetail,
+  getApiFootballFixtureDetails,
 } from "@/lib/api-football";
 import { extractApiFixtureId } from "@/lib/football-slugs";
 import { serializeJsonLd } from "@/lib/json-ld";
@@ -62,7 +62,6 @@ import {
 import {
   SectionHeading,
   PredictionInfo,
-  EmptyState,
 } from "./_detail-ui";
 import { ApiPredictionCard } from "./ModelTab";
 import SummaryTab from "./SummaryTab";
@@ -580,7 +579,6 @@ export default async function AIInsightDetailPage({ params }: Props) {
         </Card>
 
         <div className="space-y-5">
-          <KeyFactorsPanel factors={insight.keyFactors} copy={copy} />
           <ApiPredictionCard insight={insight} details={details} locale={locale} />
         </div>
       </section>
@@ -657,10 +655,79 @@ const getDetailContext = cache(async (matchId: string): Promise<DetailContext | 
       insight,
     };
   } catch (error) {
-    if (error instanceof ApiFootballError && error.status === 404) return null;
+    if (error instanceof ApiFootballError && error.status === 404) {
+      try {
+        const fixtureDetails = await getApiFootballFixtureDetails(fixtureId);
+        return {
+          fixture: fixtureDetails.fixture,
+          insight: buildFallbackInsight(fixtureDetails.fixture),
+        };
+      } catch (fixtureError) {
+        if (fixtureError instanceof ApiFootballError && fixtureError.status === 404) return null;
+        throw fixtureError;
+      }
+    }
     throw error;
   }
 });
+
+function buildFallbackInsight(fixture: ApiFootballFixture): ApiFootballAIInsightDetail {
+  const generatedAt = new Date().toISOString();
+
+  return {
+    id: `ai-fallback-${fixture.apiFixtureId ?? fixture.id}`,
+    matchId: String(fixture.apiFixtureId ?? fixture.id),
+    confidenceScore: null,
+    homeWinProbability: null,
+    drawProbability: null,
+    awayWinProbability: null,
+    heatMeter: null,
+    favoriteTeam: null,
+    homeStrength: null,
+    awayStrength: null,
+    strengthGap: null,
+    upsetRisk: null,
+    homeAdvantageFactor: null,
+    comparison: {
+      form: { home: null, away: null },
+      att: { home: null, away: null },
+      def: { home: null, away: null },
+      poisson_distribution: { home: null, away: null },
+      h2h: { home: null, away: null },
+      goals: { home: null, away: null },
+      total: { home: null, away: null },
+    },
+    formComparison: {
+      homeFormIndex: null,
+      awayFormIndex: null,
+      homeLastFive: null,
+      awayLastFive: null,
+    },
+    injuryImpact: {
+      homeImpact: null,
+      awayImpact: null,
+      homeInjuries: [],
+      awayInjuries: [],
+    },
+    upsetAlert: false,
+    upsetDescription: null,
+    communitySentiment: null,
+    keyFactors: [],
+    probabilitySource: null,
+    standings: null,
+    teamStats: null,
+    h2hSummary: null,
+    generatedAt,
+    apiAdvice: null,
+    apiUnderOver: null,
+    apiWinOrDraw: null,
+    apiWinner: null,
+    predictedScore: null,
+    apiPredictedGoals: null,
+    headToHead: [],
+    fixture,
+  };
+}
 
 function getSeoCopy(locale: string) {
   return SEO_COPY[locale as keyof typeof SEO_COPY] ?? SEO_COPY.en;
@@ -966,9 +1033,8 @@ function TeamHero({
   return (
     <div
       className={cn(
-        "relative flex min-h-[180px] flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-black/25 p-4",
-        favorite && "border-amber-300/25 bg-[linear-gradient(135deg,rgba(245,158,11,0.10),rgba(8,18,32,0.38)_42%,rgba(0,0,0,0.24))] shadow-[0_0_34px_rgba(245,158,11,0.08)]",
-        alignment === "right" && "sm:flex-row-reverse sm:text-right"
+        "relative flex min-h-[180px] flex-col items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-black/25 p-4 text-center",
+        favorite && "border-amber-300/25 bg-[linear-gradient(135deg,rgba(245,158,11,0.10),rgba(8,18,32,0.38)_42%,rgba(0,0,0,0.24))] shadow-[0_0_34px_rgba(245,158,11,0.08)]"
       )}
     >
       <div
@@ -979,7 +1045,7 @@ function TeamHero({
             : "bg-gradient-to-l from-magenta to-transparent"
         )}
       />
-      <div className={cn("flex items-center gap-3", alignment === "right" && "sm:flex-row-reverse")}>
+      <div className="flex min-h-[120px] w-full flex-1 flex-col items-center justify-center gap-3">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] p-2 shadow-inner sm:h-20 sm:w-20">
           {logo ? (
             <Image
@@ -993,11 +1059,11 @@ function TeamHero({
             <Shield size={30} className="text-gray-500" />
           )}
         </div>
-        <div className={cn("min-w-0", alignment === "right" && "sm:text-right")}>
+        <div className="min-w-0">
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-muted">
             {sideLabel}
           </p>
-          <h1 className="mt-1 line-clamp-2 text-lg font-black leading-tight text-white sm:text-2xl">
+          <h1 className="mx-auto mt-1 line-clamp-2 max-w-[18rem] text-lg font-black leading-tight text-white sm:text-2xl">
             {name}
           </h1>
         </div>
@@ -1005,8 +1071,7 @@ function TeamHero({
       {favorite ? (
         <div
           className={cn(
-            "mt-4 flex items-center gap-2 rounded-xl border border-amber-300/25 bg-black/30 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
-            alignment === "right" && "sm:flex-row-reverse"
+            "mt-4 flex w-full items-center gap-2 rounded-xl border border-amber-300/25 bg-black/30 px-3 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
           )}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-amber-300/25 bg-amber-300/10 text-amber-200 shadow-[0_0_16px_rgba(245,158,11,0.14)]">
@@ -1021,7 +1086,7 @@ function TeamHero({
           <span className="h-2 w-2 shrink-0 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.8)]" />
         </div>
       ) : (
-        <div className="mt-4 rounded-xl border border-cyan-300/10 bg-cyan-300/[0.035] px-3 py-2">
+        <div className="mt-4 w-full rounded-xl border border-cyan-300/10 bg-cyan-300/[0.035] px-3 py-2">
           <span className="inline-flex max-w-full items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             <Swords size={12} className="shrink-0 text-cyan-300/70" />
             <span className="truncate">{contenderLabel}</span>
@@ -1167,44 +1232,6 @@ function ProbabilityStackLegend({
 
 function clampProbability(value: number | null) {
   return Math.max(0, Math.min(100, Math.round(value ?? 0)));
-}
-
-function KeyFactorsPanel({
-  factors,
-  copy,
-}: {
-  factors: string[];
-  copy: ReturnType<typeof getAIInsightPageCopy>;
-}) {
-  return (
-    <Card className="overflow-hidden border border-magenta/15 bg-[#0b0f1b] p-0 shadow-xl shadow-magenta/950/20">
-      <div className="border-b border-white/10 bg-magenta/10 px-5 py-4 sm:px-6">
-        <SectionHeading
-          icon={BarChart3}
-          title={copy.labels.keyFactors}
-          description={copy.sections.matchInsights}
-          accent="purple"
-        />
-      </div>
-      <div className="space-y-3 p-5 sm:p-6">
-        {factors.length === 0 ? (
-          <EmptyState label={copy.empty.description} />
-        ) : (
-          factors.map((factor, index) => (
-            <div
-              key={factor}
-              className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/25 p-4 text-sm font-semibold leading-relaxed text-text-secondary"
-            >
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 font-mono text-[10px] font-black text-primary">
-                {index + 1}
-              </span>
-              <span>{factor}</span>
-            </div>
-          ))
-        )}
-      </div>
-    </Card>
-  );
 }
 
 function HeroStatusBadge({

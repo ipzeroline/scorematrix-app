@@ -1156,17 +1156,43 @@ export async function getApiFootballAIInsightDetail(
 
   return {
     ...data,
-    predictedScore: data.predictedScore ?? normalizeLegacyPredictedScore(data.apiPredictedGoals),
-    apiPredictedGoals: data.apiPredictedGoals ?? normalizeLegacyPredictedGoals(data.predictedScore),
+    predictedScore: hasPredictedGoals(data.predictedScore)
+      ? data.predictedScore
+      : normalizeLegacyPredictedScore(data.apiPredictedGoals),
+    apiPredictedGoals: hasPredictedGoals(data.apiPredictedGoals)
+      ? data.apiPredictedGoals
+      : normalizeLegacyPredictedGoals(data.predictedScore),
     standings: normalizeInsightStandings(data.standings),
     fixture,
   };
 }
 
+function hasPredictedGoals(
+  value:
+    | ApiFootballPredictedScore
+    | NonNullable<ApiFootballAIInsightDetail["apiPredictedGoals"]>
+    | null
+    | undefined
+): value is
+  | (ApiFootballPredictedScore & { home: number | string; away: number | string })
+  | (NonNullable<ApiFootballAIInsightDetail["apiPredictedGoals"]> & {
+      home: number | string;
+      away: number | string;
+    }) {
+  if (!value) return false;
+  return isPredictedGoalValue(value.home) && isPredictedGoalValue(value.away);
+}
+
+function isPredictedGoalValue(value: number | string | null | undefined) {
+  if (value === null || value === undefined) return false;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) && parsed >= 0;
+}
+
 function normalizeLegacyPredictedScore(
   value: ApiFootballAIInsightDetail["apiPredictedGoals"]
 ): ApiFootballPredictedScore | null {
-  if (!value) return null;
+  if (!hasPredictedGoals(value)) return null;
   return {
     home: value.home,
     away: value.away,
@@ -1179,7 +1205,7 @@ function normalizeLegacyPredictedScore(
 function normalizeLegacyPredictedGoals(
   value: ApiFootballPredictedScore | null | undefined
 ): NonNullable<ApiFootballAIInsightDetail["apiPredictedGoals"]> | null {
-  if (!value) return null;
+  if (!hasPredictedGoals(value)) return null;
   return {
     home: value.home,
     away: value.away,

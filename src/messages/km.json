@@ -1242,6 +1242,12 @@
       "title": "ប្រវត្តិជួបគ្នា",
       "empty": "No head-to-head data available yet"
     },
+    "matchLinks": {
+      "title": "ព័ត៌មានមុនទាយ",
+      "description": "បើកព័ត៌មានលម្អិតការប្រកួត និងការវិភាគ AI មុនផ្ញើការទាយ។",
+      "match": "ព័ត៌មានលម្អិតការប្រកួត",
+      "aiInsight": "មើលការវិភាគ AI"
+    },
     "submitted": {
       "title": "Prediction submitted!",
       "description": "Points will be calculated after the match finishes."

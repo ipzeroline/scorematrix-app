@@ -1,4 +1,4 @@
-import { BarChart3, Clock3, HeartPulse, Sparkles, TrendingUp, Trophy } from "lucide-react";
+import { AlertTriangle, BarChart3, Clock3, HeartPulse, Target, TrendingUp, Trophy } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { getAIInsightPageCopy } from "@/data/ai-insight-page-content";
 import type {
@@ -19,6 +19,7 @@ import {
   formatSignedNumber,
   formatBoolean,
   formatTopLevelGoals,
+  formatScorePrediction,
   isLiveStatus,
   getImpactDescription,
 } from "./_detail-shared";
@@ -77,7 +78,12 @@ export default function SummaryTab({
         />
       </div>
       <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <KeyFactorsPanel factors={insight.keyFactors} copy={copy} />
+        <MemberDecisionPanel
+          fixture={fixture}
+          insight={insight}
+          details={details}
+          copy={copy}
+        />
         <InjuryImpactCard
           injuryImpact={insight.injuryImpact}
           homeName={fixture.home.name}
@@ -383,37 +389,89 @@ function RecentProfileOverview({
   );
 }
 
-function KeyFactorsPanel({
-  factors,
+function MemberDecisionPanel({
+  fixture,
+  insight,
+  details,
   copy,
 }: {
-  factors: string[];
+  fixture: ApiFootballFixture;
+  insight: ApiFootballAIInsightDetail;
+  details: LocalizedDetailCopy;
   copy: ReturnType<typeof getAIInsightPageCopy>;
 }) {
+  const predictedScore = formatScorePrediction(insight.apiPredictedGoals);
+  const favoriteLabel =
+    insight.favoriteTeam === "home"
+      ? fixture.home.name
+      : insight.favoriteTeam === "away"
+        ? fixture.away.name
+        : details.drawOption;
+  const riskTone =
+    typeof insight.upsetRisk === "number" && insight.upsetRisk >= 70
+      ? "border-amber-300/20 bg-amber-300/10 text-amber-100"
+      : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100";
+
   return (
-    <Card className="border-border bg-surface p-5 shadow-xl">
+    <Card className="border-cyan-300/15 bg-[linear-gradient(135deg,rgba(34,211,238,0.08),rgba(5,8,15,0.9)_46%,rgba(217,70,239,0.06))] p-5 shadow-xl">
       <SectionHeading
-        icon={Sparkles}
-        title={copy.labels.keyFactors}
-        description={copy.sections.matchInsights}
+        icon={Target}
+        title={details.quickTake}
+        description={details.mainPrediction}
         accent="cyan"
       />
-      <div className="mt-5 space-y-3">
-        {factors.length === 0 ? (
-          <EmptyState label={copy.empty.description} />
-        ) : (
-          factors.map((factor) => (
-            <div
-              key={factor}
-              className="flex items-start gap-3 rounded-xl border border-border bg-elevated/40 p-4 text-sm text-text-secondary leading-relaxed"
-            >
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-              <span>{factor}</span>
-            </div>
-          ))
-        )}
+      <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-muted">
+          {details.apiAdvice}
+        </p>
+        <p className="mt-2 text-base font-black leading-relaxed text-white">
+          {insight.apiAdvice || copy.empty.description}
+        </p>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <PredictionInfo label={details.winnerLean} value={favoriteLabel} />
+        <PredictionInfo label={details.likelyScore} value={predictedScore ?? details.predictedGoalsUnavailable} />
+        <PredictionInfo label={details.confidenceSummary} value={formatPercent(insight.confidenceScore)} />
+        <PredictionInfo
+          label={details.upsetRisk}
+          value={typeof insight.upsetRisk === "number" ? formatPercent(insight.upsetRisk) : "-"}
+        />
+      </div>
+      <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-2xl border border-white/10 bg-black/25 text-center">
+        <MemberProbability label={fixture.home.name} value={insight.homeWinProbability} tone="cyan" />
+        <MemberProbability label={details.drawOption} value={insight.drawProbability} tone="gold" />
+        <MemberProbability label={fixture.away.name} value={insight.awayWinProbability} tone="magenta" />
+      </div>
+      <div className={cn("mt-4 flex items-start gap-3 rounded-xl border px-3 py-2.5 text-xs font-semibold", riskTone)}>
+        <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+        <span>
+          {insight.upsetAlert ? copy.labels.upsetAlert : details.confidenceMid}
+        </span>
       </div>
     </Card>
+  );
+}
+
+function MemberProbability({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number | null;
+  tone: "cyan" | "gold" | "magenta";
+}) {
+  const toneClass = {
+    cyan: "text-cyan-200",
+    gold: "text-amber-200 border-x border-white/10",
+    magenta: "text-fuchsia-200",
+  }[tone];
+
+  return (
+    <div className={cn("min-w-0 px-3 py-3", toneClass)}>
+      <p className="truncate text-[10px] font-black uppercase tracking-[0.14em] text-text-muted">{label}</p>
+      <p className="mt-1 font-mono text-lg font-black text-white">{formatPercent(value)}</p>
+    </div>
   );
 }
 

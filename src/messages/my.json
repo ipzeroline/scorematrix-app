@@ -1233,6 +1233,12 @@
       "title": "အပြန်အလှန်တွေ့ဆုံမှုမှတ်တမ်း",
       "empty": "No head-to-head data available yet"
     },
+    "matchLinks": {
+      "title": "ခန့်မှန်းမီ ကြည့်ရန်",
+      "description": "ခန့်မှန်းချက်မပို့မီ ပွဲအသေးစိတ်နှင့် AI သုံးသပ်ချက်ကိုဖွင့်ကြည့်ပါ။",
+      "match": "ပွဲအသေးစိတ်",
+      "aiInsight": "AI သုံးသပ်ချက်ကြည့်ရန်"
+    },
     "submitted": {
       "title": "Prediction submitted!",
       "description": "Points will be calculated after the match finishes."

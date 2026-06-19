@@ -1233,6 +1233,12 @@
       "title": "ສະຖິຕິພົບກັນຍ້ອນຫຼັງ",
       "empty": "No head-to-head data available yet"
     },
+    "matchLinks": {
+      "title": "ຂໍ້ມູນກ່ອນທາຍ",
+      "description": "ເປີດລາຍລະອຽດແມັດ ແລະ AI ວິເຄາະກ່ອນສົ່ງຄໍາທາຍ.",
+      "match": "ລາຍລະອຽດແມັດ",
+      "aiInsight": "ເບິ່ງ AI ວິເຄາະ"
+    },
     "submitted": {
       "title": "Prediction submitted!",
       "description": "Points will be calculated after the match finishes."

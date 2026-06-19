@@ -402,8 +402,6 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               }}
             />
 
-            <ApiDataCoveragePanel rawPayload={rawPayload} />
-
             <PeriodScorePanel
               scoreBreakdown={scoreBreakdown}
               status={fixture.statusShort}
@@ -910,98 +908,6 @@ function MatchContextPanel({
   );
 }
 
-function ApiDataCoveragePanel({ rawPayload }: { rawPayload: unknown }) {
-  const summary = buildApiDataCoverage(rawPayload);
-  if (!summary) return null;
-
-  return (
-    <Card className="overflow-hidden border border-cyan-300/12 bg-[#0b0f18] p-0 shadow-xl">
-      <div className="border-b border-white/10 bg-[#0f1320] px-4 py-3 border-l-2 border-cyan-300">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
-          <ListChecks size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
-          <span className="min-w-0 truncate">Data coverage</span>
-        </h2>
-      </div>
-      <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
-        {summary.sources.map((item) => (
-          <div key={item.label} className="min-w-0 bg-surface px-4 py-3.5">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <span className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">
-                {item.label}
-              </span>
-              <span className={cn(
-                "shrink-0 rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase",
-                item.status === "available"
-                  ? "border-success/30 bg-success/10 text-success"
-                  : "border-amber-300/25 bg-amber-300/10 text-amber-200"
-              )}>
-                {item.status}
-              </span>
-            </div>
-            <p className="truncate font-mono text-xs font-bold text-white">{item.source || "-"}</p>
-            <p className="mt-1 truncate font-mono text-[10px] font-semibold text-gray-500">{item.syncedAt || "-"}</p>
-          </div>
-        ))}
-      </div>
-      <div className="grid gap-px bg-border sm:grid-cols-2">
-        {summary.meta.map((item) => (
-          <div key={item.label} className="min-w-0 bg-surface px-4 py-3">
-            <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{item.label}</p>
-            <p className="mt-1 break-words font-mono text-xs font-bold text-white">{item.value}</p>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
-}
-
-function buildApiDataCoverage(rawPayload: unknown) {
-  const data = getPayloadData(rawPayload);
-  if (!data) return null;
-
-  const sourceKeys = ["events", "lineups", "statistics", "players"] as const;
-  const sources = sourceKeys.map((key) => ({
-    label: key,
-    status: readString(data[`${key}_status`]) ?? (Array.isArray(data[key]) && data[key].length > 0 ? "available" : "missing"),
-    source: readString(data[`${key}_source`]),
-    syncedAt: readString(data[`${key}_synced_at`]),
-  }));
-
-  const headToHead = isRecord(data.headToHead) ? data.headToHead : null;
-  const teamStatistics = isRecord(data.team_statistics) ? data.team_statistics : null;
-  const teamSquads = isRecord(data.team_squads) ? data.team_squads : null;
-  const standings = isRecord(data.standings) ? data.standings : null;
-
-  const meta = [
-    { label: "provider_id", value: String(data.provider_id ?? "-") },
-    { label: "status_short", value: readString(data.status_short) ?? "-" },
-    { label: "hydrated_at", value: readString(data.hydrated_at) ?? "-" },
-    { label: "head_to_head", value: headToHead ? `${readArray(headToHead.fixtures).length} fixtures${headToHead.filtered_out !== undefined ? `, filtered ${headToHead.filtered_out}` : ""}` : "-" },
-    { label: "standings", value: standings ? "home / away" : "-" },
-    { label: "team_statistics", value: teamStatistics ? `${readString(teamStatistics.hydrated_at) ?? "available"}` : "-" },
-    { label: "team_squads", value: teamSquads ? "home / away squads available" : "-" },
-  ];
-
-  return { sources, meta };
-}
-
-function getPayloadData(rawPayload: unknown) {
-  if (!isRecord(rawPayload)) return null;
-  return isRecord(rawPayload.data) ? rawPayload.data : rawPayload;
-}
-
-function readString(value: unknown) {
-  return typeof value === "string" && value.trim() ? value : null;
-}
-
-function readArray(value: unknown) {
-  return Array.isArray(value) ? value : [];
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value && typeof value === "object" && !Array.isArray(value));
-}
-
 function translateFixtureStatus(
   fixture: ApiFootballFixture,
   labels: {
@@ -1057,7 +963,7 @@ function MatchDetailShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5 px-3 pb-12 sm:px-0">
+    <div className="mx-auto w-full max-w-6xl space-y-5 px-4 pb-12 sm:px-0">
       <Link
         id="btn-back-to-matches"
         href={`/${locale}/matches`}

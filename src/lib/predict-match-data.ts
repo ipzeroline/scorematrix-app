@@ -2,6 +2,7 @@ import {
   type ApiFootballFixture,
   type ApiFootballLineup,
   type ApiFootballPlayerStats,
+  getApiFootballAIInsightDetail,
   getApiFootballFixtureDetails,
   getApiFootballH2H,
 } from "@/lib/api-football";
@@ -28,7 +29,12 @@ export async function loadPredictMatchRouteContext(
   if (apiFixtureId) {
     const details = await getApiFootballFixtureDetails(apiFixtureId);
     const context = buildApiPredictMatchContext(details);
-    context.match.h2h = await loadApiH2HFixtures(context.homeTeamId, context.awayTeamId);
+    const [h2h, hasAiInsight] = await Promise.all([
+      loadApiH2HFixtures(context.homeTeamId, context.awayTeamId),
+      loadApiAIInsightAvailability(apiFixtureId),
+    ]);
+    context.match.h2h = h2h;
+    context.match.hasAiInsight = hasAiInsight;
     return context;
   }
 
@@ -48,6 +54,15 @@ async function loadApiH2HFixtures(
     return await getApiFootballH2H(home, away, 5);
   } catch {
     return [];
+  }
+}
+
+async function loadApiAIInsightAvailability(fixtureId: number) {
+  try {
+    await getApiFootballAIInsightDetail(fixtureId);
+    return true;
+  } catch {
+    return false;
   }
 }
 

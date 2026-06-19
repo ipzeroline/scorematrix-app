@@ -1232,6 +1232,12 @@
       "title": "历史交锋",
       "empty": "暂无交锋记录"
     },
+    "matchLinks": {
+      "title": "预测前参考",
+      "description": "提交预测前，先查看比赛详情和 AI 分析。",
+      "match": "比赛详情",
+      "aiInsight": "查看 AI 分析"
+    },
     "submitted": {
       "title": "预测已提交！",
       "description": "比赛结束后将计算积分。"

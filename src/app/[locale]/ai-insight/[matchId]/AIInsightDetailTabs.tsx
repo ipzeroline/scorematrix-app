@@ -34,8 +34,8 @@ export default function AIInsightDetailTabs({
               className={cn(
                 "min-w-0 rounded-xl px-2 py-2.5 text-center text-xs font-black uppercase tracking-wider transition-all sm:px-4 cursor-pointer",
                 tab === key
-                  ? "bg-primary text-slate-950 shadow-md shadow-primary/25"
-                  : "text-text-secondary hover:bg-white/[0.05] hover:text-white"
+                  ? "border border-cyan-300/35 bg-[linear-gradient(135deg,rgba(34,211,238,0.18),rgba(217,70,239,0.12))] text-cyan-50 shadow-[0_0_22px_rgba(34,211,238,0.16),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                  : "border border-transparent text-slate-400 hover:border-cyan-300/15 hover:bg-white/[0.05] hover:text-cyan-100"
               )}
             >
               {labels[key]}

@@ -1,6 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState, useEffect, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
@@ -8,7 +9,6 @@ import {
   Brain,
   CalendarClock,
   CheckCircle2,
-  History,
   Medal,
   Sparkles,
   Timer,
@@ -30,16 +30,53 @@ import { apiPostRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
 import { extractApiFixtureId } from "@/lib/football-slugs";
 import { useUserStore } from "@/stores/user-store";
+import type { ScoringRules } from "@/types/scoring-rules";
 
 type ConfidenceLevel = "safe" | "confident" | "bold";
 
-const SCORING_BASE_POINTS = 10;
-const SCORING_BONUS = {
-  exact: 20,
-  goalDiff: 10,
-  result: 0,
-  wrong: 0,
-} as const;
+const DEFAULT_SCORING_RULES: Required<
+  Pick<ScoringRules, "resultTiers" | "bonuses" | "confidenceMultipliers" | "boost" | "streak" | "formula">
+> = {
+  resultTiers: {
+    exact: {
+      name: "exact",
+      description: "Exact final score",
+      basePoints: 10,
+      bonusPoints: 20,
+      totalPoints: 30,
+    },
+    goalDiff: {
+      name: "goalDiff",
+      description: "Correct side and goal difference",
+      basePoints: 10,
+      bonusPoints: 10,
+      totalPoints: 20,
+    },
+    result: {
+      name: "result",
+      description: "Correct side",
+      basePoints: 10,
+      bonusPoints: 0,
+      totalPoints: 10,
+    },
+  },
+  bonuses: {
+    firstScorer: { name: "First goalscorer", points: 15 },
+    totalGoals: { name: "Total goals", points: 10 },
+    halfTimeScore: { name: "Half-time score", points: 10 },
+  },
+  confidenceMultipliers: {
+    safe: { name: "Safe", multiplier: 1 },
+    confident: { name: "Confident", multiplier: 1.5 },
+    bold: { name: "Bold", multiplier: 2 },
+  },
+  boost: { name: "Boost", description: "Boost multiplier", multiplier: 2 },
+  streak: { name: "Streak Bonus", description: "Streak bonus", bonusPerLevel: 2, formula: "streak_number x 2" },
+  formula: {
+    description: "points_earned = stake + profit",
+    profit: "profit = round((base_points + total_bonus) x confidence x boost) + streak_bonus",
+  },
+};
 
 export interface PredictPlayer {
   id: number | null;
@@ -98,14 +135,17 @@ export interface PredictMatch {
   kickoffTime: string;
   venue: string;
   h2h?: PredictH2HFixture[];
+  hasAiInsight?: boolean;
 }
 
 export function PredictMatchForm({
   locale,
   match,
+  scoringRules,
 }: {
   locale: string;
   match: PredictMatch;
+  scoringRules?: ScoringRules | null;
 }) {
   const t = useTranslations("predictionForm");
   const router = useRouter();
@@ -115,6 +155,8 @@ export function PredictMatchForm({
   // match detail page (livescore) for this provider id when there's no history.
   const providerId = String(extractApiFixtureId(String(match.matchId)) ?? match.matchId).trim();
   const matchDetailHref = `/${locale}/livescore/match/${providerId}`;
+  const matchPageHref = `/${locale}/matches/detail/${providerId}`;
+  const aiInsightHref = `/${locale}/ai-insight/${providerId}`;
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
@@ -294,28 +336,40 @@ export function PredictMatchForm({
     { value: "confident", label: t("confidence.confident") },
     { value: "bold", label: t("confidence.bold") },
   ];
-  const confidenceMultiplier = getConfidenceMultiplier(confidence);
-  const boostMultiplier = useBoost ? 2 : 1;
+  const activeScoringRules = mergeScoringRules(scoringRules);
+  const exactTier = activeScoringRules.resultTiers.exact;
+  const goalDiffTier = activeScoringRules.resultTiers.goalDiff;
+  const resultTier = activeScoringRules.resultTiers.result;
+  const firstScorerBonus = activeScoringRules.bonuses.firstScorer?.points ?? 0;
+  const totalGoalsBonus = activeScoringRules.bonuses.totalGoals?.points ?? 0;
+  const halfTimeScoreBonus = activeScoringRules.bonuses.halfTimeScore?.points ?? 0;
+  const basePoints = exactTier.basePoints ?? goalDiffTier.basePoints ?? resultTier.basePoints ?? 0;
+  const confidenceMultiplier = getConfidenceMultiplier(confidence, activeScoringRules);
+  const boostMultiplier = useBoost ? activeScoringRules.boost.multiplier ?? 1 : 1;
   const streakPreview = 3;
-  const streakPointsPreview = streakPreview * 2;
+  const streakPointsPreview = streakPreview * (activeScoringRules.streak.bonusPerLevel ?? 0);
   const effectivePointsWagered = Math.round(pointsWagered * confidenceMultiplier);
+  const selectedBonusPoints =
+    (firstScorerPlayerId ? firstScorerBonus : 0) +
+    (totalGoals !== null ? totalGoalsBonus : 0) +
+    (halfHomeScore !== null && halfAwayScore !== null ? halfTimeScoreBonus : 0);
   const exactPointsPreview = Math.round(
     pointsWagered +
-      (SCORING_BASE_POINTS + SCORING_BONUS.exact) *
+      ((exactTier.totalPoints ?? (basePoints + (exactTier.bonusPoints ?? 0))) + selectedBonusPoints) *
         confidenceMultiplier *
         boostMultiplier +
       streakPointsPreview
   );
   const goalDiffPointsPreview = Math.round(
     pointsWagered +
-      (SCORING_BASE_POINTS + SCORING_BONUS.goalDiff) *
+      ((goalDiffTier.totalPoints ?? (basePoints + (goalDiffTier.bonusPoints ?? 0))) + selectedBonusPoints) *
         confidenceMultiplier *
         boostMultiplier +
       streakPointsPreview
   );
   const resultPointsPreview = Math.round(
     pointsWagered +
-      (SCORING_BASE_POINTS + SCORING_BONUS.result) *
+      ((resultTier.totalPoints ?? (basePoints + (resultTier.bonusPoints ?? 0))) + selectedBonusPoints) *
         confidenceMultiplier *
         boostMultiplier +
       streakPointsPreview
@@ -332,6 +386,31 @@ export function PredictMatchForm({
         : awayScore > homeScore
           ? t("outcome.awayWin", { team: match.away.name })
           : t("outcome.draw");
+  const fullScoreValue =
+    homeScore !== null && awayScore !== null
+      ? `${match.home.name} ${homeScore} - ${awayScore} ${match.away.name}`
+      : locale === "th"
+        ? "ยังไม่เลือกสกอร์"
+        : "No score selected";
+  const fullScoreHelper =
+    homeScore !== null && awayScore !== null
+      ? `${predictedOutcomeLabel} • ${locale === "th" ? "รวม" : "Total"} ${totalGoals ?? 0} ${
+          locale === "th" ? "ประตู" : "goals"
+        }`
+      : locale === "th"
+        ? "เลือกสกอร์ของทั้งสองทีมก่อนส่งคำทาย"
+        : "Pick both teams' final score before submitting.";
+  const firstScorerValue = selectedFirstScorer?.name ?? (locale === "th" ? "ยังไม่เลือก" : "Not selected");
+  const firstScorerHelper = selectedFirstScorer
+    ? `${selectedFirstScorer.number ? `#${selectedFirstScorer.number} • ` : ""}${
+        locale === "th" ? "ผู้เล่นที่เลือกให้ยิงประตูแรก" : "Selected first goalscorer"
+      }`
+    : locale === "th"
+      ? "เลือกได้จากรายชื่อนักเตะ หรือปล่อยว่างถ้าไม่ต้องการทาย"
+      : "Choose a player or leave this empty.";
+  const confidenceHelper = `${locale === "th" ? "แต้มที่ใช้จริง" : "Effective stake"} ${effectivePointsWagered.toLocaleString()} ${
+    locale === "th" ? "แต้ม" : "pts"
+  }`;
   
   const payload = {
     matchId: /^\d+$/.test(String(match.matchId)) ? Number(match.matchId) : match.matchId,
@@ -345,6 +424,11 @@ export function PredictMatchForm({
     useBoost,
     pointsWagered: effectivePointsWagered,
   };
+  const aiSuggestionPreview = buildAiPredictionSuggestion({
+    match,
+    homePlayers,
+    awayPlayers,
+  });
 
   const confirmSubmit = async () => {
     setShowConfirm(false);
@@ -478,21 +562,24 @@ export function PredictMatchForm({
         <FlowStep
           number="01"
           title={t("basic.fullScore")}
-          description={t("basic.selectScores")}
+          value={fullScoreValue}
+          description={fullScoreHelper}
           active={homeScore !== null && awayScore !== null}
           tone="cyan"
         />
         <FlowStep
           number="02"
           title={t("deep.firstScorer")}
-          description={selectedFirstScorer?.name ?? t("common.no")}
+          value={firstScorerValue}
+          description={firstScorerHelper}
           active={Boolean(selectedFirstScorer)}
           tone="magenta"
         />
         <FlowStep
           number="03"
           title={t("confidence.title")}
-          description={selectedConfidenceLabel}
+          value={selectedConfidenceLabel}
+          description={confidenceHelper}
           active
           tone="gold"
         />
@@ -822,13 +909,18 @@ export function PredictMatchForm({
                   {t("formula.pointsEarnedTitle")}
                 </p>
                 <p className="mt-1 break-words font-mono text-sm font-bold text-cyan-100">
-                  {t("formula.pointsEarnedExpression")}
+                  {activeScoringRules.formula.description ?? t("formula.pointsEarnedExpression")}
                 </p>
-                <div className="mt-2 grid gap-2 sm:grid-cols-4">
+                <div className="mt-2 grid gap-2 sm:grid-cols-5">
                   <FormulaValue
                     label={t("formula.stake")}
                     value={`${pointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
                     tone="text-amber-300"
+                  />
+                  <FormulaValue
+                    label={locale === "th" ? "bonus" : "bonus"}
+                    value={`+${selectedBonusPoints.toLocaleString()}`}
+                    tone="text-green-300"
                   />
                   <FormulaValue
                     label={t("formula.confidence")}
@@ -842,12 +934,12 @@ export function PredictMatchForm({
                   />
                   <FormulaValue
                     label={t("formula.streak")}
-                    value={`${streakPreview} x 2 = ${streakPointsPreview}`}
+                    value={`${streakPreview} x ${activeScoringRules.streak.bonusPerLevel ?? 0} = ${streakPointsPreview}`}
                     tone="text-green-300"
                   />
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  {t("formula.streakNote")}
+                  {activeScoringRules.streak.formula ?? t("formula.streakNote")}
                 </p>
               </div>
 
@@ -857,26 +949,26 @@ export function PredictMatchForm({
                     {t("formula.resultTierTitle")}
                   </p>
                   <span className="font-mono text-xs text-gray-400">
-                    base = {SCORING_BASE_POINTS}
+                    base = {basePoints}
                   </span>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <TierRow
-                    label={t("formula.tiers.exact")}
-                    description={t("formula.tiers.exactDesc")}
-                    bonus={`+${SCORING_BONUS.exact}`}
+                    label={exactTier.name ?? t("formula.tiers.exact")}
+                    description={exactTier.description ?? t("formula.tiers.exactDesc")}
+                    bonus={`+${exactTier.bonusPoints ?? 0}`}
                     tone="text-amber-300"
                   />
                   <TierRow
-                    label={t("formula.tiers.goalDiff")}
-                    description={t("formula.tiers.goalDiffDesc")}
-                    bonus={`+${SCORING_BONUS.goalDiff}`}
+                    label={goalDiffTier.name ?? t("formula.tiers.goalDiff")}
+                    description={goalDiffTier.description ?? t("formula.tiers.goalDiffDesc")}
+                    bonus={`+${goalDiffTier.bonusPoints ?? 0}`}
                     tone="text-green-300"
                   />
                   <TierRow
-                    label={t("formula.tiers.result")}
-                    description={t("formula.tiers.resultDesc")}
-                    bonus={`+${SCORING_BONUS.result}`}
+                    label={resultTier.name ?? t("formula.tiers.result")}
+                    description={resultTier.description ?? t("formula.tiers.resultDesc")}
+                    bonus={`+${resultTier.bonusPoints ?? 0}`}
                     tone="text-cyan-300"
                   />
                   <TierRow
@@ -889,6 +981,31 @@ export function PredictMatchForm({
                 <p className="mt-2 text-xs text-red-300/80">
                   {t("formula.wrongNote")}
                 </p>
+                <div className="mt-3 border-t border-gray-800/70 pt-3">
+                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-gray-400">
+                    {locale === "th" ? "โบนัสเพิ่มเติมจาก API" : "Additional bonuses from API"}
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    <TierRow
+                      label={activeScoringRules.bonuses.firstScorer?.name ?? t("deep.firstScorer")}
+                      description={selectedFirstScorer ? selectedFirstScorer.name : locale === "th" ? "ได้รับเมื่อทายถูก" : "Earned if correct"}
+                      bonus={`+${firstScorerBonus}`}
+                      tone="text-fuchsia-300"
+                    />
+                    <TierRow
+                      label={activeScoringRules.bonuses.totalGoals?.name ?? t("deep.totalGoals")}
+                      description={totalGoals !== null ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}` : locale === "th" ? "คำนวณจากสกอร์รวม" : "Calculated from final score"}
+                      bonus={`+${totalGoalsBonus}`}
+                      tone="text-amber-300"
+                    />
+                    <TierRow
+                      label={activeScoringRules.bonuses.halfTimeScore?.name ?? t("summary.halfTime")}
+                      description={`${halfHomeScore ?? "-"} : ${halfAwayScore ?? "-"}`}
+                      bonus={`+${halfTimeScoreBonus}`}
+                      tone="text-cyan-300"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </Card>
@@ -918,13 +1035,16 @@ export function PredictMatchForm({
 
         {/* Right Column (Sidebar Ticket & Actions) */}
         <aside className="space-y-4 min-w-0">
-          {/* Head-to-Head listing */}
-          <H2HPanel
-            h2h={match.h2h ?? []}
-            locale={locale}
-            title={t("h2h.title")}
-            vsLabel={t("common.vs")}
-            homeTeamName={match.home.name}
+          <MatchResearchLinks
+            matchHref={matchPageHref}
+            aiInsightHref={aiInsightHref}
+            hasAiInsight={Boolean(match.hasAiInsight)}
+            labels={{
+              title: t("matchLinks.title"),
+              description: t("matchLinks.description"),
+              match: t("matchLinks.match"),
+              aiInsight: t("matchLinks.aiInsight"),
+            }}
           />
 
           {/* Physical Football Ticket summary */}
@@ -988,17 +1108,13 @@ export function PredictMatchForm({
               <h3 className="text-sm font-black uppercase tracking-wider text-cyan-300">{t("ai.title")}</h3>
             </div>
             <p className="mt-2 text-sm leading-relaxed text-gray-400">
-              {t("ai.description")}
+              {locale === "th" ? aiSuggestionPreview.reasonTh : aiSuggestionPreview.reasonEn}
             </p>
             <Button
               className="mt-3.5 w-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 font-bold hover:bg-cyan-400 hover:text-black cursor-pointer shadow-md transition-all active:scale-[0.98]"
               size="sm"
               onClick={() => {
-                const aiSuggestion = buildAiPredictionSuggestion({
-                  match,
-                  homePlayers,
-                  awayPlayers,
-                });
+                const aiSuggestion = aiSuggestionPreview;
 
                 setHomeScore(aiSuggestion.homeScore);
                 setAwayScore(aiSuggestion.awayScore);
@@ -1191,7 +1307,7 @@ export function PredictMatchForm({
                   {halfAwayScore !== null ? halfAwayScore : "-"}
                 </ConfirmDetailCard>
                 <ConfirmDetailCard label={t("formula.streak")}>
-                  {streakPreview} x 2 = {streakPointsPreview}
+                  {streakPreview} x {activeScoringRules.streak.bonusPerLevel ?? 0} = {streakPointsPreview}
                 </ConfirmDetailCard>
               </div>
 
@@ -1212,25 +1328,25 @@ export function PredictMatchForm({
                   {locale === "th" ? "คะแนนที่เป็นไปได้" : "Possible outcomes"}
                 </p>
                 <span className="font-mono text-xs text-gray-500">
-                  base {SCORING_BASE_POINTS} / boost x{boostMultiplier.toFixed(1)}
+                  base {basePoints} / boost x{boostMultiplier.toFixed(1)}
                 </span>
               </div>
               <div className="space-y-2">
                 <OutcomeRow
-                  label={t("formula.tiers.exact")}
-                  description={t("formula.tiers.exactDesc")}
+                  label={exactTier.name ?? t("formula.tiers.exact")}
+                  description={exactTier.description ?? t("formula.tiers.exactDesc")}
                   points={exactPointsPreview}
                   tone="text-amber-300"
                 />
                 <OutcomeRow
-                  label={t("formula.tiers.goalDiff")}
-                  description={t("formula.tiers.goalDiffDesc")}
+                  label={goalDiffTier.name ?? t("formula.tiers.goalDiff")}
+                  description={goalDiffTier.description ?? t("formula.tiers.goalDiffDesc")}
                   points={goalDiffPointsPreview}
                   tone="text-green-300"
                 />
                 <OutcomeRow
-                  label={t("formula.tiers.result")}
-                  description={t("formula.tiers.resultDesc")}
+                  label={resultTier.name ?? t("formula.tiers.result")}
+                  description={resultTier.description ?? t("formula.tiers.resultDesc")}
                   points={resultPointsPreview}
                   tone="text-cyan-300"
                 />
@@ -1242,7 +1358,7 @@ export function PredictMatchForm({
                 />
               </div>
               <p className="mt-3 text-xs leading-relaxed text-gray-500">
-                {t("formula.pointsEarnedExpression")}
+                {activeScoringRules.formula.profit ?? t("formula.pointsEarnedExpression")}
               </p>
             </div>
           )}
@@ -1265,12 +1381,14 @@ export function PredictMatchForm({
 function FlowStep({
   number,
   title,
+  value,
   description,
   active,
   tone,
 }: {
   number: string;
   title: string;
+  value: string;
   description: string;
   active: boolean;
   tone: "cyan" | "magenta" | "gold";
@@ -1301,7 +1419,10 @@ function FlowStep({
           {number}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-base font-black text-white">{title}</p>
+          <p className="text-xs font-black uppercase tracking-wider text-gray-500">{title}</p>
+          <p className="mt-1 line-clamp-2 text-base font-black leading-snug text-white">
+            {value}
+          </p>
           <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-gray-400">
             {description}
           </p>
@@ -1480,194 +1601,54 @@ function ScorePredictorConsole({
   );
 }
 
-// ----------------------------------------------------
-// Head-to-Head listing panel
-// ----------------------------------------------------
-function H2HPanel({
-  h2h,
-  locale,
-  title,
-  vsLabel,
-  homeTeamName,
+function MatchResearchLinks({
+  matchHref,
+  aiInsightHref,
+  hasAiInsight,
+  labels,
 }: {
-  h2h: PredictH2HFixture[];
-  locale: string;
-  title: string;
-  vsLabel: string;
-  homeTeamName: string;
-}) {
-  const [open, setOpen] = useState(false);
-
-  if (h2h.length === 0) {
-    return null;
-  }
-
-  return (
-    <>
-      <Card className="overflow-hidden border border-gray-800 p-0">
-        <div className="border-b border-gray-800 px-4 py-3">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-white">
-            <History size={16} className="text-purple-300" />
-            <span className="min-w-0 truncate">{title}</span>
-          </h3>
-        </div>
-        <div className="space-y-3 px-4 py-4">
-          <p className="text-sm leading-relaxed text-gray-400">
-            {locale === "th"
-              ? `มีข้อมูลย้อนหลัง ${h2h.length} นัด กดเพื่อดูรายละเอียดทั้งหมด`
-              : `${h2h.length} previous meetings available. Open to view full details.`}
-          </p>
-          <Button
-            className="w-full justify-center border border-cyan-400/30 bg-cyan-500/15 font-semibold text-cyan-200 shadow-[0_0_20px_rgba(34,211,238,0.12)] hover:bg-cyan-400 hover:text-black"
-            onClick={() => setOpen(true)}
-            neon
-          >
-            <History size={14} />
-            {locale === "th" ? "ดูสถิติพบกันย้อนหลัง" : title}
-          </Button>
-        </div>
-      </Card>
-
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title={title}
-        size="lg"
-      >
-        <div className="space-y-3">
-          {h2h.map((fixture) => {
-            const isFinished = fixture.score.home !== null && fixture.score.away !== null;
-            let resultDot = null;
-            let resultTone = "border-gray-800/80 bg-[#0a0a0f]";
-            if (isFinished) {
-              const homeScoreVal = fixture.score.home ?? 0;
-              const awayScoreVal = fixture.score.away ?? 0;
-              const isHomeTeamMatches =
-                fixture.home.name.toLowerCase() === homeTeamName.toLowerCase();
-
-              let isWin = false;
-              let isDraw = false;
-
-              if (homeScoreVal === awayScoreVal) {
-                isDraw = true;
-              } else if (homeScoreVal > awayScoreVal) {
-                isWin = isHomeTeamMatches;
-              } else {
-                isWin = !isHomeTeamMatches;
-              }
-
-              resultDot = (
-                <span
-                  className={cn(
-                    "h-2 w-2 shrink-0 rounded-full",
-                    isDraw
-                      ? "bg-gray-500"
-                      : isWin
-                        ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]"
-                        : "bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
-                  )}
-                />
-              );
-
-              resultTone = isDraw
-                ? "border-gray-700/80 bg-[#0a0a0f]"
-                : isWin
-                  ? "border-emerald-500/20 bg-emerald-500/[0.03]"
-                  : "border-rose-500/20 bg-rose-500/[0.03]";
-            }
-
-            return (
-              <div
-                key={fixture.id}
-                className={cn(
-                  "rounded-xl border p-3 transition-colors hover:bg-white/[0.02]",
-                  resultTone
-                )}
-              >
-                <div className="mb-3 flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      {resultDot}
-                      <span className="font-mono text-xs text-gray-400">
-                        {fixture.league.name}
-                      </span>
-                    </div>
-                    <p className="mt-1 font-mono text-xs text-gray-500">
-                      {formatH2HDate(fixture.kickoffTime, locale)}
-                    </p>
-                  </div>
-                  {isFinished ? (
-                    <span className="rounded-full border border-gray-800 bg-black/40 px-2 py-0.5 font-mono text-xs text-gray-400">
-                      {fixture.score.home}-{fixture.score.away}
-                    </span>
-                  ) : null}
-                </div>
-
-                <div className="grid grid-cols-[minmax(0,1fr)_72px_minmax(0,1fr)] items-center gap-3">
-                  <H2HTeam
-                    name={fixture.home.name}
-                    logo={fixture.home.logo}
-                    align="right"
-                  />
-                  <div className="rounded-xl border border-gray-800/70 bg-black/40 px-2 py-2 text-center">
-                    <span className="block font-mono text-base font-black text-white">
-                      {isFinished
-                        ? `${fixture.score.home} - ${fixture.score.away}`
-                        : vsLabel}
-                    </span>
-                    <span className="mt-1 block text-xs uppercase tracking-wider text-gray-500">
-                      {isFinished ? "FT" : vsLabel}
-                    </span>
-                  </div>
-                  <H2HTeam name={fixture.away.name} logo={fixture.away.logo} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </Modal>
-    </>
-  );
-}
-
-function H2HTeam({
-  name,
-  logo,
-  align = "left",
-}: {
-  name: string;
-  logo: string | null;
-  align?: "left" | "right";
+  matchHref: string;
+  aiInsightHref: string;
+  hasAiInsight: boolean;
+  labels: {
+    title: string;
+    description: string;
+    match: string;
+    aiInsight: string;
+  };
 }) {
   return (
-    <div
-      className={cn(
-        "flex min-w-0 items-center gap-2",
-        align === "right" && "justify-end"
-      )}
-    >
-      {align === "right" && (
-        <span className="line-clamp-2 text-right text-sm font-semibold text-white">
-          {name}
+    <Card className="overflow-hidden border border-cyan-500/20 bg-gradient-to-b from-[#101721] to-[#090b11] p-4 shadow-[0_0_30px_rgba(34,211,238,0.06)]">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/25 bg-cyan-500/10 text-cyan-200">
+          <CalendarClock size={18} />
         </span>
-      )}
-      <ApiTeamLogo name={name} logo={logo} size="sm" accent={align === "right" ? "cyan" : "magenta"} />
-      {align === "left" && (
-        <span className="line-clamp-2 text-sm font-semibold text-white">{name}</span>
-      )}
-    </div>
+        <div className="min-w-0">
+          <h3 className="text-base font-black text-white">{labels.title}</h3>
+          <p className="mt-1 text-sm leading-relaxed text-gray-400">{labels.description}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        <Link
+          href={matchHref}
+          className="flex items-center justify-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-500/15 px-4 py-3 text-sm font-black text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.10)] transition hover:bg-cyan-300 hover:text-black"
+        >
+          <CalendarClock size={16} />
+          {labels.match}
+        </Link>
+        {hasAiInsight ? (
+          <Link
+            href={aiInsightHref}
+            className="flex items-center justify-center gap-2 rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/15 px-4 py-3 text-sm font-black text-fuchsia-100 shadow-[0_0_18px_rgba(217,70,239,0.10)] transition hover:bg-fuchsia-300 hover:text-black"
+          >
+            <Brain size={16} />
+            {labels.aiInsight}
+          </Link>
+        ) : null}
+      </div>
+    </Card>
   );
-}
-
-function formatH2HDate(value: string, locale: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
 }
 
 function buildAiPredictionSuggestion({
@@ -1684,7 +1665,7 @@ function buildAiPredictionSuggestion({
   );
 
   if (finishedH2H.length === 0) {
-    return buildFallbackAiSuggestion(homePlayers, awayPlayers);
+    return buildFallbackAiSuggestion(match, homePlayers, awayPlayers);
   }
 
   const normalized = finishedH2H
@@ -1692,7 +1673,7 @@ function buildAiPredictionSuggestion({
     .filter((fixture): fixture is { homeGoals: number; awayGoals: number } => fixture !== null);
 
   if (normalized.length === 0) {
-    return buildFallbackAiSuggestion(homePlayers, awayPlayers);
+    return buildFallbackAiSuggestion(match, homePlayers, awayPlayers);
   }
 
   const totals = normalized.reduce<{
@@ -1762,12 +1743,13 @@ function buildAiPredictionSuggestion({
     halfAwayScore,
     firstScorerPlayerId,
     confidence,
-    reasonTh: `ใช้ H2H ${sampleSize} นัดล่าสุด: เฉลี่ย ${avgHomeGoals.toFixed(1)}-${avgAwayGoals.toFixed(1)} และกรอกคำทายให้อัตโนมัติแล้ว`,
-    reasonEn: `Filled from the last ${sampleSize} H2H matches with an average of ${avgHomeGoals.toFixed(1)}-${avgAwayGoals.toFixed(1)}.`,
+    reasonTh: `AI แนะนำ ${match.home.name} ${homeScore}-${awayScore} ${match.away.name} จาก H2H ${sampleSize} นัดล่าสุด เฉลี่ย ${avgHomeGoals.toFixed(1)}-${avgAwayGoals.toFixed(1)}`,
+    reasonEn: `AI suggests ${match.home.name} ${homeScore}-${awayScore} ${match.away.name} from the last ${sampleSize} H2H matches, averaging ${avgHomeGoals.toFixed(1)}-${avgAwayGoals.toFixed(1)}.`,
   };
 }
 
 function buildFallbackAiSuggestion(
+  match: PredictMatch,
   homePlayers: PredictPlayer[],
   awayPlayers: PredictPlayer[]
 ) {
@@ -1781,8 +1763,8 @@ function buildFallbackAiSuggestion(
     halfAwayScore: 0,
     firstScorerPlayerId: toPlayerSelectionValue(homePlayers[0] ?? awayPlayers[0] ?? null),
     confidence: "safe" as ConfidenceLevel,
-    reasonTh: "ยังมีข้อมูลย้อนหลังไม่พอ จึงใช้ค่าเริ่มต้นแบบระมัดระวังและกรอกคำทายให้แล้ว",
-    reasonEn: "Not enough historical data was available, so a conservative default prediction was filled in.",
+    reasonTh: `ข้อมูลย้อนหลังยังไม่พอสำหรับ ${match.home.name} vs ${match.away.name} จึงแนะนำแบบระมัดระวังที่ ${homeScore}-${awayScore}`,
+    reasonEn: `There is not enough historical data for ${match.home.name} vs ${match.away.name}, so the conservative suggestion is ${homeScore}-${awayScore}.`,
   };
 }
 
@@ -1972,16 +1954,42 @@ function BoostToggle({
   );
 }
 
-function getConfidenceMultiplier(confidence: ConfidenceLevel) {
-  switch (confidence) {
-    case "bold":
-      return 2;
-    case "confident":
-      return 1.5;
-    case "safe":
-    default:
-      return 1;
-  }
+function mergeScoringRules(rules?: ScoringRules | null) {
+  return {
+    resultTiers: {
+      exact: { ...DEFAULT_SCORING_RULES.resultTiers.exact, ...rules?.resultTiers?.exact },
+      goalDiff: { ...DEFAULT_SCORING_RULES.resultTiers.goalDiff, ...rules?.resultTiers?.goalDiff },
+      result: { ...DEFAULT_SCORING_RULES.resultTiers.result, ...rules?.resultTiers?.result },
+    },
+    bonuses: {
+      ...DEFAULT_SCORING_RULES.bonuses,
+      ...rules?.bonuses,
+    },
+    confidenceMultipliers: {
+      safe: {
+        ...DEFAULT_SCORING_RULES.confidenceMultipliers.safe,
+        ...rules?.confidenceMultipliers?.safe,
+      },
+      confident: {
+        ...DEFAULT_SCORING_RULES.confidenceMultipliers.confident,
+        ...rules?.confidenceMultipliers?.confident,
+      },
+      bold: {
+        ...DEFAULT_SCORING_RULES.confidenceMultipliers.bold,
+        ...rules?.confidenceMultipliers?.bold,
+      },
+    },
+    boost: { ...DEFAULT_SCORING_RULES.boost, ...rules?.boost },
+    streak: { ...DEFAULT_SCORING_RULES.streak, ...rules?.streak },
+    formula: { ...DEFAULT_SCORING_RULES.formula, ...rules?.formula },
+  };
+}
+
+function getConfidenceMultiplier(
+  confidence: ConfidenceLevel,
+  rules: ReturnType<typeof mergeScoringRules>
+) {
+  return rules.confidenceMultipliers[confidence].multiplier ?? 1;
 }
 
 function PredictionSection({

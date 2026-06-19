@@ -1245,6 +1245,12 @@
       "title": "Historical head-to-head",
       "empty": "No head-to-head data available yet"
     },
+    "matchLinks": {
+      "title": "Before you predict",
+      "description": "Open the match detail and AI analysis before submitting your pick.",
+      "match": "Match details",
+      "aiInsight": "View AI insight"
+    },
     "submitted": {
       "title": "Prediction submitted!",
       "description": "Points will be calculated after the match finishes."

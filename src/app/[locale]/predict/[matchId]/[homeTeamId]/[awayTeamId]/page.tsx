@@ -5,6 +5,7 @@ import { PredictMatchForm } from "@/components/predict/PredictMatchForm";
 import { ApiFootballError } from "@/lib/api-football";
 import { loadPredictMatchRouteContext } from "@/lib/predict-match-data";
 import { buildPredictMatchHref, normalizePredictMatchSegment } from "@/lib/predict-route";
+import { getScoringRules } from "@/lib/scoring-rules-api";
 
 type Props = {
   params: Promise<{
@@ -56,5 +57,7 @@ export default async function PredictMatchCanonicalPage({ params }: Props) {
     redirect(canonicalHref);
   }
 
-  return <PredictMatchForm locale={locale} match={context.match} />;
+  const scoringRules = await getScoringRules();
+
+  return <PredictMatchForm locale={locale} match={context.match} scoringRules={scoringRules} />;
 }
