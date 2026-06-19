@@ -22,6 +22,8 @@ import {
   formatScorePrediction,
   isLiveStatus,
   getImpactDescription,
+  getAIVerdict,
+  getConfidenceDescription,
 } from "./_detail-shared";
 import {
   SectionHeading,
@@ -401,6 +403,8 @@ function MemberDecisionPanel({
   copy: ReturnType<typeof getAIInsightPageCopy>;
 }) {
   const predictedScore = formatScorePrediction(insight.apiPredictedGoals);
+  const verdict = getAIVerdict(fixture, insight, details);
+  const confidenceDescription = getConfidenceDescription(insight.confidenceScore, details);
   const favoriteLabel =
     insight.favoriteTeam === "home"
       ? fixture.home.name
@@ -422,16 +426,25 @@ function MemberDecisionPanel({
       />
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
         <p className="text-[10px] font-black uppercase tracking-[0.18em] text-text-muted">
-          {details.apiAdvice}
+          {details.aiVerdict}
         </p>
-        <p className="mt-2 text-base font-black leading-relaxed text-white">
-          {insight.apiAdvice || copy.empty.description}
+        <p className="mt-2 text-lg font-black leading-relaxed text-white">
+          {verdict.title}
         </p>
+        <p className="mt-2 text-sm font-semibold leading-relaxed text-text-secondary">
+          {verdict.detail}
+        </p>
+        {verdict.liveNote ? (
+          <p className="mt-2 text-xs font-bold text-cyan-200">{verdict.liveNote}</p>
+        ) : null}
       </div>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <PredictionInfo label={details.winnerLean} value={favoriteLabel} />
         <PredictionInfo label={details.likelyScore} value={predictedScore ?? details.predictedGoalsUnavailable} />
-        <PredictionInfo label={details.confidenceSummary} value={formatPercent(insight.confidenceScore)} />
+        <PredictionInfo
+          label={details.confidenceSummary}
+          value={`${formatPercent(insight.confidenceScore)} • ${confidenceDescription}`}
+        />
         <PredictionInfo
           label={details.upsetRisk}
           value={typeof insight.upsetRisk === "number" ? formatPercent(insight.upsetRisk) : "-"}
