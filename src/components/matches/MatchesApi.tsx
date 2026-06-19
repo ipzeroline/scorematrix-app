@@ -64,12 +64,12 @@ interface MatchesApiProps {
 }
 
 const STATUS_TAB_DEFINITIONS = [
+  { key: "all", tone: "cyan" },
   { key: MatchStatus.UPCOMING, tone: "cyan" },
   { key: MatchStatus.LIVE, tone: "green" },
   { key: MatchStatus.FINISHED, tone: "green" },
   { key: MatchStatus.POSTPONED, tone: "amber" },
   { key: MatchStatus.CANCELLED, tone: "red" },
-  { key: "all", tone: "cyan" },
 ] as const;
 
 type MatchStatusTab = (typeof STATUS_TAB_DEFINITIONS)[number]["key"];
@@ -241,13 +241,13 @@ export function MatchesApi({
   const hasActiveFilters =
     !isToday ||
     activeLeague !== "all" ||
-    activeStatusTab !== MatchStatus.UPCOMING ||
+    activeStatusTab !== "all" ||
     Boolean(searchQuery.trim());
 
   function updateUrl(key: string, value?: string) {
     const query = new URLSearchParams(searchParams.toString());
     if (key === "status_group") {
-      if (value === MatchStatus.UPCOMING) query.delete(key);
+      if (value === "all") query.delete(key);
       else if (value) query.set(key, value);
     } else if (value && value !== "all") query.set(key, value);
     else query.delete(key);
@@ -1268,7 +1268,7 @@ function getLeagueOptions(fixtures: ApiFootballFixture[]) {
 function toStatusTab(value: string | null): MatchStatusTab {
   return STATUS_TAB_DEFINITIONS.some((tab) => tab.key === value)
     ? (value as MatchStatusTab)
-    : MatchStatus.UPCOMING;
+    : "all";
 }
 
 function emptyCounts(): ApiFootballFixtureCounts {
