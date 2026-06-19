@@ -16,6 +16,8 @@ export interface SpecialEvent {
   isRegistered?: boolean;
   status: 'upcoming' | 'active' | 'ended';
   rules?: string[];
+  matches?: EventMatchData[];
+  leaderboard?: EventLeaderboardEntry[];
 }
 
 export interface EventReward {
@@ -30,4 +32,23 @@ export interface EventBadge {
   name: string;
   icon: string;
   description: string;
+}
+
+export interface EventMatchData {
+  id: string;
+  homeTeam: string;
+  awayTeam: string;
+  date: string;
+  status: 'upcoming' | 'live' | 'finished' | 'predicted';
+  predictedScore?: string;
+  actualScore?: string;
+}
+
+export interface EventLeaderboardEntry {
+  rank: number;
+  username: string;
+  points: number;
+  accuracy: number;
+  predictions: number;
+  isCurrentUser?: boolean;
 }

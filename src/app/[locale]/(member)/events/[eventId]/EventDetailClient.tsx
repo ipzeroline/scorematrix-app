@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Coins, Lock, ShieldCheck, Ticket, Wallet } from "lucide-react";
+import { useParams } from "next/navigation";
+import { ArrowRight, CheckCircle2, Coins, Gift, Lock, ShieldCheck, Sparkles, Target, Ticket, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { useEventStore } from "@/stores/event-store";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -16,6 +17,7 @@ export function EventDetailClient({
   event: SpecialEvent;
 }) {
   const t = useTranslations("events");
+  const { locale } = useParams<{ locale: string }>();
   const [showConfirm, setShowConfirm] = useState(false);
   const [entered, setEntered] = useState(false);
   const registerForEvent = useEventStore((state) => state.registerForEvent);
@@ -106,12 +108,43 @@ export function EventDetailClient({
 
         <div className="space-y-4 p-5">
           {alreadyRegistered ? (
-            <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.06] p-4 text-center">
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-green-400/30 bg-green-400/10">
-                <CheckCircle2 size={22} className="text-green-300" />
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-green-500/20 bg-green-500/[0.06] p-4 text-center">
+                <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-green-400/30 bg-green-400/10">
+                  <CheckCircle2 size={22} className="text-green-300" />
+                </div>
+                <h3 className="mt-3 text-base font-semibold text-white">{t("youAreIn")}</h3>
+                <p className="mt-1 text-sm text-gray-300">{t("registeredStatus")}</p>
               </div>
-              <h3 className="mt-3 text-base font-semibold text-white">{t("youAreIn")}</h3>
-              <p className="mt-1 text-sm text-gray-300">{t("registeredStatus")}</p>
+
+              {/* Next steps after registration */}
+              <div className="rounded-2xl border border-cyan-400/15 bg-[#0d1118] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-cyan-300">
+                  {t("nextSteps.title")}
+                </p>
+                <div className="mt-3 space-y-2">
+                  <a
+                    href={`/${locale}/predict`}
+                    className="flex items-center gap-2 rounded-xl border border-cyan-400/15 bg-cyan-400/[0.04] px-3 py-2.5 text-sm text-gray-200 transition-colors hover:border-cyan-400/30 hover:bg-cyan-400/[0.08]"
+                  >
+                    <Target size={14} className="text-cyan-300 shrink-0" />
+                    <span className="flex-1">{t("nextSteps.goPredict")}</span>
+                    <ArrowRight size={14} className="text-cyan-400 shrink-0" />
+                  </a>
+                  {event.matches && event.matches.length > 0 && (
+                    <a
+                      href={`/${locale}/events/${event.id}`}
+                      className="flex items-center gap-2 rounded-xl border border-purple-400/15 bg-purple-400/[0.04] px-3 py-2.5 text-sm text-gray-200 transition-colors hover:border-purple-400/30 hover:bg-purple-400/[0.08]"
+                    >
+                      <Sparkles size={14} className="text-purple-300 shrink-0" />
+                      <span className="flex-1">
+                        {t("nextSteps.checkMatches", { count: event.matches.length })}
+                      </span>
+                      <ArrowRight size={14} className="text-purple-400 shrink-0" />
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
           ) : (
             <>
@@ -148,6 +181,59 @@ export function EventDetailClient({
                   />
                 </div>
               </div>
+
+              {/* What you can win — mini rewards preview */}
+              {event.rewards && event.rewards.length > 0 && (
+                <div className="rounded-2xl border border-amber-400/15 bg-[#0d1118] p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Gift size={15} className="text-amber-300" />
+                    <p className="text-xs uppercase tracking-[0.14em] text-amber-300/80">
+                      {t("whatYouCanWin")}
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {/* Top reward */}
+                    {(() => {
+                      const top = event.rewards[0];
+                      if (!top) return null;
+                      const parts: string[] = [];
+                      if (top.freePoints > 0) {
+                        parts.push(t("pointsAmount", { amount: top.freePoints.toLocaleString() }));
+                      }
+                      if (top.premiumCredits && top.premiumCredits > 0) {
+                        parts.push(
+                          t("creditsAmount", { amount: top.premiumCredits.toLocaleString() })
+                        );
+                      }
+                      return (
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <span className="text-gray-400">{t("topReward")}</span>
+                          <span className="font-semibold text-amber-200">
+                            {parts.join(" + ")}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    {/* Badge count */}
+                    {event.badges && event.badges.length > 0 && (
+                      <div className="flex items-center justify-between gap-2 text-sm">
+                        <span className="text-gray-400">{t("exclusiveBadges")}</span>
+                        <span className="inline-flex items-center gap-1 font-semibold text-purple-200">
+                          <Sparkles size={13} />
+                          {t("badgeCount", { count: event.badges.length })}
+                        </span>
+                      </div>
+                    )}
+                    {/* Tier count */}
+                    <div className="flex items-center justify-between gap-2 text-sm">
+                      <span className="text-gray-400">{t("rewardTiers")}</span>
+                      <span className="font-semibold text-cyan-200">
+                        {t("rewardTierCount", { count: event.rewards.length })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={() => setShowConfirm(true)}
