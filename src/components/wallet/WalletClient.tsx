@@ -183,7 +183,7 @@ function ActivityHistory({
     setPage(1);
   }, []);
 
-  // Narrow a merged feed to the active category client-side (the API filters by
+  // Narrow a merged feed to the active category client-side (the backend filters by
   // a single type only, while a category spans several types).
   const filterByCategory = useCallback(
     (list: ActivityItem[]) => {

@@ -50,7 +50,7 @@ const fallback: AIInsightSeoContent = {
     {
       question: "What signals does the AI use?",
       answer:
-        "The insight view can include form context, head-to-head signals, standings, strength gaps, probability data, community sentiment and API-generated advice when available.",
+        "The insight view can include form context, head-to-head signals, standings, strength gaps, probability data, community sentiment and data-led advice when available.",
     },
   ],
 };
@@ -91,7 +91,7 @@ const content: Partial<Record<LocaleCode, AIInsightSeoContent>> = {
       {
         question: "AI ใช้ข้อมูลอะไรในการวิเคราะห์?",
         answer:
-          "หน้าอินไซต์อาจใช้ฟอร์มทีม สถิติพบกัน ตารางคะแนน ช่องว่างความแข็งแกร่ง ความน่าจะเป็น เสียงชุมชน และคำแนะนำจาก API เมื่อมีข้อมูล",
+          "หน้าอินไซต์อาจใช้ฟอร์มทีม สถิติพบกัน ตารางคะแนน ช่องว่างความแข็งแกร่ง ความน่าจะเป็น เสียงชุมชน และคำแนะนำจากโมเดล เมื่อมีข้อมูล",
       },
     ],
   },
@@ -129,7 +129,7 @@ const content: Partial<Record<LocaleCode, AIInsightSeoContent>> = {
       {
         question: "AI ໃຊ້ສັນຍານໃດໃນການວິເຄາະ?",
         answer:
-          "ອາດມີຟອມທີມ, ສະຖິຕິພົບກັນ, ອັນດັບ, ຊ່ອງວ່າງກຳລັງ, ຄວາມນ່າຈະເປັນ, ສຽງຊຸມຊົນ ແລະ ຄຳແນະນຳ API.",
+          "ອາດມີຟອມທີມ, ສະຖິຕິພົບກັນ, ອັນດັບ, ຊ່ອງວ່າງກຳລັງ, ຄວາມນ່າຈະເປັນ, ສຽງຊຸມຊົນ ແລະ ຄຳແນະນຳ ข้อมูล.",
       },
     ],
   },
@@ -166,7 +166,7 @@ const content: Partial<Record<LocaleCode, AIInsightSeoContent>> = {
       {
         question: "AI သည် ဘာအချက်များကို သုံးလဲ?",
         answer:
-          "အသင်းဖောင်၊ head-to-head၊ standings၊ strength gap၊ probability data၊ community sentiment နှင့် API advice ရရှိပါက ထည့်သွင်းပြနိုင်သည်။",
+          "အသင်းဖောင်၊ head-to-head၊ standings၊ strength gap၊ probability data၊ community sentiment နှင့် model advice ရရှိပါက ထည့်သွင်းပြနိုင်သည်။",
       },
     ],
   },
@@ -203,7 +203,7 @@ const content: Partial<Record<LocaleCode, AIInsightSeoContent>> = {
       {
         question: "AI ប្រើសញ្ញាអ្វីខ្លះ?",
         answer:
-          "អាចរួមមានទម្រង់ក្រុម ប្រវត្តិជួបគ្នា តារាងចំណាត់ថ្នាក់ ចន្លោះកម្លាំង ទិន្នន័យប្រូបាប៊ីលីតេ សម្លេងសហគមន៍ និងដំបូន្មាន API។",
+          "អាចរួមមានទម្រង់ក្រុម ប្រវត្តិជួបគ្នា តារាងចំណាត់ថ្នាក់ ចន្លោះកម្លាំង ទិន្នន័យប្រូបាប៊ីលីតេ សម្លេងសហគមន៍ និងដំបូន្មាន ข้อมูล។",
       },
     ],
   },
@@ -241,7 +241,7 @@ const content: Partial<Record<LocaleCode, AIInsightSeoContent>> = {
       {
         question: "AI 会使用哪些信号？",
         answer:
-          "页面可能包含球队状态、交锋记录、积分榜、强度差距、概率数据、社区情绪和 API 建议等信息。",
+          "页面可能包含球队状态、交锋记录、积分榜、强度差距、概率数据、社区情绪和 ข้อมูล 建议等信息。",
       },
     ],
   },

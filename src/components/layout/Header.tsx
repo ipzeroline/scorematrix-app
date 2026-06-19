@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { href: "/matches", label: "matches" },
   { href: "/predict", label: "predict" },
   { href: "/ai-insight", label: "aiInsight" },
+  { href: "/news", label: "news" },
   { href: "/leaderboard", label: "leaderboard" },
   { href: "/missions", label: "missions", authRequired: true },
   { href: "/rewards", label: "rewards", authRequired: true },

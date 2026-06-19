@@ -83,10 +83,10 @@ export default async function LivescorePage({ params }: Props) {
   );
 
   return (
-    <div className="space-y-8 pb-8">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 pb-8 sm:px-0">
       <Livescore initialPayload={initialPayload} locale={locale} />
 
-      <section className="mx-auto max-w-4xl rounded-2xl border border-cyan-300/15 bg-[#0b111d] p-5 md:p-6">
+      <section className="rounded-2xl border border-cyan-300/15 bg-[#0b111d] p-5 md:p-6">
         <div className="max-w-3xl">
           <p className="text-sm font-black uppercase tracking-wide text-cyan-300">
             ScoreMatrix Livescore

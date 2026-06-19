@@ -3,7 +3,7 @@ import { getFootballApiUrl } from "@/lib/backend-api-urls";
 import { proxyFootballMediaValue } from "@/lib/football-media";
 import { MatchStatus } from "@/types/common";
 
-const API_SPORTS_LEAGUE_LOGO_BASE_URL = "https://media.api-sports.io/football/leagues";
+const Backend_SPORTS_LEAGUE_LOGO_BASE_URL = "https://media.api-sports.io/football/leagues";
 
 export interface ApiFootballFixture {
   id: string;
@@ -1724,7 +1724,7 @@ function isApiFootballFixture(value: unknown): value is ApiFootballFixture {
 
 function getApiSportsLeagueLogoUrl(leagueId?: number | null): string | null {
   return typeof leagueId === "number"
-    ? `${API_SPORTS_LEAGUE_LOGO_BASE_URL}/${leagueId}.png`
+    ? `${Backend_SPORTS_LEAGUE_LOGO_BASE_URL}/${leagueId}.png`
     : null;
 }
 
@@ -1759,14 +1759,14 @@ async function fetchSoccerBackend<T>(
 
     if (!response.ok) {
       throw new ApiFootballError(
-        "ScoreMatrix Soccer API request failed",
+        "ScoreMatrix Soccer backend request failed",
         response.status,
         payload.errors ?? payload.error ?? payload.message
       );
     }
 
     if (hasBackendErrors(payload.errors)) {
-      throw new ApiFootballError("ScoreMatrix Soccer API returned errors", 502, payload.errors);
+      throw new ApiFootballError("ScoreMatrix Soccer backend returned errors", 502, payload.errors);
     }
 
     return normalizeSoccerBackendValue(proxyFootballMediaValue(payload));
@@ -1776,8 +1776,8 @@ async function fetchSoccerBackend<T>(
         ? error
         : new ApiFootballError(
             error instanceof Error && error.name === "TimeoutError"
-              ? "ScoreMatrix Soccer API request timed out"
-              : "ScoreMatrix Soccer API request failed",
+              ? "ScoreMatrix Soccer backend request timed out"
+              : "ScoreMatrix Soccer backend request failed",
             error instanceof Error && error.name === "TimeoutError" ? 504 : 502
           );
 

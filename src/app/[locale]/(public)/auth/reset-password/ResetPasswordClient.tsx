@@ -102,7 +102,7 @@ export default function ResetPasswordClient({ token, email }: ResetPasswordClien
   };
 
   return (
-    <div className="animate-slide-up mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+    <div className="animate-slide-up mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
       <section className="min-w-0">
         <div className="relative mb-5 overflow-hidden rounded-3xl border border-cyan-300/15 bg-[#0b111d] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-6">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-300 via-lime-300 to-purple-300" />

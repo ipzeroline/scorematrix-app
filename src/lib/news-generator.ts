@@ -359,52 +359,52 @@ function dailyRoundupArticle(fixtures: ApiFootballFixture[]): GeneratedArticle {
 
   return {
     id: `news-${todayStr()}-4`,
-    slug: slugify(`today-football-api-roundup-${todayStr()}`),
-    title: localize("สรุปข้อมูลฟุตบอลจาก API ประจำวันนี้", "Today Football API Roundup", {
-      lo: "ສະຫຼຸບຂໍ້ມູນບານເຕະຈາກ API ປະຈຳມື້ນີ້",
-      my: "ယနေ့ Football API အချက်အလက် စုစည်းချက်",
-      km: "សរុបទិន្នន័យបាល់ទាត់ពី API ថ្ងៃនេះ",
-      zh: "今日足球 API 数据汇总",
+    slug: slugify(`today-football-roundup-${todayStr()}`),
+    title: localize("สรุปประเด็นฟุตบอลประจำวันที่น่าติดตาม", "Latest Football Roundup", {
+      lo: "ສະຫຼຸບປະເດັນບານເຕະປະຈຳມື້",
+      my: "ယနေ့ ဘောလုံးအနှစ်ချုပ်",
+      km: "សរុបប្រធានបទបាល់ទាត់ថ្ងៃនេះ",
+      zh: "今日足球重点汇总",
     }),
     summary: localize(
-      `ScoreMatrix ดึงรายการแข่งขัน ${fixtureCount} รายการจาก API วันนี้ ครอบคลุม ${leagueText}`,
-      `ScoreMatrix pulled ${fixtureCount} fixtures from today's API feed across ${leagueText}.`,
+      `ScoreMatrix คัดประเด็นจาก ${fixtureCount} คู่แข่งขันวันนี้ ครอบคลุม ${leagueText}`,
+      `ScoreMatrix highlights ${fixtureCount} fixtures from today's football schedule across ${leagueText}.`,
       {
-        lo: `ScoreMatrix ດຶງລາຍການແຂ່ງຂັນ ${fixtureCount} ລາຍການຈາກ API ມື້ນີ້ ຄອບຄຸມ ${leagueText}.`,
-        my: `ScoreMatrix သည် ယနေ့ API feed မှ ${leagueText} အတွင်း ပွဲစဉ် ${fixtureCount} ခုကို ဆွဲယူထားသည်။`,
-        km: `ScoreMatrix បានទាញយកការប្រកួត ${fixtureCount} ពី API ថ្ងៃនេះ គ្របដណ្តប់ ${leagueText}។`,
-        zh: `ScoreMatrix 今日从 API 获取 ${fixtureCount} 场比赛，覆盖 ${leagueText}。`,
+        lo: `ScoreMatrix ດຶງລາຍການແຂ່ງຂັນ ${fixtureCount} ລາຍການຈາກຂໍ້ມູນການແຂ່ງຂັນມື້ນີ້ ຄອບຄຸມ ${leagueText}.`,
+        my: `ScoreMatrix သည် ယနေ့ ${leagueText} အတွင်း ပွဲစဉ် ${fixtureCount} ခုမှ အဓိကအကြောင်းအရာများကို စုစည်းထားသည်။`,
+        km: `ScoreMatrix រៀបចំចំណុចសំខាន់ពីការប្រកួត ${fixtureCount} ថ្ងៃនេះ គ្របដណ្តប់ ${leagueText}។`,
+        zh: `ScoreMatrix 今日整理 ${fixtureCount} 场比赛，覆盖 ${leagueText}。`,
       },
     ),
     content: localize(
       [
-        `ระบบข่าวของ ScoreMatrix ใช้ข้อมูล API ประจำวันเพื่อจัดลำดับประเด็นฟุตบอลที่ควรติดตาม โดยวันนี้มีรายการแข่งขัน ${fixtureCount} รายการจาก ${leagueText}`,
-        `คู่ที่ถูกหยิบขึ้นมาเป็นแกนข้อมูลได้แก่ ${featuredText} ซึ่งช่วยให้หน้า AI Insights และ Prediction มีบริบทสดใหม่สำหรับผู้ใช้`,
-        "ข่าวประจำวันจะถูกบันทึกเป็น JSON แยกตามภาษา เพื่อให้หน้าเว็บโหลดเร็ว ค้นหาได้ และรองรับ SEO ของแต่ละ locale",
+        `ทีมข่าว ScoreMatrix คัดประเด็นฟุตบอลประจำวันที่ควรติดตาม โดยวันนี้มีรายการแข่งขัน ${fixtureCount} รายการจาก ${leagueText}`,
+        `คู่ที่ถูกหยิบขึ้นมาเป็นแกนหลักได้แก่ ${featuredText} ซึ่งช่วยให้ผู้อ่านเห็นภาพฟอร์ม ทีม และบริบทก่อนตัดสินใจทำนายผล`,
+        "สรุปข่าวประจำวันถูกเรียบเรียงให้เหมาะกับแต่ละภาษา เพื่อให้ผู้อ่านเข้าถึงข้อมูลได้รวดเร็วและชัดเจน",
       ].join("\n\n"),
       [
-        `ScoreMatrix news uses the daily API feed to prioritize the football stories worth tracking. Today's feed includes ${fixtureCount} fixtures across ${leagueText}.`,
-        `Featured data points include ${featuredText}, giving AI Insights and Predictions fresh context for users.`,
-        "The daily articles are saved as locale-specific JSON so the news pages stay fast, searchable, and ready for SEO in every supported language.",
+        `ScoreMatrix editors prioritize the football stories worth tracking from today's schedule, covering ${fixtureCount} fixtures across ${leagueText}.`,
+        `Featured matches include ${featuredText}, giving readers a clearer view of form, team context, and prediction angles.`,
+        "Daily football coverage is localized for each supported language so readers can follow the latest stories quickly and clearly.",
       ].join("\n\n"),
       {
         lo: [
-          `ລະບົບຂ່າວຂອງ ScoreMatrix ໃຊ້ຂໍ້ມູນ API ປະຈຳວັນເພື່ອຈັດລຳດັບປະເດັນບານເຕະທີ່ຄວນຕິດຕາມ. ມື້ນີ້ມີ ${fixtureCount} ລາຍການຈາກ ${leagueText}.`,
+          `ລະບົບຂ່າວຂອງ ScoreMatrix ໃຊ້ຂໍ້ມູນການແຂ່ງຂັນປະຈຳວັນເພື່ອຈັດລຳດັບປະເດັນບານເຕະທີ່ຄວນຕິດຕາມ. ມື້ນີ້ມີ ${fixtureCount} ລາຍການຈາກ ${leagueText}.`,
           `ຂໍ້ມູນເດັ່ນລວມເຖິງ ${featuredText} ເພື່ອໃຫ້ AI Insights ແລະ Predictions ມີບໍລິບົດສົດໃໝ່.`,
           "ຂ່າວປະຈຳວັນຖືກບັນທຶກເປັນ JSON ແຍກຕາມພາສາ ເພື່ອໃຫ້ໂຫຼດໄວ ຄົ້ນຫາໄດ້ ແລະຮອງຮັບ SEO.",
         ].join("\n\n"),
         my: [
-          `ScoreMatrix သတင်းစနစ်သည် နေ့စဉ် API feed ကို အသုံးပြုပြီး စောင့်ကြည့်သင့်သည့် ဘောလုံးအကြောင်းအရာများကို ဦးစားပေးစီစဉ်သည်။ ယနေ့ feed တွင် ${leagueText} မှ ပွဲစဉ် ${fixtureCount} ခု ပါဝင်သည်။`,
-          `အဓိကဒေတာအချက်များမှာ ${featuredText} ဖြစ်ပြီး AI Insights နှင့် Predictions အတွက် လတ်ဆတ်သော ပတ်ဝန်းကျင်အချက်အလက် ပေးသည်။`,
-          "နေ့စဉ်ဆောင်းပါးများကို ဘာသာစကားအလိုက် JSON အဖြစ် သိမ်းထားသောကြောင့် သတင်းစာမျက်နှာများ မြန်ဆန်၊ ရှာဖွေနိုင်ပြီး locale တစ်ခုချင်းစီအတွက် SEO အဆင်သင့်ဖြစ်သည်။",
+          `ScoreMatrix သတင်းအဖွဲ့သည် ယနေ့ ${leagueText} မှ ပွဲစဉ် ${fixtureCount} ခုအတွင်း စောင့်ကြည့်သင့်သည့် ဘောလုံးအကြောင်းအရာများကို စုစည်းထားသည်။`,
+          `အဓိကပွဲများမှာ ${featuredText} ဖြစ်ပြီး ဖောင်၊ အသင်းအခြေအနေ နှင့် ခန့်မှန်းချက်ရှုထောင့်များကို ပိုမိုရှင်းလင်းစေသည်။`,
+          "နေ့စဉ်ဘောလုံးသတင်းများကို ဘာသာစကားတစ်ခုချင်းစီအတွက် သင့်လျော်စွာ တည်းဖြတ်ထားသည်။",
         ].join("\n\n"),
         km: [
-          `ប្រព័ន្ធព័ត៌មាន ScoreMatrix ប្រើ API ប្រចាំថ្ងៃដើម្បីរៀបចំប្រធានបទបាល់ទាត់ដែលគួរតាមដាន។ ថ្ងៃនេះមានការប្រកួត ${fixtureCount} ពី ${leagueText}។`,
+          `ប្រព័ន្ធព័ត៌មាន ScoreMatrix ប្រើទិន្នន័យប្រកួតប្រចាំថ្ងៃដើម្បីរៀបចំប្រធានបទបាល់ទាត់ដែលគួរតាមដាន។ ថ្ងៃនេះមានការប្រកួត ${fixtureCount} ពី ${leagueText}។`,
           `ចំណុចទិន្នន័យសំខាន់រួមមាន ${featuredText} ដែលជួយឱ្យ AI Insights និង Predictions មានបរិបទថ្មីសម្រាប់អ្នកប្រើ។`,
           "អត្ថបទប្រចាំថ្ងៃត្រូវបានរក្សាទុកជា JSON តាមភាសា ដើម្បីឱ្យទំព័រព័ត៌មានលឿន ស្វែងរកបាន និងរួចរាល់សម្រាប់ SEO គ្រប់ locale។",
         ].join("\n\n"),
         zh: [
-          `ScoreMatrix 新闻系统使用每日 API 数据来排序值得关注的足球内容。今日数据包含 ${leagueText} 的 ${fixtureCount} 场比赛。`,
+          `ScoreMatrix 新闻系统使用每日足球数据来排序值得关注的足球内容。今日数据包含 ${leagueText} 的 ${fixtureCount} 场比赛。`,
           `重点数据包括 ${featuredText}，为 AI Insights 与 Predictions 提供更新鲜的上下文。`,
           "每日文章会按语言保存为 JSON，让新闻页保持快速、可搜索，并支持每个 locale 的 SEO。",
         ].join("\n\n"),
@@ -414,7 +414,7 @@ function dailyRoundupArticle(fixtures: ApiFootballFixture[]): GeneratedArticle {
     author: "ScoreMatrix Data Desk",
     category: "feature",
     publishedAt: new Date().toISOString(),
-    tags: ["API", "Fixtures", ...leagues],
+    tags: ["Football", "Fixtures", ...leagues],
     readTime: 3,
   };
 }
@@ -515,7 +515,7 @@ export async function getTodayArticles(locale: string): Promise<NewsListResult> 
     return { articles: [], generatedAt: today, source: "fallback" };
   }
 
-  // Generate from API
+  // Generate from fixture data
   try {
     const fixtures = await loadFixturesForDate(50);
     const generated = await generateArticles(fixtures);

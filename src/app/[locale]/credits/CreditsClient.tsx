@@ -381,7 +381,7 @@ export default function CreditsPage() {
               >
                 {t("features.comparison")}
               </button>
-              {/* TODO: re-enable real purchase flow once the credit purchase API is ready
+              {/* TODO: re-enable real purchase flow once credit purchases are ready
               <button
                 onClick={() => setShowCheckout(true)}
                 className="px-6 py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"

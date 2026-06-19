@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import fs from "fs/promises";
 import path from "path";
 import { LOCALE_CODES } from "@/i18n";
+import { getLatestScormArticles } from "@/lib/articles-api";
 import { SITE_URL } from "@/lib/site";
 import type { NewsArticle } from "@/types/news";
 
@@ -33,9 +34,26 @@ function absoluteUrl(pathname: string) {
 }
 
 async function getNewsEntries(): Promise<MetadataRoute.Sitemap> {
-  const newsDir = path.join(process.cwd(), "src", "data", "news");
   const entries: MetadataRoute.Sitemap = [];
   const seen = new Set<string>();
+  const apiArticles = await getLatestScormArticles(100);
+
+  for (const article of apiArticles) {
+    const lastModified = article.updatedAt ?? article.publishedAt;
+    for (const locale of LOCALE_CODES) {
+      const url = absoluteUrl(`/${locale}/news/${article.slug}`);
+      if (seen.has(url)) continue;
+      seen.add(url);
+      entries.push({
+        url,
+        lastModified: lastModified ? new Date(lastModified) : new Date(),
+        changeFrequency: "daily",
+        priority: article.category === "analysis" ? 0.72 : 0.7,
+      });
+    }
+  }
+
+  const newsDir = path.join(process.cwd(), "src", "data", "news");
 
   try {
     const dateDirs = await fs.readdir(newsDir, { withFileTypes: true });

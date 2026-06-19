@@ -120,7 +120,7 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
         setIsCheckingIn(false);
         return;
       }
-      console.warn("Check-in API failed, executing client-side check-in fallback", error);
+      console.warn("Check-in request failed, executing client-side check-in fallback", error);
       try {
         const result = checkIn();
         const scheduledAmount = activeReward ? getRewardPoints(activeReward) : 0;

@@ -186,7 +186,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         <Card className="p-6 text-center">
           <h1 className="text-lg font-bold text-white">{t("matchDetail.unavailableTitle")}</h1>
           <p className="mt-2 text-sm text-gray-500">
-            {t("matchDetail.noApiFixtureId")}
+            {t("matchDetail.noFixtureId")}
           </p>
         </Card>
       </MatchDetailShell>
@@ -919,7 +919,7 @@ function ApiDataCoveragePanel({ rawPayload }: { rawPayload: unknown }) {
       <div className="border-b border-white/10 bg-[#0f1320] px-4 py-3 border-l-2 border-cyan-300">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-white font-display uppercase tracking-wider">
           <ListChecks size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
-          <span className="min-w-0 truncate">API DATA</span>
+          <span className="min-w-0 truncate">Data coverage</span>
         </h2>
       </div>
       <div className="grid gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">

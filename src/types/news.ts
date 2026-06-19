@@ -10,4 +10,7 @@ export interface NewsArticle {
   publishedAt: string;
   tags: string[];
   readTime: number;
+  keywords?: string[];
+  viewCount?: number;
+  updatedAt?: string | null;
 }

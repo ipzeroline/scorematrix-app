@@ -22,7 +22,7 @@ import {
 } from "@/lib/football-page-data";
 import { getFixtureStatusGroup } from "@/lib/football-status";
 import { serializeJsonLd } from "@/lib/json-ld";
-import { getLatestArticles } from "@/lib/news-generator";
+import { getPaginatedScormArticles } from "@/lib/articles-api";
 import { LOCALE_CODES } from "@/i18n";
 import { getHomeSeoContent } from "@/data/home-seo-content";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -123,7 +123,7 @@ export default async function Page({ params }: Props) {
     loadLiveFixtures(),
     loadTodayFixtures(),
     getWorldCupGroups(),
-    getLatestArticles(locale, 3),
+    getPaginatedScormArticles(locale, 1, "", undefined, 6),
     loadFeaturedAIInsight(),
     getHomepageBanners(),
   ]);
@@ -197,7 +197,7 @@ export default async function Page({ params }: Props) {
 
       {/* News Section */}
       <section>
-        <NewsSection articles={latestArticles} />
+        <NewsSection articles={latestArticles.articles} />
       </section>
     </>
   );

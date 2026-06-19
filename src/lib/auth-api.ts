@@ -712,7 +712,7 @@ async function parseJsonResponse(response: Response) {
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new ApiClientError("Invalid API response", response.status, undefined, text);
+    throw new ApiClientError("Invalid backend response", response.status, undefined, text);
   }
 }
 

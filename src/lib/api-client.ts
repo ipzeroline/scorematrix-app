@@ -73,7 +73,7 @@ export function isAuthSessionExpiredError(error: unknown) {
   return isAuthExpiredPayload(error);
 }
 
-const API_BASE_URL = "/api/data";
+const Backend_BASE_URL = "/api/data";
 
 const LEGACY_AUTH_TOKEN_STORAGE_KEY = "scorematrix-auth-token";
 const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
@@ -84,7 +84,7 @@ let refreshTokenRequest: Promise<boolean> | null = null;
 let authSessionExpiredDispatched = false;
 
 export function getApiBaseUrl() {
-  return API_BASE_URL;
+  return Backend_BASE_URL;
 }
 
 export function getStoredAuthToken() {
@@ -306,7 +306,7 @@ async function fetchApi<B>(
 
 function buildApiUrl(path: string) {
   if (/^https?:\/\//i.test(path)) return path;
-  return `${API_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+  return `${Backend_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function readCookie(name: string) {
@@ -480,7 +480,7 @@ async function parseApiResponse(response: Response) {
   try {
     return JSON.parse(text) as unknown;
   } catch {
-    throw new ApiClientError("Invalid API response", response.status, undefined, text);
+    throw new ApiClientError("Invalid backend response", response.status, undefined, text);
   }
 }
 
@@ -523,7 +523,7 @@ function toApiFailure(payload: unknown): ApiFailure | undefined {
   return {
     success: false,
     code: stringValue((error as { code?: unknown }).code),
-    message: typeof message === "string" ? message : "API request failed",
+    message: typeof message === "string" ? message : "backend request failed",
   };
 }
 

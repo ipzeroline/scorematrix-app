@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Clock, User, BarChart3, Lightbulb, Newspaper, Trophy } from "lucide-react";
+import { ArrowLeft, Clock, Eye, User, BarChart3, Lightbulb, Newspaper, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import type { NewsArticle } from "@/types/news";
@@ -17,6 +17,7 @@ const categoryMeta: Record<string, { labelKey: keyof DetailCopy["categories"]; v
 type DetailCopy = {
   back: string;
   minRead: string;
+  views: string;
   more: string;
   predictions: string;
   categories: Record<"analysis" | "news" | "feature" | "tips", string>;
@@ -26,6 +27,7 @@ const copyByLocale: Record<string, DetailCopy> = {
   th: {
     back: "กลับไปหน้าข่าว",
     minRead: "นาที",
+    views: "ครั้ง",
     more: "ต้องการอินไซต์ฟุตบอลเพิ่มเติม? ดูคำทำนายล่าสุดบน ScoreMatrix",
     predictions: "ไปที่หน้าทำนาย",
     categories: { analysis: "วิเคราะห์", news: "ข่าว", feature: "ฟีเจอร์", tips: "เคล็ดลับ" },
@@ -33,6 +35,7 @@ const copyByLocale: Record<string, DetailCopy> = {
   en: {
     back: "Back to News",
     minRead: "min read",
+    views: "views",
     more: "Want more football insights? Check out the latest predictions on ScoreMatrix.",
     predictions: "Go to Predictions",
     categories: { analysis: "Analysis", news: "News", feature: "Feature", tips: "Tips" },
@@ -40,6 +43,7 @@ const copyByLocale: Record<string, DetailCopy> = {
   lo: {
     back: "ກັບໄປໜ້າຂ່າວ",
     minRead: "ນາທີ",
+    views: "ຄັ້ງ",
     more: "ຕ້ອງການອິນໄຊຕ໌ບານເຕະເພີ່ມບໍ? ເບິ່ງຄຳທຳນາຍຫຼ້າສຸດໃນ ScoreMatrix.",
     predictions: "ໄປທີ່ການທຳນາຍ",
     categories: { analysis: "ວິເຄາະ", news: "ຂ່າວ", feature: "ຟີເຈີ", tips: "ເຄັດລັບ" },
@@ -47,6 +51,7 @@ const copyByLocale: Record<string, DetailCopy> = {
   my: {
     back: "သတင်းစာမျက်နှာသို့ ပြန်သွားရန်",
     minRead: "မိနစ်ဖတ်ရန်",
+    views: "ကြိမ်",
     more: "နောက်ထပ် ဘောလုံးအင်ဆိုက်များလိုပါသလား။ ScoreMatrix တွင် နောက်ဆုံးခန့်မှန်းချက်များကို ကြည့်ပါ။",
     predictions: "ခန့်မှန်းချက်များသို့",
     categories: { analysis: "သုံးသပ်ချက်", news: "သတင်း", feature: "အထူး", tips: "အကြံပြုချက်" },
@@ -54,6 +59,7 @@ const copyByLocale: Record<string, DetailCopy> = {
   km: {
     back: "ត្រឡប់ទៅព័ត៌មាន",
     minRead: "នាទីអាន",
+    views: "ដង",
     more: "ចង់បានការយល់ដឹងបាល់ទាត់បន្ថែមទេ? មើលការទស្សន៍ទាយថ្មីៗនៅលើ ScoreMatrix។",
     predictions: "ទៅកាន់ការទស្សន៍ទាយ",
     categories: { analysis: "វិភាគ", news: "ព័ត៌មាន", feature: "លក្ខណៈពិសេស", tips: "គន្លឹះ" },
@@ -61,6 +67,7 @@ const copyByLocale: Record<string, DetailCopy> = {
   zh: {
     back: "返回新闻",
     minRead: "分钟阅读",
+    views: "次阅读",
     more: "想查看更多足球洞察？前往 ScoreMatrix 查看最新预测。",
     predictions: "前往预测",
     categories: { analysis: "分析", news: "新闻", feature: "专题", tips: "技巧" },
@@ -106,7 +113,7 @@ export function NewsDetailClient({ article, locale }: Props) {
   const categoryLabel = copy.categories[cat.labelKey];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 pb-8 sm:px-0">
       {/* Back link */}
       <Link
         href={`/${locale}/news`}
@@ -117,7 +124,7 @@ export function NewsDetailClient({ article, locale }: Props) {
       </Link>
 
       {/* Article */}
-      <article>
+      <article className="w-full">
         {/* Header */}
         <div className="space-y-4 mb-6">
           <div className="flex items-center gap-3">
@@ -147,6 +154,12 @@ export function NewsDetailClient({ article, locale }: Props) {
               {formatDate(article.publishedAt)}
             </span>
             <span>{article.readTime} {copy.minRead}</span>
+            {article.viewCount !== undefined && (
+              <span className="flex items-center gap-1">
+                <Eye size={12} />
+                {article.viewCount.toLocaleString()} {copy.views}
+              </span>
+            )}
           </div>
         </div>
 
@@ -156,7 +169,7 @@ export function NewsDetailClient({ article, locale }: Props) {
             alt={title}
             fill
             priority
-            sizes="(min-width: 768px) 768px, 100vw"
+            sizes="(min-width: 1024px) 1152px, 100vw"
             className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10" />

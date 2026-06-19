@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { getPaginatedArticles } from "@/lib/news-generator";
+import { getPaginatedScormArticles, parseArticleType } from "@/lib/articles-api";
 import { NewsListClient } from "@/components/news/NewsListClient";
+import { LOCALE_CODES } from "@/i18n";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 type Props = {
   params: Promise<{ locale: string }>;
-  searchParams?: Promise<{ page?: string | string[]; q?: string | string[] }>;
+  searchParams?: Promise<{
+    page?: string | string[];
+    q?: string | string[];
+    type?: string | string[];
+  }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -22,9 +28,10 @@ function getPage(searchParams?: { page?: string | string[] }) {
   return Number.isFinite(page) && page > 0 ? page : 1;
 }
 
-function getNewsUrl(locale: string, query: string, page: number) {
+function getNewsUrl(locale: string, query: string, page: number, type?: string) {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
+  if (type) params.set("type", type);
   if (page > 1) params.set("page", String(page));
   const suffix = params.toString();
   return `/${locale}/news${suffix ? `?${suffix}` : ""}`;
@@ -35,12 +42,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const resolvedSearchParams = await searchParams;
   const query = getQuery(resolvedSearchParams);
   const page = getPage(resolvedSearchParams);
+  const type = parseArticleType(resolvedSearchParams?.type);
   const t = await getTranslations({ locale, namespace: "seo.news" });
-  const title = query ? `${query} | ${t("title")}` : t("title");
+  const sectionTitle = type === "analysis"
+    ? t("analysisTitle")
+    : type === "news"
+      ? t("newsTitle")
+      : t("title");
+  const title = query ? `${query} | ${sectionTitle}` : sectionTitle;
   const description = query
     ? `Search ScoreMatrix football news for ${query}. ${t("description")}`
     : t("description");
-  const canonical = getNewsUrl(locale, query, page);
+  const canonical = getNewsUrl(locale, query, page, type);
 
   return {
     title,
@@ -48,14 +61,9 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     keywords: t("keywords"),
     alternates: {
       canonical,
-      languages: {
-        th: getNewsUrl("th", query, page),
-        en: getNewsUrl("en", query, page),
-        lo: getNewsUrl("lo", query, page),
-        my: getNewsUrl("my", query, page),
-        km: getNewsUrl("km", query, page),
-        zh: getNewsUrl("zh", query, page),
-      },
+      languages: Object.fromEntries(
+        LOCALE_CODES.map((code) => [code, getNewsUrl(code, query, page, type)])
+      ),
     },
     openGraph: {
       title,
@@ -78,17 +86,44 @@ export default async function NewsPage({ params, searchParams }: Props) {
   const resolvedSearchParams = await searchParams;
   const query = getQuery(resolvedSearchParams);
   const page = getPage(resolvedSearchParams);
-  const result = await getPaginatedArticles(locale, page, query);
+  const type = parseArticleType(resolvedSearchParams?.type);
+  const result = await getPaginatedScormArticles(locale, page, query, type);
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: "ScoreMatrix News and Analysis",
+    inLanguage: locale,
+    url: `/${locale}/news`,
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: result.articles.map((article, index) => {
+        const title = typeof article.title === "string" ? article.title : article.title[locale] ?? article.title.th ?? "";
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          url: `/${locale}/news/${article.slug}`,
+          name: title,
+        };
+      }),
+    },
+  };
 
   return (
-    <NewsListClient
-      articles={result.articles}
-      source={result.source}
-      locale={locale}
-      initialSearch={query}
-      currentPage={result.currentPage}
-      totalPages={result.totalPages}
-      totalArticles={result.totalArticles}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
+      <NewsListClient
+        articles={result.articles}
+        source={result.source}
+        locale={locale}
+        initialSearch={query}
+        currentPage={result.currentPage}
+        totalPages={result.totalPages}
+        totalArticles={result.totalArticles}
+        activeType={type}
+      />
+    </>
   );
 }

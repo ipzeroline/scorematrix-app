@@ -279,7 +279,7 @@ export default function MissionsPage() {
         };
 
         // Mission-specific stats (streak, completed, xp, level) come from the
-        // missions API `currentStats`; the hero only takes freePoints here.
+        // Mission `currentStats`; the hero only takes freePoints here.
         setHeroStats((prev) => ({ ...prev, freePoints: nextHeroStats.freePoints }));
         useUserStore.setState(nextHeroStats);
       })

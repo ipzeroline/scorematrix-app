@@ -108,7 +108,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const leagues = [...new Set(liveMatches.map((m) => m.league.name))];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4">
+    <div className="w-full space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="flex items-center gap-2 text-xl font-bold font-display text-white">

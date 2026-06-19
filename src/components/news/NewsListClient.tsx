@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Search,
   Clock,
+  Eye,
   User,
   BarChart3,
   Lightbulb,
@@ -38,6 +39,7 @@ type NewsCopy = {
   yesterday: string;
   daysAgo: string;
   minRead: string;
+  views: string;
   article: string;
   articles: string;
   categories: Record<"analysis" | "news" | "feature" | "tips", string>;
@@ -46,7 +48,7 @@ type NewsCopy = {
 const copyByLocale: Record<string, NewsCopy> = {
   th: {
     title: "ข่าวสารและบทวิเคราะห์",
-    subtitle: "ข่าวฟุตบอลจากรายการ API วันนี้ รายงานผล พรีวิว และเคล็ดลับการทำนาย",
+    subtitle: "อัปเดตข่าวฟุตบอล บทวิเคราะห์ก่อนเกม รายงานผล และมุมมองเชิงสถิติจากทีม ScoreMatrix",
     searchPlaceholder: "ค้นหาข่าว...",
     all: "ทั้งหมด",
     noResults: "ไม่พบบทความที่ตรงกับ",
@@ -55,13 +57,14 @@ const copyByLocale: Record<string, NewsCopy> = {
     yesterday: "เมื่อวาน",
     daysAgo: "วันที่แล้ว",
     minRead: "นาที",
+    views: "ครั้ง",
     article: "ข่าว",
     articles: "ข่าว",
     categories: { analysis: "วิเคราะห์", news: "ข่าว", feature: "ฟีเจอร์", tips: "เคล็ดลับ" },
   },
   en: {
     title: "News & Analysis",
-    subtitle: "Football news from today's API fixtures, match reports, previews, and prediction tips",
+    subtitle: "Trusted football news, match reports, previews, and data-led prediction insights from ScoreMatrix",
     searchPlaceholder: "Search articles...",
     all: "All",
     noResults: "No articles matching",
@@ -70,13 +73,14 @@ const copyByLocale: Record<string, NewsCopy> = {
     yesterday: "Yesterday",
     daysAgo: "d ago",
     minRead: "min read",
+    views: "views",
     article: "article",
     articles: "articles",
     categories: { analysis: "Analysis", news: "News", feature: "Feature", tips: "Tips" },
   },
   lo: {
     title: "ຂ່າວ ແລະ ບົດວິເຄາະ",
-    subtitle: "ຂ່າວບານເຕະຈາກລາຍການ API ມື້ນີ້ ລາຍງານຜົນ ພຣີວິວ ແລະເຄັດລັບການທຳນາຍ",
+    subtitle: "ຂ່າວບານເຕະ ບົດວິເຄາະກ່ອນເກມ ລາຍງານຜົນ ແລະມຸມມອງຈາກຂໍ້ມູນຂອງ ScoreMatrix",
     searchPlaceholder: "ຄົ້ນຫາຂ່າວ...",
     all: "ທັງໝົດ",
     noResults: "ບໍ່ພົບບົດຄວາມທີ່ກົງກັບ",
@@ -85,13 +89,14 @@ const copyByLocale: Record<string, NewsCopy> = {
     yesterday: "ມື້ວານ",
     daysAgo: "ມື້ກ່ອນ",
     minRead: "ນາທີ",
+    views: "ຄັ້ງ",
     article: "ຂ່າວ",
     articles: "ຂ່າວ",
     categories: { analysis: "ວິເຄາະ", news: "ຂ່າວ", feature: "ຟີເຈີ", tips: "ເຄັດລັບ" },
   },
   my: {
     title: "သတင်းနှင့် သုံးသပ်ချက်",
-    subtitle: "ယနေ့ API ပွဲစဉ်များမှ ဘောလုံးသတင်း၊ ပွဲရလဒ်၊ ကြိုတင်သုံးသပ်ချက်နှင့် ခန့်မှန်းချက်အကြံပြုချက်များ",
+    subtitle: "ScoreMatrix မှ ဘောလုံးသတင်း၊ ပွဲရလဒ်၊ ကြိုတင်သုံးသပ်ချက်နှင့် ဒေတာအခြေခံ ခန့်မှန်းချက်အမြင်များ",
     searchPlaceholder: "သတင်းရှာရန်...",
     all: "အားလုံး",
     noResults: "ကိုက်ညီသောဆောင်းပါးမရှိ",
@@ -100,13 +105,14 @@ const copyByLocale: Record<string, NewsCopy> = {
     yesterday: "မနေ့က",
     daysAgo: "ရက်က",
     minRead: "မိနစ်ဖတ်ရန်",
+    views: "ကြိမ်",
     article: "ဆောင်းပါး",
     articles: "ဆောင်းပါး",
     categories: { analysis: "သုံးသပ်ချက်", news: "သတင်း", feature: "အထူး", tips: "အကြံပြုချက်" },
   },
   km: {
     title: "ព័ត៌មាន និងវិភាគ",
-    subtitle: "ព័ត៌មានបាល់ទាត់ពីការប្រកួត API ថ្ងៃនេះ របាយការណ៍លទ្ធផល ការមើលមុន និងគន្លឹះទស្សន៍ទាយ",
+    subtitle: "ព័ត៌មានបាល់ទាត់ ការវិភាគមុនប្រកួត របាយការណ៍លទ្ធផល និងទស្សនៈផ្អែកលើទិន្នន័យពី ScoreMatrix",
     searchPlaceholder: "ស្វែងរកអត្ថបទ...",
     all: "ទាំងអស់",
     noResults: "រកមិនឃើញអត្ថបទដែលត្រូវនឹង",
@@ -115,13 +121,14 @@ const copyByLocale: Record<string, NewsCopy> = {
     yesterday: "ម្សិលមិញ",
     daysAgo: "ថ្ងៃមុន",
     minRead: "នាទីអាន",
+    views: "ដង",
     article: "អត្ថបទ",
     articles: "អត្ថបទ",
     categories: { analysis: "វិភាគ", news: "ព័ត៌មាន", feature: "លក្ខណៈពិសេស", tips: "គន្លឹះ" },
   },
   zh: {
     title: "新闻与分析",
-    subtitle: "来自今日 API 赛程的足球新闻、赛报、前瞻与预测技巧",
+    subtitle: "来自 ScoreMatrix 的足球新闻、赛报、赛前分析与数据化预测观点",
     searchPlaceholder: "搜索文章...",
     all: "全部",
     noResults: "没有匹配的文章",
@@ -130,6 +137,7 @@ const copyByLocale: Record<string, NewsCopy> = {
     yesterday: "昨天",
     daysAgo: "天前",
     minRead: "分钟阅读",
+    views: "次阅读",
     article: "篇文章",
     articles: "篇文章",
     categories: { analysis: "分析", news: "新闻", feature: "专题", tips: "技巧" },
@@ -169,6 +177,7 @@ interface Props {
   currentPage?: number;
   totalPages?: number;
   totalArticles?: number;
+  activeType?: "news" | "analysis";
 }
 
 export function NewsListClient({
@@ -178,10 +187,10 @@ export function NewsListClient({
   currentPage = 1,
   totalPages = 1,
   totalArticles,
+  activeType,
 }: Props) {
   const copy = getCopy(locale);
   const [search, setSearch] = useState(initialSearch);
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     let result = articles;
@@ -194,18 +203,23 @@ export function NewsListClient({
         return title.includes(q) || summary.includes(q) || tags.includes(q);
       });
     }
-    if (categoryFilter) {
-      result = result.filter((a) => a.category === categoryFilter);
-    }
     return result;
-  }, [articles, search, categoryFilter, locale]);
+  }, [articles, search, locale]);
 
-  const categories = ["analysis", "news", "feature", "tips"];
+  const categories = ["analysis", "news"] as const;
   const shownTotal = totalArticles ?? articles.length;
   const pageHref = (page: number) => {
     const params = new URLSearchParams();
     if (initialSearch) params.set("q", initialSearch);
+    if (activeType) params.set("type", activeType);
     if (page > 1) params.set("page", String(page));
+    const suffix = params.toString();
+    return `/${locale}/news${suffix ? `?${suffix}` : ""}`;
+  };
+  const typeHref = (type?: "news" | "analysis") => {
+    const params = new URLSearchParams();
+    if (initialSearch) params.set("q", initialSearch);
+    if (type) params.set("type", type);
     const suffix = params.toString();
     return `/${locale}/news${suffix ? `?${suffix}` : ""}`;
   };
@@ -214,7 +228,7 @@ export function NewsListClient({
   });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 pb-8 sm:px-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -257,30 +271,30 @@ export function NewsListClient({
 
       {/* Category filters */}
       <div className="flex gap-2 flex-wrap">
-        <button
-          onClick={() => setCategoryFilter(null)}
+        <Link
+          href={typeHref()}
           className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            categoryFilter === null
+            !activeType
               ? "bg-white/10 text-white border border-white/10"
               : "text-gray-500 hover:text-gray-300"
           }`}
         >
           {copy.all}
-        </button>
+        </Link>
         {categories.map((cat) => {
           const meta = categoryMeta[cat];
           return (
-            <button
+            <Link
               key={cat}
-              onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+              href={typeHref(cat)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                categoryFilter === cat
+                activeType === cat
                   ? "bg-white/10 text-white border border-white/10"
                   : "text-gray-500 hover:text-gray-300"
               }`}
             >
               {copy.categories[meta.labelKey]}
-            </button>
+            </Link>
           );
         })}
       </div>
@@ -295,7 +309,7 @@ export function NewsListClient({
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((article) => {
+          {filtered.map((article, index) => {
             const cat = categoryMeta[article.category] ?? categoryMeta.news;
             const Icon = cat.icon;
             const title = localizeField(article, "title", locale);
@@ -314,6 +328,7 @@ export function NewsListClient({
                       alt={title}
                       width={640}
                       height={360}
+                      priority={index === 0}
                       sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -349,7 +364,15 @@ export function NewsListClient({
                       <User size={10} />
                       <span>{article.author}</span>
                     </div>
-                    <span>{article.readTime} {copy.minRead}</span>
+                    <div className="flex items-center gap-2">
+                      {article.viewCount !== undefined && (
+                        <span className="flex items-center gap-1">
+                          <Eye size={10} />
+                          {article.viewCount.toLocaleString()} {copy.views}
+                        </span>
+                      )}
+                      <span>{article.readTime} {copy.minRead}</span>
+                    </div>
                   </div>
 
                   {/* Tags */}

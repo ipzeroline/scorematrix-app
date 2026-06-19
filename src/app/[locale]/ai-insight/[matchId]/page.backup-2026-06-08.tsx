@@ -471,7 +471,7 @@ function ApiPredictionCard({
     <Card className="p-4">
       <h2 className="mb-3 inline-flex items-center gap-2 text-sm font-semibold text-white">
         <Sparkles size={15} className="text-cyan-300" />
-        API Prediction
+        Model prediction
       </h2>
       <div className="grid gap-2 text-xs">
         <InfoLine label="Advice" value={insight.apiAdvice || empty} />

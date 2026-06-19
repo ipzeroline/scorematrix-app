@@ -170,7 +170,7 @@ export async function getWorldCupGroups(): Promise<WorldCupGroup[]> {
     return buildGroupsFromLeagueDetail(standings, fixtures);
   } catch (error) {
     if (!(error instanceof ApiFootballError)) throw error;
-    console.error("World Cup API error:", error.message);
+    console.error("World Cup data error:", error.message);
     return worldCupGroups;
   }
 }
