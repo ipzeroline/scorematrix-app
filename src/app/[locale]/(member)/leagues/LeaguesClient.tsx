@@ -47,6 +47,7 @@ import {
   type AvailableLeague,
   type JoinedLeague,
   type LeagueLimit,
+  type OwnedLeagueLimit,
   type LeaguePagination,
 } from "@/lib/leagues-api";
 import { useNotificationStore } from "@/stores/notification-store";
@@ -63,6 +64,7 @@ const DEFAULT_CREATE_FORM = {
 const AVAILABLE_LEAGUES_PAGE_SIZE = 20;
 const LEAGUE_LOGO_OVERRIDE_KEY = "scorematrix:league-logo:";
 const LEAGUE_INVITE_OVERRIDE_KEY = "scorematrix:league-invite:";
+const PENDING_LEAGUE_REQUESTS_KEY = "scorematrix:pending-league-requests";
 
 type LeagueTab = "joined" | "available";
 
@@ -200,7 +202,7 @@ export default function LeaguesPage() {
   const [isJoining, setIsJoining] = useState(false);
   const [leavingLeagueId, setLeavingLeagueId] = useState<string | null>(null);
   const [pendingLeagueIds, setPendingLeagueIds] = useState<Set<string>>(
-    () => new Set()
+    () => readStoredPendingLeagueRequestIds()
   );
   const [createForm, setCreateForm] = useState(DEFAULT_CREATE_FORM);
   const [createErrors, setCreateErrors] = useState<CreateFormErrors>({});
@@ -223,6 +225,7 @@ export default function LeaguesPage() {
   const [leagueLimits, setLeagueLimits] = useState<{
     create?: LeagueLimit;
     join?: LeagueLimit;
+    owned?: OwnedLeagueLimit;
   }>({});
   const [activeLeagueTab, setActiveLeagueTab] = useState<LeagueTab>("joined");
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(true);
@@ -253,8 +256,23 @@ export default function LeaguesPage() {
         if (!active) return;
         const joined = response.joined ?? [];
         const available = response.available ?? [];
+        const joinedIds = new Set(joined.map((league) => league.id));
+        const backendPendingIds = new Set(
+          available
+            .filter((league) => league.joinStatus === "pending")
+            .map((league) => league.id)
+        );
         setJoinedLeagues(joined);
         setAvailableLeagues(available);
+        setPendingLeagueIds((current) => {
+          const next = new Set(
+            [...current, ...backendPendingIds].filter(
+              (leagueId) => !joinedIds.has(leagueId)
+            )
+          );
+          storePendingLeagueRequestIds(next);
+          return next;
+        });
         setLogoOverrides((current) =>
           hydrateStoredLogoOverrides(current, joined, available)
         );
@@ -293,15 +311,19 @@ export default function LeaguesPage() {
     };
   }, [appliedAvailableSearch, availablePage, locale, refreshKey]);
 
-  const totalMembers = joinedLeagues.reduce(
+  const ownedLimits = leagueLimits.owned;
+  const totalMembers = ownedLimits?.totalMembers ?? joinedLeagues.reduce(
     (sum, league) => sum + league.memberCount,
     0
   );
-  const totalOpenSlots = availableLeagues.reduce(
-    (sum, league) => sum + Math.max(league.maxMembers - league.memberCount, 0),
+  const totalOpenSlots = ownedLimits?.availableSlots ?? joinedLeagues.reduce(
+    (sum, league) =>
+      league.isOwner
+        ? sum + Math.max(league.maxMembers - league.memberCount, 0)
+        : sum,
     0
   );
-  const totalPoints = joinedLeagues.reduce(
+  const totalPoints = ownedLimits?.totalPoints ?? joinedLeagues.reduce(
     (sum, league) => sum + league.myPoints,
     0
   );
@@ -630,7 +652,11 @@ export default function LeaguesPage() {
       setSelectedLeague(null);
       setInviteCode("");
       if (isFreeLeague || result.status === "pending") {
-        setPendingLeagueIds((current) => new Set(current).add(selectedLeague.id));
+        setPendingLeagueIds((current) => {
+          const next = new Set(current).add(selectedLeague.id);
+          storePendingLeagueRequestIds(next);
+          return next;
+        });
         addToast({
           type: "success",
           title: copy.modal.joinPending,
@@ -714,7 +740,7 @@ export default function LeaguesPage() {
   const stats = [
     {
       label: copy.stats.activeLeagues,
-      value: joinedLeagues.length.toString(),
+      value: (ownedLimits?.leagues ?? joinedLeagues.length).toString(),
       icon: Trophy,
       tone: "text-amber-300",
     },
@@ -1836,6 +1862,38 @@ function storeLeagueLogoOverride(leagueId: string, logoUrl: string) {
     window.localStorage.setItem(`${LEAGUE_LOGO_OVERRIDE_KEY}${leagueId}`, logoUrl);
   } catch {
     // A large image can exceed storage quota. The in-memory override still updates the current view.
+  }
+}
+
+function readStoredPendingLeagueRequestIds() {
+  if (typeof window === "undefined") return new Set<string>();
+
+  try {
+    const rawValue = window.localStorage.getItem(PENDING_LEAGUE_REQUESTS_KEY);
+    const parsed = rawValue ? JSON.parse(rawValue) : [];
+    if (!Array.isArray(parsed)) return new Set<string>();
+    return new Set(
+      parsed
+        .filter((value): value is string => typeof value === "string")
+        .filter(Boolean)
+    );
+  } catch {
+    return new Set<string>();
+  }
+}
+
+function storePendingLeagueRequestIds(leagueIds: Set<string>) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const values = Array.from(leagueIds);
+    if (values.length === 0) {
+      window.localStorage.removeItem(PENDING_LEAGUE_REQUESTS_KEY);
+      return;
+    }
+    window.localStorage.setItem(PENDING_LEAGUE_REQUESTS_KEY, JSON.stringify(values));
+  } catch {
+    // Pending state is only a UI hint; backend requests remain the source of truth.
   }
 }
 

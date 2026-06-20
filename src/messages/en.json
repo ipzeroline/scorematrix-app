@@ -948,6 +948,8 @@
     "noStandings": "No standings are available yet.",
     "rankedMember": "Ranked member #{rank}",
     "accuracy": "Accuracy",
+    "predictions": "Preds",
+    "wins": "Wins",
     "leagueAccess": "League access",
     "privateLeagueDescription": "New members need an invite code to join this private league.",
     "publicLeagueDescription": "Members can join this public league without an invite code."

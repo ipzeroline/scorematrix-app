@@ -39,6 +39,7 @@ export type AvailableLeague = {
   entryFeeCredits: number;
   logoUrl: string | null;
   isLocked: boolean;
+  joinStatus?: LeagueJoinStatus;
 };
 
 export type LeaguesResponse = {
@@ -47,6 +48,7 @@ export type LeaguesResponse = {
   limits?: {
     create?: LeagueLimit;
     join?: LeagueLimit;
+    owned?: OwnedLeagueLimit;
   };
   pagination?: LeaguePagination;
 };
@@ -55,6 +57,13 @@ export type LeagueLimit = {
   used: number;
   max: number;
   remaining: number;
+};
+
+export type OwnedLeagueLimit = {
+  leagues: number;
+  totalMembers: number;
+  totalPoints: number;
+  availableSlots: number;
 };
 
 export type LeaguePagination = {
@@ -67,8 +76,16 @@ export type LeaguePagination = {
 export type LeagueStanding = {
   rank: number;
   userId: string;
+  username: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
   points: number;
   accuracy: number;
+  predictionsCount: number | null;
+  correctPredictions: number | null;
+  wins: number | null;
+  level: number | null;
+  joinedAt: string | null;
 };
 
 export type LeagueJoinStatus = "joined" | "pending" | "rejected" | "unknown";
@@ -81,7 +98,9 @@ export type JoinLeagueResult = {
 export type LeagueJoinRequest = {
   id: string;
   userId: string;
+  username: string | null;
   displayName: string;
+  avatarUrl: string | null;
   status: "pending" | "approved" | "rejected" | string;
   requestedAt: string | null;
 };
@@ -103,6 +122,7 @@ export type LeagueDetail = {
   };
   standings: LeagueStanding[];
   myRank: number | null;
+  myPoints?: number | null;
 };
 
 export type CreateLeagueInput = {
@@ -184,6 +204,7 @@ export function getLeagues(
       ...league,
       entryFeeCredits: resolveEntryFeeCredits(league),
       logoUrl: resolveLogoUrl(league),
+      joinStatus: resolveLeagueJoinStatus(league),
     })),
     limits: response.limits,
     pagination: normalizePagination(response.pagination, options),
@@ -194,14 +215,22 @@ export function getLeague(leagueId: string, options?: ApiRequestOptions) {
   return apiGetRaw<LeagueDetail>(
     `/leagues/${encodeURIComponent(leagueId)}`,
     options
-  ).then((league) => ({
-    ...league,
-    entryFeeCredits: resolveEntryFeeCredits(league),
-    isOwner: resolveIsOwner(league),
-    isPrivate: resolveIsPrivate(league),
-    inviteCode: resolveInviteCode(league),
-    logoUrl: resolveLogoUrl(league),
-  }));
+  ).then((league) => {
+    const record = readRecord(league);
+    const standings = normalizeLeagueStandings(readStandingCandidates(record));
+    const memberProfiles = normalizeLeagueStandings(readMemberCandidates(record));
+
+    return {
+      ...league,
+      entryFeeCredits: resolveEntryFeeCredits(league),
+      isOwner: resolveIsOwner(league),
+      isPrivate: resolveIsPrivate(league),
+      inviteCode: resolveInviteCode(league),
+      logoUrl: resolveLogoUrl(league),
+      standings: mergeLeagueStandingProfiles(standings, memberProfiles),
+      myPoints: resolveLeagueMyPoints(record),
+    };
+  });
 }
 
 export function joinLeague(
@@ -338,7 +367,21 @@ function resolveIsOwner(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
 
   const record = value as Record<string, unknown>;
-  return record.isOwner === true || record.is_owner === true;
+  const role =
+    readString(record.role) ??
+    readString(record.myRole) ??
+    readString(record.my_role) ??
+    readString(record.membershipRole) ??
+    readString(record.membership_role);
+
+  return (
+    record.isOwner === true ||
+    record.is_owner === true ||
+    record.owner === true ||
+    record.canManage === true ||
+    record.can_manage === true ||
+    role?.toLowerCase() === "owner"
+  );
 }
 
 function buildLeaguesPath(
@@ -422,8 +465,35 @@ function resolveInviteCode(value: unknown): string | null {
   return typeof code === "string" && code.trim() ? code : null;
 }
 
+function resolveLeagueMyPoints(value: unknown): number | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  return (
+    readNumber(
+      record.myPoints,
+      record.my_points,
+      record.points,
+      record.score,
+      readRecord(record.member)?.points,
+      readRecord(record.membership)?.points,
+      readRecord(record.currentUser)?.points,
+      readRecord(record.current_user)?.points
+    ) ?? null
+  );
+}
+
 function normalizeJoinLeagueResult(payload: unknown): JoinLeagueResult {
   const record = unwrapDataRecord(payload);
+  return {
+    status: resolveLeagueJoinStatus(record),
+    message: readString(record?.message),
+  };
+}
+
+function resolveLeagueJoinStatus(value: unknown): LeagueJoinStatus {
+  if (!value || typeof value !== "object") return "unknown";
+
+  const record = value as Record<string, unknown>;
   const rawStatus =
     readString(record?.status) ??
     readString(record?.joinStatus) ??
@@ -440,7 +510,7 @@ function normalizeJoinLeagueResult(payload: unknown): JoinLeagueResult {
     normalizedStatus === "awaiting_approval" ||
     normalizedStatus === "approval_pending"
   ) {
-    return { status: "pending", message: readString(record?.message) };
+    return "pending";
   }
 
   if (
@@ -449,20 +519,26 @@ function normalizeJoinLeagueResult(payload: unknown): JoinLeagueResult {
     normalizedStatus === "member" ||
     normalizedStatus === "active"
   ) {
-    return { status: "joined", message: readString(record?.message) };
+    return "joined";
   }
 
   if (normalizedStatus === "rejected" || normalizedStatus === "declined") {
-    return { status: "rejected", message: readString(record?.message) };
+    return "rejected";
   }
 
-  return { status: "unknown", message: readString(record?.message) };
+  return "unknown";
 }
 
 function normalizeLeagueJoinRequests(payload: unknown): LeagueJoinRequest[] {
   const record = unwrapDataRecord(payload);
   const candidates =
     (Array.isArray(record?.requests) && record.requests) ||
+    (Array.isArray(record?.joinRequests) && record.joinRequests) ||
+    (Array.isArray(record?.join_requests) && record.join_requests) ||
+    (Array.isArray(record?.pendingRequests) && record.pendingRequests) ||
+    (Array.isArray(record?.pending_requests) && record.pending_requests) ||
+    (Array.isArray(record?.items) && record.items) ||
+    (Array.isArray(record?.results) && record.results) ||
     (Array.isArray(record?.pending) && record.pending) ||
     (Array.isArray(record?.data) && record.data) ||
     (Array.isArray(payload) && payload) ||
@@ -473,16 +549,199 @@ function normalizeLeagueJoinRequests(payload: unknown): LeagueJoinRequest[] {
     .filter((request): request is LeagueJoinRequest => request !== null);
 }
 
-function normalizeLeagueJoinRequest(value: unknown): LeagueJoinRequest | null {
+function normalizeLeagueStandings(value: unknown): LeagueStanding[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => normalizeLeagueStanding(item, index))
+    .filter((standing): standing is LeagueStanding => standing !== null)
+    .sort((a, b) => a.rank - b.rank);
+}
+
+function readStandingCandidates(record: Record<string, unknown> | undefined) {
+  return (
+    readArray(record?.standings) ??
+    readArray(record?.leaderboard) ??
+    readArray(record?.rankings) ??
+    readArray(record?.ranking) ??
+    readArray(record?.scores) ??
+    []
+  );
+}
+
+function readMemberCandidates(record: Record<string, unknown> | undefined) {
+  return (
+    readArray(record?.members) ??
+    readArray(record?.member_list) ??
+    readArray(record?.users) ??
+    readArray(record?.participants) ??
+    []
+  );
+}
+
+function mergeLeagueStandingProfiles(
+  standings: LeagueStanding[],
+  memberProfiles: LeagueStanding[]
+) {
+  if (standings.length === 0) return memberProfiles;
+  if (memberProfiles.length === 0) return standings;
+
+  const profilesByUserId = new Map(
+    memberProfiles.map((profile) => [profile.userId, profile])
+  );
+
+  return standings.map((standing) => {
+    const profile = profilesByUserId.get(standing.userId);
+    if (!profile) return standing;
+
+    return {
+      ...standing,
+      username: standing.username ?? profile.username,
+      displayName: standing.displayName ?? profile.displayName,
+      avatarUrl: standing.avatarUrl ?? profile.avatarUrl,
+      predictionsCount: standing.predictionsCount ?? profile.predictionsCount,
+      correctPredictions: standing.correctPredictions ?? profile.correctPredictions,
+      wins: standing.wins ?? profile.wins,
+      level: standing.level ?? profile.level,
+      joinedAt: standing.joinedAt ?? profile.joinedAt,
+    };
+  });
+}
+
+function normalizeLeagueStanding(
+  value: unknown,
+  index: number
+): LeagueStanding | null {
   if (!value || typeof value !== "object") return null;
 
   const record = value as Record<string, unknown>;
   const userRecord = readRecord(record.user) ?? readRecord(record.member);
+  const statsRecord =
+    readRecord(record.stats) ??
+    readRecord(record.statistics) ??
+    readRecord(userRecord?.stats) ??
+    readRecord(userRecord?.statistics);
   const userId =
     readString(record.userId) ??
     readString(record.user_id) ??
     readString(record.memberId) ??
     readString(record.member_id) ??
+    readString(userRecord?.id);
+
+  if (!userId) return null;
+
+  return {
+    rank: readNumber(record.rank, record.position, record.place) ?? index + 1,
+    userId,
+    username:
+      readString(record.username) ??
+      readString(userRecord?.username) ??
+      readString(userRecord?.name) ??
+      null,
+    displayName:
+      readString(record.displayName) ??
+      readString(record.display_name) ??
+      readString(record.name) ??
+      readString(userRecord?.displayName) ??
+      readString(userRecord?.display_name) ??
+      readString(userRecord?.name) ??
+      readString(userRecord?.username) ??
+      null,
+    avatarUrl:
+      readString(record.avatarUrl) ??
+      readString(record.avatar_url) ??
+      readString(record.avatar) ??
+      readString(record.imageUrl) ??
+      readString(record.image_url) ??
+      readString(userRecord?.avatarUrl) ??
+      readString(userRecord?.avatar_url) ??
+      readString(userRecord?.avatar) ??
+      readString(userRecord?.imageUrl) ??
+      readString(userRecord?.image_url) ??
+      null,
+    points:
+      readNumber(
+        record.points,
+        record.score,
+        record.totalPoints,
+        record.total_points,
+        statsRecord?.points,
+        statsRecord?.score,
+        statsRecord?.totalPoints,
+        statsRecord?.total_points
+      ) ?? 0,
+    accuracy:
+      readNumber(
+        record.accuracy,
+        record.accuracyRate,
+        record.accuracy_rate,
+        statsRecord?.accuracy,
+        statsRecord?.accuracyRate,
+        statsRecord?.accuracy_rate
+      ) ?? 0,
+    predictionsCount:
+      readNumber(
+        record.predictionsCount,
+        record.predictions_count,
+        record.totalPredictions,
+        record.total_predictions,
+        record.predictions,
+        statsRecord?.predictionsCount,
+        statsRecord?.predictions_count,
+        statsRecord?.totalPredictions,
+        statsRecord?.total_predictions,
+        statsRecord?.predictions
+      ) ?? null,
+    correctPredictions:
+      readNumber(
+        record.correctPredictions,
+        record.correct_predictions,
+        statsRecord?.correctPredictions,
+        statsRecord?.correct_predictions
+      ) ?? null,
+    wins:
+      readNumber(record.wins, record.win, statsRecord?.wins, statsRecord?.win) ??
+      null,
+    level:
+      readNumber(record.level, userRecord?.level, statsRecord?.level) ?? null,
+    joinedAt:
+      readString(record.joinedAt) ??
+      readString(record.joined_at) ??
+      readString(record.createdAt) ??
+      readString(record.created_at) ??
+      readString(userRecord?.joinedAt) ??
+      readString(userRecord?.joined_at) ??
+      null,
+  };
+}
+
+function normalizeLeagueJoinRequest(value: unknown): LeagueJoinRequest | null {
+  if (!value || typeof value !== "object") return null;
+
+  const record = value as Record<string, unknown>;
+  const userRecord = readFirstRecord(
+    record.user,
+    record.member,
+    record.profile,
+    record.userProfile,
+    record.user_profile,
+    record.memberProfile,
+    record.member_profile,
+    record.requester,
+    record.applicant,
+    record.account,
+    record.createdBy,
+    record.created_by
+  );
+  const userId =
+    readString(record.userId) ??
+    readString(record.user_id) ??
+    readString(record.memberId) ??
+    readString(record.member_id) ??
+    readString(record.requesterId) ??
+    readString(record.requester_id) ??
+    readString(record.applicantId) ??
+    readString(record.applicant_id) ??
     readString(userRecord?.id);
   const id =
     readString(record.id) ??
@@ -495,20 +754,65 @@ function normalizeLeagueJoinRequest(value: unknown): LeagueJoinRequest | null {
   return {
     id,
     userId,
+    username:
+      readString(record.username) ??
+      readString(record.userName) ??
+      readString(record.user_name) ??
+      readString(record.nickname) ??
+      readString(userRecord?.username) ??
+      readString(userRecord?.userName) ??
+      readString(userRecord?.user_name) ??
+      readString(userRecord?.nickname) ??
+      null,
     displayName:
       readString(record.displayName) ??
       readString(record.display_name) ??
+      readString(record.fullName) ??
+      readString(record.full_name) ??
       readString(record.name) ??
       readString(userRecord?.displayName) ??
       readString(userRecord?.display_name) ??
+      readString(userRecord?.fullName) ??
+      readString(userRecord?.full_name) ??
+      joinNameParts(userRecord?.firstName, userRecord?.lastName) ??
+      joinNameParts(userRecord?.first_name, userRecord?.last_name) ??
       readString(userRecord?.username) ??
       readString(userRecord?.name) ??
       "Member",
+    avatarUrl:
+      readString(record.avatarUrl) ??
+      readString(record.avatar_url) ??
+      readString(record.avatar) ??
+      readString(record.imageUrl) ??
+      readString(record.image_url) ??
+      readString(record.image) ??
+      readString(record.photo) ??
+      readString(record.picture) ??
+      readString(record.profilePhoto) ??
+      readString(record.profile_photo) ??
+      readString(record.profileImageUrl) ??
+      readString(record.profile_image_url) ??
+      readString(userRecord?.avatarUrl) ??
+      readString(userRecord?.avatar_url) ??
+      readString(userRecord?.avatar) ??
+      readString(userRecord?.imageUrl) ??
+      readString(userRecord?.image_url) ??
+      readString(userRecord?.image) ??
+      readString(userRecord?.photo) ??
+      readString(userRecord?.picture) ??
+      readString(userRecord?.profilePhoto) ??
+      readString(userRecord?.profile_photo) ??
+      readString(userRecord?.profileImageUrl) ??
+      readString(userRecord?.profile_image_url) ??
+      null,
     status:
-      readString(record.status) ??
-      readString(record.requestStatus) ??
-      readString(record.request_status) ??
-      "pending",
+      normalizeLeagueJoinRequestStatus(
+        readString(record.status) ??
+          readString(record.requestStatus) ??
+          readString(record.request_status) ??
+          readString(record.joinStatus) ??
+          readString(record.join_status)
+      ),
     requestedAt:
       readString(record.requestedAt) ??
       readString(record.requested_at) ??
@@ -518,11 +822,45 @@ function normalizeLeagueJoinRequest(value: unknown): LeagueJoinRequest | null {
   };
 }
 
+function normalizeLeagueJoinRequestStatus(status: string | null | undefined) {
+  const normalizedStatus = status?.toLowerCase();
+
+  if (
+    !normalizedStatus ||
+    normalizedStatus === "pending" ||
+    normalizedStatus === "waiting" ||
+    normalizedStatus === "awaiting_approval" ||
+    normalizedStatus === "approval_pending" ||
+    normalizedStatus === "pending_approval"
+  ) {
+    return "pending";
+  }
+
+  if (normalizedStatus === "approved" || normalizedStatus === "joined") {
+    return "approved";
+  }
+
+  if (normalizedStatus === "rejected" || normalizedStatus === "declined") {
+    return "rejected";
+  }
+
+  return status ?? "pending";
+}
+
 function unwrapDataRecord(value: unknown): Record<string, unknown> | undefined {
   if (!value || typeof value !== "object") return undefined;
   const record = value as Record<string, unknown>;
   const data = readRecord(record.data);
   return data ?? record;
+}
+
+function readFirstRecord(...values: unknown[]) {
+  for (const value of values) {
+    const record = readRecord(value);
+    if (record) return record;
+  }
+
+  return undefined;
 }
 
 function readRecord(value: unknown): Record<string, unknown> | undefined {
@@ -531,10 +869,31 @@ function readRecord(value: unknown): Record<string, unknown> | undefined {
     : undefined;
 }
 
+function readArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value) ? value : undefined;
+}
+
 function readString(value: unknown): string | undefined {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
   return undefined;
+}
+
+function readNumber(...values: unknown[]): number | undefined {
+  for (const value of values) {
+    if (value === null || value === undefined || value === "") continue;
+    const numberValue = Number(value);
+    if (Number.isFinite(numberValue)) return numberValue;
+  }
+  return undefined;
+}
+
+function joinNameParts(firstName: unknown, lastName: unknown) {
+  const name = [readString(firstName), readString(lastName)]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  return name || undefined;
 }
 
 function normalizePagination(

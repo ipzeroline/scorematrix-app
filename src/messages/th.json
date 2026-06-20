@@ -936,6 +936,8 @@
     "noStandings": "ยังไม่มีข้อมูลอันดับ",
     "rankedMember": "สมาชิกอันดับ {rank}",
     "accuracy": "ความแม่นยำ",
+    "predictions": "ทาย",
+    "wins": "ชนะ",
     "leagueAccess": "การเข้าร่วมลีก",
     "privateLeagueDescription": "ลีกส่วนตัว สมาชิกใหม่ต้องใช้รหัสเชิญเพื่อเข้าร่วม",
     "publicLeagueDescription": "ลีกสาธารณะ สมาชิกสามารถเข้าร่วมได้โดยไม่ต้องใช้รหัสเชิญ"

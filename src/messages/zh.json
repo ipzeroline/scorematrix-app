@@ -936,6 +936,8 @@
     "noStandings": "暂无排名数据。",
     "rankedMember": "排名成员 #{rank}",
     "accuracy": "准确率",
+    "predictions": "预测",
+    "wins": "胜",
     "leagueAccess": "联赛加入方式",
     "privateLeagueDescription": "新成员需要邀请码才能加入此私人联赛。",
     "publicLeagueDescription": "成员无需邀请码即可加入此公开联赛。"
