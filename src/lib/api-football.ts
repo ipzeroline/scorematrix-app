@@ -1841,7 +1841,7 @@ async function fetchSoccerBackend<T>(
       signal: AbortSignal.timeout(10_000),
     });
 
-    const payload = (await response.json()) as T & {
+    const payload = (await parseSoccerBackendResponse(response)) as T & {
       error?: unknown;
       errors?: unknown;
       message?: string;
@@ -1868,17 +1868,47 @@ async function fetchSoccerBackend<T>(
             error instanceof Error && error.name === "TimeoutError"
               ? "ScoreMatrix Soccer backend request timed out"
               : "ScoreMatrix Soccer backend request failed",
-            error instanceof Error && error.name === "TimeoutError" ? 504 : 502
+            error instanceof Error && error.name === "TimeoutError" ? 504 : 502,
+            error instanceof Error ? error.message : error
           );
 
-    console.error("[scorematrix:soccer-api]", {
+    console.warn("[scorematrix:soccer-api]", {
       endpoint: `${url.pathname}${url.search}`,
       status: apiError.status,
       durationMs: Date.now() - startedAt,
       message: apiError.message,
+      details: formatSoccerApiLogDetails(apiError.details),
     });
 
     throw apiError;
+  }
+}
+
+async function parseSoccerBackendResponse(response: Response) {
+  const text = await response.text();
+  if (!text.trim()) return {};
+
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return {
+      message: "ScoreMatrix Soccer backend returned a non-JSON response",
+      error: text.slice(0, 500),
+    };
+  }
+}
+
+function formatSoccerApiLogDetails(details: unknown) {
+  if (details === undefined || details === null || details === "") {
+    return undefined;
+  }
+
+  if (typeof details === "string") return details;
+
+  try {
+    return JSON.stringify(details);
+  } catch {
+    return String(details);
   }
 }
 

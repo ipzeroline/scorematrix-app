@@ -12,25 +12,30 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { ApiClientError } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 import {
   getCurrentUser,
   type CurrentUserData,
   type CurrentUserResponse,
   changePassword,
 } from "@/lib/auth-api";
+import { getLevels, type LevelConfig } from "@/lib/levels-api";
 import { useUserStore } from "@/stores/user-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useShallow } from "zustand/react/shallow";
 import {
   Activity,
+  Award,
   BarChart3,
   ChevronRight,
   Crown,
   Pencil,
   ShieldCheck,
+  Shield,
   Star,
   Target,
   TrendingUp,
+  Users,
   WalletCards,
   Zap,
   Key,
@@ -58,6 +63,7 @@ export default function ProfilePage() {
   );
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState("");
+  const [levels, setLevels] = useState<LevelConfig[]>([]);
 
   const tAuth = useTranslations("auth");
   const tCommon = useTranslations("common");
@@ -297,9 +303,32 @@ export default function ProfilePage() {
     };
   }, [locale, t]);
 
+  useEffect(() => {
+    let active = true;
+
+    getLevels({ locale })
+      .then((response) => {
+        if (active) setLevels(response);
+      })
+      .catch(() => {
+        if (active) setLevels([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [locale]);
+
   const profileUser = user;
-  const rawXpProgress = profileUser.xp - (profileUser.level - 1) * 1000;
-  const xpTarget = 1000;
+  const currentLevelConfig =
+    findCurrentLevelConfig(levels, profileUser.level, profileUser.xp) ?? null;
+  const nextLevelConfig =
+    levels.find((level) => level.level > (currentLevelConfig?.level ?? profileUser.level)) ??
+    null;
+  const currentLevelXp = currentLevelConfig?.xpRequired ?? (profileUser.level - 1) * 1000;
+  const nextLevelXp = nextLevelConfig?.xpRequired ?? currentLevelXp + 1000;
+  const xpTarget = Math.max(nextLevelXp - currentLevelXp, 1);
+  const rawXpProgress = profileUser.xp - currentLevelXp;
   const xpProgress = Math.min(Math.max(rawXpProgress, 0), xpTarget);
   const xpRemaining = Math.max(xpTarget - xpProgress, 0);
   const memberSince = profileMeta.createdAt
@@ -449,6 +478,18 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      <LevelRoadmap
+        levels={levels}
+        currentLevel={currentLevelConfig?.level ?? profileUser.level}
+        currentXp={profileUser.xp}
+        currentRank={currentLevelConfig?.rank ?? profileUser.rank}
+        nextLevel={nextLevelConfig}
+        xpProgress={xpProgress}
+        xpTarget={xpTarget}
+        xpRemaining={xpRemaining}
+        locale={locale}
+      />
+
       <section className="space-y-3">
         <SectionHeader
           icon={Activity}
@@ -589,6 +630,218 @@ export default function ProfilePage() {
   );
 }
 
+function LevelRoadmap({
+  levels,
+  currentLevel,
+  currentXp,
+  currentRank,
+  nextLevel,
+  xpProgress,
+  xpTarget,
+  xpRemaining,
+  locale,
+}: {
+  levels: LevelConfig[];
+  currentLevel: number;
+  currentXp: number;
+  currentRank: string;
+  nextLevel: LevelConfig | null;
+  xpProgress: number;
+  xpTarget: number;
+  xpRemaining: number;
+  locale: string;
+}) {
+  const t = useTranslations("profile");
+  const visibleLevels =
+    levels.length > 0
+      ? levels
+      : buildFallbackLevels(currentLevel, currentXp, currentRank);
+  const highlightedLevel =
+    visibleLevels.find((level) => level.level === currentLevel) ??
+    visibleLevels.find((level) => level.level < currentLevel) ??
+    visibleLevels[0];
+  const nextVisibleLevel =
+    nextLevel ?? visibleLevels.find((level) => level.level > currentLevel) ?? null;
+  const displayXpProgress = nextVisibleLevel ? xpProgress : xpTarget;
+  const progressPercent = Math.min(
+    100,
+    Math.round((displayXpProgress / Math.max(xpTarget, 1)) * 100)
+  );
+
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-amber-300/25 bg-[#080d17] p-4 shadow-[0_24px_70px_rgba(0,0,0,0.3)] sm:p-5 lg:p-6">
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),transparent_32%),linear-gradient(315deg,rgba(34,211,238,0.11),transparent_28%)]" />
+      <div className="relative space-y-5">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.78fr)]">
+          <div className="rounded-2xl border border-amber-300/25 bg-black/28 p-4 sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-wider text-amber-200">
+                  {t("levelRoadmap")}
+                </p>
+                <div className="mt-2 flex flex-wrap items-end gap-x-4 gap-y-2">
+                  <h2 className="text-4xl font-black leading-none text-white sm:text-5xl">
+                    {t("level", { level: currentLevel })}
+                  </h2>
+                  <Badge variant="gold" size="md" className="mb-1">
+                    {formatRank(highlightedLevel?.rank ?? currentRank)}
+                  </Badge>
+                </div>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-300 sm:text-base">
+                  {t("levelRoadmapHint")}
+                </p>
+              </div>
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-amber-300/35 bg-amber-400/12 text-amber-100 shadow-[0_0_24px_rgba(245,158,11,0.18)]">
+                <Award size={26} />
+              </span>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/28 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="text-sm font-bold text-gray-300">
+                  {nextVisibleLevel
+                    ? t("nextUnlock", { level: nextVisibleLevel.level })
+                    : t("maxLevelReached")}
+                </span>
+                <span className="font-mono text-sm font-black text-amber-200">
+                  {progressPercent}%
+                </span>
+              </div>
+              <ProgressBar
+                value={displayXpProgress}
+                max={xpTarget}
+                color="gold"
+                size="lg"
+              />
+              <p className="mt-3 text-sm leading-6 text-gray-300">
+                {nextVisibleLevel
+                  ? t("xpToLevel", {
+                      xp: xpRemaining.toLocaleString(locale),
+                      level: nextVisibleLevel.level,
+                    })
+                  : t("maxLevelMessage")}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            {highlightedLevel ? (
+              <>
+                <UnlockMetric
+                  icon={Crown}
+                  label={t("rank")}
+                  value={formatRank(highlightedLevel.rank)}
+                  tone="text-amber-200"
+                />
+                <UnlockMetric
+                  icon={Shield}
+                  label={t("ownedLeagues")}
+                  value={highlightedLevel.maxOwnedLeagues.toLocaleString(locale)}
+                  tone="text-cyan-200"
+                />
+                <UnlockMetric
+                  icon={Users}
+                  label={t("leagueMembers")}
+                  value={highlightedLevel.maxLeagueMembers.toLocaleString(locale)}
+                  tone="text-purple-200"
+                />
+              </>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          {visibleLevels.map((level) => {
+            const isCurrent = level.level === currentLevel;
+            const isUnlocked = level.level <= currentLevel;
+
+            return (
+              <div
+                key={level.level}
+                className={cn(
+                  "relative min-h-[190px] overflow-hidden rounded-2xl border p-4",
+                  isCurrent
+                    ? "border-amber-300/60 bg-amber-400/14 shadow-[0_0_28px_rgba(245,158,11,0.18)]"
+                    : isUnlocked
+                      ? "border-cyan-300/25 bg-cyan-400/8"
+                      : "border-gray-800 bg-black/24"
+                )}
+              >
+                {isCurrent ? (
+                  <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-cyan-300 to-purple-300" />
+                ) : null}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-3xl font-black leading-none text-white">
+                      L{level.level}
+                    </p>
+                    <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gray-500">
+                      {formatRank(level.rank)}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={isCurrent ? "gold" : isUnlocked ? "cyan" : "default"}
+                    size="sm"
+                    className="shrink-0"
+                  >
+                    {isCurrent
+                      ? t("currentLevel")
+                      : isUnlocked
+                        ? t("unlocked")
+                        : t("locked")}
+                  </Badge>
+                </div>
+                <div className="mt-4 grid gap-2 text-xs font-semibold text-gray-400">
+                  <LevelLine label={t("xp")} value={level.xpRequired.toLocaleString(locale)} />
+                  <LevelLine label={t("reward")} value={level.rewardPoints.toLocaleString(locale)} />
+                  <LevelLine
+                    label={t("leagueAccess")}
+                    value={t("leagueLimitCompact", {
+                      owned: level.maxOwnedLeagues.toLocaleString(locale),
+                      members: level.maxLeagueMembers.toLocaleString(locale),
+                    })}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LevelLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-black/20 px-2.5 py-2">
+      <span className="text-gray-500">{label}</span>
+      <span className="max-w-[62%] text-right font-mono font-black text-gray-200">
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function UnlockMetric({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: typeof Crown;
+  label: string;
+  value: string;
+  tone: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/24 p-3">
+      <Icon size={16} className={tone} />
+      <p className="mt-2 truncate text-xs font-bold text-gray-500">{label}</p>
+      <p className="mt-1 font-mono text-lg font-black text-white">{value}</p>
+    </div>
+  );
+}
+
 function StatCard({
   icon: Icon,
   label,
@@ -694,4 +947,49 @@ function formatMemberSince(value: string, locale: string) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function findCurrentLevelConfig(
+  levels: LevelConfig[],
+  currentLevel: number,
+  currentXp: number
+) {
+  return (
+    levels.find((level) => level.level === currentLevel) ??
+    [...levels]
+      .reverse()
+      .find((level) => level.xpRequired <= currentXp) ??
+    null
+  );
+}
+
+function buildFallbackLevels(
+  currentLevel: number,
+  currentXp: number,
+  currentRank: string
+): LevelConfig[] {
+  const baseLevel = Math.max(1, currentLevel);
+  const previousLevel = Math.max(1, baseLevel - 1);
+  const nextLevel = baseLevel + 1;
+
+  return [previousLevel, baseLevel, nextLevel].map((level) => ({
+    level,
+    xpRequired: Math.max(0, (level - 1) * 1000),
+    rewardPoints: level === nextLevel ? 100 : 0,
+    rank: level === baseLevel ? currentRank : currentRank || "bronze",
+    maxOwnedLeagues: Math.max(1, level),
+    maxLeagueMembers: Math.max(3, level * 2),
+  })).filter(
+    (level, index, list) =>
+      list.findIndex((candidate) => candidate.level === level.level) === index &&
+      level.xpRequired <= Math.max(currentXp + 1000, level.xpRequired)
+  );
+}
+
+function formatRank(rank: string) {
+  return rank
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }

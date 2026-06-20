@@ -66,7 +66,8 @@ export function RegisterClient() {
   const { locale } = useParams<{ locale: string }>();
   const addToast = useNotificationStore((s) => s.addToast);
   const searchParams = useSearchParams();
-  const initialReferralCode = sanitizeReferralCode(searchParams.get("ref") ?? "");
+  const referralCodeFromUrl = sanitizeReferralCode(searchParams.get("ref") ?? "");
+  const initialReferralCode = referralCodeFromUrl;
   const currentYear = new Date().getFullYear();
   const playerTypeOptions = [
     { value: "", label: t("selectPlayerType") },
@@ -98,6 +99,29 @@ export function RegisterClient() {
   const [teamGroups, setTeamGroups] = useState<SoccerTeamGroup[]>([]);
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  useEffect(() => {
+    if (!referralCodeFromUrl) return;
+
+    const trackingKey = `scorematrix:referral-click:${referralCodeFromUrl}`;
+    if (window.sessionStorage.getItem(trackingKey)) return;
+    window.sessionStorage.setItem(trackingKey, "1");
+
+    void fetch("/api/referral-clicks", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        referral_code: referralCodeFromUrl,
+        referer: document.referrer,
+      }),
+      cache: "no-store",
+    }).catch(() => {
+      window.sessionStorage.removeItem(trackingKey);
+    });
+  }, [referralCodeFromUrl]);
 
   useEffect(() => {
     let active = true;

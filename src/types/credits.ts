@@ -25,3 +25,31 @@ export interface FirstPurchaseBonus {
   bonusCredits: number;
   minAmountThb: number;
 }
+
+// ── Stripe Checkout ──────────────────────────────────────────────────────
+
+export interface CheckoutSessionRequest {
+  packageId: string;
+  successUrl: string;
+  cancelUrl: string;
+}
+
+export interface CheckoutSessionResponse {
+  sessionId: string;
+  checkoutUrl: string;
+}
+
+export type CheckoutSessionStatus =
+  | "pending"
+  | "complete"
+  | "expired"
+  | "failed";
+
+export interface CheckoutSessionStatusResponse {
+  status: CheckoutSessionStatus;
+  packageId: string;
+  packageName: string;
+  totalCredits: number;
+  amountThb: number;
+  paidAt?: string;
+}

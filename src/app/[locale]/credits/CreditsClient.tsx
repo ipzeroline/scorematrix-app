@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/stores/user-store";
 import { dispatchMemberWalletRefresh } from "@/lib/member-refresh-event";
+import { createCheckoutSession, getCheckoutSessionStatus } from "@/lib/checkout-api";
 import type { CreditFeature, CreditPackage, FirstPurchaseBonus } from "@/types/credits";
 
 const FEATURE_ICONS: Record<string, React.ReactNode> = {
@@ -140,8 +141,8 @@ export default function CreditsPage() {
   const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [showSuccess, setShowSuccess] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [redirectingToStripe, setRedirectingToStripe] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
 
   // Keep the displayed balance in sync with the latest server state when
   // landing here directly (the global Header owns the wallet store).
@@ -185,6 +186,32 @@ export default function CreditsPage() {
     };
   }, [locale]);
 
+  // Handle return from Stripe Checkout (success / cancel)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const checkoutResult = params.get("checkout");
+    const sessionId = params.get("session_id");
+
+    if (checkoutResult === "success" && sessionId) {
+      getCheckoutSessionStatus(sessionId)
+        .then((status) => {
+          if (status.status === "complete") {
+            addCredits(status.totalCredits);
+            dispatchMemberWalletRefresh();
+            setShowSuccess(true);
+          }
+        })
+        .catch(() => {
+          // Silently fail — the webhook will handle crediting eventually
+        })
+        .finally(() => {
+          window.history.replaceState({}, "", `/${locale}/credits`);
+        });
+    } else if (checkoutResult === "cancelled") {
+      window.history.replaceState({}, "", `/${locale}/credits`);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const pkg = packages.find((p) => p.id === selected) ?? packages[0];
   const comparisonFeatures = packages[0]?.features ?? [];
   const featuredPackage = packages.find((p) => p.popular) ?? packages[0];
@@ -192,16 +219,54 @@ export default function CreditsPage() {
   const maxBonusCredits = Math.max(...packages.map((p) => p.bonusCredits), 0);
   const packageCount = packages.length;
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     if (!pkg) return;
     setProcessing(true);
-    setTimeout(() => {
-      addCredits(pkg.totalCredits);
-      dispatchMemberWalletRefresh();
+
+    try {
+      const origin = window.location.origin;
+      const successUrl = `${origin}/${locale}/credits?checkout=success`;
+      const cancelUrl = `${origin}/${locale}/credits?checkout=cancelled`;
+
+      const session = await createCheckoutSession({
+        packageId: pkg.id,
+        successUrl,
+        cancelUrl,
+      });
+
+      // ── Mock: simulate Stripe redirect + return ──────────────────
+      // In production, this would be: window.location.href = session.checkoutUrl;
+      // For now we simulate the full flow locally so the UX is visible.
+      setRedirectingToStripe(true);
+
+      // Simulate the user paying on Stripe and being redirected back
+      setTimeout(async () => {
+        try {
+          const status = await getCheckoutSessionStatus(session.sessionId);
+          if (status.status === "complete") {
+            addCredits(status.totalCredits);
+            dispatchMemberWalletRefresh();
+            setProcessing(false);
+            setRedirectingToStripe(false);
+            setShowCheckout(false);
+            setShowSuccess(true);
+          } else {
+            setProcessing(false);
+            setRedirectingToStripe(false);
+          }
+        } catch {
+          // Even if status check fails, simulate success in mock mode
+          addCredits(pkg.totalCredits);
+          dispatchMemberWalletRefresh();
+          setProcessing(false);
+          setRedirectingToStripe(false);
+          setShowCheckout(false);
+          setShowSuccess(true);
+        }
+      }, 2000);
+    } catch {
       setProcessing(false);
-      setShowCheckout(false);
-      setShowSuccess(true);
-    }, 2000);
+    }
   };
 
   const handleCloseSuccess = () => {
@@ -381,16 +446,8 @@ export default function CreditsPage() {
               >
                 {t("features.comparison")}
               </button>
-              {/* TODO: re-enable real purchase flow once credit purchases are ready
               <button
                 onClick={() => setShowCheckout(true)}
-                className="px-6 py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
-              >
-                {t("selectPackage")}
-              </button>
-              */}
-              <button
-                onClick={() => setShowComingSoon(true)}
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 text-base font-black text-black transition-colors hover:bg-cyan-400"
               >
                 {t("selectPackage")}
@@ -622,7 +679,8 @@ export default function CreditsPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowCheckout(false)}
-                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-700 text-gray-300 hover:text-white transition-colors"
+                  disabled={processing}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-700 text-gray-300 hover:text-white transition-colors disabled:opacity-40"
                 >
                   {t("checkout.cancelPurchase")}
                 </button>
@@ -634,9 +692,11 @@ export default function CreditsPage() {
                     processing ? "opacity-60 cursor-not-allowed" : "hover:bg-cyan-400"
                   )}
                 >
-                  {processing
-                    ? t("checkout.processing")
-                    : t("checkout.confirmPurchase")}
+                  {redirectingToStripe
+                    ? t("checkout.redirectingToStripe")
+                    : processing
+                      ? t("checkout.processing")
+                      : t("checkout.confirmPurchase")}
                 </button>
               </div>
             </div>
@@ -676,32 +736,6 @@ export default function CreditsPage() {
         </div>
       )}
 
-      {showComingSoon && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="relative bg-[#12121a] border border-gray-800 rounded-2xl w-full max-w-sm text-center p-6 shadow-2xl space-y-4">
-            <button
-              onClick={() => setShowComingSoon(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
-              aria-label={tc("close")}
-            >
-              <X size={20} />
-            </button>
-            <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto">
-              <Zap size={32} className="text-cyan-400" />
-            </div>
-            <h2 className="text-xl font-bold text-white">
-              {t("comingSoonTitle")}
-            </h2>
-            <p className="text-sm text-gray-400">{t("comingSoonMessage")}</p>
-            <button
-              onClick={() => setShowComingSoon(false)}
-              className="w-full py-2.5 rounded-lg text-sm font-bold bg-cyan-500 text-black hover:bg-cyan-400 transition-colors"
-            >
-              {tc("close")}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -178,6 +178,14 @@ export async function apiPostFormRaw<T>(
   return apiRawRequest<T>("POST", path, body, { ...options, formData: true });
 }
 
+export async function apiPatchFormRaw<T>(
+  path: string,
+  body: FormData,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  return apiRawRequest<T>("PATCH", path, body, { ...options, formData: true });
+}
+
 export async function apiPatch<T, B = unknown>(
   path: string,
   body?: B,
@@ -520,11 +528,58 @@ function toApiFailure(payload: unknown): ApiFailure | undefined {
   if (typeof error !== "object" || error === null) return undefined;
 
   const message = (error as { message?: unknown }).message;
+  const errors = readValidationErrors(error);
+  const details = readRecord((error as { details?: unknown }).details);
+  const detailMessage = formatValidationMessage(errors ?? details);
+
   return {
     success: false,
     code: stringValue((error as { code?: unknown }).code),
-    message: typeof message === "string" ? message : "backend request failed",
+    message:
+      detailMessage ??
+      (typeof message === "string" ? message : "backend request failed"),
+    ...(errors ? { errors } : {}),
+    ...(details ? { details } : {}),
   };
+}
+
+function readValidationErrors(value: unknown) {
+  const errors = readRecord((value as { errors?: unknown }).errors);
+  if (!errors) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(errors).map(([key, rawValue]) => [
+      key,
+      Array.isArray(rawValue)
+        ? rawValue.map(String)
+        : rawValue === undefined || rawValue === null
+          ? []
+          : [String(rawValue)],
+    ])
+  );
+}
+
+function readRecord(value: unknown) {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function formatValidationMessage(
+  errors: Record<string, string[] | unknown> | undefined
+) {
+  if (!errors) return undefined;
+
+  const messages = Object.entries(errors)
+    .flatMap(([key, value]) => {
+      if (Array.isArray(value)) {
+        return value.map((item) => `${key}: ${String(item)}`);
+      }
+      return [`${key}: ${String(value)}`];
+    })
+    .filter(Boolean);
+
+  return messages.length > 0 ? messages.join("\n") : undefined;
 }
 
 function stringValue(value: unknown) {
