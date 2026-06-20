@@ -16,6 +16,19 @@ import { AIInsightListClient, type AIInsightListItem } from "./AIInsightListClie
 
 type Props = {
   params: Promise<{ locale: string }>;
+  searchParams?: Promise<{
+    date?: string | string[];
+    league?: string | string[];
+    page?: string | string[];
+    limit?: string | string[];
+  }>;
+};
+
+type AIInsightQuery = {
+  date?: string;
+  league?: string;
+  page: number;
+  limit: number;
 };
 
 const GROUPS: ApiFootballAIInsightGroup[] = [
@@ -80,10 +93,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function AIInsightPage({ params }: Props) {
+export default async function AIInsightPage({ params, searchParams }: Props) {
   const { locale } = await params;
+  const query = normalizeAIInsightQuery(await searchParams);
   const seo = getAIInsightSeoContent(locale);
-  const { response, failed } = await loadAIInsights();
+  const { response, failed } = await loadAIInsights(query);
   const insights = mapAIInsights(response)
     .sort((a, b) => sortInsights(a, b));
   const structuredData = buildAIInsightStructuredData(locale, seo, insights);
@@ -94,6 +108,8 @@ export default async function AIInsightPage({ params }: Props) {
         locale={locale}
         insights={insights}
         source={failed ? "error" : insights.length > 0 ? "api" : "empty"}
+        pagination={response.pagination ?? null}
+        query={query}
       />
 
       <section className="mx-auto max-w-6xl rounded-2xl border border-cyan-300/15 bg-[#0b111d] p-5 md:p-6">
@@ -134,16 +150,27 @@ export default async function AIInsightPage({ params }: Props) {
   );
 }
 
-async function loadAIInsights(): Promise<{
+async function loadAIInsights(query: AIInsightQuery): Promise<{
   response: GetAIInsightsResult;
   failed: boolean;
 }> {
   try {
-    return { response: await getApiFootballAIInsights(), failed: false };
+    return { response: await getApiFootballAIInsights(query), failed: false };
   } catch (error) {
     if (error instanceof ApiFootballError) {
       return {
-        response: { live: [], highConfidence: [], upsetAlert: [] },
+        response: {
+          all: [],
+          live: [],
+          highConfidence: [],
+          upsetAlert: [],
+          pagination: {
+            page: query.page,
+            limit: query.limit,
+            total: 0,
+            totalPages: 1,
+          },
+        },
         failed: true,
       };
     }
@@ -154,6 +181,13 @@ async function loadAIInsights(): Promise<{
 function mapAIInsights(response: GetAIInsightsResult) {
   const insights = new Map<number, AIInsightListItem>();
 
+  if (Array.isArray(response.all) && response.all.length > 0) {
+    response.all.forEach((insight) => {
+      insights.set(insight.provider_id, mapAIInsight(insight));
+    });
+    return [...insights.values()];
+  }
+
   GROUPS.forEach((group) => {
     response[group].forEach((insight) => {
       const existing = insights.get(insight.provider_id);
@@ -163,6 +197,7 @@ function mapAIInsights(response: GetAIInsightsResult) {
           existing.predictedScore ??
           insight.predictedScore ??
           normalizeLegacyPredictedScore(insight.apiPredictedGoals);
+        existing.viewCount = Math.max(existing.viewCount, normalizeViewCount(insight));
         return;
       }
       insights.set(insight.provider_id, mapAIInsight(insight, group));
@@ -174,7 +209,7 @@ function mapAIInsights(response: GetAIInsightsResult) {
 
 function mapAIInsight(
   insight: ApiFootballAIInsight,
-  group: ApiFootballAIInsightGroup
+  group?: ApiFootballAIInsightGroup
 ): AIInsightListItem {
   const probabilities = [
     insight.homeWinProbability,
@@ -184,9 +219,10 @@ function mapAIInsight(
 
   return {
     id: `api-insight-${insight.provider_id}`,
-    categories: [group],
+    categories: group ? [group] : inferInsightCategories(insight),
     matchId: String(insight.provider_id),
     status: mapStatus(insight),
+    viewCount: normalizeViewCount(insight),
     league: {
       id: String(insight.league.id),
       name: insight.league.name,
@@ -268,6 +304,59 @@ function mapAIInsight(
         }
       : null,
   };
+}
+
+function inferInsightCategories(insight: ApiFootballAIInsight) {
+  const categories: AIInsightListItem["categories"] = [];
+  if (mapStatus(insight) === MatchStatus.LIVE) categories.push("live");
+  if ((insight.confidenceScore ?? 0) >= 70) categories.push("highConfidence");
+  if (insight.upsetAlert) categories.push("upsetAlert");
+  return categories;
+}
+
+function normalizeAIInsightQuery(
+  searchParams:
+    | Awaited<Props["searchParams"]>
+    | undefined
+): AIInsightQuery {
+  const date = firstSearchParam(searchParams?.date);
+  const league = firstSearchParam(searchParams?.league);
+  const page = clampInteger(firstSearchParam(searchParams?.page), 1, 9999, 1);
+  const limit = clampInteger(firstSearchParam(searchParams?.limit), 1, 50, 20);
+
+  return {
+    ...(date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? { date } : {}),
+    ...(league ? { league } : {}),
+    page,
+    limit,
+  };
+}
+
+function firstSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function clampInteger(
+  value: string | undefined,
+  min: number,
+  max: number,
+  fallback: number
+) {
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed)) return fallback;
+  return Math.min(Math.max(parsed, min), max);
+}
+
+function normalizeViewCount(insight: ApiFootballAIInsight) {
+  return normalizeNumber(
+    insight.viewCount ?? insight.view_count ?? insight.views ?? insight.visits
+  );
+}
+
+function normalizeNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function normalizeLegacyPredictedScore(

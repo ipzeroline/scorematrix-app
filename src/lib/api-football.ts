@@ -770,6 +770,10 @@ export interface ApiFootballPredictedScore {
 
 export interface ApiFootballAIInsight {
   provider_id: number;
+  viewCount?: number | string | null;
+  view_count?: number | string | null;
+  views?: number | string | null;
+  visits?: number | string | null;
   status: {
     short: string;
     long: string;
@@ -858,13 +862,27 @@ export interface ApiFootballAIInsightTeamStats {
 }
 
 export interface GetAIInsightsResult {
+  all?: ApiFootballAIInsight[];
   live: ApiFootballAIInsight[];
   highConfidence: ApiFootballAIInsight[];
   upsetAlert: ApiFootballAIInsight[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
 }
 
 interface SoccerAIInsightsResponse {
-  data?: Partial<GetAIInsightsResult>;
+  data?: ApiFootballAIInsight[] | Partial<GetAIInsightsResult>;
+  pagination?: {
+    page?: number | string | null;
+    limit?: number | string | null;
+    total?: number | string | null;
+    totalPages?: number | string | null;
+    total_pages?: number | string | null;
+  } | null;
 }
 
 export type ApiFootballInsightComparison = Record<
@@ -957,6 +975,10 @@ export type ApiFootballTeamFormProfile = {
 export interface ApiFootballAIInsightDetail {
   id: string;
   matchId: string;
+  viewCount?: number | string | null;
+  view_count?: number | string | null;
+  views?: number | string | null;
+  visits?: number | string | null;
   confidenceScore: number | null;
   homeWinProbability: number | null;
   drawProbability: number | null;
@@ -1119,21 +1141,63 @@ export async function getApiFootballFixtureList(
   };
 }
 
-export async function getApiFootballAIInsights(): Promise<GetAIInsightsResult> {
+export async function getApiFootballAIInsights(
+  options: {
+    date?: string;
+    page?: number;
+    league?: string;
+    limit?: number;
+  } = {}
+): Promise<GetAIInsightsResult> {
+  const query: Record<string, string> = {};
+  if (options.date) query.date = options.date;
+  if (options.page && options.page > 1) query.page = String(options.page);
+  if (options.league) query.league = options.league;
+  if (options.limit) query.limit = String(options.limit);
+
   const payload = await fetchSoccerBackend<SoccerAIInsightsResponse>(
     "/ai-insights",
-    {}
+    query
   );
+  const data = payload.data;
+
+  if (Array.isArray(data)) {
+    return {
+      all: data,
+      live: [],
+      highConfidence: [],
+      upsetAlert: [],
+      pagination: normalizeAIInsightPagination(payload.pagination, data.length),
+    };
+  }
 
   return {
-    live: Array.isArray(payload.data?.live) ? payload.data.live : [],
-    highConfidence: Array.isArray(payload.data?.highConfidence)
-      ? payload.data.highConfidence
+    all: Array.isArray(data?.all) ? data.all : undefined,
+    live: Array.isArray(data?.live) ? data.live : [],
+    highConfidence: Array.isArray(data?.highConfidence)
+      ? data.highConfidence
       : [],
-    upsetAlert: Array.isArray(payload.data?.upsetAlert)
-      ? payload.data.upsetAlert
+    upsetAlert: Array.isArray(data?.upsetAlert)
+      ? data.upsetAlert
       : [],
+    pagination: normalizeAIInsightPagination(payload.pagination),
   };
+}
+
+function normalizeAIInsightPagination(
+  pagination: SoccerAIInsightsResponse["pagination"],
+  fallbackTotal = 0
+) {
+  if (!pagination) return null;
+  const page = toNumber(pagination.page, 1);
+  const limit = toNumber(pagination.limit, 20);
+  const total = toNumber(pagination.total, fallbackTotal);
+  const totalPages = toNumber(
+    pagination.totalPages ?? pagination.total_pages,
+    Math.max(Math.ceil(total / Math.max(limit, 1)), 1)
+  );
+
+  return { page, limit, total, totalPages };
 }
 
 export async function getApiFootballAIInsightDetail(

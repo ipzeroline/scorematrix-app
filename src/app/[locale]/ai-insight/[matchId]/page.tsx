@@ -9,6 +9,7 @@ import {
   Activity,
   Clock3,
   Crosshair,
+  Eye,
   Flame,
   Gauge,
   Home,
@@ -267,6 +268,15 @@ const UI_COPY = {
   },
 } as const;
 
+const localeMap: Record<string, string> = {
+  th: "th-TH",
+  en: "en-US",
+  lo: "lo-LA",
+  my: "my-MM",
+  km: "km-KH",
+  zh: "zh-CN",
+};
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, matchId } = await params;
   const copy = getSeoCopy(locale);
@@ -369,6 +379,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
   const generatedAtLabel = insight.generatedAt
     ? formatDateTime(insight.generatedAt, locale)
     : details.noGeneratedTime;
+  const viewCount = normalizeInsightViewCount(insight);
   const headToHead =
     (insight as ApiFootballAIInsightDetail & { headToHead?: InsightHeadToHeadRecord[] })
       .headToHead ?? [];
@@ -434,6 +445,10 @@ export default async function AIInsightDetailPage({ params }: Props) {
             <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-200/80">
               {details.generatedAt}: {generatedAtLabel}
             </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-300/15 bg-cyan-300/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-cyan-100">
+              <Eye size={12} />
+              {viewCount.toLocaleString(localeMap[locale] ?? "th-TH")} {copy.labels.views}
+            </span>
           </div>
 
           <div className="mt-5 grid items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(220px,0.72fr)_minmax(0,1fr)]">
@@ -498,7 +513,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="grid gap-3 bg-[#090f1d] p-4 sm:p-5 lg:grid-cols-4">
+        <div className="grid gap-3 bg-[#090f1d] p-4 sm:p-5 lg:grid-cols-4 xl:grid-cols-5">
           <SimpleStatCard
             icon={Gauge}
             label={copy.labels.confidence}
@@ -525,6 +540,13 @@ export default async function AIInsightDetailPage({ params }: Props) {
             label={details.homeAdvantage}
             value={formatMultiplier(insight.homeAdvantageFactor)}
             note={fixture.home.name}
+            tone="blue"
+          />
+          <SimpleStatCard
+            icon={Eye}
+            label={copy.labels.views}
+            value={viewCount.toLocaleString(localeMap[locale] ?? "th-TH")}
+            note={copy.actions.viewInsight}
             tone="blue"
           />
         </div>
@@ -752,6 +774,18 @@ function buildFallbackInsight(fixture: ApiFootballFixture): ApiFootballAIInsight
 
 function getSeoCopy(locale: string) {
   return SEO_COPY[locale as keyof typeof SEO_COPY] ?? SEO_COPY.en;
+}
+
+function normalizeInsightViewCount(insight: ApiFootballAIInsightDetail) {
+  return normalizeNumber(
+    insight.viewCount ?? insight.view_count ?? insight.views ?? insight.visits
+  );
+}
+
+function normalizeNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return 0;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function getUiCopy(locale: string) {

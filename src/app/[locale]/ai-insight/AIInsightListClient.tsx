@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, AlertTriangle, Brain, Calendar, ChevronRight, Flame, Gauge, Goal, ShieldAlert, Sparkles, Target, Users } from "lucide-react";
+import { Activity, AlertTriangle, Brain, Calendar, ChevronLeft, ChevronRight, Eye, Flame, Gauge, Goal, Search, ShieldAlert, Sparkles, Target, Users } from "lucide-react";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
@@ -14,11 +14,26 @@ import { MatchStatus } from "@/types/common";
 
 type FilterKey = "all" | "live" | "highConfidence" | "upsetAlert";
 
+type AIInsightPagination = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+};
+
+type AIInsightQuery = {
+  date?: string;
+  league?: string;
+  page: number;
+  limit: number;
+};
+
 export type AIInsightListItem = {
   id: string;
   categories: Array<"live" | "highConfidence" | "upsetAlert">;
   matchId: string;
   status: MatchStatus;
+  viewCount: number;
   league: {
     id: string;
     name: string;
@@ -97,13 +112,18 @@ export function AIInsightListClient({
   locale,
   insights,
   source,
+  pagination,
+  query,
 }: {
   locale: string;
   insights: AIInsightListItem[];
   source: "api" | "empty" | "error";
+  pagination: AIInsightPagination | null;
+  query: AIInsightQuery;
 }) {
   const copy = getAIInsightPageCopy(locale);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const [search, setSearch] = useState("");
 
   const counts = {
     all: insights.length,
@@ -112,11 +132,17 @@ export function AIInsightListClient({
     upsetAlert: insights.filter((insight) => insight.categories.includes("upsetAlert")).length,
   };
 
-  const filteredInsights = activeFilter === "all"
+  const filteredByCategory = activeFilter === "all"
     ? insights
     : insights.filter((insight) => insight.categories.includes(activeFilter));
+  const normalizedSearch = search.trim().toLocaleLowerCase(localeMap[locale] ?? "th-TH");
+  const filteredInsights = normalizedSearch
+    ? filteredByCategory.filter((insight) => doesInsightMatchSearch(insight, normalizedSearch, locale))
+    : filteredByCategory;
 
   const groupedInsights = groupInsightsByDay(filteredInsights, locale);
+  const pageHref = (page: number) => buildAIInsightPageHref(locale, query, page);
+  const todayHref = buildAIInsightTodayHref(locale, query);
 
   const tabs: Array<{ key: FilterKey; label: string; count: number }> = [
     { key: "all", label: copy.filters.all, count: counts.all },
@@ -134,6 +160,10 @@ export function AIInsightListClient({
     insights[0];
   const communityVotes = insights.reduce(
     (sum, insight) => sum + insight.apiSummary.communityVotes,
+    0
+  );
+  const totalViews = insights.reduce(
+    (sum, insight) => sum + (insight.viewCount ?? 0),
     0
   );
   const confidenceValues = insights
@@ -172,6 +202,12 @@ export function AIInsightListClient({
       value: communityVotes.toLocaleString(localeMap[locale] ?? "th-TH"),
       icon: Users,
       tone: "text-amber-400",
+    },
+    {
+      label: copy.stats.views,
+      value: totalViews.toLocaleString(localeMap[locale] ?? "th-TH"),
+      icon: Eye,
+      tone: "text-cyan-300",
     },
   ];
 
@@ -224,9 +260,16 @@ export function AIInsightListClient({
                 <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400 via-amber-400 to-magenta" />
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <Badge variant="gold" size="md">{copy.labels.featured}</Badge>
-                  <span className="rounded-full border border-gray-800 bg-[#10121a] px-2.5 py-1 font-mono text-xs font-bold text-slate-400">
-                    {formatMatchMoment(featuredInsight, locale)}
-                  </span>
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <ViewCountBadge
+                      viewCount={featuredInsight.viewCount}
+                      locale={locale}
+                      copy={copy}
+                    />
+                    <span className="rounded-full border border-gray-800 bg-[#10121a] px-2.5 py-1 font-mono text-xs font-bold text-slate-400">
+                      {formatMatchMoment(featuredInsight, locale)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-400">
@@ -313,6 +356,51 @@ export function AIInsightListClient({
             </span>
           </div>
 
+          <div className="mb-2 grid gap-2 lg:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="flex items-center gap-2 rounded-lg border border-gray-800 bg-black/25 px-3 py-2 text-sm text-slate-300 focus-within:border-cyan-400/45 focus-within:bg-cyan-500/[0.04]">
+              <Search size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+              <span className="sr-only">{copy.labels.search}</span>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={copy.labels.searchPlaceholder}
+                className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-100 outline-none placeholder:text-slate-600"
+              />
+            </label>
+
+            <form
+              action={`/${locale}/ai-insight`}
+              method="get"
+              className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-800 bg-black/25 px-2 py-2"
+            >
+              <label className="flex min-w-0 flex-1 items-center gap-2 rounded-md border border-gray-800 bg-[#10121a] px-2 py-1.5 text-sm text-slate-300 sm:flex-none">
+                <Calendar size={16} className="shrink-0 text-cyan-300" aria-hidden="true" />
+                <span className="sr-only">{copy.labels.date}</span>
+                <input
+                  type="date"
+                  name="date"
+                  defaultValue={query.date ?? ""}
+                  max={getBangkokTodayDate()}
+                  className="min-w-[9.25rem] bg-transparent font-mono text-sm font-bold text-slate-100 outline-none [color-scheme:dark]"
+                />
+              </label>
+              {query.league ? <input type="hidden" name="league" value={query.league} /> : null}
+              {query.limit !== 20 ? <input type="hidden" name="limit" value={query.limit} /> : null}
+              <button
+                type="submit"
+                className="rounded-md border border-cyan-400/25 bg-cyan-500/15 px-3 py-2 text-sm font-black text-cyan-100 transition-colors hover:bg-cyan-500/25"
+              >
+                {copy.labels.chooseDate}
+              </button>
+              <Link
+                href={todayHref}
+                className="rounded-md border border-gray-700 px-3 py-2 text-sm font-black text-slate-300 transition-colors hover:border-cyan-400/35 hover:text-cyan-100"
+              >
+                {copy.labels.today}
+              </Link>
+            </form>
+          </div>
+
           <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
             {tabs.map((tab) => (
               <button
@@ -362,6 +450,79 @@ export function AIInsightListClient({
           ))
         )}
       </div>
+
+      {pagination ? (
+        <PaginationControls
+          pagination={pagination}
+          locale={locale}
+          prevHref={pageHref(Math.max(pagination.page - 1, 1))}
+          nextHref={pageHref(Math.min(pagination.page + 1, pagination.totalPages))}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function PaginationControls({
+  pagination,
+  locale,
+  prevHref,
+  nextHref,
+}: {
+  pagination: AIInsightPagination;
+  locale: string;
+  prevHref: string;
+  nextHref: string;
+}) {
+  const localeCode = localeMap[locale] ?? "th-TH";
+  const totalPages = Math.max(pagination.totalPages, 1);
+  const currentPage = Math.min(Math.max(pagination.page, 1), totalPages);
+  const start = pagination.total > 0 ? (currentPage - 1) * pagination.limit + 1 : 0;
+  const end = Math.min(currentPage * pagination.limit, pagination.total);
+  const canPrev = currentPage > 1;
+  const canNext = currentPage < totalPages;
+
+  return (
+    <div className="mx-3 flex flex-col gap-3 rounded-2xl border border-gray-800 bg-[#10121a] p-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="font-mono text-sm font-bold text-slate-400">
+        <span className="text-cyan-200">
+          {start.toLocaleString(localeCode)}-{end.toLocaleString(localeCode)}
+        </span>
+        <span className="mx-2 text-slate-600">/</span>
+        <span>{pagination.total.toLocaleString(localeCode)}</span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {canPrev ? (
+          <Link
+            href={prevHref}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-black/25 text-slate-200 transition-colors hover:border-cyan-400/45 hover:text-cyan-200"
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={18} />
+          </Link>
+        ) : (
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-800 bg-black/15 text-slate-700">
+            <ChevronLeft size={18} />
+          </span>
+        )}
+        <span className="min-w-20 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-2 text-center font-mono text-sm font-black text-cyan-100">
+          {currentPage.toLocaleString(localeCode)} / {totalPages.toLocaleString(localeCode)}
+        </span>
+        {canNext ? (
+          <Link
+            href={nextHref}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-700 bg-black/25 text-slate-200 transition-colors hover:border-cyan-400/45 hover:text-cyan-200"
+            aria-label="Next page"
+          >
+            <ChevronRight size={18} />
+          </Link>
+        ) : (
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-800 bg-black/15 text-slate-700">
+            <ChevronRight size={18} />
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -401,6 +562,7 @@ function InsightCard({
             />
             <span className="min-w-0 flex-1 truncate font-semibold">{insight.league.name}</span>
             <StatusBadge insight={insight} copy={copy} />
+            <ViewCountBadge viewCount={insight.viewCount} locale={locale} copy={copy} />
             <span className="rounded-full border border-gray-800 bg-[#10121a] px-2.5 py-1 font-mono text-xs font-bold text-slate-500">
               {formatMatchMoment(insight, locale)}
             </span>
@@ -500,6 +662,81 @@ function InsightCard({
       </Link>
     </Card>
   );
+}
+
+function ViewCountBadge({
+  viewCount,
+  locale,
+  copy,
+}: {
+  viewCount: number;
+  locale: string;
+  copy: ReturnType<typeof getAIInsightPageCopy>;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-2.5 py-1 font-mono text-xs font-bold text-cyan-200">
+      <Eye size={13} />
+      {viewCount.toLocaleString(localeMap[locale] ?? "th-TH")} {copy.labels.views}
+    </span>
+  );
+}
+
+function doesInsightMatchSearch(
+  insight: AIInsightListItem,
+  normalizedSearch: string,
+  locale: string
+) {
+  const haystack = [
+    insight.homeTeam.name,
+    insight.homeTeam.shortName,
+    insight.awayTeam.name,
+    insight.awayTeam.shortName,
+    insight.league.name,
+    insight.statusText,
+    insight.apiAdvice,
+    insight.apiWinner,
+    ...insight.keyFactors,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLocaleLowerCase(localeMap[locale] ?? "th-TH");
+
+  return haystack.includes(normalizedSearch);
+}
+
+function buildAIInsightPageHref(
+  locale: string,
+  query: AIInsightQuery,
+  page: number
+) {
+  const params = new URLSearchParams();
+  if (query.date) params.set("date", query.date);
+  if (query.league) params.set("league", query.league);
+  if (query.limit !== 20) params.set("limit", String(query.limit));
+  if (page > 1) params.set("page", String(page));
+
+  const queryString = params.toString();
+  return `/${locale}/ai-insight${queryString ? `?${queryString}` : ""}`;
+}
+
+function buildAIInsightTodayHref(locale: string, query: AIInsightQuery) {
+  const params = new URLSearchParams();
+  if (query.league) params.set("league", query.league);
+  if (query.limit !== 20) params.set("limit", String(query.limit));
+
+  const queryString = params.toString();
+  return `/${locale}/ai-insight${queryString ? `?${queryString}` : ""}`;
+}
+
+function getBangkokTodayDate() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Bangkok",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 function HeroSignalTile({

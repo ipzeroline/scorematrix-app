@@ -13,6 +13,7 @@ export type AIInsightPageCopy = {
     averageConfidence: string;
     upsetAlerts: string;
     communityVotes: string;
+    views: string;
   };
   filters: {
     all: string;
@@ -44,6 +45,12 @@ export type AIInsightPageCopy = {
     h2h: string;
     community: string;
     votes: string;
+    views: string;
+    search: string;
+    searchPlaceholder: string;
+    date: string;
+    chooseDate: string;
+    today: string;
     keyFactors: string;
     generated: string;
     kickoff: string;
@@ -89,6 +96,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       averageConfidence: "ความมั่นใจเฉลี่ย",
       upsetAlerts: "แจ้งเตือนพลิกล็อก",
       communityVotes: "โหวตชุมชน",
+      views: "คนเข้าดู",
     },
     filters: {
       all: "ทั้งหมด",
@@ -120,6 +128,12 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       h2h: "สถิติเจอกัน",
       community: "เสียงชุมชน",
       votes: "โหวต",
+      views: "เข้าดู",
+      search: "ค้นหาอินไซต์",
+      searchPlaceholder: "ค้นหาทีม ลีก หรือปัจจัยสำคัญ",
+      date: "เลือกวันที่",
+      chooseDate: "ดูวันที่",
+      today: "วันนี้",
       keyFactors: "ปัจจัยสำคัญ",
       generated: "อัปเดต",
       kickoff: "เวลาแข่ง",
@@ -170,6 +184,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       averageConfidence: "Average confidence",
       upsetAlerts: "Upset alerts",
       communityVotes: "Community votes",
+      views: "Views",
     },
     filters: {
       all: "All",
@@ -201,6 +216,12 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       h2h: "Head-to-head",
       community: "Community",
       votes: "votes",
+      views: "views",
+      search: "Search insights",
+      searchPlaceholder: "Search team, league, or key factor",
+      date: "Select date",
+      chooseDate: "View date",
+      today: "Today",
       keyFactors: "Key factors",
       generated: "Updated",
       kickoff: "Kickoff",
@@ -250,6 +271,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       averageConfidence: "ຄວາມໝັ້ນໃຈສະເລ່ຍ",
       upsetAlerts: "ເຕືອນພິກລັອກ",
       communityVotes: "ໂຫວດຊຸມຊົນ",
+      views: "ຄົນເຂົ້າເບິ່ງ",
     },
     filters: { all: "ທັງໝົດ", live: "ກໍາລັງແຂ່ງ", upcoming: "ຈະມາເຖິງ", highConfidence: "ໝັ້ນໃຈສູງ", upset: "ສ່ຽງພິກລັອກ" },
     labels: {
@@ -275,6 +297,12 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       h2h: "ສະຖິຕິພົບກັນ",
       community: "ຊຸມຊົນ",
       votes: "ໂຫວດ",
+      views: "ເຂົ້າເບິ່ງ",
+      search: "ຄົ້ນຫາອິນໄຊຕ໌",
+      searchPlaceholder: "ຄົ້ນຫາທີມ ລີກ ຫຼືປັດໃຈສໍາຄັນ",
+      date: "ເລືອກວັນທີ",
+      chooseDate: "ເບິ່ງວັນທີ",
+      today: "ມື້ນີ້",
       keyFactors: "ປັດໃຈສໍາຄັນ",
       generated: "ອັບເດດ",
       kickoff: "ເວລາແຂ່ງ",
@@ -308,6 +336,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       averageConfidence: "ပျမ်းမျှယုံကြည်မှု",
       upsetAlerts: "Upset သတိပေးချက်",
       communityVotes: "ကွန်မြူနิตี้မဲ",
+      views: "ကြည့်ရှုမှု",
     },
     filters: { all: "အားလုံး", live: "တိုက်ရိုက်", upcoming: "လာမည့်ပွဲ", highConfidence: "ယုံကြည်မှုမြင့်", upset: "Upset အန္တရာယ်" },
     labels: {
@@ -333,6 +362,12 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       h2h: "ထိပ်တိုက်တွေ့ဆုံ",
       community: "ကွန်မြူနิตี้",
       votes: "မဲ",
+      views: "ကြည့်ရှုမှု",
+      search: "အင်ဆိုက်ရှာရန်",
+      searchPlaceholder: "အသင်း၊ လိဂ် သို့မဟုတ် အရေးကြီးအချက်ကို ရှာပါ",
+      date: "ရက်စွဲရွေးရန်",
+      chooseDate: "ရက်စွဲကြည့်ရန်",
+      today: "ယနေ့",
       keyFactors: "အရေးကြီးအချက်များ",
       generated: "အပ်ဒိတ်",
       kickoff: "ပွဲစချိန်",
@@ -366,6 +401,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       averageConfidence: "ទំនុកចិត្តមធ្យម",
       upsetAlerts: "ការព្រមានพลิกលទ្ធផល",
       communityVotes: "សម្លេងសហគមន៍",
+      views: "ចំនួនមើល",
     },
     filters: { all: "ទាំងអស់", live: "កំពុងប្រកួត", upcoming: "ជិតមកដល់", highConfidence: "ទំនុកចិត្តខ្ពស់", upset: "ហានិភ័យพลិកលទ្ធផល" },
     labels: {
@@ -391,6 +427,12 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       h2h: "ប្រវត្តិជួបគ្នា",
       community: "សហគមន៍",
       votes: "សម្លេង",
+      views: "មើល",
+      search: "ស្វែងរកអ៊ីនសាយ",
+      searchPlaceholder: "ស្វែងរកក្រុម លីគ ឬកត្តាសំខាន់",
+      date: "ជ្រើសកាលបរិច្ឆេទ",
+      chooseDate: "មើលកាលបរិច្ឆេទ",
+      today: "ថ្ងៃនេះ",
       keyFactors: "កត្តាសំខាន់",
       generated: "បានអាប់ដេត",
       kickoff: "ម៉ោងប្រកួត",
@@ -424,6 +466,7 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       averageConfidence: "平均信心",
       upsetAlerts: "爆冷提醒",
       communityVotes: "社区投票",
+      views: "浏览量",
     },
     filters: { all: "全部", live: "进行中", upcoming: "未开始", highConfidence: "高信心", upset: "爆冷风险" },
     labels: {
@@ -449,6 +492,12 @@ const aiInsightCopy: Record<LocaleCode, AIInsightPageCopy> = {
       h2h: "交锋",
       community: "社区",
       votes: "票",
+      views: "浏览",
+      search: "搜索分析",
+      searchPlaceholder: "搜索球队、联赛或关键因素",
+      date: "选择日期",
+      chooseDate: "查看日期",
+      today: "今天",
       keyFactors: "关键因素",
       generated: "更新",
       kickoff: "开赛时间",

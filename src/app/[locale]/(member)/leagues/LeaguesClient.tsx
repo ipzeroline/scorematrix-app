@@ -7,6 +7,8 @@ import { useParams } from "next/navigation";
 import {
   Activity,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   LockKeyhole,
   Plus,
@@ -44,6 +46,8 @@ const DEFAULT_CREATE_FORM = {
   entryFeeCredits: "0",
   isPrivate: false,
 };
+
+const AVAILABLE_LEAGUES_PAGE_SIZE = 20;
 
 type CreateFormErrors = Partial<
   Record<keyof typeof DEFAULT_CREATE_FORM | "submit", string>
@@ -155,6 +159,7 @@ export default function LeaguesPage() {
   const [joinedLeagues, setJoinedLeagues] = useState<JoinedLeague[]>([]);
   const [availableLeagues, setAvailableLeagues] = useState<AvailableLeague[]>([]);
   const [availableSearch, setAvailableSearch] = useState("");
+  const [availablePage, setAvailablePage] = useState(1);
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -169,6 +174,7 @@ export default function LeaguesPage() {
         if (!active) return;
         setJoinedLeagues(response.joined ?? []);
         setAvailableLeagues(response.available ?? []);
+        setAvailablePage(1);
         setLoadFailed(false);
       })
       .catch((error) => {
@@ -214,6 +220,23 @@ export default function LeaguesPage() {
             .toLowerCase()
             .includes(normalizedAvailableSearch);
         });
+  const availableTotalPages = Math.max(
+    Math.ceil(filteredAvailableLeagues.length / AVAILABLE_LEAGUES_PAGE_SIZE),
+    1
+  );
+  const safeAvailablePage = Math.min(availablePage, availableTotalPages);
+  const availablePageStart =
+    filteredAvailableLeagues.length === 0
+      ? 0
+      : (safeAvailablePage - 1) * AVAILABLE_LEAGUES_PAGE_SIZE + 1;
+  const availablePageEnd = Math.min(
+    safeAvailablePage * AVAILABLE_LEAGUES_PAGE_SIZE,
+    filteredAvailableLeagues.length
+  );
+  const paginatedAvailableLeagues = filteredAvailableLeagues.slice(
+    (safeAvailablePage - 1) * AVAILABLE_LEAGUES_PAGE_SIZE,
+    safeAvailablePage * AVAILABLE_LEAGUES_PAGE_SIZE
+  );
 
   const closeCreateModal = () => {
     if (isCreating) return;
@@ -392,65 +415,90 @@ export default function LeaguesPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
-      <section className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)] sm:p-6 lg:p-7">
-        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(34,211,238,0.13),transparent_34%),linear-gradient(315deg,rgba(168,85,247,0.13),transparent_30%),linear-gradient(rgba(148,163,184,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.045)_1px,transparent_1px)] bg-[auto,auto,34px_34px,34px_34px]" />
-        <div className="relative grid gap-5 xl:grid-cols-[1.08fr_0.92fr] xl:items-stretch">
-          <div className="flex min-h-[300px] flex-col justify-between rounded-2xl border border-white/10 bg-black/24 p-4 sm:p-5">
-            <div>
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                <Badge variant="cyan" size="md" className="uppercase tracking-wider">
-                  {copy.commandCenter}
-                </Badge>
-                <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
-                  <ShieldCheck size={14} />
-                  {copy.skillNotice}
-                </span>
+    <div className="mx-auto max-w-6xl space-y-4 pb-8 sm:space-y-5">
+      <section className="rounded-xl border border-cyan-400/20 bg-[#070b13] p-4 shadow-[0_18px_56px_rgba(0,0,0,0.28)]">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <Badge variant="cyan" size="sm" className="uppercase tracking-wider">
+                {copy.commandCenter}
+              </Badge>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-emerald-200">
+                <ShieldCheck size={13} />
+                {copy.skillNotice}
+              </span>
+            </div>
+            <h1 className="font-display text-3xl font-black leading-tight text-white sm:text-4xl">
+              {copy.title}
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-gray-300">
+              {copy.subtitle}
+            </p>
+          </div>
+
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row xl:pt-7">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={availableLeagues.length === 0}
+              onClick={scrollToAvailableLeagues}
+              className="min-h-10 text-sm font-black"
+            >
+              <UserPlus size={16} />
+              {copy.joinLeague}
+            </Button>
+            <Button
+              size="sm"
+              neon
+              onClick={() => setShowCreate(true)}
+              className="min-h-10 text-sm font-black"
+            >
+              <Plus size={16} />
+              {copy.createLeague}
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {stats.map((stat) => (
+            <HeroMetric
+              key={stat.label}
+              icon={stat.icon}
+              label={stat.label}
+              value={stat.value}
+              helper={copy.title}
+              tone={stat.tone}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-white/10 bg-[#0a101a] p-3">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10 text-cyan-200">
+            <Activity size={14} />
+          </span>
+          <h2 className="text-sm font-black uppercase tracking-wide text-white">
+            {copy.sections.howItWorks}
+          </h2>
+        </div>
+        <div className="grid gap-2 md:grid-cols-3">
+          {copy.how.map((item, index) => (
+            <div
+              key={item.title}
+              className="flex gap-2.5 rounded-lg border border-gray-800 bg-[#0b111d] p-2.5"
+            >
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-cyan-400/20 bg-cyan-500/10 text-xs font-black text-cyan-300">
+                {index + 1}
               </div>
-              <h1 className="font-display text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl">
-                {copy.title}
-              </h1>
-              <p className="mt-3 max-w-2xl text-base leading-7 text-gray-300 sm:text-lg">
-                {copy.subtitle}
-              </p>
+              <div>
+                <h3 className="text-sm font-black text-white">{item.title}</h3>
+                <p className="mt-0.5 text-xs leading-5 text-gray-400">
+                  {item.description}
+                </p>
+              </div>
             </div>
-
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Button
-                size="md"
-                variant="outline"
-                disabled={availableLeagues.length === 0}
-                onClick={scrollToAvailableLeagues}
-                className="min-h-12 text-base font-black"
-              >
-                <UserPlus size={18} />
-                {copy.joinLeague}
-              </Button>
-              <Button
-                size="md"
-                neon
-                onClick={() => setShowCreate(true)}
-                className="min-h-12 text-base font-black"
-              >
-                <Plus size={18} />
-                {copy.createLeague}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            {stats.map((stat, index) => (
-              <HeroMetric
-                key={stat.label}
-                icon={stat.icon}
-                label={stat.label}
-                value={stat.value}
-                helper={index === 0 ? copy.hubHint : copy.title}
-                tone={stat.tone}
-                className={index === 0 ? "sm:col-span-2" : undefined}
-              />
-            ))}
-          </div>
+          ))}
         </div>
       </section>
 
@@ -459,12 +507,12 @@ export default function LeaguesPage() {
           icon={Radio}
           eyebrow={`${joinedLeagues.length} ${copy.stats.activeLeagues}`}
           title={copy.sections.myLeagues}
-          description={copy.hubHint}
+          description=""
           action={<Badge variant="cyan" size="md">{joinedLeagues.length} {copy.stats.activeLeagues}</Badge>}
         />
 
         {isLoadingLeagues ? (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <Skeleton className="h-64" />
             <Skeleton className="h-64" />
           </div>
@@ -511,13 +559,13 @@ export default function LeaguesPage() {
                   key={league.id}
                   hover
                   neon="cyan"
-                  className="relative space-y-5 overflow-hidden border-cyan-400/15 bg-[#0b111d] p-4 sm:p-5"
+                  className="relative space-y-3 overflow-hidden border-cyan-400/15 bg-[#0b111d] p-3.5"
                 >
                   <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-400/70 via-purple-400/60 to-amber-300/50" />
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="truncate text-xl font-black leading-tight text-white">
+                        <h3 className="truncate text-base font-black leading-tight text-white">
                           {league.name}
                         </h3>
                         <Badge variant={league.isOwner ? "gold" : "default"}>
@@ -526,7 +574,7 @@ export default function LeaguesPage() {
                             : copy.labels.member}
                         </Badge>
                       </div>
-                      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-gray-400">
                         <span className="inline-flex items-center gap-1.5">
                           <Users size={13} />
                           {league.memberCount}/{league.maxMembers}{" "}
@@ -538,17 +586,17 @@ export default function LeaguesPage() {
                         </span>
                       </div>
                     </div>
-                    <Badge variant="green" size="md" className="shrink-0">
+                    <Badge variant="green" size="sm" className="shrink-0">
                       {league.myPoints.toLocaleString()} {copy.labels.points}
                     </Badge>
                   </div>
 
                   <div>
-                    <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
+                    <div className="mb-1.5 flex items-center justify-between text-xs text-gray-500">
                       <span>{copy.labels.capacity}</span>
                       <span>{fillPercent}%</span>
                     </div>
-                    <div className="h-3 overflow-hidden rounded-full border border-gray-800 bg-black/40 p-0.5">
+                    <div className="h-2.5 overflow-hidden rounded-full border border-gray-800 bg-black/40 p-0.5">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-purple-400"
                         style={{ width: `${fillPercent}%` }}
@@ -556,40 +604,31 @@ export default function LeaguesPage() {
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-gray-800 bg-black/24 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                  <div className="grid gap-2 rounded-xl border border-gray-800 bg-black/20 p-3 sm:grid-cols-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-gray-500">
                         {copy.labels.weeklyLeader}
                       </p>
-                      <div className="mt-2 flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-medium text-white">
-                          {leader ? listCopy.topPlayer : "-"}
-                        </span>
+                      <p className="mt-1 truncate text-sm font-bold text-white">
+                        {leader ? listCopy.topPlayer : "-"}{" "}
                         <span className="text-xs text-amber-300">
-                          {(leader?.points ?? 0).toLocaleString()}{" "}
-                          {copy.labels.points}
+                          {(leader?.points ?? 0).toLocaleString()}
                         </span>
-                      </div>
+                      </p>
                     </div>
-                    <div className="rounded-2xl border border-gray-800 bg-black/24 p-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    <div className="min-w-0 sm:text-right">
+                      <p className="text-xs font-bold text-gray-500">
                         {copy.labels.yourRank}
                       </p>
-                      <div className="mt-2 flex items-center justify-between gap-3">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-white">
-                          <Crown size={14} className="text-amber-300" />
-                          {league.myRank > 0 ? `#${league.myRank}` : "-"}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {league.myPoints.toLocaleString()}{" "}
-                          {copy.labels.points}
-                        </span>
-                      </div>
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-bold text-white sm:justify-end">
+                        <Crown size={13} className="text-amber-300" />
+                        {league.myRank > 0 ? `#${league.myRank}` : "-"}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col gap-2 border-t border-gray-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 text-xs text-gray-500">
+                  <div className="flex flex-col gap-2 border-t border-gray-800 pt-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0 truncate text-xs text-gray-500">
                       {league.description || listCopy.prizePool}{" "}
                       <span className="font-medium text-amber-300">
                         {league.description
@@ -600,7 +639,7 @@ export default function LeaguesPage() {
                     <div className="flex items-center gap-3">
                       <Link
                         href={`/${locale}/leagues/${league.id}`}
-                        className="inline-flex min-h-10 items-center justify-center rounded-xl bg-cyan-500 px-4 text-sm font-black text-black transition-colors hover:bg-cyan-400"
+                        className="inline-flex min-h-9 items-center justify-center rounded-lg bg-cyan-500 px-3 text-sm font-black text-black transition-colors hover:bg-cyan-400"
                       >
                         {copy.labels.viewBoard}
                       </Link>
@@ -613,51 +652,95 @@ export default function LeaguesPage() {
         )}
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-        <div ref={availableSectionRef} className="scroll-mt-24 space-y-3">
+      <section ref={availableSectionRef} className="scroll-mt-24 space-y-3">
           <SectionHeader
             icon={Swords}
             eyebrow={listCopy.available}
             title={listCopy.available}
-            description={copy.availableHint}
+            description=""
             action={
               !isLoadingLeagues && availableLeagues.length > 0 ? (
-                <Badge variant="cyan" size="md">
-                  {filteredAvailableLeagues.length}/{availableLeagues.length}
+                <Badge variant="cyan" size="sm">
+                  {availablePageStart}-{availablePageEnd}/{filteredAvailableLeagues.length}
                 </Badge>
               ) : undefined
             }
           />
           {!isLoadingLeagues && availableLeagues.length > 0 && (
-            <Card className="border-cyan-400/15 bg-[#080d17] p-3 sm:p-4">
-              <label
-                htmlFor="available-league-search"
-                className="mb-2 flex items-center gap-2 text-sm font-black text-white"
-              >
-                <Search size={16} className="text-cyan-300" />
-                {copy.searchLabel}
-              </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Input
-                  id="available-league-search"
-                  type="search"
-                  value={availableSearch}
-                  onChange={(event) => setAvailableSearch(event.target.value)}
-                  placeholder={copy.searchPlaceholder}
-                  className="min-h-12 rounded-xl border-cyan-400/20 bg-black/30 pl-4 text-base font-semibold"
-                />
-                {availableSearch && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setAvailableSearch("")}
-                    className="min-h-12 shrink-0 text-sm font-black"
+            <Card className="border-cyan-400/15 bg-[#080d17] p-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div className="min-w-0 flex-1">
+                  <label
+                    htmlFor="available-league-search"
+                    className="mb-2 flex items-center gap-2 text-xs font-black uppercase tracking-wide text-white"
                   >
-                    <X size={16} />
-                    {copy.clearSearch}
-                  </Button>
-                )}
+                    <Search size={14} className="text-cyan-300" />
+                    {copy.searchLabel}
+                  </label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="available-league-search"
+                      type="search"
+                      value={availableSearch}
+                      onChange={(event) => {
+                        setAvailableSearch(event.target.value);
+                        setAvailablePage(1);
+                      }}
+                      placeholder={copy.searchPlaceholder}
+                      className="min-h-10 rounded-lg border-cyan-400/20 bg-black/30 pl-3 text-sm font-semibold"
+                    />
+                    {availableSearch && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setAvailableSearch("");
+                          setAvailablePage(1);
+                        }}
+                        className="min-h-10 shrink-0 px-3 text-sm font-black"
+                      >
+                        <X size={16} />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-3 lg:justify-end">
+                  <span className="font-mono text-xs font-bold text-gray-500">
+                    {availablePageStart}-{availablePageEnd} / {filteredAvailableLeagues.length}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={safeAvailablePage <= 1}
+                      onClick={() => setAvailablePage((page) => Math.max(page - 1, 1))}
+                      className="min-h-9 px-2"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft size={16} />
+                    </Button>
+                    <span className="min-w-14 text-center font-mono text-xs font-black text-cyan-200">
+                      {safeAvailablePage}/{availableTotalPages}
+                    </span>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={safeAvailablePage >= availableTotalPages}
+                      onClick={() =>
+                        setAvailablePage((page) =>
+                          Math.min(page + 1, availableTotalPages)
+                        )
+                      }
+                      className="min-h-9 px-2"
+                      aria-label="Next page"
+                    >
+                      <ChevronRight size={16} />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </Card>
           )}
@@ -693,84 +776,91 @@ export default function LeaguesPage() {
               </Button>
             </Card>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              {filteredAvailableLeagues.map((league) => {
-                const isFull = league.memberCount >= league.maxMembers;
+            <Card className="overflow-hidden border-white/10 bg-[#0b111d] p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px]">
+                  <thead>
+                    <tr className="border-b border-gray-800 bg-black/25">
+                      <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-gray-500">
+                        {copy.labels.leagueName}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-black uppercase tracking-wide text-gray-500">
+                        {listCopy.public}
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-black uppercase tracking-wide text-gray-500">
+                        {copy.labels.members}
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-black uppercase tracking-wide text-gray-500">
+                        {listCopy.entryFee}
+                      </th>
+                      <th className="px-4 py-3 text-right text-xs font-black uppercase tracking-wide text-gray-500">
+                        {copy.labels.join}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedAvailableLeagues.map((league) => {
+                      const isFull = league.memberCount >= league.maxMembers;
 
-                return (
-                <Card key={league.id} className="border-white/10 bg-[#0b111d] p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-black text-white">
-                        {league.name}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-gray-400">
-                        {league.description}
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        isFull ? "default" : league.isLocked ? "purple" : "green"
-                      }
-                      className="shrink-0"
-                    >
-                      {isFull
-                        ? listCopy.full
-                        : league.isLocked
-                          ? listCopy.locked
-                          : listCopy.public}
-                    </Badge>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-800 pt-4">
-                    <span className="text-sm font-bold text-gray-400">
-                      {league.memberCount}/{league.maxMembers}{" "}
-                      {copy.labels.members}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={isFull}
-                      onClick={() => openJoinModal(league)}
-                    >
-                      <UserPlus size={14} />
-                      {isFull ? listCopy.full : copy.joinLeague}
-                    </Button>
-                  </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <SectionHeader
-            icon={Activity}
-            eyebrow={copy.sections.howItWorks}
-            title={copy.sections.howItWorks}
-            description={copy.hubHint}
-          />
-          <div className="space-y-3">
-            {copy.how.map((item, index) => (
-              <div
-                key={item.title}
-                className="flex gap-3 rounded-2xl border border-gray-800 bg-[#0b111d] p-4"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10 text-sm font-black text-cyan-300">
-                  {index + 1}
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-white">
-                    {item.title}
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-gray-400">
-                    {item.description}
-                  </p>
-                </div>
+                      return (
+                        <tr
+                          key={league.id}
+                          className="border-b border-gray-800/60 last:border-0 hover:bg-white/[0.03]"
+                        >
+                          <td className="max-w-[360px] px-4 py-3">
+                            <p className="truncate text-sm font-black text-white">
+                              {league.name}
+                            </p>
+                            <p className="mt-1 truncate text-xs text-gray-500">
+                              {league.description}
+                            </p>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              variant={
+                                isFull
+                                  ? "default"
+                                  : league.isLocked
+                                    ? "purple"
+                                    : "green"
+                              }
+                              className="shrink-0"
+                            >
+                              {isFull
+                                ? listCopy.full
+                                : league.isLocked
+                                  ? listCopy.locked
+                                  : listCopy.public}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-300">
+                            {league.memberCount}/{league.maxMembers}
+                          </td>
+                          <td className="px-4 py-3 text-right font-mono text-sm font-bold text-gray-300">
+                            {league.entryFeeCredits === 0
+                              ? listCopy.free
+                              : league.entryFeeCredits.toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isFull}
+                              onClick={() => openJoinModal(league)}
+                              className="min-h-9 px-3"
+                            >
+                              <UserPlus size={14} />
+                              {isFull ? listCopy.full : copy.joinLeague}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
-            ))}
-          </div>
-        </div>
+            </Card>
+          )}
       </section>
 
       <Modal
@@ -968,23 +1058,23 @@ function HeroMetric({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-white/10 bg-black/28 p-4",
+        "relative overflow-hidden rounded-xl border border-white/10 bg-black/28 p-3.5",
         className
       )}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-bold text-gray-400">{label}</p>
-          <p className="mt-2 font-mono text-3xl font-black leading-none text-white sm:text-4xl">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-400">{label}</p>
+          <p className="mt-2 font-mono text-2xl font-black leading-none text-white sm:text-3xl">
             {value}
           </p>
-          <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+          <p className="mt-2 text-xs font-bold leading-5 text-gray-500">
             {helper}
           </p>
         </div>
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
-          <Icon size={22} className={tone} />
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/[0.04]">
+          <Icon size={19} className={tone} />
         </span>
       </div>
     </div>
@@ -1005,20 +1095,22 @@ function SectionHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#0a101a] p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+    <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-[#0a101a] p-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
-          <span className="grid h-8 w-8 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10">
-            <Icon size={16} />
+        <div className="mb-1.5 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
+          <span className="grid h-7 w-7 place-items-center rounded-lg border border-cyan-400/20 bg-cyan-400/10">
+            <Icon size={14} />
           </span>
           {eyebrow}
         </div>
-        <h2 className="font-display text-2xl font-black text-white sm:text-3xl">
+        <h2 className="font-display text-lg font-black text-white sm:text-xl">
           {title}
         </h2>
-        <p className="mt-2 max-w-3xl text-base leading-7 text-gray-400">
-          {description}
-        </p>
+        {description && (
+          <p className="mt-1.5 max-w-3xl text-sm leading-6 text-gray-400">
+            {description}
+          </p>
+        )}
       </div>
       {action}
     </div>

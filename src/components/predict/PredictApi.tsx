@@ -2465,215 +2465,248 @@ function ScoringBreakdownSection({
     bonuses.half_time?.actual_away ?? bonuses.half_time?.actual?.away ?? null;
 
   return (
-    <div className="rounded-2xl border border-gray-800/80 bg-black/30 p-4 space-y-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">{copy.title}</p>
-
-      {/* Result Tier — prominent hero row */}
-      {bonuses.result_tier && (
-        <div className={cn(
-          "rounded-xl border px-4 py-3 flex items-center justify-between gap-3",
-          tier.tone === "gold"  && "border-amber-400/30 bg-amber-400/8",
-          tier.tone === "green" && "border-emerald-400/30 bg-emerald-400/8",
-          tier.tone === "cyan"  && "border-cyan-400/30 bg-cyan-400/8",
-          tier.tone === "red"   && "border-gray-700/60 bg-black/20",
-        )}>
-          <div className="flex items-center gap-3 min-w-0">
-            <span className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black",
-              tier.tone === "gold"  && "bg-amber-400 text-black",
-              tier.tone === "green" && "bg-emerald-400 text-black",
-              tier.tone === "cyan"  && "bg-cyan-400 text-black",
-              tier.tone === "red"   && "bg-gray-700 text-gray-400",
-            )}>
-              {tierEarned ? "✓" : "✗"}
-            </span>
-            <div className="min-w-0">
-              <p className={cn(
-                "text-sm font-black",
-                tier.tone === "gold"  && "text-amber-300",
-                tier.tone === "green" && "text-emerald-300",
-                tier.tone === "cyan"  && "text-cyan-300",
-                tier.tone === "red"   && "text-gray-400",
-              )}>
-                {tier.label}
-              </p>
-              <p className="text-[10px] text-gray-500">
-                {tier.sublabel} · {formatPredictionActualDetail(prediction.predicted, prediction.actual, copy)}
-              </p>
-            </div>
-          </div>
-          <div className="text-right shrink-0">
-            <p className={cn(
-              "font-mono text-lg font-black",
-              tier.tone === "gold"  && "text-amber-300",
-              tier.tone === "green" && "text-emerald-300",
-              tier.tone === "cyan"  && "text-cyan-300",
-              tier.tone === "red"   && "text-gray-500",
-            )}>
-              +{bonuses.result_tier.points ?? 0}
-            </p>
-            <p className="text-[9px] text-gray-500">{copy.bonusPoints}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Stake & Base Points */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-amber-400/70">{copy.stake}</p>
-          <p className="font-mono text-xl font-black text-amber-300">{stake}</p>
-          <p className="text-[9px] text-gray-500">{copy.pointsWagered}</p>
-        </div>
-        <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2.5 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-cyan-400/70">{copy.basePoints}</p>
-          <p className="font-mono text-xl font-black text-cyan-300">+{basePoints}</p>
-          <p className="text-[9px] text-gray-500">{copy.resultScore}</p>
-        </div>
-      </div>
-
-      {/* Other Bonuses */}
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">{copy.extraBonuses}</p>
-        <div className="space-y-1.5">
-          {bonuses.first_scorer && (
-            <BonusRow
-              label={copy.firstScorer}
-              earned={bonuses.first_scorer.earned ?? false}
-              detail={formatPredictionActualDetail(firstScorerPredicted, firstScorerActual, copy)}
-              points={bonuses.first_scorer.points ?? 0}
-            />
-          )}
-          {bonuses.total_goals && (
-            <BonusRow
-              label={copy.totalGoals}
-              earned={bonuses.total_goals.earned ?? false}
-              detail={formatPredictionActualDetail(bonuses.total_goals.predicted, bonuses.total_goals.actual, copy)}
-              points={bonuses.total_goals.points ?? 0}
-            />
-          )}
-          {bonuses.half_time && (
-            <BonusRow
-              label={copy.halfTime}
-              earned={bonuses.half_time.earned ?? false}
-              detail={formatPredictionActualDetail(
-                formatScorePair(bonuses.half_time.predicted_home, bonuses.half_time.predicted_away),
-                formatScorePair(halfTimeActualHome, halfTimeActualAway),
-                copy
+    <div className="rounded-2xl border border-gray-800/80 bg-black/30 p-4">
+      <div className="mb-4 flex flex-col gap-3 rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">
+            {copy.title}
+          </p>
+          <h3 className="mt-1 font-mono text-lg font-black text-white">
+            #{prediction.id}
+          </h3>
+          <div className="mt-2 space-y-1 text-xs text-gray-400">
+            <p>
+              {copy.predicted}:{" "}
+              <span className="font-mono font-black text-white">
+                {prediction.predicted}
+              </span>
+              {prediction.halfTimeHome !== null && prediction.halfTimeAway !== null && (
+                <span className="font-mono text-cyan-200">
+                  {" "}
+                  | HT {prediction.halfTimeHome}-{prediction.halfTimeAway}
+                </span>
               )}
-              points={bonuses.half_time.points ?? 0}
-            />
-          )}
+            </p>
+            <p>
+              {copy.actual}:{" "}
+              <span className="font-mono font-black text-cyan-200">
+                {prediction.actual}
+              </span>
+              {bonuses.result_tier && (
+                <span className="text-gray-500">
+                  {" "}
+                  ({tier.label} - {tier.sublabel})
+                </span>
+              )}
+            </p>
+            <p>
+              {copy.confidence}:{" "}
+              <span className="font-black text-emerald-300">
+                {formatConfidenceLevel(confidenceLevel, copy)} (×{confidenceMultiplier.toFixed(1)})
+              </span>
+              {" · "}
+              {copy.stake}:{" "}
+              <span className="font-mono font-black text-amber-300">
+                {stake.toLocaleString()}
+              </span>
+            </p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-right">
+          <p className="text-[10px] font-black uppercase tracking-wider text-emerald-300">
+            {copy.total}
+          </p>
+          <p className="font-mono text-xl font-black text-emerald-300">
+            {total.toLocaleString()}
+          </p>
         </div>
       </div>
 
-      {/* Subtotal */}
-      <div className="flex items-center justify-between rounded-xl border border-gray-700/40 bg-black/25 px-3 py-2">
-        <span className="text-[11px] text-gray-400">{copy.subtotal}</span>
-        <span className="font-mono text-sm font-black text-white">{subtotal} {copy.pointsAbbr}</span>
-      </div>
+      <div className="space-y-1.5">
+        <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em] text-gray-500">
+          {copy.scoreCalculation}
+        </p>
+        <ScoreStepRow
+          earned={basePoints > 0}
+          label={copy.basePoints}
+          detail={copy.resultScore}
+          points={basePoints}
+        />
+        {bonuses.result_tier && (
+          <ScoreStepRow
+            earned={tierEarned}
+            label={tier.label}
+            detail={tier.sublabel}
+            points={bonuses.result_tier.points ?? 0}
+          />
+        )}
+        {bonuses.total_goals && (
+          <ScoreStepRow
+            earned={bonuses.total_goals.earned ?? false}
+            label={copy.totalGoals}
+            detail={formatPredictionActualDetail(
+              bonuses.total_goals.predicted,
+              bonuses.total_goals.actual,
+              copy
+            )}
+            points={bonuses.total_goals.points ?? 0}
+          />
+        )}
+        {bonuses.half_time && (
+          <ScoreStepRow
+            earned={bonuses.half_time.earned ?? false}
+            label={copy.halfTime}
+            detail={formatPredictionActualDetail(
+              formatScorePair(
+                bonuses.half_time.predicted_home,
+                bonuses.half_time.predicted_away
+              ),
+              formatScorePair(halfTimeActualHome, halfTimeActualAway),
+              copy
+            )}
+            points={bonuses.half_time.points ?? 0}
+          />
+        )}
+        {bonuses.first_scorer && (
+          <ScoreStepRow
+            earned={bonuses.first_scorer.earned ?? false}
+            label={copy.firstScorer}
+            detail={formatPredictionActualDetail(
+              firstScorerPredicted,
+              firstScorerActual,
+              copy
+            )}
+            points={bonuses.first_scorer.points ?? 0}
+          />
+        )}
 
-      {/* Multipliers */}
-      <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">{copy.multipliers}</p>
-        <div className="space-y-1.5">
-          <MultiplierRow
-            label={`${copy.confidence}: ${formatConfidenceLevel(confidenceLevel, copy)}`}
-            value={`×${confidenceMultiplier.toFixed(1)}`}
-            tone="text-violet-300"
-          />
-          <MultiplierRow
-            label={`${copy.boost}: ${boostUsed ? copy.on : copy.off}`}
-            value={`×${boostMultiplier.toFixed(1)}`}
-            tone={boostUsed ? "text-fuchsia-300" : "text-gray-400"}
-          />
-          <MultiplierRow
-            label={`${copy.streak} #${streakNumber} (×${streakBonusPerLevel}/${copy.level})`}
-            value={`+${streakTotal}`}
-            tone="text-emerald-300"
-          />
-        </div>
-      </div>
+        <ScoreDivider />
+        <ScoreTotalRow label={copy.subtotal} value={subtotal} />
+        <ScoreFormulaRow
+          label={`${copy.confidence}: ${formatConfidenceLevel(confidenceLevel, copy)}`}
+          value={`×${confidenceMultiplier.toFixed(1)}`}
+        />
+        <ScoreFormulaRow
+          label={`${copy.boost}: ${boostUsed ? copy.on : copy.off}`}
+          value={`×${boostMultiplier.toFixed(1)}`}
+        />
+        <ScoreFormulaRow
+          label={`${copy.streak} #${streakNumber} (×${streakBonusPerLevel}/${copy.level})`}
+          value={`+${streakTotal}`}
+        />
 
-      {/* Totals */}
-      <div className="space-y-1.5 border-t border-gray-800/60 pt-3">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-gray-500">{copy.rankingPoints}</span>
-          <span className="font-mono font-bold text-white">{rankingPoints}</span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-gray-500">{copy.profit}</span>
-          <span className={cn("font-mono font-bold", profit >= 0 ? "text-emerald-300" : "text-rose-300")}>
-            {profit >= 0 ? "+" : ""}{profit}
-          </span>
-        </div>
-        <div className="flex items-center justify-between rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5 mt-1">
-          <span className="text-xs font-black uppercase tracking-wider text-emerald-300">{copy.total}</span>
-          <span className="font-mono text-xl font-black text-emerald-300">{total} {copy.pointsAbbr.toUpperCase()}</span>
-        </div>
+        <ScoreDivider />
+        <ScoreTotalRow label={copy.rankingPoints} value={rankingPoints} highlight />
+        <ScoreTotalRow label={copy.refund} value={stake} tone="text-amber-300" prefix="+" />
+        <ScoreDivider />
+        <ScoreTotalRow label={copy.received} value={total} highlight size="lg" />
+        <ScoreTotalRow
+          label={copy.profit}
+          value={profit}
+          tone={profit >= 0 ? "text-emerald-300" : "text-rose-300"}
+          prefix={profit >= 0 ? "+" : ""}
+        />
       </div>
     </div>
   );
 }
 
-function BonusRow({
-  label,
+function ScoreStepRow({
   earned,
+  label,
   detail,
   points,
 }: {
-  label: string;
   earned: boolean;
-  detail: React.ReactNode;
+  label: string;
+  detail?: React.ReactNode;
   points: number;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between gap-3 rounded-lg border px-3 py-2",
-        earned ? "border-emerald-500/25 bg-emerald-500/4" : "border-gray-800/60 bg-black/20"
-      )}
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        <span
-          className={cn(
-            "flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-black",
-            earned ? "bg-emerald-500 text-black" : "bg-gray-700 text-gray-400"
-          )}
-        >
-          {earned ? "✓" : "✗"}
-        </span>
-        <div className="min-w-0">
-          <p className={cn("text-[11px] font-bold", earned ? "text-white" : "text-gray-400")}>
-            {label}
-          </p>
-          <p className="text-[10px] text-gray-500 truncate">{detail}</p>
-        </div>
+    <div className="grid grid-cols-[auto_1fr_auto] items-start gap-3 rounded-lg border border-gray-800/60 bg-black/20 px-3 py-2">
+      <span className={cn("pt-0.5 text-sm", earned ? "text-emerald-300" : "text-gray-600")}>
+        {earned ? "✓" : "✗"}
+      </span>
+      <div className="min-w-0">
+        <p className={cn("text-sm font-bold", earned ? "text-white" : "text-gray-400")}>
+          {label}
+        </p>
+        {detail && (
+          <p className="mt-0.5 truncate text-xs text-gray-500">{detail}</p>
+        )}
       </div>
       <span
         className={cn(
-          "font-mono text-sm font-black shrink-0",
+          "font-mono text-sm font-black",
           earned ? "text-emerald-300" : "text-gray-500"
         )}
       >
-        +{points}
+        {points > 0 ? `+${points}` : "0"}
       </span>
     </div>
   );
 }
 
-function MultiplierRow({
+function ScoreDivider() {
+  return <div className="my-2 border-t border-dashed border-gray-800" />;
+}
+
+function ScoreFormulaRow({
   label,
   value,
-  tone,
 }: {
   label: string;
   value: string;
-  tone?: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-800/60 bg-black/20 px-3 py-2">
-      <span className="text-[11px] text-gray-400">{label}</span>
-      <span className={cn("font-mono text-sm font-black text-white", tone)}>{value}</span>
+    <div className="flex items-center justify-between gap-3 px-3 py-1.5 text-xs">
+      <span className="text-gray-500">{label}</span>
+      <span className="font-mono font-black text-violet-300">{value}</span>
+    </div>
+  );
+}
+
+function ScoreTotalRow({
+  label,
+  value,
+  highlight,
+  tone,
+  prefix = "",
+  size = "md",
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+  tone?: string;
+  prefix?: string;
+  size?: "md" | "lg";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center justify-between gap-3 rounded-lg px-3 py-2",
+        highlight ? "border border-emerald-500/25 bg-emerald-500/5" : "bg-transparent"
+      )}
+    >
+      <span
+        className={cn(
+          "font-bold",
+          highlight ? "text-emerald-300" : "text-gray-500",
+          size === "lg" ? "text-sm uppercase tracking-wide" : "text-xs"
+        )}
+      >
+        {label}
+      </span>
+      <span
+        className={cn(
+          "font-mono font-black",
+          tone ?? (highlight ? "text-emerald-300" : "text-white"),
+          size === "lg" ? "text-xl" : "text-sm"
+        )}
+      >
+        {prefix}
+        {value.toLocaleString()}
+      </span>
     </div>
   );
 }
@@ -2681,6 +2714,7 @@ function MultiplierRow({
 type ScoringBreakdownCopy = {
   receipt: string;
   title: string;
+  scoreCalculation: string;
   result: string;
   resultType: string;
   predictionSetup: string;
@@ -2705,6 +2739,8 @@ type ScoringBreakdownCopy = {
   on: string;
   off: string;
   rankingPoints: string;
+  refund: string;
+  received: string;
   profit: string;
   total: string;
   pointsAbbr: string;
@@ -2725,6 +2761,7 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
   th: {
     receipt: "ใบรับคำทาย",
     title: "สรุปคะแนน",
+    scoreCalculation: "คิดคะแนน",
     result: "ผลลัพธ์",
     resultType: "ประเภทผลลัพธ์",
     predictionSetup: "ข้อมูลคำทาย",
@@ -2749,6 +2786,8 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
     on: "เปิด",
     off: "ปิด",
     rankingPoints: "คะแนนจัดอันดับ",
+    refund: "คืนทุน",
+    received: "ได้รับ",
     profit: "กำไร",
     total: "รวม",
     pointsAbbr: "แต้ม",
@@ -2767,6 +2806,7 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
   en: {
     receipt: "Prediction Receipt",
     title: "Score Breakdown",
+    scoreCalculation: "Score calculation",
     result: "Result",
     resultType: "Result Type",
     predictionSetup: "Prediction Setup",
@@ -2791,6 +2831,8 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
     on: "on",
     off: "off",
     rankingPoints: "Ranking Points",
+    refund: "Stake returned",
+    received: "Received",
     profit: "Profit",
     total: "Total",
     pointsAbbr: "pts",
@@ -2809,6 +2851,7 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
   lo: {
     receipt: "ໃບສະຫຼຸບການທາຍ",
     title: "ສະຫຼຸບຄະແນນ",
+    scoreCalculation: "ຄິດຄະແນນ",
     result: "ຜົນ",
     resultType: "ປະເພດຜົນ",
     predictionSetup: "ຂໍ້ມູນການທາຍ",
@@ -2833,6 +2876,8 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
     on: "ເປີດ",
     off: "ປິດ",
     rankingPoints: "ຄະແນນຈັດອັນດັບ",
+    refund: "ຄືນທຶນ",
+    received: "ໄດ້ຮັບ",
     profit: "ກຳໄລ",
     total: "ລວມ",
     pointsAbbr: "ຄະແນນ",
@@ -2851,6 +2896,7 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
   my: {
     receipt: "ခန့်မှန်းချက်လက်ခံဖြတ်ပိုင်း",
     title: "အမှတ်ခွဲခြမ်းစိတ်ဖြာချက်",
+    scoreCalculation: "အမှတ်တွက်ချက်မှု",
     result: "ရလဒ်",
     resultType: "ရလဒ်အမျိုးအစား",
     predictionSetup: "ခန့်မှန်းချက်အချက်အလက်",
@@ -2875,6 +2921,8 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
     on: "ဖွင့်",
     off: "ပိတ်",
     rankingPoints: "အဆင့်မှတ်",
+    refund: "အရင်းပြန်",
+    received: "ရရှိသည်",
     profit: "အမြတ်",
     total: "စုစုပေါင်း",
     pointsAbbr: "မှတ်",
@@ -2893,6 +2941,7 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
   km: {
     receipt: "បង្កាន់ដៃទស្សន៍ទាយ",
     title: "សង្ខេបពិន្ទុ",
+    scoreCalculation: "គណនាពិន្ទុ",
     result: "លទ្ធផល",
     resultType: "ប្រភេទលទ្ធផល",
     predictionSetup: "ព័ត៌មានទស្សន៍ទាយ",
@@ -2917,6 +2966,8 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
     on: "បើក",
     off: "បិទ",
     rankingPoints: "ពិន្ទុចំណាត់ថ្នាក់",
+    refund: "សងដើម",
+    received: "ទទួលបាន",
     profit: "ចំណេញ",
     total: "សរុប",
     pointsAbbr: "ពិន្ទុ",
@@ -2935,6 +2986,7 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
   zh: {
     receipt: "预测记录",
     title: "得分明细",
+    scoreCalculation: "得分计算",
     result: "结果",
     resultType: "结果类型",
     predictionSetup: "预测设置",
@@ -2959,6 +3011,8 @@ const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
     on: "开",
     off: "关",
     rankingPoints: "排名积分",
+    refund: "返还本金",
+    received: "获得",
     profit: "收益",
     total: "总计",
     pointsAbbr: "分",
