@@ -33,6 +33,7 @@ export type AIInsightListItem = {
   categories: Array<"live" | "highConfidence" | "upsetAlert">;
   matchId: string;
   status: MatchStatus;
+  statusShort: string;
   viewCount: number;
   league: {
     id: string;
@@ -982,11 +983,13 @@ function getStatusBadge(
   insight: AIInsightListItem,
   copy: ReturnType<typeof getAIInsightPageCopy>
 ): { variant: "green" | "cyan" | "default" | "gold" | "red"; label: string; live: boolean } {
+  const statusShort = insight.statusShort.trim().toUpperCase();
+
   switch (insight.status) {
     case MatchStatus.LIVE:
-      return { variant: "green", label: copy.labels.live, live: true };
+      return { variant: "green", label: statusShort || copy.labels.live, live: true };
     case MatchStatus.FINISHED:
-      return { variant: "default", label: copy.labels.finished, live: false };
+      return { variant: "default", label: statusShort || copy.labels.finished, live: false };
     case MatchStatus.POSTPONED:
       return { variant: "gold", label: copy.labels.postponed, live: false };
     case MatchStatus.CANCELLED:
@@ -1095,11 +1098,13 @@ function hasStandingsOrH2H(insight: AIInsightListItem) {
 }
 
 function formatMatchMoment(insight: AIInsightListItem, locale: string) {
+  const statusShort = insight.statusShort.trim().toUpperCase();
+
   if (insight.status === MatchStatus.LIVE) {
     return insight.elapsed !== null ? `${insight.elapsed}'` : "LIVE";
   }
   if (insight.status === MatchStatus.FINISHED) {
-    return "FT";
+    return statusShort || "FT";
   }
   return formatKickoffTime(insight.kickoffTime, locale);
 }

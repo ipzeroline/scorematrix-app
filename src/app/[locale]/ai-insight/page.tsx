@@ -222,6 +222,7 @@ function mapAIInsight(
     categories: group ? [group] : inferInsightCategories(insight),
     matchId: String(insight.provider_id),
     status: mapStatus(insight),
+    statusShort: insight.status.short,
     viewCount: normalizeViewCount(insight),
     league: {
       id: String(insight.league.id),

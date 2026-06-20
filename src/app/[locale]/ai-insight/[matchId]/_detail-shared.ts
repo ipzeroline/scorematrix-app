@@ -92,6 +92,9 @@ export type LocalizedDetailCopy = {
   verdictHome: string;
   verdictAway: string;
   verdictDraw: string;
+  finalResult: string;
+  finalWin: string;
+  finalDraw: string;
   liveContext: string;
   predictedGoalsUnavailable: string;
   noCommunityVotes: string;
@@ -299,6 +302,9 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     verdictHome: "เจ้าบ้านน่าเชียร์กว่า",
     verdictAway: "ทีมเยือนน่าเชียร์กว่า",
     verdictDraw: "มีแนวโน้มออกเสมอ",
+    finalResult: "สรุปผลการแข่งขัน",
+    finalWin: "ชนะ",
+    finalDraw: "จบเสมอ",
     liveContext: "สถานะสด",
     predictedGoalsUnavailable: "ไม่มีสกอร์คาดการณ์ที่ใช้ได้",
     noCommunityVotes: "ยังไม่มีเสียงโหวตจากผู้ใช้สำหรับคู่นี้",
@@ -423,6 +429,9 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     verdictHome: "Home side has the edge",
     verdictAway: "Away side has the edge",
     verdictDraw: "Draw looks most likely",
+    finalResult: "Final result",
+    finalWin: "beat",
+    finalDraw: "finished level with",
     liveContext: "Live context",
     predictedGoalsUnavailable: "No reliable projected score",
     noCommunityVotes: "No community votes yet for this match",
@@ -547,6 +556,9 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     verdictHome: "ເຈົ້າບ້ານໄດ້ປຽບກວ່າ",
     verdictAway: "ທີມເຢືອນໄດ້ປຽບກວ່າ",
     verdictDraw: "ໂອກາດສະເໝີສູງ",
+    finalResult: "ສະຫຼຸບຜົນແຂ່ງຂັນ",
+    finalWin: "ຊະນະ",
+    finalDraw: "ຈົບສະເໝີກັບ",
     liveContext: "ບໍລິບົດສົດ",
     predictedGoalsUnavailable: "ບໍ່ມີສະກໍຄາດການທີ່ເຊື່ອຖືໄດ້",
     noCommunityVotes: "ຍັງບໍ່ມີໂຫວດຊຸມຊົນສໍາລັບແມຕຊ໌ນີ້",
@@ -671,6 +683,9 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     verdictHome: "အိမ်ရှင်ဘက်က အသာစီးရှိသည်",
     verdictAway: "ဧည့်အသင်းဘက်က အသာစီးရှိသည်",
     verdictDraw: "သရေဖြစ်နိုင်ခြေ မြင့်သည်",
+    finalResult: "ပွဲပြီးရလဒ်",
+    finalWin: "အနိုင်ရခဲ့သည်",
+    finalDraw: "သရေကျခဲ့သည်",
     liveContext: "တိုက်ရိုက်အခြေအနေ",
     predictedGoalsUnavailable: "ယုံကြည်ရသော ခန့်မှန်းစကိုးမရှိပါ",
     noCommunityVotes: "ဤပွဲအတွက် ကွန်မြူနิตี้မဲ မရှိသေးပါ",
@@ -795,6 +810,9 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     verdictHome: "ម្ចាស់ផ្ទះមានប្រៀប",
     verdictAway: "ក្រុមភ្ញៀវមានប្រៀប",
     verdictDraw: "ស្មើមើលទៅមានសក្តានុពល",
+    finalResult: "លទ្ធផលចុងក្រោយ",
+    finalWin: "បានឈ្នះ",
+    finalDraw: "បញ្ចប់ស្មើជាមួយ",
     liveContext: "បរិបទផ្ទាល់",
     predictedGoalsUnavailable: "មិនមានពិន្ទុព្យាករដែលអាចទុកចិត្តបាន",
     noCommunityVotes: "មិនទាន់មានសម្លេងសហគមន៍សម្រាប់ការប្រកួតនេះ",
@@ -919,6 +937,9 @@ export const detailCopy: Record<string, LocalizedDetailCopy> = {
     verdictHome: "主队更占优",
     verdictAway: "客队更占优",
     verdictDraw: "平局可能性更高",
+    finalResult: "完场结果",
+    finalWin: "战胜",
+    finalDraw: "与对手战平",
     liveContext: "实时背景",
     predictedGoalsUnavailable: "暂无可靠预测比分",
     noCommunityVotes: "这场比赛暂无社区投票",
@@ -1227,16 +1248,34 @@ export function clampPercent(value: number) {
 // ---------------------------------------------------------------------------
 
 export function isLiveStatus(short: string, elapsed: number | null) {
+  const normalized = short.trim().toUpperCase();
+  if (
+    [
+      "NS",
+      "TBD",
+      "FT",
+      "AET",
+      "PEN",
+      "FINISHED",
+      "PST",
+      "CANC",
+      "ABD",
+      "AWD",
+      "WO",
+    ].includes(normalized)
+  ) {
+    return false;
+  }
   if (typeof elapsed === "number" && elapsed > 0) return true;
-  return !["NS", "FT", "AET", "PEN", "PST", "CANC", "ABD", "AWD", "WO"].includes(short);
+  return ["LIVE", "1H", "HT", "2H", "ET", "BT", "P", "SUSP", "INT"].includes(normalized);
 }
 
 export function isFinishedStatus(short: string) {
-  return ["FT", "AET", "PEN"].includes(short);
+  return ["FT", "AET", "PEN", "FINISHED"].includes(short.trim().toUpperCase());
 }
 
 export function isHoldStatus(short: string) {
-  return ["PST", "CANC", "ABD", "AWD", "WO"].includes(short);
+  return ["PST", "CANC", "ABD", "AWD", "WO"].includes(short.trim().toUpperCase());
 }
 
 // ---------------------------------------------------------------------------
@@ -1361,6 +1400,10 @@ export function getAIVerdict(
   insight: ApiFootballAIInsightDetail,
   details: LocalizedDetailCopy
 ) {
+  if (isFinishedStatus(fixture.statusShort)) {
+    return getFinalResultVerdict(fixture, details);
+  }
+
   const home = insight.homeWinProbability ?? -1;
   const draw = insight.drawProbability ?? -1;
   const away = insight.awayWinProbability ?? -1;
@@ -1398,6 +1441,53 @@ export function getAIVerdict(
     detail: `${fixture.home.name} ${formatPercent(home)} • ${details.drawOption} ${formatPercent(draw)} • ${fixture.away.name} ${formatPercent(away)}`,
     liveNote: liveLeader,
   };
+}
+
+function getFinalResultVerdict(
+  fixture: ApiFootballFixture,
+  details: LocalizedDetailCopy
+) {
+  const homeScore = fixture.score.home;
+  const awayScore = fixture.score.away;
+  const scoreLabel =
+    typeof homeScore === "number" && typeof awayScore === "number"
+      ? `${homeScore}-${awayScore}`
+      : "";
+
+  if (typeof homeScore !== "number" || typeof awayScore !== "number") {
+    return {
+      title: details.finalResult,
+      detail: getStatusLabelFallback(fixture.statusShort, details),
+      liveNote: null,
+    };
+  }
+
+  if (homeScore === awayScore) {
+    return {
+      title: details.finalResult,
+      detail: `${details.finalDraw} ${scoreLabel}`,
+      liveNote: null,
+    };
+  }
+
+  const winner = homeScore > awayScore ? fixture.home.name : fixture.away.name;
+  const loser = homeScore > awayScore ? fixture.away.name : fixture.home.name;
+
+  return {
+    title: details.finalResult,
+    detail: `${winner} ${details.finalWin} ${loser} ${scoreLabel}`,
+    liveNote: null,
+  };
+}
+
+function getStatusLabelFallback(
+  statusShort: string,
+  details: LocalizedDetailCopy
+) {
+  const short = statusShort.trim().toUpperCase();
+  if (isFinishedStatus(short)) return short;
+  if (isHoldStatus(short)) return short;
+  return details.finalResult;
 }
 
 export function getLocalizedModelAdvice(
@@ -1458,7 +1548,7 @@ export function getStatusLabel(
   if (isLiveStatus(short, fixture.elapsed)) {
     return fixture.elapsed !== null ? `${details.liveNow} ${fixture.elapsed}'` : details.liveNow;
   }
-  if (isFinishedStatus(short)) return copy.labels.finished;
+  if (isFinishedStatus(short)) return short || copy.labels.finished;
   if (short === "PST") return copy.labels.postponed;
   if (short === "CANC") return copy.labels.cancelled;
   if (short === "ABD" || short === "AWD" || short === "WO") return copy.labels.cancelled;

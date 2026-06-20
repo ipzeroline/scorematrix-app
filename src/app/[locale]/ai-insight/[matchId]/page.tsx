@@ -1221,6 +1221,9 @@ function AIVerdictCard({
   label: string;
 }) {
   const verdict = getAIVerdict(fixture, insight, details);
+  const heading = isFinishedStatus(fixture.statusShort)
+    ? details.finalResult
+    : label;
 
   return (
     <div className="rounded-2xl border border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.12),rgba(5,8,15,0.78))] p-4">
@@ -1229,7 +1232,7 @@ function AIVerdictCard({
           <Activity size={18} />
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/80">{label}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200/80">{heading}</p>
           <p className="mt-2 text-lg font-black leading-tight text-white">{verdict.title}</p>
           <p className="mt-2 text-sm font-semibold leading-relaxed text-text-secondary">{verdict.detail}</p>
         </div>
