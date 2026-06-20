@@ -46,6 +46,16 @@ export type ApiMission = {
   };
   completed?: boolean;
   claimed?: boolean;
+  startsAt?: string;
+  starts_at?: string;
+  startAt?: string;
+  start_at?: string;
+  availableFrom?: string;
+  available_from?: string;
+  resetAt?: string;
+  reset_at?: string;
+  endAt?: string;
+  end_at?: string;
   expiresAt?: string;
   expires_at?: string;
 };
@@ -62,8 +72,19 @@ export type MissionsResponse = {
   daily: ApiMission[];
   weekly: ApiMission[];
   special: ApiMission[];
+  periods: MissionPeriodWindows;
   currentStats: MissionCurrentStats;
 };
+
+export type MissionPeriodKey = "daily" | "weekly" | "special";
+
+export type MissionPeriodWindow = {
+  start: string;
+  end: string;
+  resetAt: string;
+};
+
+export type MissionPeriodWindows = Record<MissionPeriodKey, MissionPeriodWindow | null>;
 
 export const DEFAULT_MISSION_CURRENT_STATS: MissionCurrentStats = {
   missionStreak: 0,
@@ -75,6 +96,11 @@ export const DEFAULT_MISSION_CURRENT_STATS: MissionCurrentStats = {
 
 export const DEFAULT_MISSIONS_RESPONSE: MissionsResponse = {
   currentStats: { ...DEFAULT_MISSION_CURRENT_STATS },
+  periods: {
+    daily: null,
+    weekly: null,
+    special: null,
+  },
   daily: [
     {
       id: "bold-win",
@@ -228,6 +254,17 @@ type ApiMissionsResponse = {
   daily?: ApiMission[];
   weekly?: ApiMission[];
   special?: ApiMission[];
+  periods?: unknown;
+  period?: unknown;
+  windows?: unknown;
+  resetWindows?: unknown;
+  reset_windows?: unknown;
+  dailyPeriod?: unknown;
+  daily_period?: unknown;
+  weeklyPeriod?: unknown;
+  weekly_period?: unknown;
+  specialPeriod?: unknown;
+  special_period?: unknown;
   currentStats?: ApiCurrentStats;
   current_stats?: ApiCurrentStats;
 };
@@ -261,6 +298,7 @@ export function normalizeMissionsResponse(
       daily: response.daily,
       weekly: Array.isArray(response.weekly) ? response.weekly : [],
       special: Array.isArray(response.special) ? response.special : [],
+      periods: normalizeMissionPeriods(response),
       currentStats: normalizeCurrentStats(
         response.currentStats ?? response.current_stats
       ),
@@ -344,8 +382,166 @@ export function mapApiMission(
     ),
     completed,
     claimed: Boolean(userProgress?.claimed ?? mission.claimed),
-    expiresAt: mission.expiresAt ?? mission.expires_at ?? "",
-    resetAt: mission.expiresAt ?? mission.expires_at ?? "",
+    startsAt:
+      mission.startsAt ??
+      mission.starts_at ??
+      mission.startAt ??
+      mission.start_at ??
+      mission.availableFrom ??
+      mission.available_from,
+    expiresAt:
+      mission.expiresAt ??
+      mission.expires_at ??
+      mission.endAt ??
+      mission.end_at ??
+      mission.resetAt ??
+      mission.reset_at ??
+      "",
+    resetAt:
+      mission.resetAt ??
+      mission.reset_at ??
+      mission.expiresAt ??
+      mission.expires_at ??
+      mission.endAt ??
+      mission.end_at ??
+      "",
+  };
+}
+
+function normalizeMissionPeriods(
+  response: ApiMissionsResponse
+): MissionPeriodWindows {
+  return {
+    daily: normalizeMissionPeriodWindow(
+      pickPeriodWindow(response, "daily"),
+      response.daily
+    ),
+    weekly: normalizeMissionPeriodWindow(
+      pickPeriodWindow(response, "weekly"),
+      response.weekly
+    ),
+    special: normalizeMissionPeriodWindow(
+      pickPeriodWindow(response, "special"),
+      response.special
+    ),
+  };
+}
+
+function pickPeriodWindow(response: ApiMissionsResponse, key: MissionPeriodKey) {
+  const direct =
+    key === "daily"
+      ? response.dailyPeriod ?? response.daily_period
+      : key === "weekly"
+      ? response.weeklyPeriod ?? response.weekly_period
+      : response.specialPeriod ?? response.special_period;
+
+  if (direct) return direct;
+
+  for (const source of [
+    response.periods,
+    response.period,
+    response.windows,
+    response.resetWindows,
+    response.reset_windows,
+  ]) {
+    if (!isRecord(source)) continue;
+    const value =
+      source[key] ??
+      source[`${key}Period`] ??
+      source[`${key}_period`] ??
+      source[`${key}Window`] ??
+      source[`${key}_window`];
+    if (value) return value;
+  }
+
+  return null;
+}
+
+function normalizeMissionPeriodWindow(
+  window: unknown,
+  missions?: ApiMission[]
+): MissionPeriodWindow | null {
+  const value = isRecord(window) ? window : {};
+  const start = toStringValue(
+    value.start ??
+      value.startsAt ??
+      value.starts_at ??
+      value.startAt ??
+      value.start_at ??
+      value.from ??
+      value.availableFrom ??
+      value.available_from
+  );
+  const end = toStringValue(
+    value.end ??
+      value.endsAt ??
+      value.ends_at ??
+      value.endAt ??
+      value.end_at ??
+      value.to ??
+      value.expiresAt ??
+      value.expires_at ??
+      value.resetAt ??
+      value.reset_at
+  );
+  const resetAt = toStringValue(
+    value.resetAt ??
+      value.reset_at ??
+      value.nextResetAt ??
+      value.next_reset_at ??
+      end
+  );
+
+  if (start || end || resetAt) {
+    return {
+      start,
+      end: end || resetAt,
+      resetAt: resetAt || end,
+    };
+  }
+
+  const missionWindow = normalizeWindowFromMissions(missions);
+  return missionWindow;
+}
+
+function normalizeWindowFromMissions(
+  missions?: ApiMission[]
+): MissionPeriodWindow | null {
+  if (!Array.isArray(missions) || missions.length === 0) return null;
+
+  const starts = missions
+    .map((mission) =>
+      toStringValue(
+        mission.startsAt ??
+          mission.starts_at ??
+          mission.startAt ??
+          mission.start_at ??
+          mission.availableFrom ??
+          mission.available_from
+      )
+    )
+    .filter(Boolean);
+  const ends = missions
+    .map((mission) =>
+      toStringValue(
+        mission.resetAt ??
+          mission.reset_at ??
+          mission.expiresAt ??
+          mission.expires_at ??
+          mission.endAt ??
+          mission.end_at
+      )
+    )
+    .filter(Boolean);
+
+  const start = starts[0] ?? "";
+  const end = ends[0] ?? "";
+  if (!start && !end) return null;
+
+  return {
+    start,
+    end,
+    resetAt: end,
   };
 }
 
@@ -356,6 +552,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function toNumber(value: unknown, fallback: number) {
   const numberValue = Number(value);
   return Number.isFinite(numberValue) ? numberValue : fallback;
+}
+
+function toStringValue(value: unknown) {
+  if (value === null || value === undefined) return "";
+  return String(value);
 }
 
 function toPositiveNumber(value: unknown) {

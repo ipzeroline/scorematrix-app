@@ -47,11 +47,14 @@ import {
   formatScorePrediction,
   formatProbabilitySource,
   formatScore,
+  resolveHeatMeter,
   getConfidenceTone,
   getHeatTone,
   getHeatDescription,
   getConfidenceDescription,
   getAIVerdict,
+  getCloseProbabilityNote,
+  getLocalizedUpsetDescription,
   getStatusLabel,
   isLiveStatus,
   isFinishedStatus,
@@ -108,60 +111,60 @@ const SEO_COPY = {
     keywords: ["AI football prediction", "football insight", "match probabilities", "football analysis", "soccer prediction"],
   },
   lo: {
-    fallbackTitle: "AI Football Insight | ScoreMatrix",
+    fallbackTitle: "AI ວິເຄາະບານເຕະ | ScoreMatrix",
     title: (home: string, away: string, league: string) =>
-      `AI Insight ${home} vs ${away} - ${league} | ຄວາມນ່າຈະເປັນແລະບົດວິເຄາະ`,
-    insightLabel: "AI football insight",
+      `AI ວິເຄາະ ${home} vs ${away} - ${league} | ຄວາມນ່າຈະເປັນແລະບົດວິເຄາະ`,
+    insightLabel: "AI ວິເຄາະບານເຕະ",
     descriptionPrefix: (home: string, away: string, league: string) =>
-      `AI football insight ສໍາລັບ ${home} vs ${away} ໃນ ${league}`,
-    confidence: "confidence",
-    homeWin: "home win",
-    draw: "draw",
-    awayWin: "away win",
-    upset: "upset alert",
-    keywords: ["AI football prediction", "football insight", "match probabilities", "football analysis", "soccer prediction"],
+      `AI ວິເຄາະບານເຕະສໍາລັບ ${home} vs ${away} ໃນ ${league}`,
+    confidence: "ຄວາມໝັ້ນໃຈ",
+    homeWin: "ເຈົ້າບ້ານຊະນະ",
+    draw: "ສະເໝີ",
+    awayWin: "ທີມເຢືອນຊະນະ",
+    upset: "ເຕືອນພິກລັອກ",
+    keywords: ["AI ທາຍຜົນບານເຕະ", "ວິເຄາະບານເຕະ", "ຄວາມນ່າຈະເປັນແມຕຊ໌", "ທັດສະນະບານ", "ພະຍາກອນບານເຕະ"],
   },
   my: {
-    fallbackTitle: "AI Football Insight | ScoreMatrix",
+    fallbackTitle: "AI ဘောလုံးသုံးသပ်ချက် | ScoreMatrix",
     title: (home: string, away: string, league: string) =>
-      `AI Insight ${home} vs ${away} - ${league} | ဖြစ်နိုင်ခြေနှင့် ခန့်မှန်းချက်`,
-    insightLabel: "AI football insight",
+      `${home} vs ${away} AI ဘောလုံးသုံးသပ်ချက် - ${league} | ဖြစ်နိုင်ခြေနှင့် ခန့်မှန်းချက်`,
+    insightLabel: "AI ဘောလုံးသုံးသပ်ချက်",
     descriptionPrefix: (home: string, away: string, league: string) =>
-      `${league} တွင် ${home} vs ${away} အတွက် AI football insight`,
-    confidence: "confidence",
-    homeWin: "home win",
-    draw: "draw",
-    awayWin: "away win",
-    upset: "upset alert",
-    keywords: ["AI football prediction", "football insight", "match probabilities", "football analysis", "soccer prediction"],
+      `${league} တွင် ${home} vs ${away} အတွက် AI ဘောလုံးသုံးသပ်ချက်`,
+    confidence: "ယုံကြည်မှု",
+    homeWin: "အိမ်ရှင်နိုင်",
+    draw: "သရေ",
+    awayWin: "ဧည့်အသင်းနိုင်",
+    upset: "Upset သတိပေးချက်",
+    keywords: ["AI ဘောလုံးခန့်မှန်းချက်", "ဘောလုံးသုံးသပ်ချက်", "ပွဲဖြစ်နိုင်ခြေ", "ဘောလုံးခွဲခြမ်းစိတ်ဖြာမှု", "ဘောလုံးခန့်မှန်း"],
   },
   km: {
-    fallbackTitle: "AI Football Insight | ScoreMatrix",
+    fallbackTitle: "ការវិភាគបាល់ទាត់ AI | ScoreMatrix",
     title: (home: string, away: string, league: string) =>
-      `AI Insight ${home} vs ${away} - ${league} | ប្រូបាប និងការវិភាគ`,
-    insightLabel: "AI football insight",
+      `ការវិភាគ AI ${home} vs ${away} - ${league} | ប្រូបាប និងការវិភាគ`,
+    insightLabel: "ការវិភាគបាល់ទាត់ AI",
     descriptionPrefix: (home: string, away: string, league: string) =>
-      `AI football insight សម្រាប់ ${home} vs ${away} ក្នុង ${league}`,
-    confidence: "confidence",
-    homeWin: "home win",
-    draw: "draw",
-    awayWin: "away win",
-    upset: "upset alert",
-    keywords: ["AI football prediction", "football insight", "match probabilities", "football analysis", "soccer prediction"],
+      `ការវិភាគបាល់ទាត់ AI សម្រាប់ ${home} vs ${away} ក្នុង ${league}`,
+    confidence: "ទំនុកចិត្ត",
+    homeWin: "ម្ចាស់ផ្ទះឈ្នះ",
+    draw: "ស្មើ",
+    awayWin: "ក្រុមភ្ញៀវឈ្នះ",
+    upset: "ព្រមានพลិកលទ្ធផល",
+    keywords: ["ការព្យាករបាល់ទាត់ AI", "ការវិភាគបាល់ទាត់", "ប្រូបាបការប្រកួត", "ទស្សនៈបាល់ទាត់", "ព្យាករបាល់ទាត់"],
   },
   zh: {
-    fallbackTitle: "AI Football Insight | ScoreMatrix",
+    fallbackTitle: "AI 足球分析 | ScoreMatrix",
     title: (home: string, away: string, league: string) =>
       `${home} vs ${away} AI 足球分析 - ${league} | 概率与预测`,
-    insightLabel: "AI football insight",
+    insightLabel: "AI 足球分析",
     descriptionPrefix: (home: string, away: string, league: string) =>
-      `${league} ${home} vs ${away} 的 AI football insight`,
-    confidence: "confidence",
-    homeWin: "home win",
-    draw: "draw",
-    awayWin: "away win",
-    upset: "upset alert",
-    keywords: ["AI football prediction", "football insight", "match probabilities", "football analysis", "soccer prediction"],
+      `${league} ${home} vs ${away} 的 AI 足球分析`,
+    confidence: "信心",
+    homeWin: "主队胜",
+    draw: "平局",
+    awayWin: "客队胜",
+    upset: "爆冷提醒",
+    keywords: ["AI 足球预测", "足球分析", "比赛概率", "足球观点", "足球预测"],
   },
 } as const;
 
@@ -179,6 +182,8 @@ const UI_COPY = {
     homeSide: "เจ้าบ้าน",
     awaySide: "ทีมเยือน",
     contender: "คู่แข่ง",
+    matchDetails: "ดูรายละเอียดแมตซ์",
+    heatMeterLabel: "HeatMeter · ความมันส์ของเกม",
   },
   en: {
     matchCenter: "AI Match Center",
@@ -193,62 +198,72 @@ const UI_COPY = {
     homeSide: "Home",
     awaySide: "Away",
     contender: "Contender",
+    matchDetails: "Match details",
+    heatMeterLabel: "HeatMeter · Match excitement",
   },
   lo: {
-    matchCenter: "AI Match Center",
-    liveDesk: "Esport Analysis Desk",
-    winMap: "Win Probability Map",
-    modelRead: "Model Read",
-    strongestSignal: "Primary Signal",
-    teamEdge: "Team Edge",
-    balancedGame: "Balanced Game",
-    versus: "versus",
-    kickoff: "Kickoff",
-    homeSide: "Home",
-    awaySide: "Away",
-    contender: "Contender",
+    matchCenter: "ສູນວິເຄາະ AI",
+    liveDesk: "ໂຕະວິເຄາະສົດ",
+    winMap: "ແຜນທີ່ໂອກາດຊະນະ",
+    modelRead: "ການອ່ານເກມຈາກໂມເດວ",
+    strongestSignal: "ສັນຍານຫຼັກ",
+    teamEdge: "ທີມທີ່ໄດ້ປຽບ",
+    balancedGame: "ເກມສູສີ",
+    versus: "ພົບ",
+    kickoff: "ເວລາແຂ່ງ",
+    homeSide: "ເຈົ້າບ້ານ",
+    awaySide: "ທີມເຢືອນ",
+    contender: "ຄູ່ແຂ່ງ",
+    matchDetails: "ລາຍລະອຽດແມຕຊ໌",
+    heatMeterLabel: "HeatMeter · ຄວາມມັນຂອງເກມ",
   },
   my: {
-    matchCenter: "AI Match Center",
-    liveDesk: "Esport Analysis Desk",
-    winMap: "Win Probability Map",
-    modelRead: "Model Read",
-    strongestSignal: "Primary Signal",
-    teamEdge: "Team Edge",
-    balancedGame: "Balanced Game",
-    versus: "versus",
-    kickoff: "Kickoff",
-    homeSide: "Home",
-    awaySide: "Away",
-    contender: "Contender",
+    matchCenter: "AI ပွဲစင်တာ",
+    liveDesk: "တိုက်ရိုက်သုံးသပ်စားပွဲ",
+    winMap: "နိုင်ခြေမြေပုံ",
+    modelRead: "မော်ဒယ်ဖတ်ရှုချက်",
+    strongestSignal: "အဓိကအချက်ပြ",
+    teamEdge: "အားသာသည့်အသင်း",
+    balancedGame: "မျှတသောပွဲ",
+    versus: "နှင့်",
+    kickoff: "စတင်ချိန်",
+    homeSide: "အိမ်ရှင်",
+    awaySide: "ဧည့်အသင်း",
+    contender: "ပြိုင်ဘက်",
+    matchDetails: "ပွဲအသေးစိတ်",
+    heatMeterLabel: "HeatMeter · ပွဲစိတ်လှုပ်ရှားမှု",
   },
   km: {
-    matchCenter: "AI Match Center",
-    liveDesk: "Esport Analysis Desk",
-    winMap: "Win Probability Map",
-    modelRead: "Model Read",
-    strongestSignal: "Primary Signal",
-    teamEdge: "Team Edge",
-    balancedGame: "Balanced Game",
-    versus: "versus",
-    kickoff: "Kickoff",
-    homeSide: "Home",
-    awaySide: "Away",
-    contender: "Contender",
+    matchCenter: "មជ្ឈមណ្ឌលប្រកួត AI",
+    liveDesk: "តុវិភាគផ្ទាល់",
+    winMap: "ផែនទីប្រូបាបឈ្នះ",
+    modelRead: "ការអានពីម៉ូឌែល",
+    strongestSignal: "សញ្ញាសំខាន់",
+    teamEdge: "ក្រុមមានប្រៀប",
+    balancedGame: "ការប្រកួតស្មើសាច់",
+    versus: "ប៉ះ",
+    kickoff: "ម៉ោងចាប់ផ្តើម",
+    homeSide: "ម្ចាស់ផ្ទះ",
+    awaySide: "ក្រុមភ្ញៀវ",
+    contender: "គូប្រជែង",
+    matchDetails: "ព័ត៌មានលម្អិតការប្រកួត",
+    heatMeterLabel: "HeatMeter · ភាពរំភើបនៃការប្រកួត",
   },
   zh: {
-    matchCenter: "AI Match Center",
-    liveDesk: "Esport Analysis Desk",
-    winMap: "Win Probability Map",
-    modelRead: "Model Read",
-    strongestSignal: "Primary Signal",
-    teamEdge: "Team Edge",
-    balancedGame: "Balanced Game",
-    versus: "versus",
-    kickoff: "Kickoff",
-    homeSide: "Home",
-    awaySide: "Away",
-    contender: "Contender",
+    matchCenter: "AI 比赛中心",
+    liveDesk: "实时分析台",
+    winMap: "胜率地图",
+    modelRead: "模型解读",
+    strongestSignal: "主要信号",
+    teamEdge: "占优球队",
+    balancedGame: "均势比赛",
+    versus: "对阵",
+    kickoff: "开赛时间",
+    homeSide: "主队",
+    awaySide: "客队",
+    contender: "竞争方",
+    matchDetails: "比赛详情",
+    heatMeterLabel: "HeatMeter · 比赛精彩度",
   },
 } as const;
 
@@ -349,7 +364,8 @@ export default async function AIInsightDetailPage({ params }: Props) {
 
   const { fixture, insight } = context;
   const confidenceTone = getConfidenceTone(insight.confidenceScore);
-  const heatTone = getHeatTone(insight.heatMeter);
+  const heatMeter = resolveHeatMeter(insight);
+  const heatTone = getHeatTone(heatMeter);
   const generatedAtLabel = insight.generatedAt
     ? formatDateTime(insight.generatedAt, locale)
     : details.noGeneratedTime;
@@ -359,6 +375,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
   const structuredData = buildStructuredData(locale, matchId, fixture, insight);
   const matchEdge = getMatchEdge(fixture, insight, details, ui);
   const predictedScoreLabel = formatScorePrediction(insight.apiPredictedGoals);
+  const matchDetailHref = `/${locale}/matches/detail/${fixture.apiFixtureId ?? fixture.id}`;
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-5 px-3 pb-8 sm:px-4 md:px-6">
@@ -457,6 +474,13 @@ export default async function AIInsightDetailPage({ params }: Props) {
                   {formatDateTime(fixture.kickoffTime, locale)}
                 </span>
               </div>
+              <Link
+                href={matchDetailHref}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/45 bg-cyan-300 px-4 py-3 text-sm font-black text-black shadow-[0_0_26px_rgba(34,211,238,0.24)] transition-all hover:-translate-y-0.5 hover:bg-cyan-200 hover:shadow-[0_0_34px_rgba(34,211,238,0.34)] focus:outline-none focus:ring-2 focus:ring-cyan-200/60"
+              >
+                <Activity size={18} />
+                {ui.matchDetails}
+              </Link>
               <div className="mt-4 w-full rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">{ui.teamEdge}</p>
                 <p className="mt-1 truncate text-sm font-black text-white">{matchEdge.label}</p>
@@ -484,9 +508,9 @@ export default async function AIInsightDetailPage({ params }: Props) {
           />
           <SimpleStatCard
             icon={Flame}
-            label={details.heatMeter}
-            value={formatHeatMeter(insight.heatMeter)}
-            note={getHeatDescription(insight.heatMeter, copy)}
+            label={ui.heatMeterLabel}
+            value={formatHeatMeter(heatMeter)}
+            note={buildHeatMeterNote(insight, heatMeter, locale, copy)}
             tone={heatTone}
           />
           <SimpleStatCard
@@ -506,14 +530,13 @@ export default async function AIInsightDetailPage({ params }: Props) {
         </div>
       </section>
 
-      {insight.upsetAlert && insight.upsetDescription ? (
+      {insight.upsetAlert ? (
         <div className="flex items-start gap-3 rounded-2xl border border-warning/20 bg-warning/10 p-4 text-sm text-warning">
           <AlertTriangle size={18} className="mt-0.5 shrink-0 text-warning" />
           <div>
             <p className="font-semibold text-warning">{copy.labels.upsetAlert}</p>
             <p className="mt-1 text-text-secondary">
-              {typeof insight.upsetRisk === "number" ? `${Math.round(insight.upsetRisk)}% • ` : ""}
-              {insight.upsetDescription}
+              {getLocalizedUpsetDescription(insight, details)}
             </p>
           </div>
         </div>
@@ -560,9 +583,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
           </div>
           {Math.abs((insight.homeWinProbability ?? 0) - (insight.drawProbability ?? 0)) < 5 ? (
             <p className="mx-5 mb-5 rounded-xl border border-amber-300/20 bg-amber-300/10 px-3 py-2 text-xs font-semibold text-amber-200 sm:mx-6">
-              {locale === "th"
-                ? "โอกาสเจ้าบ้านชนะและเสมอใกล้กันมาก ควรอ่านสัญญาณอื่นประกอบ"
-                : "Home win and draw probabilities are very close — consider both outcomes"}
+              {getCloseProbabilityNote(details)}
             </p>
           ) : null}
           {insight.probabilitySource ? (
@@ -579,7 +600,7 @@ export default async function AIInsightDetailPage({ params }: Props) {
         </Card>
 
         <div className="space-y-5">
-          <ApiPredictionCard insight={insight} details={details} locale={locale} />
+          <ApiPredictionCard fixture={fixture} insight={insight} details={details} locale={locale} />
         </div>
       </section>
 
@@ -794,6 +815,7 @@ function buildSeoDescription(
   insight: ApiFootballAIInsightDetail
 ) {
   const copy = getSeoCopy(locale);
+  const details = detailCopy[locale] ?? detailCopy.th;
   const metrics = [
     typeof insight.confidenceScore === "number"
       ? `${copy.confidence} ${Math.round(insight.confidenceScore)}%`
@@ -811,16 +833,33 @@ function buildSeoDescription(
   ].filter(Boolean);
 
   const kickoff = fixture.kickoffTime
-    ? `Kickoff: ${formatDateTime(fixture.kickoffTime, locale)}.`
+    ? `${details.kickoff}: ${formatDateTime(fixture.kickoffTime, locale)}.`
     : "";
-  const advice = insight.apiAdvice ? ` ${insight.apiAdvice}` : "";
-  const metricText = metrics.length > 0 ? ` พร้อมข้อมูล ${metrics.join(", ")}.` : ".";
+  const metricText = metrics.length > 0 ? ` ${getSeoMetricPrefix(locale)} ${metrics.join(", ")}.` : ".";
 
   return `${copy.descriptionPrefix(
     fixture.home.name,
     fixture.away.name,
     fixture.league.name
-  )}${metricText} ${kickoff}${advice}`.trim();
+  )}${metricText} ${kickoff}`.trim();
+}
+
+function getSeoMetricPrefix(locale: string) {
+  if (locale === "en") return "with";
+  if (locale === "lo") return "ພ້ອມຂໍ້ມູນ";
+  if (locale === "my") return "အချက်အလက်များဖြင့်";
+  if (locale === "km") return "ជាមួយទិន្នន័យ";
+  if (locale === "zh") return "包含";
+  return "พร้อมข้อมูล";
+}
+
+function buildHeatMeterNote(
+  _insight: ApiFootballAIInsightDetail,
+  heatMeter: number | null,
+  locale: string,
+  copy: ReturnType<typeof getAIInsightPageCopy>
+) {
+  return getHeatDescription(heatMeter, locale, copy);
 }
 
 function buildStructuredData(
@@ -1129,7 +1168,7 @@ function SimpleStatCard({
           <Icon size={16} />
         </div>
       </div>
-      <p className="mt-3 line-clamp-2 text-xs font-semibold leading-relaxed text-text-secondary">{note}</p>
+      <p className="mt-3 text-xs font-semibold leading-relaxed text-text-secondary">{note}</p>
     </div>
   );
 }

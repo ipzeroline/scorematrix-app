@@ -38,7 +38,19 @@ type LeaderboardViewData = {
   rewards: LeaderboardReward[];
 };
 
+type LeaderboardPeriodCounts = Record<LeaderboardPeriodQuery, number | null>;
+
 const EMPTY_LEADERBOARD_ENTRIES: LeaderboardEntry[] = [];
+const LEADERBOARD_PERIODS: LeaderboardPeriodQuery[] = [
+  "daily",
+  "weekly",
+  "seasonal",
+];
+const EMPTY_PERIOD_COUNTS: LeaderboardPeriodCounts = {
+  daily: null,
+  weekly: null,
+  seasonal: null,
+};
 
 function rankTone(rank: number) {
   if (rank === 1) return "border-amber-500/30 bg-amber-500/15 text-amber-300";
@@ -194,6 +206,8 @@ export default function LeaderboardPage() {
   const profileUsername = useUserStore((state) => state.username);
   const profileDisplayName = useUserStore((state) => state.displayName);
   const [leaderboard, setLeaderboard] = useState<LeaderboardViewData | null>(null);
+  const [periodCounts, setPeriodCounts] =
+    useState<LeaderboardPeriodCounts>(EMPTY_PERIOD_COUNTS);
   const [loading, setLoading] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
 
@@ -204,6 +218,10 @@ export default function LeaderboardPage() {
       .then((response) => {
         if (!isActive) return;
         setLeaderboard(toLeaderboardViewData(response));
+        setPeriodCounts((current) => ({
+          ...current,
+          [period]: response.entries.length,
+        }));
         setLoadFailed(false);
       })
       .catch(() => {
@@ -219,6 +237,32 @@ export default function LeaderboardPage() {
       isActive = false;
     };
   }, [locale, period]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    Promise.all(
+      LEADERBOARD_PERIODS.map(async (periodKey) => {
+        try {
+          const response = await getLeaderboard(periodKey, { locale });
+          return [periodKey, response.entries.length] as const;
+        } catch {
+          return [periodKey, null] as const;
+        }
+      })
+    ).then((counts) => {
+      if (!isActive) return;
+      setPeriodCounts({
+        daily: counts.find(([key]) => key === "daily")?.[1] ?? null,
+        weekly: counts.find(([key]) => key === "weekly")?.[1] ?? null,
+        seasonal: counts.find(([key]) => key === "seasonal")?.[1] ?? null,
+      });
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [locale]);
 
   const entries = useMemo(
     () => leaderboard?.entries ?? EMPTY_LEADERBOARD_ENTRIES,
@@ -256,15 +300,13 @@ export default function LeaderboardPage() {
     };
   }, [entries]);
 
-  const tabs = [
-    { key: "daily", label: copy.periods.daily, count: entries.length },
-    { key: "weekly", label: copy.periods.weekly, count: entries.length },
-    {
-      key: "seasonal",
-      label: copy.periods.seasonal,
-      count: entries.length,
-    },
-  ];
+  const tabs = LEADERBOARD_PERIODS.map((periodKey) => ({
+    key: periodKey,
+    label: copy.periods[periodKey],
+    count:
+      periodCounts[periodKey] ??
+      (periodKey === period && leaderboard ? entries.length : undefined),
+  }));
   const showLoadingState = loading && leaderboard === null;
   const handlePeriodChange = (value: string) => {
     const nextPeriod = value as LeaderboardPeriodQuery;

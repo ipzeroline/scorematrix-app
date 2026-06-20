@@ -9,19 +9,19 @@ interface HeatMeterProps {
 }
 
 function getHeatLabel(value: number): string {
-  if (value <= 2) return "Cold";
-  if (value <= 4) return "Mild";
-  if (value <= 6) return "Warm";
-  if (value <= 8) return "Hot";
-  return "Fire";
+  if (value >= 90) return "Very heated";
+  if (value >= 75) return "Exciting";
+  if (value >= 50) return "Decent";
+  if (value >= 25) return "Light";
+  return "Boring";
 }
 
 function getHeatEmoji(value: number): string {
-  if (value <= 2) return "🥶";
-  if (value <= 4) return "🧊";
-  if (value <= 6) return "🌡️";
-  if (value <= 8) return "🔥";
-  return "💥";
+  if (value >= 90) return "🔥";
+  if (value >= 75) return "⚡️";
+  if (value >= 50) return "🤔";
+  if (value >= 25) return "😐";
+  return "💤";
 }
 
 export function HeatMeter({
@@ -29,8 +29,9 @@ export function HeatMeter({
   size = "md",
   className,
 }: HeatMeterProps) {
-  const clamped = Math.min(10, Math.max(0, value));
-  const percentage = (clamped / 10) * 100;
+  const normalized = value <= 10 ? value * 10 : value;
+  const clamped = Math.min(100, Math.max(0, Math.round(normalized)));
+  const percentage = clamped;
 
   const sizeClasses = {
     sm: "h-1.5",
@@ -65,17 +66,17 @@ export function HeatMeter({
           />
         </div>
         <span className="w-8 text-right text-sm font-mono font-bold text-white">
-          {clamped}/10
+          {clamped}/100
         </span>
       </div>
 
       {/* Label */}
       <div className="flex justify-between text-[10px] text-gray-500">
-        <span>0 - Cold</span>
+        <span>0 - Boring</span>
         <span className="text-xs font-medium text-gray-400">
           {getHeatLabel(clamped)}
         </span>
-        <span>10 - Fire</span>
+        <span>100 - Very heated</span>
       </div>
     </div>
   );

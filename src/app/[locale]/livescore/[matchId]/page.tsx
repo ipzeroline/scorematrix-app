@@ -4,6 +4,7 @@ import { cache } from "react";
 import {
   ArrowLeft,
   ArrowLeftRight,
+  Brain,
   Clock,
   ClipboardList,
   History,
@@ -15,8 +16,6 @@ import {
   Radio,
   ShieldCheck,
   Table2,
-  Timer,
-  TrendingUp,
   Trophy,
   User,
 } from "lucide-react";
@@ -377,8 +376,18 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
           />
         </div>
         
-        {fixture.status === MatchStatus.UPCOMING && isLoggedIn && new Date(fixture.kickoffTime) > new Date() && (
-          <div className="mt-5 flex justify-center">
+        <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+          <Link
+            id="btn-ai-insight-match"
+            href={`/${locale}/ai-insight/${fixture.apiFixtureId ?? fixture.id}`}
+            className="w-full sm:w-auto"
+          >
+            <Button variant="primary" size="md" className="w-full sm:w-auto font-display font-extrabold uppercase tracking-widest transition-all duration-150">
+              <Brain size={16} className="mr-2 inline-block align-[-2px]" aria-hidden="true" />
+              {t("predictionForm.matchLinks.aiInsight")}
+            </Button>
+          </Link>
+          {fixture.status === MatchStatus.UPCOMING && isLoggedIn && new Date(fixture.kickoffTime) > new Date() && (
             <Link
               id="btn-predict-match"
               href={buildPredictMatchHref(
@@ -393,8 +402,8 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                 {t("prediction.predictScore")}
               </Button>
             </Link>
-          </div>
-        )}
+          )}
+        </div>
         </div>
       </Card>
 
@@ -414,25 +423,12 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
               locale={locale}
               labels={{
                 title: t("matchDetail.matchInfo"),
-                status: t("matchDetail.liveStatus"),
-                kickoff: t("matchDetail.kickoffTime"),
-                elapsed: t("matchDetail.elapsed"),
-                addedTime: t("matchDetail.addedTime"),
                 referee: t("matchDetail.referee"),
                 venue: t("matchDetail.venue"),
                 firstPeriod: t("matchDetail.firstPeriod"),
                 secondPeriod: t("matchDetail.secondPeriod"),
                 lastUpdated: t("matchDetail.lastUpdated"),
                 unavailable: t("matchDetail.unavailable"),
-                statusFirstHalf: t("matchDetail.statusFirstHalf"),
-                statusSecondHalf: t("matchDetail.statusSecondHalf"),
-                statusHalftime: t("matchDetail.statusHalftime"),
-                statusFulltime: t("matchDetail.statusFulltime"),
-                statusExtraTime: t("matchDetail.statusExtraTime"),
-                statusPenalty: t("matchDetail.statusPenalty"),
-                statusPostponed: t("matchDetail.statusPostponed"),
-                statusCancelled: t("matchDetail.statusCancelled"),
-                statusNotStarted: t("matchDetail.statusNotStarted"),
               }}
             />
 
@@ -456,7 +452,6 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                 assist: t("matchDetail.goalAssist"),
                 type: t("matchDetail.goalType"),
                 detail: t("matchDetail.goalDetail"),
-                related: t("matchDetail.relatedPlayer"),
                 comments: t("matchDetail.goalComments"),
               }}
             />
@@ -477,6 +472,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                 standings={standings}
                 homeTeam={fixture.home}
                 awayTeam={fixture.away}
+                locale={locale}
                 title={t("matchDetail.leagueStanding")}
                 emptyLabel={t("matchDetail.noStandingData")}
                 labels={{
@@ -490,6 +486,7 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
                   split: t("matchDetail.standingSplit"),
                   home: t("matchDetail.standingHome"),
                   away: t("matchDetail.standingAway"),
+                  lastUpdated: t("matchDetail.lastUpdated"),
                 }}
               />
             </div>
@@ -497,16 +494,6 @@ export default async function MatchDetailPage({ params, showJsonBox = false }: P
         }
         statsTab={
           <>
-            <StatsAnalysisPanel
-              statistics={statistics}
-              labels={{
-                title: t("matchDetail.analysisGraph"),
-                empty: t("matchDetail.noTeamStatistics"),
-                balanced: t("matchDetail.balancedStat"),
-              }}
-              statLabels={buildTeamStatLabels(t)}
-            />
-
             <TeamStatsPanel
               statistics={statistics}
               title={t("matchDetail.teamStatistics")}
@@ -741,7 +728,6 @@ function FirstScorerPanel({
     assist: string;
     type: string;
     detail: string;
-    related: string;
     comments: string;
   };
 }) {
@@ -792,7 +778,6 @@ function FirstScorerPanel({
           </div>
           <div className="grid gap-3">
             <FirstScorerMeta label={labels.detail} value={translateEventDetail(event.detail, eventLabels)} />
-            <FirstScorerMeta label={labels.related} value={event.assist.name ?? "-"} />
             <FirstScorerMeta label={labels.comments} value={event.comments ?? "-"} multiline />
           </div>
         </div>
@@ -868,56 +853,15 @@ function MatchContextPanel({
   locale: string;
   labels: {
     title: string;
-    status: string;
-    kickoff: string;
-    elapsed: string;
-    addedTime: string;
     referee: string;
     venue: string;
     firstPeriod: string;
     secondPeriod: string;
     lastUpdated: string;
     unavailable: string;
-    statusFirstHalf: string;
-    statusSecondHalf: string;
-    statusHalftime: string;
-    statusFulltime: string;
-    statusExtraTime: string;
-    statusPenalty: string;
-    statusPostponed: string;
-    statusCancelled: string;
-    statusNotStarted: string;
   };
 }) {
-  const elapsedValue = fixture.elapsed === null
-    ? labels.unavailable
-    : `${fixture.elapsed}${fixture.statusExtra ? `+${fixture.statusExtra}` : ""}'`;
-
   const items = [
-    {
-      icon: Radio,
-      label: labels.status,
-      value: translateFixtureStatus(fixture, labels),
-      tone: "text-success",
-    },
-    {
-      icon: Clock,
-      label: labels.kickoff,
-      value: formatFixtureDateTime(fixture.kickoffTime, locale),
-      tone: "text-primary",
-    },
-    {
-      icon: Timer,
-      label: labels.elapsed,
-      value: elapsedValue,
-      tone: "text-warning",
-    },
-    {
-      icon: Timer,
-      label: labels.addedTime,
-      value: fixture.statusExtra === null ? labels.unavailable : `${fixture.statusExtra}'`,
-      tone: "text-warning",
-    },
     {
       icon: User,
       label: labels.referee,
@@ -935,12 +879,14 @@ function MatchContextPanel({
       label: labels.firstPeriod,
       value: formatUnixTimestamp(fixture.periods.first, labels.unavailable, locale),
       tone: "text-primary",
+      visible: Boolean(fixture.periods.first),
     },
     {
       icon: Clock,
       label: labels.secondPeriod,
       value: formatUnixTimestamp(fixture.periods.second, labels.unavailable, locale),
       tone: "text-text-muted",
+      visible: Boolean(fixture.periods.second),
     },
     {
       icon: Radio,
@@ -948,7 +894,7 @@ function MatchContextPanel({
       value: formatFixtureDateTime(fetchedAt, locale),
       tone: "text-success",
     },
-  ];
+  ].filter((item) => item.visible !== false);
 
   return (
     <Card className="overflow-hidden p-0 border border-border bg-surface shadow-xl">
@@ -973,51 +919,6 @@ function MatchContextPanel({
       </div>
     </Card>
   );
-}
-
-function translateFixtureStatus(
-  fixture: ApiFootballFixture,
-  labels: {
-    unavailable: string;
-    statusFirstHalf: string;
-    statusSecondHalf: string;
-    statusHalftime: string;
-    statusFulltime: string;
-    statusExtraTime: string;
-    statusPenalty: string;
-    statusPostponed: string;
-    statusCancelled: string;
-    statusNotStarted: string;
-  }
-) {
-  switch (fixture.statusShort.toUpperCase()) {
-    case "1H":
-      return labels.statusFirstHalf;
-    case "2H":
-      return labels.statusSecondHalf;
-    case "HT":
-      return labels.statusHalftime;
-    case "FT":
-      return labels.statusFulltime;
-    case "ET":
-    case "AET":
-      return labels.statusExtraTime;
-    case "P":
-    case "PEN":
-      return labels.statusPenalty;
-    case "PST":
-      return labels.statusPostponed;
-    case "CANC":
-    case "ABD":
-    case "AWD":
-    case "WO":
-      return labels.statusCancelled;
-    case "NS":
-    case "TBD":
-      return labels.statusNotStarted;
-    default:
-      return fixture.statusLong || fixture.statusShort || labels.unavailable;
-  }
 }
 
 function MatchDetailShell({
@@ -1522,96 +1423,6 @@ function TeamStatsPanel({
                 </div>
                 <div className="mt-2 flex items-center justify-between font-mono text-xs font-black tracking-wide">
                   <span className="text-cyan-200/80">{row.homePercent}%</span>
-                  <span className="text-rose-200/80">{row.awayPercent}%</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </Card>
-  );
-}
-
-function StatsAnalysisPanel({
-  statistics,
-  labels,
-  statLabels,
-}: {
-  statistics: ApiFootballTeamStatistics[];
-  labels: {
-    title: string;
-    empty: string;
-    balanced: string;
-  };
-  statLabels: TeamStatLabels;
-}) {
-  const homeStats = statistics[0];
-  const awayStats = statistics[1];
-  const rows = buildAnalysisRows(homeStats, awayStats);
-
-  return (
-    <Card className="overflow-hidden border border-cyan-300/12 bg-[#0b0f18] p-0 shadow-xl">
-      <div className="flex flex-col gap-3 border-b border-white/10 bg-[#0f1320] px-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={17} className="shrink-0 text-primary font-display" />
-            <h2 className="min-w-0 truncate text-base font-black text-white font-display sm:text-sm sm:font-semibold sm:uppercase sm:tracking-wider">{labels.title}</h2>
-          </div>
-        </div>
-        {homeStats && awayStats ? (
-          <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 text-sm sm:flex sm:w-auto sm:flex-nowrap">
-            <TeamMiniLabel team={homeStats.team} tone="cyan" />
-            <span className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-white/10 bg-black/40 px-2 text-center font-mono text-xs font-black uppercase tracking-wider text-white shadow-[0_0_20px_rgba(34,211,238,0.08)]">
-              vs
-            </span>
-            <TeamMiniLabel team={awayStats.team} tone="magenta" />
-          </div>
-        ) : null}
-      </div>
-
-      {!homeStats || !awayStats || rows.length === 0 ? (
-        <div className="p-4">
-          <EmptyDetail label={labels.empty} />
-        </div>
-      ) : (
-        <div className="grid gap-3.5 p-3 sm:p-4 md:grid-cols-2">
-          {rows.map((row) => {
-            const visual = getStatVisual(rowDominance(row.homePercent, row.awayPercent));
-
-            return (
-              <div
-                key={row.type}
-                className="rounded-xl border border-white/10 bg-[#10131d] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] transition-all duration-150 hover:border-cyan-300/20 hover:bg-[#121827]"
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <span className="min-w-[54px] truncate font-mono text-base font-black text-cyan-200 sm:min-w-[64px]">
-                    {row.homeDisplay}
-                  </span>
-                  <span className="min-w-0 truncate px-2 text-center text-[12px] font-black uppercase tracking-wide text-gray-100 font-display sm:text-[13px]">
-                    {translateTeamStat(row.type, statLabels)}
-                  </span>
-                  <span className="min-w-[54px] truncate text-right font-mono text-base font-black text-rose-300 sm:min-w-[64px]">
-                    {row.awayDisplay}
-                  </span>
-                </div>
-                <div className="h-3.5 overflow-hidden rounded-full border border-white/10 bg-slate-900/80">
-                  <div className="flex h-full w-full gap-0.5 p-0.5">
-                    <div
-                      className={cn("h-full rounded-l-full", visual.home)}
-                      style={{ width: `${row.homePercent}%` }}
-                    />
-                    <div
-                      className={cn("h-full rounded-r-full", visual.away)}
-                      style={{ width: `${row.awayPercent}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center justify-between font-mono text-xs font-black tracking-wide">
-                  <span className="text-cyan-200/80">{row.homePercent}%</span>
-                  <span className="truncate px-2 text-center text-[11px] font-bold text-amber-200/85">
-                    {row.homePercent === row.awayPercent ? labels.balanced : ""}
-                  </span>
                   <span className="text-rose-200/80">{row.awayPercent}%</span>
                 </div>
               </div>
@@ -2752,6 +2563,7 @@ function StandingPanel({
   standings,
   homeTeam,
   awayTeam,
+  locale,
   title,
   emptyLabel,
   labels,
@@ -2759,9 +2571,10 @@ function StandingPanel({
   standings: { home: ApiFootballFixtureTeamStanding | null; away: ApiFootballFixtureTeamStanding | null } | null;
   homeTeam: ApiFootballFixture["home"];
   awayTeam: ApiFootballFixture["away"];
+  locale: string;
   title: string;
   emptyLabel: string;
-  labels: { points: string; rank: string; played: string; wdl: string; goals: string; gd: string; recentForm: string; split: string; home: string; away: string };
+  labels: { points: string; rank: string; played: string; wdl: string; goals: string; gd: string; recentForm: string; split: string; home: string; away: string; lastUpdated: string };
 }) {
   const home = standings?.home;
   const away = standings?.away;
@@ -2872,12 +2685,12 @@ function StandingPanel({
         {(hs.update || as_.update) && (
           <div className="grid gap-2 rounded-xl border border-white/10 bg-[#10131d] px-3 py-3 sm:grid-cols-2">
             <div className="min-w-0">
-              <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{homeTeam.name} update</p>
-              <p className="mt-1 truncate font-mono text-xs font-bold text-cyan-200">{hs.update ?? "-"}</p>
+              <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{homeTeam.name} · {labels.lastUpdated}</p>
+              <p className="mt-1 truncate font-mono text-xs font-bold text-cyan-200">{formatOptionalDateTime(hs.update, locale)}</p>
             </div>
             <div className="min-w-0 sm:text-right">
-              <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{awayTeam.name} update</p>
-              <p className="mt-1 truncate font-mono text-xs font-bold text-rose-300">{as_.update ?? "-"}</p>
+              <p className="truncate text-[10px] font-black uppercase tracking-wider text-gray-500">{awayTeam.name} · {labels.lastUpdated}</p>
+              <p className="mt-1 truncate font-mono text-xs font-bold text-rose-300">{formatOptionalDateTime(as_.update, locale)}</p>
             </div>
           </div>
         )}
@@ -2984,15 +2797,6 @@ function EmptyDetail({ label }: { label: string }) {
 
 function parseApiFixtureId(matchId: string): number | null {
   return extractApiFixtureId(matchId);
-}
-
-function buildAnalysisRows(
-  homeStats?: ApiFootballTeamStatistics,
-  awayStats?: ApiFootballTeamStatistics
-) {
-  return buildTeamStatRows(homeStats, awayStats).filter(
-    (row) => row.homeNumber !== null && row.awayNumber !== null
-  );
 }
 
 function buildTeamStatRows(
@@ -3124,6 +2928,13 @@ function shortenPlayerName(name: string) {
 
 function formatFixtureDateTime(value: string, locale: string) {
   return `${formatDate(value, locale)} ${formatTime(value, locale)}`;
+}
+
+function formatOptionalDateTime(value: string | null | undefined, locale: string) {
+  if (!value) return "-";
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return "-";
+  return formatFixtureDateTime(value, locale);
 }
 
 function formatUnixTimestamp(value: number | null, fallback: string, locale: string) {

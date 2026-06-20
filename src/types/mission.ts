@@ -14,6 +14,7 @@ export interface Mission {
   rewardCredits?: number;
   completed: boolean;
   claimed: boolean;
+  startsAt?: string;
   expiresAt: string;
   resetAt: string;
 }

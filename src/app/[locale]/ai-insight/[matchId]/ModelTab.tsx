@@ -15,6 +15,8 @@ import {
   formatHeadToHeadFulltime,
   formatVenue,
   clampPercent,
+  getLocalizedModelAdvice,
+  getLocalizedWinnerComment,
 } from "./_detail-shared";
 import {
   SectionHeading,
@@ -55,7 +57,7 @@ export default function ModelTab({
         locale={locale}
       />
       <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <ApiPredictionCard insight={insight} details={details} locale={locale} />
+        <ApiPredictionCard fixture={fixture} insight={insight} details={details} locale={locale} />
         <ComparisonPanel
           comparison={insight.comparison}
           labels={comparisonLabels}
@@ -118,10 +120,12 @@ function ModelStrengthCard({
 }
 
 export function ApiPredictionCard({
+  fixture,
   insight,
   details,
   locale,
 }: {
+  fixture: ApiFootballFixture;
   insight: ApiFootballAIInsightDetail;
   details: LocalizedDetailCopy;
   locale: string;
@@ -137,12 +141,12 @@ export function ApiPredictionCard({
       <div className="mt-4 space-y-4">
         <div className="rounded-xl border border-warning/20 bg-warning/10 p-4">
           <p className="text-sm leading-6 text-text-secondary">
-            {insight.apiAdvice || details.noPrediction}
+            {getLocalizedModelAdvice(fixture, insight, details)}
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <PredictionInfo label={details.winnerLean} value={insight.apiWinner?.name} />
-          <PredictionInfo label={details.winnerNote} value={insight.apiWinner?.comment} />
+          <PredictionInfo label={details.winnerNote} value={getLocalizedWinnerComment(fixture, insight, details)} />
           <PredictionInfo
             label={details.winOrDraw}
             value={formatBoolean(insight.apiWinOrDraw, locale)}

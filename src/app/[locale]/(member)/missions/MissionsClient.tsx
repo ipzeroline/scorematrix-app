@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import {
   Award,
@@ -43,7 +43,10 @@ import {
   getMissions,
   mapApiMission,
   claimMission,
-  type MissionCurrentStats,
+  type MissionPeriodKey,
+  type MissionPeriodWindow,
+  type MissionPeriodWindows,
+  type MissionsResponse,
 } from "@/lib/missions-api";
 import type { Mission } from "@/types/mission";
 import { MissionType } from "@/types/common";
@@ -95,6 +98,128 @@ function formatTimeLeft(ms: number): string {
   return `${seconds}s`;
 }
 
+function parseApiDateTime(value?: string | null): number {
+  if (!value) return 0;
+  const trimmed = value.trim();
+  if (!trimmed) return 0;
+
+  const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(trimmed)
+    ? trimmed.replace(" ", "T")
+    : trimmed;
+  const timestamp = new Date(normalized).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const WEEK_MS = 7 * DAY_MS;
+
+function getNextLocalMidnight(timestamp: number) {
+  const next = new Date(timestamp);
+  next.setHours(24, 0, 0, 0);
+  return next.getTime();
+}
+
+function getNextLocalWeekStart(timestamp: number) {
+  const next = new Date(timestamp);
+  const day = next.getDay();
+  const daysUntilMonday = day === 0 ? 1 : 8 - day;
+  next.setDate(next.getDate() + daysUntilMonday);
+  next.setHours(0, 0, 0, 0);
+  return next.getTime();
+}
+
+function clampResetToApiWindow(
+  target: number,
+  periodStart: number,
+  periodEnd: number,
+  now: number
+) {
+  if (periodStart > 0 && now < periodStart) return periodStart;
+  if (periodEnd > 0 && now > periodEnd) return periodEnd;
+  if (periodEnd > 0 && target > periodEnd) return periodEnd;
+  return target;
+}
+
+function getResetTimestamp(
+  periodKey: MissionPeriodKey,
+  periods: MissionPeriodWindows,
+  missions: Mission[],
+  now = Date.now()
+) {
+  const period = periods[periodKey];
+  const periodResetAt = period?.resetAt || period?.end;
+  const periodStartTimestamp = parseApiDateTime(period?.start);
+  const periodResetTimestamp = parseApiDateTime(periodResetAt);
+  const periodSpan =
+    periodStartTimestamp > 0 && periodResetTimestamp > 0
+      ? periodResetTimestamp - periodStartTimestamp
+      : 0;
+
+  if (periodKey === "daily") {
+    const nextDailyReset =
+      periodResetTimestamp > 0 && periodSpan > 0 && periodSpan <= DAY_MS * 1.5
+        ? periodResetTimestamp
+        : getNextLocalMidnight(now);
+    return clampResetToApiWindow(
+      nextDailyReset,
+      periodStartTimestamp,
+      periodResetTimestamp,
+      now
+    );
+  }
+
+  if (periodKey === "weekly") {
+    const nextWeeklyReset =
+      periodResetTimestamp > 0 && periodSpan > 0 && periodSpan <= WEEK_MS * 1.25
+        ? periodResetTimestamp
+        : getNextLocalWeekStart(now);
+    return clampResetToApiWindow(
+      nextWeeklyReset,
+      periodStartTimestamp,
+      periodResetTimestamp,
+      now
+    );
+  }
+
+  if (periodKey === "special") {
+    return missions.reduce((earliest, mission) => {
+      const missionResetTimestamp = parseApiDateTime(
+        mission.resetAt || mission.expiresAt
+      );
+      if (missionResetTimestamp <= 0) return earliest;
+      return earliest === 0
+        ? missionResetTimestamp
+        : Math.min(earliest, missionResetTimestamp);
+    }, 0);
+  }
+
+  if (periodResetTimestamp > 0) return periodResetTimestamp;
+
+  return missions.reduce((earliest, mission) => {
+    const missionResetTimestamp = parseApiDateTime(
+      mission.resetAt || mission.expiresAt
+    );
+    if (missionResetTimestamp <= 0) return earliest;
+    return earliest === 0
+      ? missionResetTimestamp
+      : Math.min(earliest, missionResetTimestamp);
+  }, 0);
+}
+
+function isInsideApiWindow(
+  now: number | null,
+  startsAt?: string,
+  resetAt?: string
+) {
+  if (!now) return true;
+  const startTimestamp = parseApiDateTime(startsAt);
+  const resetTimestamp = parseApiDateTime(resetAt);
+
+  if (startTimestamp > 0 && now < startTimestamp) return false;
+  if (resetTimestamp > 0 && now > resetTimestamp) return false;
+  return true;
+}
+
 type HeroStats = {
   freePoints: number;
   xp: number;
@@ -139,6 +264,9 @@ export default function MissionsPage() {
       mapApiMission(mission, MissionType.SPECIAL)
     )
   );
+  const [periods, setPeriods] = useState<MissionPeriodWindows>(
+    DEFAULT_MISSIONS_RESPONSE.periods
+  );
   const [loading, setLoading] = useState(false);
   const [loadFailed, setLoadFailed] = useState(false);
   const [heroStats, setHeroStats] = useState<HeroStats>(INITIAL_HERO_STATS);
@@ -147,6 +275,7 @@ export default function MissionsPage() {
   const [achievementsLoading, setAchievementsLoading] = useState(true);
   const [achievementsLoadFailed, setAchievementsLoadFailed] = useState(false);
   const [now, setNow] = useState<number>(() => Date.now());
+  const resetRefreshRef = useRef<Record<string, boolean>>({});
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -172,6 +301,26 @@ export default function MissionsPage() {
   function getPositiveRewardCredits(mission: Mission): number {
     return Math.max(0, mission.rewardCredits ?? 0);
   }
+
+  const applyMissionsResponse = useCallback((response: MissionsResponse) => {
+    setDaily(response.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)));
+    setWeekly(response.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)));
+    setSpecial(response.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)));
+    setPeriods(response.periods);
+    setHeroStats((prev) => ({
+      ...prev,
+      streak: response.currentStats.missionStreak,
+      missionsCompleted: response.currentStats.todayCompleted,
+      xp: response.currentStats.xp,
+      level: response.currentStats.level,
+    }));
+  }, []);
+
+  const refreshMissions = useCallback(async () => {
+    const response = await getMissions({ locale });
+    applyMissionsResponse(response);
+    setLoadFailed(false);
+  }, [applyMissionsResponse, locale]);
 
   const handleClaimMission = async (missionId: string) => {
     const mission = [...daily, ...weekly, ...special].find((m) => m.id === missionId);
@@ -221,31 +370,15 @@ export default function MissionsPage() {
   useEffect(() => {
     let active = true;
 
-    const applyCurrentStats = (stats: MissionCurrentStats) => {
-      setHeroStats((prev) => ({
-        ...prev,
-        streak: stats.missionStreak,
-        missionsCompleted: stats.todayCompleted,
-        xp: stats.xp,
-        level: stats.level,
-      }));
-    };
-
     getMissions({ locale })
       .then((response) => {
         if (!active) return;
-        setDaily(response.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)));
-        setWeekly(response.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)));
-        setSpecial(response.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)));
-        applyCurrentStats(response.currentStats);
+        applyMissionsResponse(response);
         setLoadFailed(false);
       })
       .catch(() => {
         if (!active) return;
-        setDaily(DEFAULT_MISSIONS_RESPONSE.daily.map((mission) => mapApiMission(mission, MissionType.DAILY)));
-        setWeekly(DEFAULT_MISSIONS_RESPONSE.weekly.map((mission) => mapApiMission(mission, MissionType.WEEKLY)));
-        setSpecial(DEFAULT_MISSIONS_RESPONSE.special.map((mission) => mapApiMission(mission, MissionType.SPECIAL)));
-        applyCurrentStats(DEFAULT_MISSIONS_RESPONSE.currentStats);
+        applyMissionsResponse(DEFAULT_MISSIONS_RESPONSE);
         setLoadFailed(false);
       })
       .finally(() => {
@@ -255,7 +388,7 @@ export default function MissionsPage() {
     return () => {
       active = false;
     };
-  }, [locale]);
+  }, [applyMissionsResponse, locale]);
 
   useEffect(() => {
     let active = true;
@@ -327,9 +460,56 @@ export default function MissionsPage() {
       : tab === "special"
       ? special
       : [];
+  const dailyResetTimestamp = useMemo(
+    () => getResetTimestamp("daily", periods, daily, now),
+    [daily, now, periods]
+  );
+  const weeklyResetTimestamp = useMemo(
+    () => getResetTimestamp("weekly", periods, weekly, now),
+    [now, periods, weekly]
+  );
   const readyToClaim = activeMissions.filter(
     (mission) => mission.completed && !mission.claimed && !claimed[mission.id]
   ).length;
+
+  useEffect(() => {
+    const timers: number[] = [];
+    const resetTargets = [
+      { key: "daily", timestamp: dailyResetTimestamp },
+      { key: "weekly", timestamp: weeklyResetTimestamp },
+    ];
+
+    for (const target of resetTargets) {
+      if (target.timestamp <= 0) continue;
+
+      const refreshKey = `${target.key}:${target.timestamp}`;
+      const delay = target.timestamp - Date.now();
+
+      if (delay <= 0) {
+        if (!resetRefreshRef.current[refreshKey]) {
+          resetRefreshRef.current[refreshKey] = true;
+          void refreshMissions().catch(() => {
+            setLoadFailed(true);
+          });
+        }
+        continue;
+      }
+
+      const timeoutId = window.setTimeout(() => {
+        if (resetRefreshRef.current[refreshKey]) return;
+        resetRefreshRef.current[refreshKey] = true;
+        void refreshMissions().catch(() => {
+          setLoadFailed(true);
+        });
+      }, Math.min(delay + 1000, 2147483647));
+
+      timers.push(timeoutId);
+    }
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, [dailyResetTimestamp, refreshMissions, weeklyResetTimestamp]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
@@ -435,6 +615,8 @@ export default function MissionsPage() {
           title={copy.daily}
           intro={copy.dailyIntro}
           missions={daily}
+          periodKey="daily"
+          period={periods.daily}
           copy={copy}
           claimed={claimed}
           now={now}
@@ -449,6 +631,8 @@ export default function MissionsPage() {
           title={copy.weekly}
           intro={copy.weeklyIntro}
           missions={weekly}
+          periodKey="weekly"
+          period={periods.weekly}
           copy={copy}
           claimed={claimed}
           now={now}
@@ -463,6 +647,8 @@ export default function MissionsPage() {
           title={copy.special}
           intro={copy.specialIntro}
           missions={special}
+          periodKey="special"
+          period={periods.special}
           copy={copy}
           claimed={claimed}
           now={now}
@@ -931,16 +1117,26 @@ function SectionHeader({
   eyebrow,
   title,
   intro,
+  meta,
 }: {
   eyebrow: string;
   title: string;
   intro: string;
+  meta?: string;
 }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-[#0a101a] p-4 sm:p-5">
-      <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
-        <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
-        {eyebrow}
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-200">
+          <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.7)]" />
+          {eyebrow}
+        </div>
+        {meta && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-xs font-mono font-black uppercase tracking-wider text-cyan-100">
+            <CalendarClock size={13} />
+            {meta}
+          </span>
+        )}
       </div>
       <h2 className="font-display text-2xl font-black text-white sm:text-3xl">
         {title}
@@ -956,6 +1152,8 @@ function MissionList({
   title,
   intro,
   missions,
+  periodKey,
+  period,
   copy,
   claimed,
   now,
@@ -966,6 +1164,8 @@ function MissionList({
   title: string;
   intro: string;
   missions: Mission[];
+  periodKey: MissionPeriodKey;
+  period: MissionPeriodWindow | null;
   copy: ReturnType<typeof getMissionPageCopy>;
   claimed: Record<string, boolean>;
   now: number | null;
@@ -973,12 +1173,29 @@ function MissionList({
   loadFailed: boolean;
   onClaim: (id: string) => void;
 }) {
+  const resetTimestamp = getResetTimestamp(periodKey, {
+    daily: periodKey === "daily" ? period : null,
+    weekly: periodKey === "weekly" ? period : null,
+    special: periodKey === "special" ? period : null,
+  }, missions, now ?? 0);
+  const periodEnd = period?.resetAt || period?.end || "";
+  const periodTimeLeft = now && resetTimestamp > 0 ? resetTimestamp - now : 0;
+  const showPeriodCountdown =
+    periodKey !== "special" &&
+    periodTimeLeft > 0 &&
+    isInsideApiWindow(now, period?.start, periodEnd);
+
   return (
     <section className="space-y-4">
       <SectionHeader
         eyebrow={`${missions.length.toLocaleString()} ${copy.missionsLabel}`}
         title={title}
         intro={intro}
+        meta={
+          showPeriodCountdown
+            ? copy.resetsIn.replace("{time}", formatTimeLeft(periodTimeLeft))
+            : undefined
+        }
       />
       {loading && (
         <div className="grid gap-3 lg:grid-cols-2">
@@ -1008,6 +1225,9 @@ function MissionList({
             mission={mission}
             copy={copy}
             claimed={Boolean(claimed[mission.id])}
+            period={period}
+            periodKey={periodKey}
+            resetTimestamp={resetTimestamp}
             now={now}
             onClaim={onClaim}
           />
@@ -1022,12 +1242,18 @@ function MissionPanel({
   mission,
   copy,
   claimed,
+  period,
+  periodKey,
+  resetTimestamp,
   now,
   onClaim,
 }: {
   mission: Mission;
   copy: ReturnType<typeof getMissionPageCopy>;
   claimed: boolean;
+  period: MissionPeriodWindow | null;
+  periodKey: MissionPeriodKey;
+  resetTimestamp: number;
   now: number | null;
   onClaim: (id: string) => void;
 }) {
@@ -1038,8 +1264,16 @@ function MissionPanel({
   const color = categoryColors[mission.category] ?? "cyan";
   const Icon = missionIconMap[mission.icon as keyof typeof missionIconMap] ?? Target;
 
-  const expiryDate = mission.expiresAt ? new Date(mission.expiresAt).getTime() : 0;
-  const timeLeft = now && expiryDate > 0 ? expiryDate - now : 0;
+  const resetAt = period?.resetAt || period?.end || mission.resetAt || mission.expiresAt;
+  const startsAt = period?.start || mission.startsAt;
+  const expiryDate =
+    periodKey === "daily" || periodKey === "weekly"
+      ? resetTimestamp
+      : 0;
+  const timeLeft =
+    now && expiryDate > 0 && isInsideApiWindow(now, startsAt, resetAt)
+      ? expiryDate - now
+      : 0;
 
   const progressPercent =
     mission.target > 0

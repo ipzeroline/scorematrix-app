@@ -24,6 +24,7 @@ import {
   getImpactDescription,
   getAIVerdict,
   getConfidenceDescription,
+  getStatusLabel,
 } from "./_detail-shared";
 import {
   SectionHeading,
@@ -72,7 +73,7 @@ export default function SummaryTab({
         />
       ) : null}
       <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <FixtureMetaCard fixture={fixture} details={details} locale={locale} />
+        <FixtureMetaCard fixture={fixture} details={details} locale={locale} copy={copy} />
         <FormIndexOverview
           insight={insight}
           fixture={fixture}
@@ -286,10 +287,12 @@ function FixtureMetaCard({
   fixture,
   details,
   locale,
+  copy,
 }: {
   fixture: ApiFootballFixture;
   details: LocalizedDetailCopy;
   locale: string;
+  copy: ReturnType<typeof getAIInsightPageCopy>;
 }) {
   return (
     <Card className="border-border bg-surface p-5 shadow-xl">
@@ -308,7 +311,7 @@ function FixtureMetaCard({
           label={details.liveFlag}
           value={formatBoolean(isLiveStatus(fixture.statusShort.toUpperCase(), fixture.elapsed), locale)}
         />
-        <PredictionInfo label={details.status} value={fixture.statusLong || fixture.statusShort} />
+        <PredictionInfo label={details.status} value={getStatusLabel(fixture, copy, details)} />
         <PredictionInfo label={details.round} value={fixture.league.round || "-"} />
         <PredictionInfo label={details.venue} value={fixture.venue || "-"} />
         <PredictionInfo label={details.referee} value={fixture.referee || "-"} />

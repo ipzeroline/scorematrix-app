@@ -284,6 +284,12 @@ type ScoringApiBreakdown = {
       earned?: boolean | null;
       predicted_home?: number | null;
       predicted_away?: number | null;
+      actual_home?: number | null;
+      actual_away?: number | null;
+      actual?: {
+        home?: number | null;
+        away?: number | null;
+      } | null;
       points?: number | null;
     } | null;
   } | null;
@@ -301,6 +307,7 @@ type ScoringApiBreakdown = {
 export function PredictApi() {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
+  const scoreCopy = getScoringBreakdownCopy(locale);
   const pathname = usePathname();
   const [tab, setTab] = useState("upcoming");
   const [matches, setMatches] = useState<PredictableMatch[]>([]);
@@ -1053,7 +1060,7 @@ export function PredictApi() {
               <div className="mb-5 flex items-start justify-between gap-4 border-b border-gray-800/80 pb-4">
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-[0.22em] text-cyan-400">
-                    Prediction Receipt
+                    {scoreCopy.receipt}
                   </span>
                   <p className="mt-2 text-xs text-gray-500">
                     {formatHistoryTimestamp(selectedPrediction.createdAt, locale)}
@@ -1131,29 +1138,29 @@ export function PredictApi() {
                     <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
                       <HistorySummaryStat
                         label={t("prediction.pointsEarned")}
-                        value={`+${selectedPrediction.points} PTS`}
+                        value={`+${selectedPrediction.points} ${scoreCopy.pointsAbbr}`}
                         valueClassName={selectedPrediction.result === "void" ? "text-gray-400" : "text-emerald-300"}
                       />
                       <HistorySummaryStat
-                        label="Result"
+                        label={scoreCopy.result}
                         value={t(`prediction.${selectedPrediction.result}`)}
                         valueClassName={historyTierTextClass(selectedPrediction.result)}
                       />
                       {selectedPrediction.resultType && selectedPrediction.result !== "void" && (
                         <HistorySummaryStat
-                          label="Result Type"
-                          value={formatResultType(selectedPrediction.resultType)}
+                          label={scoreCopy.resultType}
+                          value={formatResultType(selectedPrediction.resultType, scoreCopy)}
                           valueClassName="text-amber-300"
                         />
                       )}
                       <HistorySummaryStat
-                        label="Confidence"
-                        value={formatHistoryConfidence(selectedPrediction.confidenceLevel)}
+                        label={scoreCopy.confidence}
+                        value={formatHistoryConfidence(selectedPrediction.confidenceLevel, scoreCopy)}
                         valueClassName="text-violet-300"
                       />
                       <HistorySummaryStat
-                        label="Boost"
-                        value={selectedPrediction.boostUsed ? "ON" : "OFF"}
+                        label={scoreCopy.boost}
+                        value={selectedPrediction.boostUsed ? scoreCopy.on : scoreCopy.off}
                         valueClassName={
                           selectedPrediction.boostUsed
                             ? "text-fuchsia-300"
@@ -1167,23 +1174,24 @@ export function PredictApi() {
                 {selectedPrediction.scoring ? (
                   <ScoringBreakdownSection
                     scoring={selectedPrediction.scoring}
+                    prediction={selectedPrediction}
                     firstScorerPlayerName={
                       loadingPlayer
-                        ? "Loading..."
+                        ? null
                         : selectedPrediction.firstScorerPlayerName || playerName || null
                     }
                   />
                 ) : (
                   <div className="grid gap-3 lg:grid-cols-2">
                     <HistoryModalSection
-                      title="Prediction Setup"
+                      title={scoreCopy.predictionSetup}
                       tone="text-cyan-300"
                       className="border-cyan-500/10"
                     >
                       <div className="grid gap-2 sm:grid-cols-2">
                         <HistoryModalMetric
                           label={t("predictionForm.payload.pointsWagered")}
-                          value={`${Number(selectedPrediction.pointsWagered).toLocaleString()} PTS`}
+                          value={`${Number(selectedPrediction.pointsWagered).toLocaleString()} ${scoreCopy.pointsAbbr}`}
                           valueClassName="text-cyan-300"
                         />
                         <HistoryModalMetric
@@ -1197,8 +1205,8 @@ export function PredictApi() {
                           valueClassName="text-emerald-300"
                         />
                         <HistoryModalMetric
-                          label="Boost"
-                          value={selectedPrediction.boostUsed ? "ON" : "OFF"}
+                          label={scoreCopy.boost}
+                          value={selectedPrediction.boostUsed ? scoreCopy.on : scoreCopy.off}
                           valueClassName={
                             selectedPrediction.boostUsed
                               ? "text-fuchsia-300"
@@ -1348,7 +1356,7 @@ export function PredictApi() {
 
               {/* Confidence multipliers */}
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-white">Confidence Multipliers</h3>
+                <h3 className="mb-2 text-sm font-semibold text-white">{scoreCopy.multipliers}</h3>
                 <div className="space-y-2">
                   {Object.entries(scoringRules.confidenceMultipliers || {}).map(
                     ([key, c]) => (
@@ -1708,28 +1716,19 @@ function historyTierTextClass(result: PredictionHistoryItem["result"]) {
   }
 }
 
-function formatResultType(value: string | null) {
+function formatResultType(value: string | null, copy: ScoringBreakdownCopy) {
   switch (value) {
-    case "exact":    return "Exact Score";
+    case "exact":    return copy.tiers.exact;
     case "goalDiff":
-    case "goal_diff": return "Goal Difference";
-    case "result":   return "Correct Result";
-    case "wrong":    return "Wrong";
+    case "goal_diff": return copy.tiers.goalDiff;
+    case "result":   return copy.tiers.result;
+    case "wrong":    return copy.tiers.wrong;
     default:         return value ?? "-";
   }
 }
 
-function formatHistoryConfidence(value: string | null) {
-  switch (value) {
-    case "bold":
-      return "Bold";
-    case "confident":
-      return "Confident";
-    case "safe":
-      return "Safe";
-    default:
-      return "-";
-  }
+function formatHistoryConfidence(value: string | null, copy: ScoringBreakdownCopy) {
+  return formatConfidenceLevel(value, copy);
 }
 
 function formatHistoryTimestamp(value: string | null, locale: string) {
@@ -2411,11 +2410,15 @@ function HistoryTimelineRow({
 // ----------------------------------------------------
 function ScoringBreakdownSection({
   scoring,
+  prediction,
   firstScorerPlayerName,
 }: {
   scoring: ScoringApiBreakdown;
+  prediction: PredictionHistoryItem;
   firstScorerPlayerName: string | null;
 }) {
+  const { locale } = useParams<{ locale: string }>();
+  const copy = getScoringBreakdownCopy(locale);
   const stake = scoring.stake ?? 0;
   const basePoints = scoring.base_points ?? 0;
   const subtotal = scoring.subtotal_before_multipliers ?? 0;
@@ -2437,23 +2440,33 @@ function ScoringBreakdownSection({
   const tierMeta = (type: string | null | undefined): { label: string; sublabel: string; tone: "gold" | "green" | "cyan" | "red" } => {
     switch (type) {
       case "exact":
-        return { label: "ถูกสกอร์เป๊ะ!", sublabel: "Exact Score", tone: "gold" };
+        return { label: copy.tiers.exact, sublabel: copy.tiers.exactHint, tone: "gold" };
       case "goal_diff":
       case "goalDiff":
-        return { label: "ผลต่างประตูถูก", sublabel: "Goal Difference", tone: "green" };
+        return { label: copy.tiers.goalDiff, sublabel: copy.tiers.goalDiffHint, tone: "green" };
       case "result":
-        return { label: "ผลแพ้ชนะถูก", sublabel: "Correct Result", tone: "cyan" };
+        return { label: copy.tiers.result, sublabel: copy.tiers.resultHint, tone: "cyan" };
       default:
-        return { label: "ผิดทั้งหมด", sublabel: "Wrong", tone: "red" };
+        return { label: copy.tiers.wrong, sublabel: copy.tiers.wrongHint, tone: "red" };
     }
   };
 
   const tier = tierMeta(bonuses.result_tier?.type);
   const tierEarned = bonuses.result_tier?.type !== "wrong" && bonuses.result_tier?.type != null;
+  const firstScorerPredicted =
+    firstScorerPlayerName ??
+    formatIdValue(bonuses.first_scorer?.predicted?.player_id, copy);
+  const firstScorerActual =
+    bonuses.first_scorer?.actual?.player_name ??
+    formatIdValue(bonuses.first_scorer?.actual?.player_id, copy);
+  const halfTimeActualHome =
+    bonuses.half_time?.actual_home ?? bonuses.half_time?.actual?.home ?? null;
+  const halfTimeActualAway =
+    bonuses.half_time?.actual_away ?? bonuses.half_time?.actual?.away ?? null;
 
   return (
     <div className="rounded-2xl border border-gray-800/80 bg-black/30 p-4 space-y-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">Score Breakdown</p>
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-300">{copy.title}</p>
 
       {/* Result Tier — prominent hero row */}
       {bonuses.result_tier && (
@@ -2484,7 +2497,9 @@ function ScoringBreakdownSection({
               )}>
                 {tier.label}
               </p>
-              <p className="text-[10px] text-gray-500">{tier.sublabel}</p>
+              <p className="text-[10px] text-gray-500">
+                {tier.sublabel} · {formatPredictionActualDetail(prediction.predicted, prediction.actual, copy)}
+              </p>
             </div>
           </div>
           <div className="text-right shrink-0">
@@ -2497,7 +2512,7 @@ function ScoringBreakdownSection({
             )}>
               +{bonuses.result_tier.points ?? 0}
             </p>
-            <p className="text-[9px] text-gray-500">bonus pts</p>
+            <p className="text-[9px] text-gray-500">{copy.bonusPoints}</p>
           </div>
         </div>
       )}
@@ -2505,52 +2520,46 @@ function ScoringBreakdownSection({
       {/* Stake & Base Points */}
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-amber-400/70">Stake</p>
+          <p className="text-[10px] uppercase tracking-wider text-amber-400/70">{copy.stake}</p>
           <p className="font-mono text-xl font-black text-amber-300">{stake}</p>
-          <p className="text-[9px] text-gray-500">pts wagered</p>
+          <p className="text-[9px] text-gray-500">{copy.pointsWagered}</p>
         </div>
         <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 px-3 py-2.5 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-cyan-400/70">Base Points</p>
+          <p className="text-[10px] uppercase tracking-wider text-cyan-400/70">{copy.basePoints}</p>
           <p className="font-mono text-xl font-black text-cyan-300">+{basePoints}</p>
-          <p className="text-[9px] text-gray-500">result score</p>
+          <p className="text-[9px] text-gray-500">{copy.resultScore}</p>
         </div>
       </div>
 
       {/* Other Bonuses */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">Extra Bonuses</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">{copy.extraBonuses}</p>
         <div className="space-y-1.5">
           {bonuses.first_scorer && (
             <BonusRow
-              label="First Scorer"
+              label={copy.firstScorer}
               earned={bonuses.first_scorer.earned ?? false}
-              detail={
-                bonuses.first_scorer.actual?.player_name
-                  ? `actual: ${bonuses.first_scorer.actual.player_name}`
-                  : bonuses.first_scorer.actual?.player_id
-                    ? `actual id: #${bonuses.first_scorer.actual.player_id}`
-                    : firstScorerPlayerName
-                      ? `pred: ${firstScorerPlayerName}`
-                      : bonuses.first_scorer.predicted?.player_id
-                        ? `pred id: #${bonuses.first_scorer.predicted.player_id}`
-                        : "—"
-              }
+              detail={formatPredictionActualDetail(firstScorerPredicted, firstScorerActual, copy)}
               points={bonuses.first_scorer.points ?? 0}
             />
           )}
           {bonuses.total_goals && (
             <BonusRow
-              label="Total Goals"
+              label={copy.totalGoals}
               earned={bonuses.total_goals.earned ?? false}
-              detail={`pred ${bonuses.total_goals.predicted ?? "-"} → actual ${bonuses.total_goals.actual ?? "-"}`}
+              detail={formatPredictionActualDetail(bonuses.total_goals.predicted, bonuses.total_goals.actual, copy)}
               points={bonuses.total_goals.points ?? 0}
             />
           )}
           {bonuses.half_time && (
             <BonusRow
-              label="Half Time"
+              label={copy.halfTime}
               earned={bonuses.half_time.earned ?? false}
-              detail={`pred ${bonuses.half_time.predicted_home ?? "-"}-${bonuses.half_time.predicted_away ?? "-"}`}
+              detail={formatPredictionActualDetail(
+                formatScorePair(bonuses.half_time.predicted_home, bonuses.half_time.predicted_away),
+                formatScorePair(halfTimeActualHome, halfTimeActualAway),
+                copy
+              )}
               points={bonuses.half_time.points ?? 0}
             />
           )}
@@ -2559,26 +2568,26 @@ function ScoringBreakdownSection({
 
       {/* Subtotal */}
       <div className="flex items-center justify-between rounded-xl border border-gray-700/40 bg-black/25 px-3 py-2">
-        <span className="text-[11px] text-gray-400">Subtotal (ก่อนคูณ)</span>
-        <span className="font-mono text-sm font-black text-white">{subtotal} pts</span>
+        <span className="text-[11px] text-gray-400">{copy.subtotal}</span>
+        <span className="font-mono text-sm font-black text-white">{subtotal} {copy.pointsAbbr}</span>
       </div>
 
       {/* Multipliers */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">Multipliers</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.14em] text-gray-500 mb-2">{copy.multipliers}</p>
         <div className="space-y-1.5">
           <MultiplierRow
-            label={`Confidence: ${confidenceLevel}`}
+            label={`${copy.confidence}: ${formatConfidenceLevel(confidenceLevel, copy)}`}
             value={`×${confidenceMultiplier.toFixed(1)}`}
             tone="text-violet-300"
           />
           <MultiplierRow
-            label={`Boost: ${boostUsed ? "ON" : "off"}`}
+            label={`${copy.boost}: ${boostUsed ? copy.on : copy.off}`}
             value={`×${boostMultiplier.toFixed(1)}`}
             tone={boostUsed ? "text-fuchsia-300" : "text-gray-400"}
           />
           <MultiplierRow
-            label={`Streak #${streakNumber} (×${streakBonusPerLevel}/level)`}
+            label={`${copy.streak} #${streakNumber} (×${streakBonusPerLevel}/${copy.level})`}
             value={`+${streakTotal}`}
             tone="text-emerald-300"
           />
@@ -2588,18 +2597,18 @@ function ScoringBreakdownSection({
       {/* Totals */}
       <div className="space-y-1.5 border-t border-gray-800/60 pt-3">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-gray-500">Ranking Points</span>
+          <span className="text-gray-500">{copy.rankingPoints}</span>
           <span className="font-mono font-bold text-white">{rankingPoints}</span>
         </div>
         <div className="flex items-center justify-between text-xs">
-          <span className="text-gray-500">Profit</span>
+          <span className="text-gray-500">{copy.profit}</span>
           <span className={cn("font-mono font-bold", profit >= 0 ? "text-emerald-300" : "text-rose-300")}>
             {profit >= 0 ? "+" : ""}{profit}
           </span>
         </div>
         <div className="flex items-center justify-between rounded-xl border border-emerald-500/25 bg-emerald-500/5 px-3 py-2.5 mt-1">
-          <span className="text-xs font-black uppercase tracking-wider text-emerald-300">TOTAL</span>
-          <span className="font-mono text-xl font-black text-emerald-300">{total} PTS</span>
+          <span className="text-xs font-black uppercase tracking-wider text-emerald-300">{copy.total}</span>
+          <span className="font-mono text-xl font-black text-emerald-300">{total} {copy.pointsAbbr.toUpperCase()}</span>
         </div>
       </div>
     </div>
@@ -2614,7 +2623,7 @@ function BonusRow({
 }: {
   label: string;
   earned: boolean;
-  detail: string;
+  detail: React.ReactNode;
   points: number;
 }) {
   return (
@@ -2667,4 +2676,346 @@ function MultiplierRow({
       <span className={cn("font-mono text-sm font-black text-white", tone)}>{value}</span>
     </div>
   );
+}
+
+type ScoringBreakdownCopy = {
+  receipt: string;
+  title: string;
+  result: string;
+  resultType: string;
+  predictionSetup: string;
+  bonusPoints: string;
+  stake: string;
+  pointsWagered: string;
+  basePoints: string;
+  resultScore: string;
+  extraBonuses: string;
+  firstScorer: string;
+  totalGoals: string;
+  halfTime: string;
+  predicted: string;
+  actual: string;
+  id: string;
+  subtotal: string;
+  multipliers: string;
+  confidence: string;
+  boost: string;
+  streak: string;
+  level: string;
+  on: string;
+  off: string;
+  rankingPoints: string;
+  profit: string;
+  total: string;
+  pointsAbbr: string;
+  confidenceLevels: Record<string, string>;
+  tiers: {
+    exact: string;
+    exactHint: string;
+    goalDiff: string;
+    goalDiffHint: string;
+    result: string;
+    resultHint: string;
+    wrong: string;
+    wrongHint: string;
+  };
+};
+
+const scoringBreakdownCopy: Record<string, ScoringBreakdownCopy> = {
+  th: {
+    receipt: "ใบรับคำทาย",
+    title: "สรุปคะแนน",
+    result: "ผลลัพธ์",
+    resultType: "ประเภทผลลัพธ์",
+    predictionSetup: "ข้อมูลคำทาย",
+    bonusPoints: "แต้มโบนัส",
+    stake: "แต้มที่ใช้ทาย",
+    pointsWagered: "แต้มเดิมพัน",
+    basePoints: "แต้มพื้นฐาน",
+    resultScore: "คะแนนผลลัพธ์",
+    extraBonuses: "โบนัสพิเศษ",
+    firstScorer: "ผู้ทำประตูแรก",
+    totalGoals: "จำนวนประตูรวม",
+    halfTime: "สกอร์ครึ่งแรก",
+    predicted: "ทาย",
+    actual: "ผลจริง",
+    id: "รหัส",
+    subtotal: "รวมก่อนคูณ",
+    multipliers: "ตัวคูณ",
+    confidence: "ความมั่นใจ",
+    boost: "บูสต์",
+    streak: "สตรีค",
+    level: "ระดับ",
+    on: "เปิด",
+    off: "ปิด",
+    rankingPoints: "คะแนนจัดอันดับ",
+    profit: "กำไร",
+    total: "รวม",
+    pointsAbbr: "แต้ม",
+    confidenceLevels: { safe: "ปลอดภัย", confident: "มั่นใจ", bold: "กล้าเสี่ยง" },
+    tiers: {
+      exact: "ถูกสกอร์เป๊ะ",
+      exactHint: "สกอร์ตรงทุกประตู",
+      goalDiff: "ผลต่างประตูถูก",
+      goalDiffHint: "ถูกผลต่างประตู",
+      result: "ผลแพ้ชนะถูก",
+      resultHint: "ถูกฝั่งผลการแข่งขัน",
+      wrong: "ผิดทั้งหมด",
+      wrongHint: "ทายผิดฝั่ง",
+    },
+  },
+  en: {
+    receipt: "Prediction Receipt",
+    title: "Score Breakdown",
+    result: "Result",
+    resultType: "Result Type",
+    predictionSetup: "Prediction Setup",
+    bonusPoints: "bonus pts",
+    stake: "Stake",
+    pointsWagered: "pts wagered",
+    basePoints: "Base Points",
+    resultScore: "result score",
+    extraBonuses: "Extra Bonuses",
+    firstScorer: "First Scorer",
+    totalGoals: "Total Goals",
+    halfTime: "Half Time",
+    predicted: "Predicted",
+    actual: "Actual",
+    id: "ID",
+    subtotal: "Subtotal before multipliers",
+    multipliers: "Multipliers",
+    confidence: "Confidence",
+    boost: "Boost",
+    streak: "Streak",
+    level: "level",
+    on: "on",
+    off: "off",
+    rankingPoints: "Ranking Points",
+    profit: "Profit",
+    total: "Total",
+    pointsAbbr: "pts",
+    confidenceLevels: { safe: "safe", confident: "confident", bold: "bold" },
+    tiers: {
+      exact: "Exact score",
+      exactHint: "Exact final score",
+      goalDiff: "Goal difference correct",
+      goalDiffHint: "Correct goal difference",
+      result: "Correct result",
+      resultHint: "Correct match result",
+      wrong: "Wrong",
+      wrongHint: "Wrong result side",
+    },
+  },
+  lo: {
+    receipt: "ໃບສະຫຼຸບການທາຍ",
+    title: "ສະຫຼຸບຄະແນນ",
+    result: "ຜົນ",
+    resultType: "ປະເພດຜົນ",
+    predictionSetup: "ຂໍ້ມູນການທາຍ",
+    bonusPoints: "ຄະແນນໂບນັດ",
+    stake: "ຄະແນນທີ່ໃຊ້ທາຍ",
+    pointsWagered: "ຄະແນນວາງ",
+    basePoints: "ຄະແນນພື້ນຖານ",
+    resultScore: "ຄະແນນຜົນ",
+    extraBonuses: "ໂບນັດພິເສດ",
+    firstScorer: "ຜູ້ຍິງປະຕູທຳອິດ",
+    totalGoals: "ຈຳນວນປະຕູລວມ",
+    halfTime: "ສະກໍເຄິ່ງທຳອິດ",
+    predicted: "ທາຍ",
+    actual: "ຜົນຈິງ",
+    id: "ລະຫັດ",
+    subtotal: "ລວມກ່ອນຄູນ",
+    multipliers: "ຕົວຄູນ",
+    confidence: "ຄວາມໝັ້ນໃຈ",
+    boost: "ບູສ",
+    streak: "ສະຕຣີກ",
+    level: "ລະດັບ",
+    on: "ເປີດ",
+    off: "ປິດ",
+    rankingPoints: "ຄະແນນຈັດອັນດັບ",
+    profit: "ກຳໄລ",
+    total: "ລວມ",
+    pointsAbbr: "ຄະແນນ",
+    confidenceLevels: { safe: "ປອດໄພ", confident: "ໝັ້ນໃຈ", bold: "ກ້າສ່ຽງ" },
+    tiers: {
+      exact: "ຖືກສະກໍເປະ",
+      exactHint: "ສະກໍສຸດທ້າຍຖືກເປະ",
+      goalDiff: "ຜົນຕ່າງປະຕູຖືກ",
+      goalDiffHint: "ຖືກຜົນຕ່າງປະຕູ",
+      result: "ຜົນແຂ່ງຂັນຖືກ",
+      resultHint: "ຖືກຝັ່ງຜົນແຂ່ງຂັນ",
+      wrong: "ຜິດ",
+      wrongHint: "ທາຍຜິດຝັ່ງ",
+    },
+  },
+  my: {
+    receipt: "ခန့်မှန်းချက်လက်ခံဖြတ်ပိုင်း",
+    title: "အမှတ်ခွဲခြမ်းစိတ်ဖြာချက်",
+    result: "ရလဒ်",
+    resultType: "ရလဒ်အမျိုးအစား",
+    predictionSetup: "ခန့်မှန်းချက်အချက်အလက်",
+    bonusPoints: "ဘောနပ်စ်မှတ်",
+    stake: "ခန့်မှန်းရာတွင်သုံးသောမှတ်",
+    pointsWagered: "သုံးထားသောမှတ်",
+    basePoints: "အခြေခံမှတ်",
+    resultScore: "ရလဒ်မှတ်",
+    extraBonuses: "အပိုဘောနပ်စ်",
+    firstScorer: "ပထမဂိုးသွင်းသူ",
+    totalGoals: "စုစုပေါင်းဂိုး",
+    halfTime: "ပထမပိုင်းစကอร์",
+    predicted: "ခန့်မှန်း",
+    actual: "ရလဒ်",
+    id: "ID",
+    subtotal: "မြှောက်ကိန်းမတိုင်မီစုစုပေါင်း",
+    multipliers: "မြှောက်ကိန်းများ",
+    confidence: "ယုံကြည်မှု",
+    boost: "Boost",
+    streak: "စတရိခ်",
+    level: "အဆင့်",
+    on: "ဖွင့်",
+    off: "ပိတ်",
+    rankingPoints: "အဆင့်မှတ်",
+    profit: "အမြတ်",
+    total: "စုစုပေါင်း",
+    pointsAbbr: "မှတ်",
+    confidenceLevels: { safe: "လုံခြုံ", confident: "ယုံကြည်", bold: "စွန့်စား" },
+    tiers: {
+      exact: "စကอร์အတိအကျမှန်",
+      exactHint: "နောက်ဆုံးစကอร์အတိအကျမှန်",
+      goalDiff: "ဂိုးကွာဟချက်မှန်",
+      goalDiffHint: "ဂိုးကွာဟချက်မှန်",
+      result: "ရလဒ်မှန်",
+      resultHint: "ပွဲရလဒ်ဘက်မှန်",
+      wrong: "မှား",
+      wrongHint: "ရလဒ်ဘက်မှား",
+    },
+  },
+  km: {
+    receipt: "បង្កាន់ដៃទស្សន៍ទាយ",
+    title: "សង្ខេបពិន្ទុ",
+    result: "លទ្ធផល",
+    resultType: "ប្រភេទលទ្ធផល",
+    predictionSetup: "ព័ត៌មានទស្សន៍ទាយ",
+    bonusPoints: "ពិន្ទុបន្ថែម",
+    stake: "ពិន្ទុបានដាក់",
+    pointsWagered: "ពិន្ទុដែលប្រើ",
+    basePoints: "ពិន្ទុមូលដ្ឋាន",
+    resultScore: "ពិន្ទុលទ្ធផល",
+    extraBonuses: "បន្ថែមពិសេស",
+    firstScorer: "អ្នកស៊ុតដំបូង",
+    totalGoals: "គ្រាប់បាល់សរុប",
+    halfTime: "ពិន្ទុតង់ទី១",
+    predicted: "ទាយ",
+    actual: "លទ្ធផលពិត",
+    id: "ID",
+    subtotal: "សរុបមុនគុណ",
+    multipliers: "មេគុណ",
+    confidence: "ទំនុកចិត្ត",
+    boost: "Boost",
+    streak: "ស្ទ្រីក",
+    level: "កម្រិត",
+    on: "បើក",
+    off: "បិទ",
+    rankingPoints: "ពិន្ទុចំណាត់ថ្នាក់",
+    profit: "ចំណេញ",
+    total: "សរុប",
+    pointsAbbr: "ពិន្ទុ",
+    confidenceLevels: { safe: "សុវត្ថិភាព", confident: "មានទំនុកចិត្ត", bold: "ហ៊ានប្រថុយ" },
+    tiers: {
+      exact: "ពិន្ទុត្រឹមត្រូវ",
+      exactHint: "ពិន្ទុចុងក្រោយត្រឹមត្រូវ",
+      goalDiff: "គម្លាតគ្រាប់ត្រឹមត្រូវ",
+      goalDiffHint: "គម្លាតគ្រាប់ត្រឹមត្រូវ",
+      result: "លទ្ធផលត្រឹមត្រូវ",
+      resultHint: "ជ្រើសរើសលទ្ធផលត្រឹមត្រូវ",
+      wrong: "ខុស",
+      wrongHint: "ជ្រើសរើសលទ្ធផលខុស",
+    },
+  },
+  zh: {
+    receipt: "预测记录",
+    title: "得分明细",
+    result: "结果",
+    resultType: "结果类型",
+    predictionSetup: "预测设置",
+    bonusPoints: "奖励分",
+    stake: "投入积分",
+    pointsWagered: "已投入",
+    basePoints: "基础分",
+    resultScore: "赛果得分",
+    extraBonuses: "额外奖励",
+    firstScorer: "首位进球者",
+    totalGoals: "总进球",
+    halfTime: "半场比分",
+    predicted: "预测",
+    actual: "实际",
+    id: "ID",
+    subtotal: "乘数前小计",
+    multipliers: "乘数",
+    confidence: "信心",
+    boost: "加成",
+    streak: "连中",
+    level: "级",
+    on: "开",
+    off: "关",
+    rankingPoints: "排名积分",
+    profit: "收益",
+    total: "总计",
+    pointsAbbr: "分",
+    confidenceLevels: { safe: "稳妥", confident: "自信", bold: "大胆" },
+    tiers: {
+      exact: "比分全中",
+      exactHint: "最终比分完全正确",
+      goalDiff: "净胜球正确",
+      goalDiffHint: "进球差正确",
+      result: "赛果正确",
+      resultHint: "胜平负方向正确",
+      wrong: "未命中",
+      wrongHint: "赛果方向错误",
+    },
+  },
+};
+
+function getScoringBreakdownCopy(locale: string | undefined) {
+  return scoringBreakdownCopy[locale ?? ""] ?? scoringBreakdownCopy.en;
+}
+
+function formatPredictionActualDetail(
+  predicted: string | number | null | undefined,
+  actual: string | number | null | undefined,
+  copy: ScoringBreakdownCopy
+) {
+  return (
+    <>
+      <span className="text-gray-500">
+        {copy.predicted}: {formatDisplayValue(predicted)}
+      </span>
+      <span className="px-1 text-gray-600">→</span>
+      <span className="font-black text-cyan-200">
+        {copy.actual}: {formatDisplayValue(actual)}
+      </span>
+    </>
+  );
+}
+
+function formatDisplayValue(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === "") return "-";
+  return String(value);
+}
+
+function formatIdValue(value: string | number | null | undefined, copy: ScoringBreakdownCopy) {
+  if (value === null || value === undefined || value === "") return null;
+  return `${copy.id}: #${value}`;
+}
+
+function formatScorePair(home: number | null | undefined, away: number | null | undefined) {
+  if (home === null || home === undefined || away === null || away === undefined) {
+    return null;
+  }
+  return `${home}-${away}`;
+}
+
+function formatConfidenceLevel(value: string | null | undefined, copy: ScoringBreakdownCopy) {
+  if (!value) return "-";
+  return copy.confidenceLevels[value] ?? value;
 }

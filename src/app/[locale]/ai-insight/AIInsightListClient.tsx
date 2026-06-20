@@ -266,7 +266,7 @@ export function AIInsightListClient({
                   {featuredInsight.predictedScore ? null : (
                     <HeroSignalTile
                       label={copy.labels.heat}
-                      value={formatHeatMetric(featuredInsight.heatMeter)}
+                      value={formatHeatMetric(resolveHeatValue(featuredInsight))}
                       icon={Flame}
                       tone="text-amber-300"
                     />
@@ -692,17 +692,21 @@ function HeatRow({
   insight: AIInsightListItem;
   copy: ReturnType<typeof getAIInsightPageCopy>;
 }) {
-  const heat = normalizeHeat(insight.heatMeter ?? 0);
+  const heat = resolveHeatValue(insight) ?? 0;
   const heatTone =
-    heat >= 70
-      ? "bg-gradient-to-r from-violet-500 to-fuchsia-500"
-      : heat >= 40
+    heat >= 90
+      ? "bg-gradient-to-r from-rose-500 to-red-500"
+      : heat >= 75
+        ? "bg-gradient-to-r from-violet-500 to-fuchsia-500"
+        : heat >= 50
         ? "bg-gradient-to-r from-amber-300 to-orange-400"
+        : heat >= 25
+          ? "bg-gradient-to-r from-cyan-400 to-cyan-300"
         : "bg-gradient-to-r from-cyan-400 to-cyan-300";
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-[92px] shrink-0 whitespace-nowrap text-right text-xs font-semibold text-slate-500">
+    <div className="flex items-center gap-3 rounded-xl border border-cyan-300/10 bg-[#050b13]/65 px-3 py-2">
+      <span className="w-[176px] shrink-0 text-left text-xs font-bold leading-snug text-cyan-100 sm:w-[220px]">
         {getHeatLabel(heat, copy)}
       </span>
       <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800/80 ring-1 ring-white/[0.04]">
@@ -965,9 +969,11 @@ function getHeatLabel(
   heat: number,
   copy: ReturnType<typeof getAIInsightPageCopy>
 ) {
-  if (heat <= 30) return copy.labels.heatLow;
-  if (heat <= 69) return copy.labels.heatMid;
-  return copy.labels.heatHigh;
+  if (heat >= 90) return copy.labels.heatVeryHigh;
+  if (heat >= 75) return copy.labels.heatHigh;
+  if (heat >= 50) return copy.labels.heatMid;
+  if (heat >= 25) return copy.labels.heatLow;
+  return copy.labels.heatVeryLow;
 }
 
 function clampPercent(value: number) {
@@ -990,11 +996,29 @@ function hasProbabilityData(insight: AIInsightListItem) {
 }
 
 function hasHeatData(insight: AIInsightListItem) {
-  return typeof insight.heatMeter === "number";
+  return resolveHeatValue(insight) !== null;
 }
 
 function normalizeHeat(value: number) {
   return clampPercent(value <= 10 ? Math.round(value * 10) : Math.round(value));
+}
+
+function resolveHeatValue(insight: AIInsightListItem) {
+  if (
+    typeof insight.homeStrength === "number" &&
+    typeof insight.awayStrength === "number"
+  ) {
+    return clampPercent(
+      Math.round(
+        100 -
+          Math.abs(
+            clampPercent(insight.homeStrength) - clampPercent(insight.awayStrength)
+          )
+      )
+    );
+  }
+
+  return typeof insight.heatMeter === "number" ? normalizeHeat(insight.heatMeter) : null;
 }
 
 function formatPercentMetric(value: number | null) {
@@ -1003,6 +1027,5 @@ function formatPercentMetric(value: number | null) {
 
 function formatHeatMetric(value: number | null) {
   if (typeof value !== "number") return "-";
-  if (value <= 10) return `${Math.round(value * 10)}/100`;
   return `${Math.round(value)}/100`;
 }
