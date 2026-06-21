@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -63,6 +63,7 @@ import {
   setLeagueThreadReaction,
   type LeagueWebboardChannel,
   type LeagueWebboardDetailResult,
+  type LeagueWebboardListResult,
   type LeagueWebboardReaction,
   type LeagueWebboardReply,
   type LeagueWebboardThread,
@@ -1040,6 +1041,15 @@ function LeagueWebboardMockup({
     !webboardFailed &&
     !webboardAccessDenied &&
     webboardPage < webboardTotalPages;
+  const applyOnlinePresence = useCallback((response: Pick<LeagueWebboardListResult, "onlineCount" | "onlineUsers">) => {
+    setHeartbeatOnlineCount(response.onlineCount);
+    setHeartbeatOnlineMembers(
+      response.onlineUsers
+        .map((member) => mapHeartbeatUserToOnlineMember(member, t))
+        .filter((member): member is OnlineWebboardMember => Boolean(member))
+        .slice(0, 12)
+    );
+  }, [t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1069,13 +1079,7 @@ function LeagueWebboardMockup({
         setChannelCounts(response.channelCounts);
         setWebboardPage(response.pagination.page);
         setWebboardTotalPages(response.pagination.totalPages);
-        setHeartbeatOnlineCount(response.onlineCount);
-        setHeartbeatOnlineMembers(
-          response.onlineUsers
-            .map((member) => mapHeartbeatUserToOnlineMember(member, t))
-            .filter((member): member is OnlineWebboardMember => Boolean(member))
-            .slice(0, 12)
-        );
+        applyOnlinePresence(response);
       } catch (error) {
         if (cancelled || isAuthSessionExpiredError(error)) return;
         if (isWebboardAccessDeniedError(error)) {
@@ -1106,7 +1110,7 @@ function LeagueWebboardMockup({
     return () => {
       cancelled = true;
     };
-  }, [activeChannel, leagueId, locale, searchQuery, seedThreads, t]);
+  }, [activeChannel, applyOnlinePresence, leagueId, locale, searchQuery, seedThreads, t]);
 
   useEffect(() => {
     if (webboardAccessDenied || webboardFailed) return;
@@ -1130,6 +1134,17 @@ function LeagueWebboardMockup({
         // webboard online list unless the backend sends an explicit count/list.
         if (response.onlineCount !== null) setHeartbeatOnlineCount(response.onlineCount);
         if (nextOnlineMembers.length > 0) setHeartbeatOnlineMembers(nextOnlineMembers);
+
+        const presence = await getLeagueThreads(
+          leagueId,
+          {
+            channel: activeChannel,
+            page: 1,
+            limit: 1,
+          },
+          { locale }
+        );
+        if (!cancelled) applyOnlinePresence(presence);
       } catch (error) {
         if (!cancelled && !isAuthSessionExpiredError(error)) {
           console.error("Error sending member heartbeat:", error);
@@ -1149,7 +1164,7 @@ function LeagueWebboardMockup({
       window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [locale, t, webboardAccessDenied, webboardFailed]);
+  }, [activeChannel, applyOnlinePresence, leagueId, locale, t, webboardAccessDenied, webboardFailed]);
 
   const channelOptions: Array<{
     id: WebboardChannel;
