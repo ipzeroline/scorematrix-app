@@ -57,6 +57,7 @@ import {
   deleteLeagueThreadReaction,
   getLeagueThread,
   getLeagueThreads,
+  sendMemberHeartbeat,
   setLeagueThreadLocked,
   setLeagueThreadPinned,
   setLeagueThreadReaction,
@@ -65,12 +66,14 @@ import {
   type LeagueWebboardReaction,
   type LeagueWebboardReply,
   type LeagueWebboardThread,
+  type LeagueWebboardUser,
 } from "@/lib/league-webboard-api";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
 
 const LEAGUE_LOGO_OVERRIDE_KEY = "scorematrix:league-logo:";
 const LEAGUE_DETAIL_CACHE_KEY = "scorematrix:league-detail:";
+const MEMBER_HEARTBEAT_INTERVAL_MS = 40_000;
 const WEBBOARD_PAGE_SIZE = 20;
 const WEBBOARD_EMOJI_GROUPS = [
   {
@@ -221,6 +224,13 @@ type WebboardThread = {
   views: number;
   isLocked?: boolean;
   pinned?: boolean;
+};
+
+type OnlineWebboardMember = {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  level: number;
 };
 
 export default function LeagueDetailPage() {
@@ -990,11 +1000,13 @@ function LeagueWebboardMockup({
   const [webboardPage, setWebboardPage] = useState(1);
   const [webboardTotalPages, setWebboardTotalPages] = useState(1);
   const [webboardAccessDenied, setWebboardAccessDenied] = useState(false);
+  const [heartbeatOnlineCount, setHeartbeatOnlineCount] = useState<number | null>(null);
+  const [heartbeatOnlineMembers, setHeartbeatOnlineMembers] = useState<
+    OnlineWebboardMember[]
+  >([]);
   const addToast = useNotificationStore((state) => state.addToast);
-  const onlineCount = Math.max(
-    1,
-    Math.min(league.memberCount, topMembers.length + 2)
-  );
+  const onlineCount = heartbeatOnlineCount ?? 0;
+  const onlineMembers = heartbeatOnlineMembers;
   const activeThread =
     activeThreadDetail ??
     threads.find((thread) => thread.id === activeThreadId) ??
@@ -1057,6 +1069,13 @@ function LeagueWebboardMockup({
         setChannelCounts(response.channelCounts);
         setWebboardPage(response.pagination.page);
         setWebboardTotalPages(response.pagination.totalPages);
+        setHeartbeatOnlineCount(response.onlineCount);
+        setHeartbeatOnlineMembers(
+          response.onlineUsers
+            .map((member) => mapHeartbeatUserToOnlineMember(member, t))
+            .filter((member): member is OnlineWebboardMember => Boolean(member))
+            .slice(0, 12)
+        );
       } catch (error) {
         if (cancelled || isAuthSessionExpiredError(error)) return;
         if (isWebboardAccessDeniedError(error)) {
@@ -1088,6 +1107,49 @@ function LeagueWebboardMockup({
       cancelled = true;
     };
   }, [activeChannel, leagueId, locale, searchQuery, seedThreads, t]);
+
+  useEffect(() => {
+    if (webboardAccessDenied || webboardFailed) return;
+
+    let cancelled = false;
+
+    const syncHeartbeat = async () => {
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+
+      try {
+        const response = await sendMemberHeartbeat({ locale });
+        if (cancelled) return;
+        const nextOnlineMembers = response.onlineUsers
+          .map((member) => mapHeartbeatUserToOnlineMember(member, t))
+          .filter((member): member is OnlineWebboardMember => Boolean(member))
+          .slice(0, 12);
+
+        // Some heartbeat responses only acknowledge the ping. Do not clear the
+        // webboard online list unless the backend sends an explicit count/list.
+        if (response.onlineCount !== null) setHeartbeatOnlineCount(response.onlineCount);
+        if (nextOnlineMembers.length > 0) setHeartbeatOnlineMembers(nextOnlineMembers);
+      } catch (error) {
+        if (!cancelled && !isAuthSessionExpiredError(error)) {
+          console.error("Error sending member heartbeat:", error);
+        }
+      }
+    };
+
+    void syncHeartbeat();
+    const intervalId = window.setInterval(syncHeartbeat, MEMBER_HEARTBEAT_INTERVAL_MS);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void syncHeartbeat();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [locale, t, webboardAccessDenied, webboardFailed]);
 
   const channelOptions: Array<{
     id: WebboardChannel;
@@ -1174,6 +1236,13 @@ function LeagueWebboardMockup({
       setChannelCounts(response.channelCounts);
       setWebboardPage(response.pagination.page);
       setWebboardTotalPages(response.pagination.totalPages);
+      setHeartbeatOnlineCount(response.onlineCount);
+      setHeartbeatOnlineMembers(
+        response.onlineUsers
+          .map((member) => mapHeartbeatUserToOnlineMember(member, t))
+          .filter((member): member is OnlineWebboardMember => Boolean(member))
+          .slice(0, 12)
+      );
     } catch (error) {
       if (!isAuthSessionExpiredError(error)) {
         const message =
@@ -1759,19 +1828,18 @@ function LeagueWebboardMockup({
                 </span>
               </div>
               <div className="mt-4 space-y-3">
-                {(topMembers.length > 0 ? topMembers : standings.slice(0, 1)).map((member) => {
-                  const name = getMemberDisplayName(member, t("webboardMember"));
+                {onlineMembers.map((member) => {
                   return (
-                    <div key={`${member.userId}-online`} className="flex min-w-0 items-center gap-3">
+                    <div key={`${member.id}-online`} className="flex min-w-0 items-center gap-3">
                       <Avatar
                         src={member.avatarUrl}
-                        fallback={getMemberInitials(member)}
+                        fallback={getInitials(member.name)}
                         size="md"
-                        level={getDisplayLevel(member.level)}
+                        level={member.level}
                         className="shrink-0 border-green-400/25 bg-green-400/10"
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-white">{name}</p>
+                        <p className="truncate text-sm font-bold text-white">{member.name}</p>
                         <p className="text-xs text-gray-500">{t("webboardTypingReady")}</p>
                       </div>
                     </div>
@@ -2056,6 +2124,32 @@ function mapLeagueReplyToWebboardReply(
 
 function getWebboardUserName(user: LeagueWebboardThread["author"], t: LeagueTranslator) {
   return user.displayName || user.username || t("webboardMember");
+}
+
+function mapHeartbeatUserToOnlineMember(
+  user: LeagueWebboardUser,
+  t: LeagueTranslator
+): OnlineWebboardMember | null {
+  const name = getWebboardUserName(user, t);
+  if (!name) return null;
+
+  return {
+    id: user.id ?? user.username ?? name,
+    name,
+    avatarUrl: user.avatarUrl,
+    level: getDisplayLevel(user.level ?? 1),
+  };
+}
+
+function getInitials(name: string) {
+  const letters = name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .join("")
+    .slice(0, 2);
+
+  return (letters || name.slice(0, 2) || "SM").toUpperCase();
 }
 
 function formatWebboardTime(

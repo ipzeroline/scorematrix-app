@@ -56,11 +56,18 @@ export type LeagueWebboardListResult = {
     totalPages: number;
   };
   channelCounts: Record<LeagueWebboardChannel, number>;
+  onlineCount: number | null;
+  onlineUsers: LeagueWebboardUser[];
 };
 
 export type LeagueWebboardDetailResult = {
   thread: LeagueWebboardThread;
   replies: LeagueWebboardReply[];
+};
+
+export type MemberHeartbeatResult = {
+  onlineCount: number | null;
+  onlineUsers: LeagueWebboardUser[];
 };
 
 export type CreateLeagueThreadInput = {
@@ -85,6 +92,35 @@ const EMPTY_COUNTS: Record<LeagueWebboardChannel, number> = {
   predictions: 0,
   results: 0,
 };
+
+const HEARTBEAT_THROTTLE_MS = 35_000;
+
+let lastHeartbeatAt = 0;
+let lastHeartbeatResult: MemberHeartbeatResult | null = null;
+let heartbeatRequest: Promise<MemberHeartbeatResult> | null = null;
+
+export async function sendMemberHeartbeat(
+  options?: ApiRequestOptions
+): Promise<MemberHeartbeatResult> {
+  const now = Date.now();
+  if (heartbeatRequest) return heartbeatRequest;
+  if (lastHeartbeatResult && now - lastHeartbeatAt < HEARTBEAT_THROTTLE_MS) {
+    return lastHeartbeatResult;
+  }
+
+  heartbeatRequest = apiPostRaw<unknown>("/member/heartbeat", undefined, options)
+    .then(normalizeHeartbeat)
+    .then((result) => {
+      lastHeartbeatAt = Date.now();
+      lastHeartbeatResult = result;
+      return result;
+    })
+    .finally(() => {
+      heartbeatRequest = null;
+    });
+
+  return heartbeatRequest;
+}
 
 export async function getLeagueThreads(
   leagueId: string,
@@ -229,6 +265,14 @@ function normalizeThreadList(
   const envelope = unwrap(payload);
   const data = readArray(envelope?.data) ?? readArray(envelope?.threads) ?? [];
   const paginationRecord = readRecord(envelope?.pagination);
+  const onlineUsers =
+    readArray(envelope?.onlineUsers) ??
+    readArray(envelope?.onlineMembers) ??
+    readArray(envelope?.online_users) ??
+    readArray(envelope?.online_members) ??
+    readArray(envelope?.users) ??
+    readArray(envelope?.members) ??
+    [];
 
   return {
     threads: data.map(normalizeThread),
@@ -241,6 +285,14 @@ function normalizeThreadList(
         1,
     },
     channelCounts: normalizeChannelCounts(envelope?.channelCounts),
+    onlineCount:
+      readNumber(
+        envelope?.onlineCount,
+        envelope?.online_count,
+        envelope?.activeCount,
+        envelope?.active_count
+      ) ?? (onlineUsers.length > 0 ? onlineUsers.length : null),
+    onlineUsers: onlineUsers.map(normalizeUser).filter((user) => user.username),
   };
 }
 
@@ -255,6 +307,31 @@ function normalizeThreadDetail(payload: unknown): LeagueWebboardDetailResult {
   return {
     thread,
     replies: replies.map(normalizeReply),
+  };
+}
+
+function normalizeHeartbeat(payload: unknown): MemberHeartbeatResult {
+  const envelope = unwrap(payload);
+  const data = readRecord(envelope?.data) ?? envelope;
+  const users =
+    readArray(data?.onlineUsers) ??
+    readArray(data?.onlineMembers) ??
+    readArray(data?.online_users) ??
+    readArray(data?.online_members) ??
+    readArray(data?.users) ??
+    readArray(data?.members) ??
+    [];
+
+  return {
+    onlineCount:
+      readNumber(
+        data?.onlineCount,
+        data?.online_count,
+        data?.activeCount,
+        data?.active_count,
+        data?.count
+      ) ?? (users.length > 0 ? users.length : null),
+    onlineUsers: users.map(normalizeUser).filter((user) => user.username),
   };
 }
 
