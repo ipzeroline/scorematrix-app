@@ -76,7 +76,6 @@ export function isAuthSessionExpiredError(error: unknown) {
 const Backend_BASE_URL = "/api/data";
 
 const LEGACY_AUTH_TOKEN_STORAGE_KEY = "scorematrix-auth-token";
-const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
 
 export const AUTH_SESSION_EXPIRED_EVENT = "scorematrix:auth-session-expired";
 
@@ -88,22 +87,7 @@ export function getApiBaseUrl() {
 }
 
 export function getStoredAuthToken() {
-  if (typeof window === "undefined") return null;
-  const token = readCookie(AUTH_TOKEN_COOKIE_NAME);
-  if (token) return token;
-
-  const legacyToken =
-    window.localStorage.getItem(LEGACY_AUTH_TOKEN_STORAGE_KEY) ??
-    window.sessionStorage.getItem(LEGACY_AUTH_TOKEN_STORAGE_KEY);
-
-  if (legacyToken) {
-    setStoredAuthToken(
-      legacyToken,
-      window.localStorage.getItem(LEGACY_AUTH_TOKEN_STORAGE_KEY) === legacyToken
-    );
-  }
-
-  return legacyToken;
+  return null;
 }
 
 export function getStoredRefreshSession() {
@@ -111,10 +95,10 @@ export function getStoredRefreshSession() {
   return readCookie(REFRESH_SESSION_COOKIE_NAME);
 }
 
-export function setStoredAuthToken(token: string, remember = true) {
+export function setStoredAuthToken(_token: string, _remember = true) {
   if (typeof window === "undefined") return;
-  const maxAge = remember ? ACCESS_TOKEN_MAX_AGE_SECONDS : undefined;
-  writeCookie(AUTH_TOKEN_COOKIE_NAME, token, maxAge);
+  void _token;
+  void _remember;
   clearLegacyStoredAuthToken();
 }
 
@@ -313,7 +297,19 @@ async function fetchApi<B>(
 }
 
 function buildApiUrl(path: string) {
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\//i.test(path)) {
+    const url = new URL(path);
+    if (typeof window !== "undefined" && url.origin === window.location.origin) {
+      return `${url.pathname}${url.search}`;
+    }
+
+    throw new ApiClientError(
+      "Absolute API URLs are not allowed in the browser client",
+      400,
+      "absolute_api_url_not_allowed"
+    );
+  }
+
   return `${Backend_BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
@@ -325,24 +321,6 @@ function readCookie(name: string) {
     ?.slice(prefix.length);
 
   return value ? decodeURIComponent(value) : null;
-}
-
-function writeCookie(name: string, value: string, maxAge?: number) {
-  const attributes = [
-    `${encodeURIComponent(name)}=${encodeURIComponent(value)}`,
-    "Path=/",
-    "SameSite=Lax",
-  ];
-
-  if (maxAge !== undefined) {
-    attributes.push(`Max-Age=${maxAge}`);
-  }
-
-  if (window.location.protocol === "https:") {
-    attributes.push("Secure");
-  }
-
-  document.cookie = attributes.join("; ");
 }
 
 function deleteCookie(name: string) {
@@ -359,8 +337,6 @@ function clearLegacyStoredAuthToken() {
 function buildApiHeaders(options: ApiRequestOptions, hasBody: boolean) {
   const headers = new Headers(options.headers);
   const locale = normalizeLocale(options.locale);
-  const token =
-    options.token === undefined ? getStoredAuthToken() : options.token;
 
   headers.set("Accept", "application/json");
   headers.set("Accept-Language", locale);
@@ -372,9 +348,7 @@ function buildApiHeaders(options: ApiRequestOptions, hasBody: boolean) {
     headers.set("Content-Type", "application/json");
   }
 
-  if (token && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+  headers.delete("Authorization");
 
   return headers;
 }

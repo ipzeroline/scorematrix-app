@@ -3,7 +3,28 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Menu, X, Bell, Check } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  Brain,
+  Calendar,
+  Check,
+  Coins,
+  Gift,
+  Home,
+  LockKeyhole,
+  Mail,
+  Menu,
+  Newspaper,
+  Share2,
+  Sparkles,
+  Target,
+  Trophy,
+  Users,
+  X,
+  Zap,
+} from "lucide-react";
 import { Logo } from "./Logo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { UserMenu } from "./UserMenu";
@@ -27,6 +48,24 @@ const NAV_LINKS = [
   { href: "/missions", label: "missions", authRequired: true },
   { href: "/rewards", label: "rewards", authRequired: true },
   { href: "/legal/contact", label: "contactTeam" },
+];
+
+const MOBILE_NAV_LINKS = [
+  { href: "", label: "home", icon: Home },
+  { href: "/livescore", label: "livescore", icon: Activity },
+  { href: "/matches", label: "matches", icon: Calendar },
+  { href: "/predict", label: "predict", icon: Target },
+  { href: "/ai-insight", label: "aiInsight", icon: Brain },
+  { href: "/news", label: "news", icon: Newspaper },
+  { href: "/leaderboard", label: "leaderboard", icon: Trophy, authRequired: true },
+  { href: "/missions", label: "missions", icon: Zap, authRequired: true },
+  { href: "/events", label: "events", icon: Sparkles, authRequired: true },
+  { href: "/rewards", label: "rewards", icon: Gift, authRequired: true },
+  { href: "/credits", label: "credits", icon: Coins },
+  { href: "/stats", label: "stats", icon: BarChart3, authRequired: true },
+  { href: "/affiliate", label: "affiliate", icon: Share2, authRequired: true },
+  { href: "/leagues", label: "leagues", icon: Users, authRequired: true },
+  { href: "/legal/contact", label: "contactTeam", icon: Mail },
 ];
 
 const emptySubscribe = () => () => {};
@@ -212,24 +251,41 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <nav id="mobile-main-menu" className="lg:hidden border-t border-gray-800 bg-[#111722] p-2.5 animate-slide-up">
-          <div className="flex flex-col gap-1">
-            {visibleNavLinks.map((link) => (
+        <nav
+          id="mobile-main-menu"
+          className="lg:hidden max-h-[calc(100dvh-3.5rem)] overflow-y-auto border-t border-gray-800 bg-[#111722] p-2.5 pb-[calc(5rem+env(safe-area-inset-bottom))] animate-slide-up"
+        >
+          <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+            {MOBILE_NAV_LINKS.map((link) => {
+              const Icon = link.icon;
+              const locked = Boolean(link.authRequired && !effectiveIsLoggedIn);
+              const href = locked
+                ? `/${locale}/auth/login?next=${encodeURIComponent(`/${locale}${link.href}`)}`
+                : `/${locale}${link.href}`;
+
+              return (
               <Link
                 key={link.href}
-                href={`/${locale}${link.href}`}
+                href={href}
                 onClick={() => setMobileMenuOpen(false)}
                 className={cn(
-                  "min-h-11 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
-                  isActive(link.href)
-                    ? "text-cyan-400 bg-cyan-500/10"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                  "flex min-h-12 items-center gap-2 rounded-xl border px-2.5 py-2 text-sm font-bold transition-colors",
+                  !locked && isActive(link.href)
+                    ? "border-cyan-400/25 bg-cyan-500/10 text-cyan-300"
+                    : locked
+                      ? "border-amber-300/15 bg-amber-300/[0.04] text-amber-200/80"
+                      : "border-white/5 text-gray-300 hover:border-cyan-300/20 hover:bg-white/[0.04] hover:text-white"
                 )}
               >
-                {t(link.label)}
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-white/10 bg-black/20">
+                  <Icon size={16} />
+                </span>
+                <span className="min-w-0 flex-1 truncate">{t(link.label)}</span>
+                {locked ? <LockKeyhole size={13} className="shrink-0" /> : null}
               </Link>
-            ))}
-            <div className="mt-2 pt-2 border-t border-gray-800 sm:hidden">
+              );
+            })}
+            <div className="col-span-2 mt-2 border-t border-gray-800 pt-2 sm:col-span-3 sm:hidden">
               <LanguageSwitcher />
             </div>
           </div>

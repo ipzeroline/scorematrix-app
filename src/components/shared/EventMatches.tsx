@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Clock, Target, Users, Zap } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
@@ -88,7 +89,7 @@ export function EventMatches({ matches }: Props) {
       {/* Match list */}
       <div className="space-y-2">
         {matches.map((match) => (
-          <a
+          <Link
             key={match.id}
             href={
               match.status === "finished"
@@ -138,19 +139,19 @@ export function EventMatches({ matches }: Props) {
                     ? t("matches.finished")
                     : t("matches.upcoming")}
             </span>
-          </a>
+          </Link>
         ))}
       </div>
 
       {/* CTA */}
       <div className="flex justify-center">
-        <a
-          href="/predict"
+        <Link
+          href={`/${locale}/predict`}
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-black transition-colors hover:bg-cyan-400"
         >
           <Users size={16} />
           {t("matches.viewAllPredicts")}
-        </a>
+        </Link>
       </div>
     </div>
   );

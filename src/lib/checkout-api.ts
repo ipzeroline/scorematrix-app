@@ -75,6 +75,7 @@ export async function getCheckoutSessionStatus(
 function mockCreateCheckoutSession(
   body: CheckoutSessionRequest
 ): CheckoutSessionResponse {
+  void body;
   const sessionId = `cs_mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
   return {
@@ -86,6 +87,7 @@ function mockCreateCheckoutSession(
 function mockGetCheckoutSessionStatus(
   sessionId: string
 ): CheckoutSessionStatusResponse {
+  void sessionId;
   // Simulate a completed payment for any mock session
   return {
     status: "complete",

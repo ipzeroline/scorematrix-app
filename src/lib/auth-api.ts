@@ -6,7 +6,6 @@ import {
   apiPostFormRaw,
   ApiClientError,
   clearStoredAuthToken,
-  getStoredAuthToken,
   suppressAuthSessionExpired,
   type ApiSuccess,
   type ApiRequestOptions,
@@ -754,7 +753,6 @@ async function localAuthPost<T, B>(
 ): Promise<T> {
   const headers = new Headers(options.headers);
   const locale = options.locale ?? "th";
-  const token = options.token === undefined ? getStoredAuthToken() : options.token;
 
   headers.set("Accept", "application/json");
   headers.set("Accept-Language", locale);
@@ -762,9 +760,7 @@ async function localAuthPost<T, B>(
   headers.set("X-Locale", locale);
   headers.set("X-App-Locale", locale);
   if (body !== undefined) headers.set("Content-Type", "application/json");
-  if (token && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
+  headers.delete("Authorization");
 
   const response = await fetch(path, {
     method: "POST",

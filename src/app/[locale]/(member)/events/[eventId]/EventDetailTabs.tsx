@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import {
   BookOpen,
   LayoutList,
-  Medal,
   Sparkles,
   Trophy,
 } from "lucide-react";

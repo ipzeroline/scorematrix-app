@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import type { HomepageBanner } from "@/types/banner";
@@ -65,18 +66,24 @@ export function HeroBanner({ banners = [] }: HeroBannerProps) {
   const description = apiBanner ? apiBanner.description : t(`${slide.key}.subtitle`);
   const href = apiBanner ? normalizeBannerHref(apiBanner.linkUrl, locale) : `/${locale}${slide.href}`;
   const cta = apiBanner ? getBannerCta(apiBanner.linkUrl, locale) : t(`${slide.key}.cta`);
-  const backgroundImage = apiBanner?.imageUrl
-    ? `linear-gradient(90deg, rgba(3,7,18,0.92) 0%, rgba(3,7,18,0.72) 42%, rgba(3,7,18,0.28) 100%), url(${apiBanner.imageUrl})`
-    : undefined;
 
   return (
     <div className="scorematrix-hero-slider relative h-36 w-full overflow-hidden rounded-xl border border-gray-800 bg-[#0a0a0f] sm:h-[168px] md:h-48">
       {/* Slide content */}
+      {apiBanner?.imageUrl && (
+        <Image
+          src={apiBanner.imageUrl}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+      )}
       <div
         className={`hero-fade absolute inset-0 bg-gradient-to-r ${apiBanner ? "from-black/80 via-black/45 to-black/5 bg-cover bg-center" : slide.gradient} ${
           isTransitioning ? "opacity-80" : "opacity-100"
         }`}
-        style={backgroundImage ? { backgroundImage } : undefined}
       />
       {apiBanner && (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_22%,rgba(34,211,238,0.22),transparent_30%),linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.38))]" />

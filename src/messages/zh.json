@@ -120,6 +120,8 @@
     "passwordMaxLength": "密码不能超过 100 个字符",
     "passwordStrengthHint": "包含大写字母和数字",
     "passwordMismatch": "密码不匹配",
+    "showPassword": "显示密码",
+    "hidePassword": "隐藏密码",
     "bio": "个人简介",
     "optional": "可选",
     "tagline": "加入预测社区",
@@ -1258,7 +1260,8 @@
       "description": "字段与预测 data payload 保持一致。",
       "overUnder": "大/小 2.5",
       "firstScorerName": "首位进球者",
-      "halfTime": "半场比分"
+      "halfTime": "半场比分",
+      "expectedProfit": "预计收益"
     },
     "payload": {
       "matchId": "比赛ID",

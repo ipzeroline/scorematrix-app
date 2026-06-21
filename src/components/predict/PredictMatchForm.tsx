@@ -374,6 +374,7 @@ export function PredictMatchForm({
         boostMultiplier +
       streakPointsPreview
   );
+  const expectedProfitPreview = Math.max(0, exactPointsPreview - pointsWagered);
   const wrongPointsPreview = 0;
   const selectedFirstScorer = findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, firstScorerPlayerId);
   const selectedConfidenceLabel =
@@ -488,7 +489,7 @@ export function PredictMatchForm({
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6 space-y-6 pb-8">
+    <div className="mx-auto w-full max-w-6xl px-3 sm:px-4 md:px-6 space-y-6 pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-8">
       {/* Back navigation */}
       <button
         type="button"
@@ -696,13 +697,14 @@ export function PredictMatchForm({
       {/* Main Grid: Form Inputs + Sidebar */}
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Left Column (Prediction inputs) */}
-        <div className="space-y-6 min-w-0">
+        <div className="flex min-w-0 flex-col gap-6">
           
           {/* Section 1: Scorer & Stats HUD (Deep Prediction) */}
           <PredictionSection
             icon={Sparkles}
             title={t("deep.title")}
             subtitle={t("deep.subtitle")}
+            className="order-3 lg:order-1"
           >
             <div className="grid gap-5">
               {/* Tactical pitch player picker */}
@@ -851,7 +853,7 @@ export function PredictMatchForm({
             </div>
           </PredictionSection>
 
-          <Card className="relative overflow-hidden border border-amber-500/20 bg-gradient-to-br from-[#140f06] to-[#07080b] p-4 sm:p-5">
+          <Card className="order-1 relative overflow-hidden border border-amber-500/20 bg-gradient-to-br from-[#140f06] to-[#07080b] p-4 sm:p-5 lg:order-2">
             <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-amber-400/5 blur-2xl" />
             <div className="relative grid gap-4 sm:grid-cols-[minmax(0,1fr)_190px] sm:items-end">
               <div className="min-w-0">
@@ -1015,6 +1017,7 @@ export function PredictMatchForm({
             icon={Medal}
             title={t("confidence.title")}
             subtitle={t("confidence.subtitle")}
+            className="order-2 lg:order-3"
           >
             <div className="space-y-4">
               <ConfidenceCards
@@ -1034,7 +1037,7 @@ export function PredictMatchForm({
         </div>
 
         {/* Right Column (Sidebar Ticket & Actions) */}
-        <aside className="space-y-4 min-w-0">
+        <aside className="min-w-0 space-y-4">
           <MatchResearchLinks
             matchHref={matchPageHref}
             aiInsightHref={aiInsightHref}
@@ -1157,6 +1160,42 @@ export function PredictMatchForm({
             </Button>
           )}
         </aside>
+      </div>
+
+      <div className="fixed inset-x-0 z-40 border-t border-cyan-500/20 bg-[#05070b]/95 px-3 py-3 shadow-[0_-18px_45px_rgba(0,0,0,0.55)] backdrop-blur-xl lg:hidden bottom-[calc(4rem+env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-6xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-mono text-lg font-black text-white">
+              <span className="text-cyan-300">{homeScore ?? "-"}</span>
+              <span className="px-1 text-gray-600">:</span>
+              <span className="text-magenta-300">{awayScore ?? "-"}</span>
+              <span className="ml-2 align-middle text-xs font-bold text-gray-500">
+                {selectedConfidenceLabel}
+              </span>
+            </p>
+            <p className="truncate text-xs font-semibold text-gray-400">
+              {effectivePointsWagered.toLocaleString()} {locale === "th" ? "แต้ม" : "pts"}
+              {" · "}
+              {t("summary.expectedProfit")}: +{expectedProfitPreview.toLocaleString()}
+            </p>
+          </div>
+          {submitted ? (
+            <div className="flex h-11 shrink-0 items-center gap-2 rounded-xl border border-green-500/30 bg-green-500/10 px-3 text-sm font-black text-green-300">
+              <CheckCircle2 size={17} />
+              {t("submitted.title")}
+            </div>
+          ) : (
+            <Button
+              onClick={() => setShowConfirm(true)}
+              disabled={!canSubmit}
+              className="h-11 shrink-0 cursor-pointer px-4 shadow-[0_0_18px_rgba(34,211,238,0.22)]"
+              size="sm"
+              neon
+            >
+              {t("submit")}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Confirmation Modal */}
@@ -1997,14 +2036,16 @@ function PredictionSection({
   title,
   subtitle,
   children,
+  className,
 }: {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
   subtitle: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <Card className="p-5 border border-gray-800 bg-[#12121a]/85 backdrop-blur-md">
+    <Card className={cn("p-5 border border-gray-800 bg-[#12121a]/85 backdrop-blur-md", className)}>
       <div className="mb-4 flex items-start gap-3 border-b border-gray-800/40 pb-3">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-cyan-500/25 bg-cyan-950/20 text-cyan-400">
           <Icon size={16} />

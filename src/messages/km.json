@@ -120,6 +120,8 @@
     "passwordMaxLength": "ពាក្យសម្ងាត់ត្រូវមិនលើសពី 100 តួអក្សរ",
     "passwordStrengthHint": "គួរមានអក្សរធំ និងលេខ",
     "passwordMismatch": "ពាក្យសម្ងាត់មិនត្រូវគ្នា",
+    "showPassword": "បង្ហាញពាក្យសម្ងាត់",
+    "hidePassword": "លាក់ពាក្យសម្ងាត់",
     "bio": "ជីវប្រវត្តិ",
     "optional": "មិនចាំបាច់",
     "tagline": "ចូលរួមសហគមន៍អ្នកទស្សន៍ទាយ",
@@ -1268,7 +1270,8 @@
       "description": "Fields mirror the prediction details.",
       "overUnder": "Over/Under 2.5",
       "firstScorerName": "First scorer",
-      "halfTime": "Half-time score"
+      "halfTime": "Half-time score",
+      "expectedProfit": "Expected profit"
     },
     "payload": {
       "matchId": "លេខសម្គាល់ការប្រកួត",

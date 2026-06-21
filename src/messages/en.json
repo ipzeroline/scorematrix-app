@@ -120,6 +120,8 @@
     "passwordMaxLength": "Password must be at most 100 characters",
     "passwordStrengthHint": "Include uppercase and number",
     "passwordMismatch": "Passwords do not match",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
     "bio": "Bio",
     "optional": "Optional",
     "tagline": "Join the prediction community",
@@ -1271,7 +1273,8 @@
       "description": "Fields mirror the prediction details.",
       "overUnder": "Over/Under 2.5",
       "firstScorerName": "First scorer",
-      "halfTime": "Half-time score"
+      "halfTime": "Half-time score",
+      "expectedProfit": "Expected profit"
     },
     "payload": {
       "matchId": "Match ID",

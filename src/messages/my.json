@@ -120,6 +120,8 @@
     "passwordMaxLength": "စကားဝှက်သည် စာလုံး 100 ထက် မကျော်ရပါ",
     "passwordStrengthHint": "စာလုံးအကြီးနှင့် နံပါတ် ထည့်ပါ",
     "passwordMismatch": "စကားဝှက်များ မတူညီပါ",
+    "showPassword": "စကားဝှက် ပြပါ",
+    "hidePassword": "စကားဝှက် ဖျောက်ပါ",
     "bio": "ကိုယ်ရေးအကျဉ်း",
     "optional": "မဖြစ်မနေမဟုတ်",
     "tagline": "ခန့်မှန်းသူအသိုင်းဝိုင်းသို့ ပူးပေါင်းပါ",
@@ -1259,7 +1261,8 @@
       "description": "Fields mirror the prediction details.",
       "overUnder": "Over/Under 2.5",
       "firstScorerName": "First scorer",
-      "halfTime": "Half-time score"
+      "halfTime": "Half-time score",
+      "expectedProfit": "Expected profit"
     },
     "payload": {
       "matchId": "ပွဲစဉ် ID",

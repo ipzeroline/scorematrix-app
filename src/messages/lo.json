@@ -120,6 +120,8 @@
     "passwordMaxLength": "ລະຫັດຜ່ານຕ້ອງບໍ່ເກີນ 100 ໂຕອັກສອນ",
     "passwordStrengthHint": "ຄວນມີຕົວພິມໃຫຍ່ ແລະໂຕເລກ",
     "passwordMismatch": "ລະຫັດຜ່ານບໍ່ຕົງກັນ",
+    "showPassword": "ສະແດງລະຫັດຜ່ານ",
+    "hidePassword": "ເຊື່ອງລະຫັດຜ່ານ",
     "bio": "ກ່ຽວກັບ",
     "optional": "ບໍ່ຈຳເປັນ",
     "tagline": "ເຂົ້າຮ່ວມຊຸມຊົນທາຍຜົນບານເຕະ",
@@ -1259,7 +1261,8 @@
       "description": "Fields mirror the prediction details.",
       "overUnder": "Over/Under 2.5",
       "firstScorerName": "First scorer",
-      "halfTime": "Half-time score"
+      "halfTime": "Half-time score",
+      "expectedProfit": "Expected profit"
     },
     "payload": {
       "matchId": "ລະຫັດແມັດ",

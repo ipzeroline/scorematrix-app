@@ -8,6 +8,29 @@ type DataProxyContext = {
   params: Promise<{ path: string[] }>;
 };
 
+const ALLOWED_DATA_PROXY_PREFIXES = [
+  "achievements",
+  "auth/forgot-password",
+  "auth/register/banks",
+  "auth/reset-password",
+  "checkins",
+  "credits",
+  "events",
+  "leaderboard",
+  "levels",
+  "leagues",
+  "member",
+  "missions",
+  "predictable-matches",
+  "predictions",
+  "referral",
+  "referrals",
+  "rewards",
+  "scoring-rules",
+  "stats",
+  "users/me",
+];
+
 export function GET(request: Request, context: DataProxyContext) {
   return proxyDataRequest(request, context);
 }
@@ -39,8 +62,18 @@ async function proxyDataRequest(request: Request, context: DataProxyContext) {
 
   try {
     const { path } = await context.params;
+    const normalizedPath = normalizeProxyPath(path);
+    if (!isAllowedProxyPath(normalizedPath)) {
+      return Response.json(
+        { success: false, code: "not_found", message: "Data route is not available" },
+        { status: 404, headers: NO_CACHE_HEADERS }
+      );
+    }
+
     const requestUrl = new URL(request.url);
-    const backendUrl = getDataApiUrl(path.map(encodeURIComponent).join("/"));
+    const backendUrl = getDataApiUrl(
+      normalizedPath.split("/").map(encodeURIComponent).join("/")
+    );
     requestUrl.searchParams.forEach((value, key) => {
       backendUrl.searchParams.append(key, value);
     });
@@ -73,7 +106,6 @@ async function buildProxyHeaders(request: Request) {
   for (const name of [
     "accept",
     "accept-language",
-    "authorization",
     "content-language",
     "content-type",
     "x-app-locale",
@@ -89,6 +121,19 @@ async function buildProxyHeaders(request: Request) {
   }
 
   return headers;
+}
+
+function normalizeProxyPath(path: string[]) {
+  return path
+    .map((segment) => decodeURIComponent(segment).trim())
+    .filter(Boolean)
+    .join("/");
+}
+
+function isAllowedProxyPath(path: string) {
+  return ALLOWED_DATA_PROXY_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+  );
 }
 
 async function readRequestBody(request: Request) {

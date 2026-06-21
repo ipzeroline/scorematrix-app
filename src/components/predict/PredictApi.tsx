@@ -407,7 +407,7 @@ export function PredictApi() {
       try {
         setMatchesRequestFailed(false);
         const response = await apiGetRaw<PredictableMatchResponse>(
-          "https://api.scorematrix.live/api/v1/scorm/predictable-matches?excludePredicted=false",
+          "/predictable-matches?excludePredicted=false",
           {
             locale,
             token: isLoggedIn ? undefined : null,
@@ -603,7 +603,7 @@ export function PredictApi() {
                       setRulesRequestFailed(false);
                       try {
                         const resp = await apiGetRaw<{ data?: ScoringRules } & ScoringRules>(
-                          "https://api.scorematrix.live/api/v1/scorm/scoring-rules",
+                          "/scoring-rules",
                           { locale }
                         );
                         setScoringRules(resp?.data ?? resp);

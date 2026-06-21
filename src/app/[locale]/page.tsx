@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { Brain } from "lucide-react";
@@ -110,115 +111,30 @@ export default async function Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "dashboard" });
   const seo = getHomeSeoContent(locale);
-  const [
-    cookieStore,
-    liveResult,
-    todayFixtures,
-    wcGroups,
-    latestArticles,
-    aiInsight,
-    banners,
-  ] = await Promise.all([
-    cookies(),
-    loadLiveFixtures(),
-    loadTodayFixtures(),
-    getWorldCupGroups(),
-    getPaginatedScormArticles(locale, 1, "", undefined, 6),
-    loadFeaturedAIInsight(),
-    getHomepageBanners(),
-  ]);
-  const homepageFixtures = sortFixtures(todayFixtures)
-    .filter((fixture) => {
-      if (getFixtureStatusGroup(fixture) === MatchStatus.LIVE) {
-        return false;
-      }
-
-      return getFixtureStatusGroup(fixture) === MatchStatus.UPCOMING;
-    });
-
-  const wcTodayMatches = sortFixtures(todayFixtures).filter(
-    (fixture) =>
-      fixture.league.id === "1" ||
-      fixture.league.apiLeagueId === 1 ||
-      fixture.league.name === "World Cup"
-  );
-  const initialHasAuthSession =
-    Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
-    Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
   const structuredData = buildHomeStructuredData(locale, seo);
-
-  const mainContent = (
-    <>
-      <WorldFootballFeature wcGroups={wcGroups} wcTodayMatches={wcTodayMatches} />
-
-      {/* Live Match Highlights */}
-      <section>
-        <LiveMatchHighlights
-          fixtures={liveResult.fixtures}
-          initialError={liveResult.error}
-        />
-      </section>
-
-      {/* Today's Matches */}
-      <section>
-        <TodayMatches fixtures={homepageFixtures} />
-      </section>
-
-      {/* AI Match of the Day */}
-      {aiInsight && (
-        <section>
-          <div className="relative mb-3 overflow-hidden rounded-lg border border-border bg-surface px-3 py-2.5">
-            {/* Top edge accent gradient line for the featured section */}
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
-
-            <div className="relative flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
-                  <Brain
-                    size={17}
-                    strokeWidth={2}
-                    aria-hidden="true"
-                  />
-                </span>
-                <h2 className="text-base font-extrabold tracking-normal text-white md:text-lg">
-                  {t("aiMatchOfTheDay")}
-                </h2>
-              </div>
-
-              {/* Featured Badge */}
-              <span className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[9px] font-bold text-cyan-300 uppercase tracking-wide">
-                {featuredBadgeCopy[locale] || "Featured"}
-              </span>
-            </div>
-          </div>
-          <AIMatchOfTheDay insight={aiInsight} />
-        </section>
-      )}
-
-      {/* News Section */}
-      <section>
-        <NewsSection articles={latestArticles.articles} />
-      </section>
-    </>
-  );
 
   return (
     <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-4 overflow-x-hidden px-4 pb-5 sm:px-0 lg:gap-5">
       {/* Hero Banner */}
-      <section>
-        <HeroBanner banners={banners} />
-      </section>
+      <Suspense fallback={null}>
+        <HomeHeroBanner />
+      </Suspense>
 
       {/* Daily Check-in (Full Width) */}
-      <DailyCheckIn initialHasAuthSession={initialHasAuthSession} />
-
-      {/* Missions Widget (Full Width) */}
-      {initialHasAuthSession && (
-        <MissionsWidget initialHasAuthSession={initialHasAuthSession} />
-      )}
+      <Suspense fallback={null}>
+        <HomeAuthWidgets />
+      </Suspense>
 
       {/* Main Content (Matches, AI, News) */}
-      {mainContent}
+      <Suspense fallback={null}>
+        <HomeFootballSections />
+      </Suspense>
+      <Suspense fallback={null}>
+        <HomeAISection locale={locale} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <HomeNewsSection locale={locale} />
+      </Suspense>
 
       <section className="rounded-lg border border-gray-800 bg-[#0a0a0f] p-3.5 md:p-4">
         <div className="max-w-4xl">
@@ -278,6 +194,117 @@ export default async function Page({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
     </div>
+  );
+}
+
+async function HomeHeroBanner() {
+  const banners = await getHomepageBanners();
+
+  return (
+    <section>
+      <HeroBanner banners={banners} />
+    </section>
+  );
+}
+
+async function HomeAuthWidgets() {
+  const cookieStore = await cookies();
+  const initialHasAuthSession =
+    Boolean(cookieStore.get(AUTH_TOKEN_COOKIE_NAME)?.value) ||
+    Boolean(cookieStore.get(REFRESH_TOKEN_COOKIE_NAME)?.value);
+
+  return (
+    <>
+      <DailyCheckIn initialHasAuthSession={initialHasAuthSession} />
+      {initialHasAuthSession && (
+        <MissionsWidget initialHasAuthSession={initialHasAuthSession} />
+      )}
+    </>
+  );
+}
+
+async function HomeFootballSections() {
+  const [liveResult, todayFixtures, wcGroups] = await Promise.all([
+    loadLiveFixtures(),
+    loadTodayFixtures(),
+    getWorldCupGroups(),
+  ]);
+  const homepageFixtures = sortFixtures(todayFixtures).filter((fixture) => {
+    if (getFixtureStatusGroup(fixture) === MatchStatus.LIVE) {
+      return false;
+    }
+
+    return getFixtureStatusGroup(fixture) === MatchStatus.UPCOMING;
+  });
+  const wcTodayMatches = sortFixtures(todayFixtures).filter(
+    (fixture) =>
+      fixture.league.id === "1" ||
+      fixture.league.apiLeagueId === 1 ||
+      fixture.league.name === "World Cup"
+  );
+
+  return (
+    <>
+      <WorldFootballFeature wcGroups={wcGroups} wcTodayMatches={wcTodayMatches} />
+      <section>
+        <LiveMatchHighlights
+          fixtures={liveResult.fixtures}
+          initialError={liveResult.error}
+        />
+      </section>
+      <section>
+        <TodayMatches fixtures={homepageFixtures} />
+      </section>
+    </>
+  );
+}
+
+async function HomeAISection({ locale }: { locale: string }) {
+  const [t, aiInsight] = await Promise.all([
+    getTranslations({ locale, namespace: "dashboard" }),
+    loadFeaturedAIInsight(),
+  ]);
+
+  if (!aiInsight) return null;
+
+  return (
+    <section>
+      <div className="relative mb-3 overflow-hidden rounded-lg border border-border bg-surface px-3 py-2.5">
+        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-magenta-500" />
+
+        <div className="relative flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+              <Brain size={17} strokeWidth={2} aria-hidden="true" />
+            </span>
+            <h2 className="text-base font-extrabold tracking-normal text-white md:text-lg">
+              {t("aiMatchOfTheDay")}
+            </h2>
+          </div>
+
+          <span className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[9px] font-bold text-cyan-300 uppercase tracking-wide">
+            {featuredBadgeCopy[locale] || "Featured"}
+          </span>
+        </div>
+      </div>
+      <AIMatchOfTheDay insight={aiInsight} />
+    </section>
+  );
+}
+
+async function HomeNewsSection({ locale }: { locale: string }) {
+  const latestArticles = await getPaginatedScormArticles(
+    locale,
+    1,
+    "",
+    undefined,
+    6
+  );
+
+  return (
+    <section>
+      <NewsSection articles={latestArticles.articles} />
+    </section>
   );
 }
 

@@ -5,6 +5,8 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   CheckCircle2,
+  Eye,
+  EyeOff,
   ShieldCheck,
   Sparkles,
   Trophy,
@@ -38,6 +40,7 @@ export function LoginClient() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const markTouched = (field: string) =>
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -160,17 +163,32 @@ export function LoginClient() {
             autoComplete="username"
           />
 
-          <div>
-            <Input
-              label={t("password")}
-              type="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={(e) => update("password", e.target.value)}
-              onBlur={() => markTouched("password")}
-              error={errors.password}
-              autoComplete="current-password"
-            />
+          <div className="w-full">
+            <label htmlFor="login-password" className="mb-1 block text-sm font-medium text-gray-400">
+              {t("password")}
+            </label>
+            <div className="relative">
+              <input
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={(e) => update("password", e.target.value)}
+                onBlur={() => markTouched("password")}
+                autoComplete="current-password"
+                className="w-full rounded-lg border border-gray-700 bg-[#0a0a0f] px-3 py-2 pr-12 text-sm text-white placeholder-gray-500 transition-colors duration-200 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
+                aria-pressed={showPassword}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-gray-400 transition-colors hover:text-cyan-300 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {errors.password && <p className="mt-1 text-xs text-red-400">{errors.password}</p>}
           </div>
           </FormSection>
 

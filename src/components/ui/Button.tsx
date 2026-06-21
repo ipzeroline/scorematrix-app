@@ -1,4 +1,3 @@
-"use client";
 import { ButtonHTMLAttributes } from "react";
 import { FootballSpinner } from "@/components/ui/FootballLoading";
 import { cn } from "@/lib/utils";

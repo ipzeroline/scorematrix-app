@@ -18,6 +18,7 @@ import {
   type ApiLeagueDetailStanding,
   type ApiLeagueDetailFixture,
 } from "@/lib/api-football";
+import { SITE_URL } from "@/lib/site";
 
 const WORLD_CUP_LEAGUE_ID = 1;
 const WORLD_CUP_SEASON = 2026;
@@ -29,14 +30,15 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "worldCup2026" });
+  const canonical = `${SITE_URL}/${locale}/world-cup-2026`;
 
   return {
     title: `${t("title")} | ScoreMatrix`,
     description: t("description"),
     alternates: {
-      canonical: `/${locale}/world-cup-2026`,
+      canonical,
       languages: Object.fromEntries(
-        LOCALE_CODES.map((code) => [code, `/${code}/world-cup-2026`])
+        LOCALE_CODES.map((code) => [code, `${SITE_URL}/${code}/world-cup-2026`])
       ),
     },
     openGraph: {
@@ -44,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t("description"),
       type: "website",
       locale,
-      url: `/${locale}/world-cup-2026`,
+      url: canonical,
       siteName: "ScoreMatrix",
     },
   };

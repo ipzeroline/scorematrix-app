@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   ArrowRight,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Users,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 import type { SpecialEvent } from "@/types/event";
 
 type Props = {
@@ -18,6 +20,7 @@ type Props = {
 
 export function EventHowToPlay({ event }: Props) {
   const t = useTranslations("events");
+  const { locale } = useParams<{ locale: string }>();
   const isFree =
     (event.entryFeePoints ?? 0) <= 0 && (event.entryFeeCredits ?? 0) <= 0;
 
@@ -125,13 +128,13 @@ export function EventHowToPlay({ event }: Props) {
 
       {/* CTA */}
       <div className="flex justify-center">
-        <a
-          href="/predict"
+        <Link
+          href={`/${locale}/predict`}
           className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-black transition-colors hover:bg-cyan-400"
         >
           {t("howToPlay.goPredict")}
           <ArrowRight size={16} />
-        </a>
+        </Link>
       </div>
     </div>
   );

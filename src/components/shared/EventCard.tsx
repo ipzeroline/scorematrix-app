@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -32,11 +32,7 @@ const STATUS_BADGE: Record<string, string> = {
 export function EventCard({ event }: { event: SpecialEvent }) {
   const { locale } = useParams<{ locale: string }>();
   const t = useTranslations('events');
-  const [now, setNow] = useState<number | null>(null);
-
-  useEffect(() => {
-    setNow(Date.now());
-  }, []);
+  const [now] = useState(() => Date.now());
 
   const daysUntilStart = now
     ? Math.ceil((new Date(event.startDate).getTime() - now) / 86400000)
