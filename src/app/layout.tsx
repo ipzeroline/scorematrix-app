@@ -33,7 +33,16 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/icons/scorematrix-icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icons/scorematrix-icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },
   openGraph: {
     title: "ScoreMatrix - Predict. Compete. Win.",
     description: SITE_DESCRIPTION,
