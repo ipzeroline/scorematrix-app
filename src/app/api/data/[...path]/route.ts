@@ -21,6 +21,7 @@ const ALLOWED_DATA_PROXY_PREFIXES = [
   "leagues",
   "member",
   "missions",
+  "points",
   "predictable-matches",
   "predictions",
   "referral",

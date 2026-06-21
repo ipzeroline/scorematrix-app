@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -13,8 +13,14 @@ import {
   Coins,
   Copy,
   Crown,
+  Flame,
   LockKeyhole,
+  MessageSquare,
+  MoreHorizontal,
+  Pin,
   Search,
+  Send,
+  Smile,
   UserMinus,
   ShieldCheck,
   Target,
@@ -48,6 +54,37 @@ import { useUserStore } from "@/stores/user-store";
 
 const LEAGUE_LOGO_OVERRIDE_KEY = "scorematrix:league-logo:";
 const LEAGUE_DETAIL_CACHE_KEY = "scorematrix:league-detail:";
+const LEAGUE_WEBBOARD_STORAGE_KEY = "scorematrix:league-webboard:";
+
+type LeagueTranslator = ReturnType<typeof useTranslations<"leagues">>;
+type WebboardChannel = "general" | "predictions" | "results";
+type WebboardReaction = "fire" | "target" | "smile";
+
+type WebboardReply = {
+  id: string;
+  author: string;
+  avatarUrl: string | null;
+  level: number;
+  body: string;
+  time: string;
+};
+
+type WebboardThread = {
+  id: string;
+  channel: WebboardChannel;
+  author: string;
+  avatarUrl: string | null;
+  level: number;
+  time: string;
+  title: string;
+  body: string;
+  tags: string[];
+  replies: WebboardReply[];
+  reactions: Record<WebboardReaction, number>;
+  reacted: WebboardReaction | null;
+  views: number;
+  pinned?: boolean;
+};
 
 export default function LeagueDetailPage() {
   const { id, locale } = useParams<{ id: string; locale: string }>();
@@ -357,6 +394,18 @@ export default function LeagueDetailPage() {
           </div>
         </div>
         </Card>
+
+        <LeagueWebboardMockup
+          league={league}
+          standings={standings}
+          currentUser={{
+            username: currentUsername,
+            displayName: currentDisplayName,
+            avatarUrl: currentAvatarUrl,
+            level: currentLevel,
+          }}
+          t={t}
+        />
 
       <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
         <Card className="overflow-hidden p-0">
@@ -739,6 +788,812 @@ export default function LeagueDetailPage() {
         </Modal>
       ) : null}
     </>
+  );
+}
+
+function LeagueWebboardMockup({
+  league,
+  standings,
+  currentUser,
+  t,
+}: {
+  league: LeagueDetail;
+  standings: LeagueStanding[];
+  currentUser: {
+    username: string;
+    displayName: string;
+    avatarUrl: string;
+    level: number;
+  };
+  t: LeagueTranslator;
+}) {
+  const topMembers = standings.slice(0, 4);
+  const displayName =
+    currentUser.displayName ||
+    currentUser.username ||
+    topMembers[0]?.displayName ||
+    topMembers[0]?.username ||
+    t("webboardMember");
+  const leagueId = String(league.id);
+  const seedThreads = useMemo(
+    () => buildMockThreads(league, standings, t),
+    [league, standings, t]
+  );
+  const [threads, setThreads] = useState<WebboardThread[]>(seedThreads);
+  const [storageReady, setStorageReady] = useState(false);
+  const [activeChannel, setActiveChannel] = useState<WebboardChannel>("general");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [draftTitle, setDraftTitle] = useState("");
+  const [draftBody, setDraftBody] = useState("");
+  const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [replyDraft, setReplyDraft] = useState("");
+  const onlineCount = Math.max(
+    1,
+    Math.min(league.memberCount, topMembers.length + 2)
+  );
+  const activeThread =
+    threads.find((thread) => thread.id === activeThreadId) ?? null;
+  const filteredThreads = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+
+    return threads.filter((thread) => {
+      const matchesChannel = thread.channel === activeChannel || thread.pinned;
+      if (!matchesChannel) return false;
+      if (!query) return true;
+
+      return [thread.author, thread.title, thread.body, ...thread.tags].some(
+        (value) => value.toLowerCase().includes(query)
+      );
+    });
+  }, [activeChannel, searchQuery, threads]);
+  const pinnedCount = threads.filter((thread) => thread.pinned).length;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const storedThreads = readStoredWebboardThreads(leagueId);
+      setThreads(storedThreads ?? seedThreads);
+      setStorageReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [leagueId, seedThreads]);
+
+  useEffect(() => {
+    if (!storageReady) return;
+    storeWebboardThreads(leagueId, threads);
+  }, [leagueId, storageReady, threads]);
+
+  const channelOptions: Array<{
+    id: WebboardChannel;
+    label: string;
+    tone: string;
+    icon: React.ReactNode;
+  }> = [
+    {
+      id: "general",
+      label: t("webboardChannelGeneral"),
+      tone: "text-cyan-300",
+      icon: <MessageSquare size={14} />,
+    },
+    {
+      id: "predictions",
+      label: t("webboardChannelPredictions"),
+      tone: "text-amber-300",
+      icon: <Target size={14} />,
+    },
+    {
+      id: "results",
+      label: t("webboardChannelResults"),
+      tone: "text-green-300",
+      icon: <Trophy size={14} />,
+    },
+  ];
+
+  const createThread = () => {
+    const body = draftBody.trim();
+    const title = draftTitle.trim() || body.slice(0, 72);
+    if (!title || !body) return;
+
+    const newThread: WebboardThread = {
+      id: `local-${Date.now()}`,
+      channel: activeChannel,
+      author: displayName,
+      avatarUrl: currentUser.avatarUrl ?? null,
+      level: getDisplayLevel(currentUser.level),
+      time: t("webboardTimeNow"),
+      title,
+      body,
+      tags: getWebboardChannelTags(activeChannel, t),
+      replies: [],
+      reactions: { fire: 0, target: 0, smile: 0 },
+      reacted: null,
+      views: 1,
+    };
+
+    setThreads((current) => [newThread, ...current]);
+    setDraftTitle("");
+    setDraftBody("");
+  };
+
+  const openThread = (threadId: string) => {
+    setActiveThreadId(threadId);
+    setThreads((current) =>
+      current.map((thread) =>
+        thread.id === threadId ? { ...thread, views: thread.views + 1 } : thread
+      )
+    );
+  };
+
+  const toggleReaction = (threadId: string, reaction: WebboardReaction) => {
+    setThreads((current) =>
+      current.map((thread) => {
+        if (thread.id !== threadId) return thread;
+
+        const nextReactions = { ...thread.reactions };
+        if (thread.reacted) {
+          nextReactions[thread.reacted] = Math.max(
+            0,
+            nextReactions[thread.reacted] - 1
+          );
+        }
+
+        const nextReacted = thread.reacted === reaction ? null : reaction;
+        if (nextReacted) {
+          nextReactions[nextReacted] += 1;
+        }
+
+        return { ...thread, reactions: nextReactions, reacted: nextReacted };
+      })
+    );
+  };
+
+  const submitReply = () => {
+    const body = replyDraft.trim();
+    if (!body || !activeThread) return;
+
+    const reply: WebboardReply = {
+      id: `reply-${Date.now()}`,
+      author: displayName,
+      avatarUrl: currentUser.avatarUrl ?? null,
+      level: getDisplayLevel(currentUser.level),
+      body,
+      time: t("webboardTimeNow"),
+    };
+
+    setThreads((current) =>
+      current.map((thread) =>
+        thread.id === activeThread.id
+          ? { ...thread, replies: [...thread.replies, reply] }
+          : thread
+      )
+    );
+    setReplyDraft("");
+  };
+
+  return (
+    <>
+      <Card className="overflow-hidden border-cyan-400/20 bg-[#080d16] p-0 shadow-[0_0_42px_rgba(34,211,238,0.06)]">
+        <div className="relative overflow-hidden border-b border-cyan-400/10 bg-[radial-gradient(circle_at_18%_0%,rgba(34,211,238,0.18),transparent_34%),linear-gradient(135deg,rgba(14,21,34,0.98),rgba(5,8,14,0.98))] px-4 py-4 sm:px-5">
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300" />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="cyan" size="sm">
+                  <MessageSquare size={12} />
+                  {t("webboardMockup")}
+                </Badge>
+                <Badge variant="purple" size="sm">
+                  {t("webboardEsportRoom")}
+                </Badge>
+                <Badge variant="gold" size="sm">
+                  {t("webboardLocalOnly")}
+                </Badge>
+              </div>
+              <h2 className="mt-3 text-xl font-black leading-tight text-white sm:text-2xl">
+                {t("webboardTitle")}
+              </h2>
+              <p className="mt-1 max-w-2xl text-sm font-semibold leading-6 text-gray-400">
+                {t("webboardDescription")}
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:min-w-[330px]">
+              <WebboardStat label={t("webboardOnline")} value={onlineCount.toLocaleString()} tone="text-green-300" />
+              <WebboardStat label={t("webboardThreads")} value={threads.length.toLocaleString()} tone="text-cyan-300" />
+              <WebboardStat label={t("webboardPinned")} value={pinnedCount.toLocaleString()} tone="text-amber-300" />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 space-y-4 p-4 sm:p-5">
+            <button
+              type="button"
+              onClick={() => openThread("rules")}
+              className="w-full rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 text-left transition-colors hover:border-amber-300/40"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-amber-300/30 bg-amber-300/10 text-amber-200">
+                    <Pin size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xs font-black uppercase tracking-wide text-amber-300">
+                      {t("webboardPinnedTopic")}
+                    </p>
+                    <h3 className="mt-1 line-clamp-2 text-base font-black text-white">
+                      {t("webboardPinnedTitle")}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-gray-400">
+                      {t("webboardPinnedDescription")}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="gold" size="sm">
+                  <Flame size={12} />
+                  {t("webboardHot")}
+                </Badge>
+              </div>
+            </button>
+
+            <div className="rounded-2xl border border-cyan-400/15 bg-black/25 p-3 sm:p-4">
+              <div className="flex items-start gap-3">
+                <Avatar
+                  src={currentUser.avatarUrl}
+                  fallback={displayName.slice(0, 2).toUpperCase()}
+                  size="lg"
+                  level={getDisplayLevel(currentUser.level)}
+                  className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
+                />
+                <div className="min-w-0 flex-1 space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {channelOptions.map((channel) => (
+                      <button
+                        key={channel.id}
+                        type="button"
+                        onClick={() => setActiveChannel(channel.id)}
+                        className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-3 text-xs font-black transition-colors ${
+                          activeChannel === channel.id
+                            ? "border-cyan-300/45 bg-cyan-300/10 text-cyan-100"
+                            : "border-gray-800 bg-[#070a10] text-gray-500 hover:border-gray-700 hover:text-gray-300"
+                        }`}
+                      >
+                        <span className={channel.tone}>{channel.icon}</span>
+                        {channel.label}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={draftTitle}
+                    onChange={(event) => setDraftTitle(event.target.value)}
+                    placeholder={t("webboardTitlePlaceholder")}
+                    className="border-gray-800 bg-[#070a10] text-sm font-bold"
+                    maxLength={96}
+                  />
+                  <textarea
+                    value={draftBody}
+                    onChange={(event) => setDraftBody(event.target.value)}
+                    placeholder={t("webboardComposerPlaceholder")}
+                    className="min-h-24 w-full resize-none rounded-xl border border-gray-800 bg-[#070a10] px-3 py-3 text-sm font-semibold leading-6 text-white outline-none transition-colors placeholder:text-gray-600 focus:border-cyan-400/50"
+                    maxLength={500}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraftBody((current) =>
+                          `${current}${current ? " " : ""}${t("webboardTagPrediction")}`
+                        )
+                      }
+                      className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-purple-400/20 bg-purple-400/[0.06] px-3 text-xs font-black text-purple-200 transition-colors hover:border-purple-300/40 hover:bg-purple-400/10"
+                      aria-label={t("webboardReaction")}
+                    >
+                      <Smile size={16} />
+                      {t("webboardEmoji")}
+                    </button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="min-h-9"
+                      disabled={!draftBody.trim()}
+                      onClick={createThread}
+                    >
+                      <Send size={14} />
+                      {t("webboardPost")}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3 rounded-2xl border border-gray-800 bg-black/20 p-3 sm:flex-row sm:items-center">
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-600"
+                />
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={t("webboardSearchPlaceholder")}
+                  className="border-gray-800 bg-[#070a10] pl-9 text-sm"
+                />
+              </div>
+              <Badge variant="cyan" size="sm">
+                {filteredThreads.length.toLocaleString()} {t("webboardThreads")}
+              </Badge>
+            </div>
+
+            <div className="space-y-3">
+              {filteredThreads.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-800 bg-[#0b111d] p-6 text-center text-sm font-semibold text-gray-500">
+                  {t("webboardNoThreads")}
+                </div>
+              ) : (
+                filteredThreads.map((thread) => (
+                  <div
+                    key={thread.id}
+                    className="rounded-2xl border border-gray-800 bg-[#0b111d] p-4 transition-colors hover:border-cyan-400/20"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Avatar
+                        src={thread.avatarUrl}
+                        fallback={thread.author.slice(0, 2).toUpperCase()}
+                        size="lg"
+                        level={thread.level}
+                        className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-black text-white">
+                            {thread.author}
+                          </p>
+                          <span className="rounded-md border border-purple-400/20 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold text-purple-200">
+                            LV {thread.level}
+                          </span>
+                          {thread.pinned ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-black text-amber-200">
+                              <Pin size={10} />
+                              {t("webboardPinned")}
+                            </span>
+                          ) : null}
+                          <span className="text-[11px] font-semibold text-gray-600">
+                            {thread.time}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => openThread(thread.id)}
+                          className="mt-2 block w-full text-left"
+                        >
+                          <h3 className="text-base font-black leading-6 text-white transition-colors hover:text-cyan-200">
+                            {thread.title}
+                          </h3>
+                          <p className="mt-1 line-clamp-2 text-sm leading-6 text-gray-400">
+                            {thread.body}
+                          </p>
+                        </button>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          {thread.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="rounded-full border border-cyan-400/15 bg-cyan-400/[0.04] px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-200"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <ReactionButton
+                            label={t("webboardFire")}
+                            value={thread.reactions.fire}
+                            active={thread.reacted === "fire"}
+                            onClick={() => toggleReaction(thread.id, "fire")}
+                            icon={<Flame size={13} />}
+                          />
+                          <ReactionButton
+                            label={t("webboardTarget")}
+                            value={thread.reactions.target}
+                            active={thread.reacted === "target"}
+                            onClick={() => toggleReaction(thread.id, "target")}
+                            icon={<Target size={13} />}
+                          />
+                          <ReactionButton
+                            label={t("webboardSmile")}
+                            value={thread.reactions.smile}
+                            active={thread.reacted === "smile"}
+                            onClick={() => toggleReaction(thread.id, "smile")}
+                            icon={<Smile size={13} />}
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openThread(thread.id)}
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-gray-600 transition-colors hover:bg-white/5 hover:text-white"
+                        aria-label={t("webboardOpenThread")}
+                      >
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-800 pt-3 text-center">
+                      <ThreadMetric label={t("webboardReplies")} value={thread.replies.length} />
+                      <ThreadMetric label={t("webboardReactions")} value={getReactionTotal(thread)} />
+                      <ThreadMetric label={t("webboardViews")} value={thread.views} />
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <aside className="border-t border-gray-800 bg-black/18 p-4 sm:p-5 lg:border-l lg:border-t-0">
+            <div className="rounded-2xl border border-green-400/15 bg-green-400/[0.04] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-sm font-black text-white">
+                  {t("webboardOnlineSquad")}
+                </h3>
+                <span className="flex items-center gap-1 text-xs font-black text-green-300">
+                  <span className="h-2 w-2 rounded-full bg-green-300 shadow-[0_0_10px_rgba(134,239,172,0.9)]" />
+                  {onlineCount}
+                </span>
+              </div>
+              <div className="mt-4 space-y-3">
+                {(topMembers.length > 0 ? topMembers : standings.slice(0, 1)).map((member) => {
+                  const name = getMemberDisplayName(member, t("webboardMember"));
+                  return (
+                    <div key={`${member.userId}-online`} className="flex min-w-0 items-center gap-3">
+                      <Avatar
+                        src={member.avatarUrl}
+                        fallback={getMemberInitials(member)}
+                        size="md"
+                        level={getDisplayLevel(member.level)}
+                        className="shrink-0 border-green-400/25 bg-green-400/10"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-white">{name}</p>
+                        <p className="text-xs text-gray-500">{t("webboardTypingReady")}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-cyan-400/15 bg-cyan-400/[0.04] p-4">
+              <h3 className="text-sm font-black text-white">
+                {t("webboardChannels")}
+              </h3>
+              <div className="mt-3 space-y-2">
+                {channelOptions.map((channel) => {
+                  const count = threads.filter(
+                    (thread) => thread.channel === channel.id
+                  ).length;
+                  return (
+                    <button
+                      type="button"
+                      key={channel.id}
+                      onClick={() => setActiveChannel(channel.id)}
+                      className={`flex min-h-11 w-full items-center justify-between rounded-xl border px-3 py-2 transition-colors ${
+                        activeChannel === channel.id
+                          ? "border-cyan-300/45 bg-cyan-300/10"
+                          : "border-gray-800 bg-black/20 hover:border-gray-700"
+                      }`}
+                    >
+                      <span className="flex min-w-0 items-center gap-2 text-sm font-bold text-gray-300">
+                        <span className={channel.tone}>{channel.icon}</span>
+                        <span className="truncate">{channel.label}</span>
+                      </span>
+                      <span className="font-mono text-xs font-black text-gray-500">
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </Card>
+
+      <Modal
+        open={Boolean(activeThread)}
+        onClose={() => {
+          setActiveThreadId(null);
+          setReplyDraft("");
+        }}
+        title={activeThread?.title}
+        size="lg"
+        className="border-cyan-400/20 bg-[#0b111d]"
+      >
+        {activeThread ? (
+          <div className="space-y-4">
+            <div className="flex items-start gap-3 rounded-2xl border border-gray-800 bg-black/20 p-4">
+              <Avatar
+                src={activeThread.avatarUrl}
+                fallback={activeThread.author.slice(0, 2).toUpperCase()}
+                size="lg"
+                level={activeThread.level}
+                className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="truncate text-sm font-black text-white">
+                    {activeThread.author}
+                  </p>
+                  <span className="rounded-md border border-purple-400/20 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold text-purple-200">
+                    LV {activeThread.level}
+                  </span>
+                  <span className="text-[11px] font-semibold text-gray-600">
+                    {activeThread.time}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-gray-300">
+                  {activeThread.body}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <ThreadMetric label={t("webboardReplies")} value={activeThread.replies.length} />
+              <ThreadMetric label={t("webboardReactions")} value={getReactionTotal(activeThread)} />
+              <ThreadMetric label={t("webboardViews")} value={activeThread.views} />
+            </div>
+
+            <div className="space-y-3">
+              {activeThread.replies.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-800 p-4 text-center text-sm font-semibold text-gray-500">
+                  {t("webboardNoReplies")}
+                </div>
+              ) : (
+                activeThread.replies.map((reply) => (
+                  <div key={reply.id} className="flex items-start gap-3 rounded-xl border border-gray-800 bg-black/20 p-3">
+                    <Avatar
+                      src={reply.avatarUrl}
+                      fallback={reply.author.slice(0, 2).toUpperCase()}
+                      size="md"
+                      level={reply.level}
+                      className="shrink-0 border-purple-400/25 bg-purple-400/10"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-black text-white">
+                          {reply.author}
+                        </p>
+                        <span className="text-[11px] font-semibold text-gray-600">
+                          {reply.time}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm leading-6 text-gray-400">
+                        {reply.body}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                value={replyDraft}
+                onChange={(event) => setReplyDraft(event.target.value)}
+                placeholder={t("webboardReplyPlaceholder")}
+                className="border-gray-800 bg-[#070a10]"
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    submitReply();
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                size="sm"
+                disabled={!replyDraft.trim()}
+                onClick={submitReply}
+                className="shrink-0"
+              >
+                <Send size={14} />
+                {t("webboardSendReply")}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+    </>
+  );
+}
+
+function ReactionButton({
+  label,
+  value,
+  active,
+  onClick,
+  icon,
+}: {
+  label: string;
+  value: number;
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-black transition-colors ${
+        active
+          ? "border-cyan-300/45 bg-cyan-300/10 text-cyan-100"
+          : "border-gray-800 bg-black/20 text-gray-500 hover:border-gray-700 hover:text-gray-300"
+      }`}
+    >
+      {icon}
+      <span>{label}</span>
+      <span className="font-mono">{value.toLocaleString()}</span>
+    </button>
+  );
+}
+
+function getReactionTotal(thread: WebboardThread) {
+  return Object.values(thread.reactions).reduce((sum, value) => sum + value, 0);
+}
+
+function getWebboardChannelTags(channel: WebboardChannel, t: LeagueTranslator) {
+  if (channel === "predictions") {
+    return [t("webboardTagPrediction"), t("webboardTagStats")];
+  }
+  if (channel === "results") {
+    return [t("webboardChannelResults"), t("webboardTagStats")];
+  }
+  return [t("webboardTagStrategy"), t("webboardTagMatchday")];
+}
+
+function WebboardStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: string;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/24 px-3 py-2 text-center">
+      <p className={`font-mono text-lg font-black ${tone}`}>{value}</p>
+      <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function ThreadMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <p className="font-mono text-sm font-black text-white">
+        {value.toLocaleString()}
+      </p>
+      <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+function buildMockThreads(
+  league: LeagueDetail,
+  standings: LeagueStanding[],
+  t: LeagueTranslator
+): WebboardThread[] {
+  const primary = standings[0];
+  const secondary = standings[1] ?? standings[0];
+  const fallbackAuthor = primary
+    ? getMemberDisplayName(primary, t("webboardMember"))
+    : t("webboardMember");
+
+  return [
+    {
+      id: "rules",
+      channel: "general",
+      author: fallbackAuthor,
+      avatarUrl: null,
+      level: getDisplayLevel(primary?.level ?? 10),
+      time: t("webboardTimeNow"),
+      title: t("webboardPinnedTitle"),
+      body: t("webboardPinnedDescription"),
+      tags: [t("webboardPinnedTopic"), t("webboardTagStrategy")],
+      replies: [],
+      reactions: { fire: 12, target: 7, smile: 5 },
+      reacted: null,
+      views: 210,
+      pinned: true,
+    },
+    {
+      id: "lineup",
+      channel: "general",
+      author: primary ? getMemberDisplayName(primary, fallbackAuthor) : fallbackAuthor,
+      avatarUrl: primary?.avatarUrl ?? null,
+      level: getDisplayLevel(primary?.level ?? 10),
+      time: t("webboardTimeNow"),
+      title: t("webboardThreadLineupTitle"),
+      body: t("webboardThreadLineupBody"),
+      tags: [t("webboardTagStrategy"), t("webboardTagMatchday")],
+      replies: [
+        {
+          id: "lineup-reply",
+          author: secondary
+            ? getMemberDisplayName(secondary, fallbackAuthor)
+            : fallbackAuthor,
+          avatarUrl: secondary?.avatarUrl ?? null,
+          level: getDisplayLevel(secondary?.level ?? 6),
+          body: t("webboardThreadPredictionBody"),
+          time: t("webboardTimeRecent"),
+        },
+      ],
+      reactions: { fire: 18, target: 16, smile: 8 },
+      reacted: null,
+      views: 128,
+    },
+    {
+      id: "prediction",
+      channel: "predictions",
+      author: secondary ? getMemberDisplayName(secondary, fallbackAuthor) : fallbackAuthor,
+      avatarUrl: secondary?.avatarUrl ?? null,
+      level: getDisplayLevel(secondary?.level ?? 6),
+      time: t("webboardTimeRecent"),
+      title: t("webboardThreadPredictionTitle"),
+      body: t("webboardThreadPredictionBody"),
+      tags: [t("webboardTagPrediction"), t("webboardTagStats")],
+      replies: [],
+      reactions: { fire: 10, target: 13, smile: 4 },
+      reacted: null,
+      views: 96,
+    },
+  ];
+}
+
+function readStoredWebboardThreads(leagueId: string): WebboardThread[] | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(`${LEAGUE_WEBBOARD_STORAGE_KEY}${leagueId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    return parsed.filter(isWebboardThread);
+  } catch {
+    return null;
+  }
+}
+
+function storeWebboardThreads(leagueId: string, threads: WebboardThread[]) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(
+      `${LEAGUE_WEBBOARD_STORAGE_KEY}${leagueId}`,
+      JSON.stringify(threads)
+    );
+  } catch {
+    // Ignore storage quota/private-mode failures; the webboard remains usable in memory.
+  }
+}
+
+function isWebboardThread(value: unknown): value is WebboardThread {
+  if (!value || typeof value !== "object") return false;
+  const thread = value as Partial<WebboardThread>;
+  return (
+    typeof thread.id === "string" &&
+    typeof thread.author === "string" &&
+    typeof thread.title === "string" &&
+    typeof thread.body === "string" &&
+    Array.isArray(thread.tags) &&
+    Array.isArray(thread.replies) &&
+    Boolean(thread.reactions)
   );
 }
 

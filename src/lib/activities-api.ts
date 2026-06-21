@@ -54,19 +54,6 @@ export const CATEGORY_ORDER: ActivityCategory[] = [
   "items",
 ];
 
-/**
- * Point-ledger types are served by /points/transactions; everything else by
- * /activities. In practice both endpoints return the same unified log, so this
- * only routes a single-type request — the unfiltered feed always uses
- * /activities to avoid duplicate fetches.
- */
-const TRANSACTION_TYPES = new Set<ActivityType>([
-  "checkin",
-  "points_spent",
-  "points_earned",
-  "referral_earned",
-]);
-
 export function isKnownActivityType(type: string): type is ActivityType {
   return (ACTIVITY_TYPES as readonly string[]).includes(type);
 }
@@ -105,15 +92,21 @@ export async function fetchActivityFeed({
   limit,
   locale,
 }: FetchActivityFeedOptions): Promise<ActivityFeedResult> {
-  const query = `page=${page}&limit=${limit}`;
-  const base =
-    type && TRANSACTION_TYPES.has(type) ? "/points/transactions" : "/activities";
-  const path = type ? `${base}?type=${type}&${query}` : `/activities?${query}`;
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
 
-  const response = await apiGetRaw<unknown>(path, { locale });
+  const response = await apiGetRaw<unknown>(
+    `/points/transactions?${params.toString()}`,
+    { locale }
+  );
+  const normalizedItems = normalizeActivities(response).sort(byCreatedAtDesc);
 
   return {
-    items: normalizeActivities(response).sort(byCreatedAtDesc),
+    items: type
+      ? normalizedItems.filter((item) => item.type === type)
+      : normalizedItems,
     hasMore: hasMorePages(response, page),
   };
 }
@@ -132,7 +125,9 @@ function byCreatedAtDesc(a: ActivityItem, b: ActivityItem): number {
 export function normalizeActivities(payload: unknown): ActivityItem[] {
   return extractList(payload).flatMap((raw, index) => {
     if (!isRecord(raw)) return [];
-    const type = pickString(raw.type, raw.activity_type, raw.event);
+    const type =
+      pickString(raw.type, raw.activity_type, raw.event) ??
+      deriveActivityType(raw);
     if (!type) return [];
 
     return [
@@ -141,7 +136,13 @@ export function normalizeActivities(payload: unknown): ActivityItem[] {
         type,
         amount: pickAmount(raw),
         context: pickContext(raw),
-        createdAt: pickString(raw.createdAt, raw.created_at, raw.date),
+        createdAt: pickString(
+          raw.createdAt,
+          raw.created_at,
+          raw.transactionDate,
+          raw.transaction_date,
+          raw.date
+        ),
       },
     ];
   });
@@ -149,9 +150,21 @@ export function normalizeActivities(payload: unknown): ActivityItem[] {
 
 /** Prefer the point change; fall back to item quantity for boost/shield items. */
 function pickAmount(raw: Record<string, unknown>): number | null {
-  const points = pickNumber(raw.pointsChange, raw.amount, raw.points, raw.value);
+  const points = pickNumber(
+    raw.pointsChange,
+    raw.points_change,
+    raw.amount,
+    raw.points,
+    raw.value,
+    raw.freePointsChange,
+    raw.free_points_change,
+    raw.premiumCreditsChange,
+    raw.premium_credits_change,
+    raw.creditChange,
+    raw.credit_change
+  );
   if (points !== null && points !== 0) return points;
-  const qty = pickNumber(raw.itemQtyChange);
+  const qty = pickNumber(raw.itemQtyChange, raw.item_qty_change);
   if (qty !== null && qty !== 0) return qty;
   return points; // 0 or null — UI hides zero amounts
 }
@@ -163,14 +176,25 @@ function pickContext(raw: Record<string, unknown>): string | null {
     : isRecord(raw.meta)
       ? raw.meta
       : undefined;
-  if (!metadata) return null;
+  if (!metadata) {
+    return pickString(raw.description, raw.reason, raw.message, raw.source);
+  }
 
   const match = pickString(metadata.match, metadata.title, metadata.name);
   if (match) {
     const score = pickString(metadata.score);
     return score ? `${match} · ${score}` : match;
   }
-  return pickString(metadata.description, metadata.reason, metadata.message);
+  return pickString(
+    metadata.description,
+    metadata.reason,
+    metadata.message,
+    metadata.league_name,
+    raw.description,
+    raw.reason,
+    raw.message,
+    raw.source
+  );
 }
 
 function extractList(payload: unknown): unknown[] {
@@ -178,8 +202,25 @@ function extractList(payload: unknown): unknown[] {
   if (!isRecord(payload)) return [];
   if (Array.isArray(payload.data)) return payload.data;
   if (Array.isArray(payload.items)) return payload.items;
+  if (Array.isArray(payload.transactions)) return payload.transactions;
+  if (Array.isArray(payload.history)) return payload.history;
+  if (Array.isArray(payload.activities)) return payload.activities;
+  if (Array.isArray(payload.records)) return payload.records;
+  if (Array.isArray(payload.results)) return payload.results;
   if (isRecord(payload.data) && Array.isArray(payload.data.items)) {
     return payload.data.items;
+  }
+  if (isRecord(payload.data) && Array.isArray(payload.data.transactions)) {
+    return payload.data.transactions;
+  }
+  if (isRecord(payload.data) && Array.isArray(payload.data.history)) {
+    return payload.data.history;
+  }
+  if (isRecord(payload.data) && Array.isArray(payload.data.activities)) {
+    return payload.data.activities;
+  }
+  if (isRecord(payload.data) && Array.isArray(payload.data.records)) {
+    return payload.data.records;
   }
   return [];
 }
@@ -187,17 +228,46 @@ function extractList(payload: unknown): unknown[] {
 /** hasMore from the pagination envelope ({ page, totalPages }). */
 function hasMorePages(payload: unknown, currentPage: number): boolean {
   if (!isRecord(payload)) return false;
+  const data = isRecord(payload.data) ? payload.data : undefined;
   const pagination = isRecord(payload.pagination)
     ? payload.pagination
+    : data && isRecord(data.pagination)
+      ? data.pagination
     : isRecord(payload.meta)
       ? payload.meta
+      : data && isRecord(data.meta)
+        ? data.meta
       : undefined;
   if (!pagination) return false;
 
   const page = pickNumber(pagination.page) ?? currentPage;
-  const totalPages = pickNumber(pagination.totalPages, pagination.total_pages);
+  const totalPages = pickNumber(
+    pagination.totalPages,
+    pagination.total_pages,
+    pagination.lastPage,
+    pagination.last_page
+  );
   if (totalPages !== null) return page < totalPages;
   return false;
+}
+
+function deriveActivityType(raw: Record<string, unknown>): ActivityType | null {
+  const source = pickString(raw.source, raw.referenceType, raw.reference_type);
+  const amount = pickAmount(raw);
+  const normalizedSource = source?.toLowerCase();
+
+  if (normalizedSource?.includes("checkin")) return "checkin";
+  if (normalizedSource?.includes("mission")) return "mission_claimed";
+  if (normalizedSource?.includes("referral")) return "referral_earned";
+  if (normalizedSource?.includes("redemption")) return "reward_redeemed";
+  if (normalizedSource?.includes("reward")) return "reward_redeemed";
+  if (normalizedSource?.includes("prediction")) {
+    return amount !== null && amount < 0 ? "prediction_placed" : "prediction_won";
+  }
+  if (normalizedSource?.includes("purchase")) return "points_earned";
+  if (amount !== null && amount < 0) return "points_spent";
+  if (amount !== null && amount > 0) return "points_earned";
+  return null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

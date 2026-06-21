@@ -36,7 +36,7 @@ const frameStyles = {
   7: "bg-[conic-gradient(from_210deg,#7f1d1d,#ef4444,#facc15,#ffffff,#7f1d1d)] shadow-[0_0_26px_rgba(239,68,68,0.38)]",
   8: "bg-[conic-gradient(from_210deg,#0e7490,#22d3ee,#ffffff,#a855f7,#0e7490)] shadow-[0_0_28px_rgba(34,211,238,0.42)]",
   9: "bg-[conic-gradient(from_210deg,#713f12,#facc15,#ffffff,#f97316,#a855f7,#713f12)] shadow-[0_0_30px_rgba(250,204,21,0.44)]",
-  10: "bg-[conic-gradient(from_210deg,#020617,#22d3ee,#ffffff,#facc15,#f472b6,#22c55e,#020617)] shadow-[0_0_34px_rgba(244,114,182,0.45)]",
+  10: "bg-[conic-gradient(from_210deg,#020617,#67e8f9,#f8fafc,#fbbf24,#a78bfa,#020617)] shadow-[0_0_30px_rgba(34,211,238,0.34),0_0_18px_rgba(251,191,36,0.22)]",
 } as const;
 
 const badgeStyles = {
@@ -79,7 +79,7 @@ export function Avatar({
   return (
     <span
       className={cn(
-        "relative inline-grid shrink-0 place-items-center rounded-full p-[3px]",
+        "relative inline-grid h-fit w-fit shrink-0 self-start place-items-center rounded-full p-[3px]",
         "before:absolute before:inset-[2px] before:rounded-full before:border before:border-black/45",
         "after:absolute after:inset-[-2px] after:rounded-full after:border after:border-white/10",
         frameStyles[frameLevel]
@@ -121,7 +121,7 @@ function AvatarImage({
           width={imageSizes[size]}
           height={imageSizes[size]}
           className={cn(
-            "rounded-full object-contain border border-gray-700 bg-[#0a0a0f] p-[2px]",
+            "rounded-full object-cover border border-gray-700 bg-[#0a0a0f] p-[2px]",
             sizeClasses[size],
             className
           )}
@@ -137,7 +137,7 @@ function AvatarImage({
         height={imageSizes[size]}
         unoptimized
         className={cn(
-          "rounded-full object-contain border border-gray-700 bg-[#0a0a0f] p-[2px]",
+          "rounded-full object-cover border border-gray-700 bg-[#0a0a0f] p-[2px]",
           sizeClasses[size],
           className
         )}
