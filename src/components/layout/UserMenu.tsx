@@ -104,6 +104,7 @@ export function UserMenu({
               src={avatar}
               fallback={username}
               size="sm"
+              level={level}
               className="border-cyan-300/25 bg-cyan-300/10"
             />
           ) : (
@@ -143,6 +144,7 @@ export function UserMenu({
                 src={avatar}
                 fallback={username}
                 size="md"
+                level={level}
                 className="shrink-0 border-cyan-300/30 bg-cyan-300/10"
               />
             ) : (

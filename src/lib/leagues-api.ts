@@ -19,6 +19,7 @@ export type JoinedLeague = {
   memberCount: number;
   maxMembers: number;
   entryFeeCredits: number | null;
+  totalFeesReceived: number | null;
   logoUrl: string | null;
   isPrivate: boolean;
   inviteCode: string | null;
@@ -105,6 +106,17 @@ export type LeagueJoinRequest = {
   requestedAt: string | null;
 };
 
+export type LeagueHistoryEntry = {
+  id: string;
+  userId: string | null;
+  username: string | null;
+  type: string;
+  referenceType: string | null;
+  pointsChange: number;
+  metadata: Record<string, unknown>;
+  createdAt: string | null;
+};
+
 export type LeagueDetail = {
   id: string;
   name: string;
@@ -112,6 +124,7 @@ export type LeagueDetail = {
   memberCount: number;
   maxMembers: number;
   entryFeeCredits: number;
+  totalFeesReceived: number;
   logoUrl: string | null;
   isPrivate: boolean;
   isOwner: boolean;
@@ -121,6 +134,7 @@ export type LeagueDetail = {
     id: string;
   };
   standings: LeagueStanding[];
+  history: LeagueHistoryEntry[];
   myRank: number | null;
   myPoints?: number | null;
 };
@@ -196,6 +210,7 @@ export function getLeagues(
     joined: (response.joined ?? []).map((league) => ({
       ...league,
       entryFeeCredits: resolveOptionalEntryFeeCredits(league),
+      totalFeesReceived: resolveOptionalTotalFeesReceived(league),
       logoUrl: resolveLogoUrl(league),
       isPrivate: resolveIsPrivate(league),
       inviteCode: resolveInviteCode(league),
@@ -216,19 +231,23 @@ export function getLeague(leagueId: string, options?: ApiRequestOptions) {
     `/leagues/${encodeURIComponent(leagueId)}`,
     options
   ).then((league) => {
-    const record = readRecord(league);
+    const record = unwrapDataRecord(league) ?? readRecord(league);
     const standings = normalizeLeagueStandings(readStandingCandidates(record));
     const memberProfiles = normalizeLeagueStandings(readMemberCandidates(record));
+    const history = normalizeLeagueHistory(readHistoryCandidates(record));
 
     return {
       ...league,
-      entryFeeCredits: resolveEntryFeeCredits(league),
-      isOwner: resolveIsOwner(league),
-      isPrivate: resolveIsPrivate(league),
-      inviteCode: resolveInviteCode(league),
-      logoUrl: resolveLogoUrl(league),
+      ...record,
+      entryFeeCredits: resolveEntryFeeCredits(record),
+      isOwner: resolveIsOwner(record),
+      isPrivate: resolveIsPrivate(record),
+      inviteCode: resolveInviteCode(record),
+      logoUrl: resolveLogoUrl(record),
       standings: mergeLeagueStandingProfiles(standings, memberProfiles),
+      history,
       myPoints: resolveLeagueMyPoints(record),
+      totalFeesReceived: resolveTotalFeesReceived(record),
     };
   });
 }
@@ -341,6 +360,30 @@ function resolveOptionalEntryFeeCredits(value: unknown): number | null {
 
 function resolveEntryFeeCredits(value: unknown): number {
   return findEntryFeeCredits(value) ?? 0;
+}
+
+function resolveTotalFeesReceived(value: unknown): number {
+  return resolveOptionalTotalFeesReceived(value) ?? 0;
+}
+
+function resolveOptionalTotalFeesReceived(value: unknown): number | null {
+  if (!value || typeof value !== "object") return null;
+
+  const record = value as Record<string, unknown>;
+  for (const candidate of [
+    record.totalFeesReceived,
+    record.total_fees_received,
+    record.totalFeeReceived,
+    record.total_fee_received,
+  ]) {
+    if (candidate === null || candidate === undefined || candidate === "") {
+      continue;
+    }
+    const amount = Number(candidate);
+    if (Number.isFinite(amount) && amount >= 0) return amount;
+  }
+
+  return null;
 }
 
 function findEntryFeeCredits(value: unknown): number | null {
@@ -577,6 +620,67 @@ function readMemberCandidates(record: Record<string, unknown> | undefined) {
     readArray(record?.participants) ??
     []
   );
+}
+
+function readHistoryCandidates(record: Record<string, unknown> | undefined) {
+  return (
+    readArray(record?.history) ??
+    readArray(record?.activities) ??
+    readArray(record?.activity) ??
+    readArray(record?.logs) ??
+    readArray(record?.events) ??
+    []
+  );
+}
+
+function normalizeLeagueHistory(values: unknown[]) {
+  return values
+    .map(normalizeLeagueHistoryEntry)
+    .filter((entry): entry is LeagueHistoryEntry => entry !== null);
+}
+
+function normalizeLeagueHistoryEntry(value: unknown): LeagueHistoryEntry | null {
+  if (!value || typeof value !== "object") return null;
+
+  const record = value as Record<string, unknown>;
+  const id = readString(record.id);
+  const createdAt =
+    readString(record.createdAt) ??
+    readString(record.created_at) ??
+    readString(record.timestamp) ??
+    null;
+  const type = readString(record.type) ?? readString(record.eventType) ?? "activity";
+
+  if (!id && !createdAt) return null;
+
+  return {
+    id: id ?? `${type}:${createdAt}`,
+    userId:
+      readString(record.userId) ??
+      readString(record.user_id) ??
+      readString(record.memberId) ??
+      readString(record.member_id) ??
+      null,
+    username:
+      readString(record.username) ??
+      readString(record.userName) ??
+      readString(record.user_name) ??
+      null,
+    type,
+    referenceType:
+      readString(record.referenceType) ??
+      readString(record.reference_type) ??
+      null,
+    pointsChange:
+      readNumber(
+        record.pointsChange,
+        record.points_change,
+        record.amount,
+        record.value
+      ) ?? 0,
+    metadata: readRecord(record.metadata) ?? {},
+    createdAt,
+  };
 }
 
 function mergeLeagueStandingProfiles(

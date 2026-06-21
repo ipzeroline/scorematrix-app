@@ -488,6 +488,19 @@ async function parseApiResponse(response: Response) {
   try {
     return JSON.parse(text) as unknown;
   } catch {
+    if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      return {
+        success: false,
+        code: "invalid_backend_response",
+        message: response.statusText || "backend request failed",
+        details: {
+          contentType: contentType || "unknown",
+          body: text.slice(0, 500),
+        },
+      } satisfies ApiFailure;
+    }
+
     throw new ApiClientError("Invalid backend response", response.status, undefined, text);
   }
 }

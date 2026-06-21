@@ -182,6 +182,7 @@ export default function LeaguesPage() {
     totalPoints: t("totalPoints"),
     entryFee: t("entryFee"),
     prizePool: t("prizePool"),
+    totalFeesReceived: t("totalFeesReceived"),
     free: t("free"),
     locked: t("locked"),
     public: t("public"),
@@ -289,6 +290,16 @@ export default function LeaguesPage() {
             current.map((league) =>
               codes[league.id]
                 ? { ...league, inviteCode: codes[league.id] }
+                : league
+            )
+          );
+        });
+        fetchMissingOwnerFeeTotals(joined, locale).then((totals) => {
+          if (!active || Object.keys(totals).length === 0) return;
+          setJoinedLeagues((current) =>
+            current.map((league) =>
+              totals[league.id] !== undefined
+                ? { ...league, totalFeesReceived: totals[league.id] }
                 : league
             )
           );
@@ -1162,6 +1173,20 @@ export default function LeaguesPage() {
                     </div>
                   </div>
 
+                  {league.isOwner ? (
+                    <div className="rounded-xl border border-green-400/15 bg-green-400/[0.06] px-3 py-2.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="inline-flex min-w-0 items-center gap-2 text-xs font-bold text-green-100/75">
+                          <Crown size={13} className="shrink-0 text-green-300" />
+                          <span className="truncate">{listCopy.totalFeesReceived}</span>
+                        </span>
+                        <span className="shrink-0 font-mono text-sm font-black text-green-300">
+                          {(league.totalFeesReceived ?? 0).toLocaleString()} Premium Credits
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div className="flex flex-col gap-2 border-t border-gray-800 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 truncate text-xs text-gray-500">
                       {league.description || listCopy.prizePool}{" "}
@@ -1788,6 +1813,25 @@ function hydrateStoredInviteOverrides(
   }
 
   return next;
+}
+
+async function fetchMissingOwnerFeeTotals(joined: JoinedLeague[], locale: string) {
+  const entries = await Promise.all(
+    joined
+      .filter((league) => league.isOwner && league.totalFeesReceived === null)
+      .map(async (league) => {
+        try {
+          const detail = await getLeague(league.id, { locale });
+          return [league.id, detail.totalFeesReceived] as const;
+        } catch {
+          return null;
+        }
+      })
+  );
+
+  return Object.fromEntries(
+    entries.filter((entry): entry is readonly [string, number] => entry !== null)
+  );
 }
 
 async function fetchMissingOwnerInviteCodes(

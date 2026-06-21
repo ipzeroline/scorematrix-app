@@ -411,6 +411,7 @@ export default function LeaderboardPage() {
                       src={currentUserAvatar}
                       fallback={currentUserName}
                       size="xl"
+                      level={currentUser.level}
                       className="border-cyan-500/35 ring-1 ring-cyan-400/25"
                     />
                     <div className="min-w-0">
@@ -653,6 +654,7 @@ export default function LeaderboardPage() {
                                     src={entryAvatar}
                                     fallback={entryName}
                                     size="md"
+                                    level={entry.level}
                                     className="border-cyan-500/20"
                                   />
                                   <div className="min-w-0">
@@ -801,6 +803,7 @@ function PodiumCard({
           src={avatar}
           fallback={username}
           size={isChampion ? "xl" : "lg"}
+          level={entry.level}
           className={isChampion ? "border-amber-400/50 ring-1 ring-amber-300/35" : "border-cyan-500/25 ring-1 ring-cyan-400/20"}
         />
         <div className="min-w-0 flex-1">
@@ -863,6 +866,7 @@ function MobileRankCard({
           src={avatar}
           fallback={username}
           size="lg"
+          level={entry.level}
           className={isCurrentUser ? "border-cyan-400/35 ring-1 ring-cyan-300/25" : "border-gray-700"}
         />
         <div className="min-w-0 flex-1">

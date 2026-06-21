@@ -53,6 +53,7 @@ export default function EditProfilePage() {
       displayName: s.displayName,
       favoriteTeam: s.favoriteTeam,
       language: s.language,
+      level: s.level,
     }))
   );
   const [form, setForm] = useState<ProfileForm>({
@@ -345,6 +346,7 @@ export default function EditProfilePage() {
                 src={avatarPreviewUrl || form.avatarUrl || null}
                 fallback={user.username}
                 size="xl"
+                level={user.level}
                 className="ring-2 ring-cyan-500/30"
               />
               <div className="min-w-0 flex-1 space-y-3">

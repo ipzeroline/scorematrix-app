@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
+  Activity,
   ArrowLeft,
   CalendarDays,
   Check,
@@ -13,15 +14,19 @@ import {
   Copy,
   Crown,
   LockKeyhole,
+  Search,
   UserMinus,
   ShieldCheck,
   Target,
   Trophy,
   Users,
+  WalletCards,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Avatar } from "@/components/ui/Avatar";
 import {
@@ -52,6 +57,8 @@ export default function LeagueDetailPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(() => Date.now());
   const [copiedInvite, setCopiedInvite] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
   const [joinRequests, setJoinRequests] = useState<LeagueJoinRequest[]>([]);
   const [requestsLoading, setRequestsLoading] = useState(true);
   const [processingRequestKey, setProcessingRequestKey] = useState<string | null>(
@@ -282,15 +289,18 @@ export default function LeagueDetailPage() {
     }
   );
   const displayedMemberCount = Math.max(league.memberCount, standings.length);
+  const filteredHistory = filterLeagueHistory(league.history, historySearch);
+  const historyPreview = league.history.slice(0, 3);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-5 pb-8">
-      <BackLink locale={locale} label={t("backToLeagues")} />
+    <>
+      <div className="mx-auto max-w-6xl space-y-5 pb-8">
+        <BackLink locale={locale} label={t("backToLeagues")} />
 
-      <Card
-        neon="cyan"
-        className="overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.08] via-[#12121a] to-purple-500/[0.05] p-5 sm:p-6"
-      >
+        <Card
+          neon="cyan"
+          className="overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/[0.08] via-[#12121a] to-purple-500/[0.05] p-5 sm:p-6"
+        >
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 flex-col items-center gap-5 text-center sm:flex-row sm:items-center sm:text-left">
             <LeagueLogo
@@ -319,9 +329,17 @@ export default function LeagueDetailPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={`mt-6 grid gap-3 sm:grid-cols-2 ${canManageLeague ? "lg:grid-cols-5" : "lg:grid-cols-4"}`}>
           <Metric icon={Users} label={t("members")} value={`${displayedMemberCount}/${league.maxMembers}`} tone="text-cyan-300" />
           <Metric icon={Coins} label={t("entryFee")} value={league.entryFeeCredits === 0 ? t("free") : `${league.entryFeeCredits.toLocaleString()} Premium Credits`} tone="text-amber-300" />
+          {canManageLeague ? (
+            <Metric
+              icon={WalletCards}
+              label={t("totalFeesReceived")}
+              value={`${(league.totalFeesReceived ?? 0).toLocaleString()} Premium Credits`}
+              tone="text-green-300"
+            />
+          ) : null}
           <Metric icon={Crown} label={t("yourRank")} value={league.myRank ? `#${league.myRank}` : "-"} tone="text-amber-300" />
           <Metric icon={CalendarDays} label={t("createdAt")} value={createdAt} tone="text-purple-300" />
         </div>
@@ -338,7 +356,7 @@ export default function LeagueDetailPage() {
             />
           </div>
         </div>
-      </Card>
+        </Card>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
         <Card className="overflow-hidden p-0">
@@ -356,11 +374,14 @@ export default function LeagueDetailPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-800">
-              {standings.map((standing) => (
-                <div
-                  key={`${standing.userId}-${standing.rank}`}
-                  className="grid gap-3 px-4 py-4 md:grid-cols-[44px_minmax(0,1fr)_auto_auto] md:items-center"
-                >
+              {standings.map((standing) => {
+                const memberLevel = getDisplayLevel(standing.level);
+
+                return (
+                  <div
+                    key={`${standing.userId}-${standing.rank}`}
+                    className="grid gap-3 px-4 py-4 md:grid-cols-[44px_minmax(0,1fr)_auto_auto] md:items-center"
+                  >
                   <div className="flex items-center gap-3 md:contents">
                     <Rank rank={standing.rank} />
                     <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -368,6 +389,7 @@ export default function LeagueDetailPage() {
                         src={standing.avatarUrl}
                         fallback={getMemberInitials(standing)}
                         size="lg"
+                        level={memberLevel}
                         className="shrink-0 border-cyan-500/20 bg-cyan-500/10"
                       />
                       <div className="min-w-0">
@@ -386,11 +408,9 @@ export default function LeagueDetailPage() {
                               {t("owner")}
                             </Badge>
                           ) : null}
-                          {standing.level ? (
-                            <span className="rounded-md border border-purple-400/20 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold text-purple-200">
-                              LV {standing.level}
-                            </span>
-                          ) : null}
+                          <span className="rounded-md border border-purple-400/20 bg-purple-400/10 px-2 py-0.5 text-[10px] font-bold text-purple-200">
+                            LV {memberLevel}
+                          </span>
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500">
                           {standing.username && standing.username !== standing.displayName ? (
@@ -440,8 +460,9 @@ export default function LeagueDetailPage() {
                       </Button>
                     ) : null}
                   </div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>
@@ -523,6 +544,7 @@ export default function LeagueDetailPage() {
                             src={request.avatarUrl}
                             fallback={getJoinRequestInitials(request)}
                             size="lg"
+                            level={1}
                             className="shrink-0 border-cyan-400/25 bg-cyan-400/10"
                           />
                           <div className="min-w-0">
@@ -577,9 +599,146 @@ export default function LeagueDetailPage() {
               )}
             </Card>
           ) : null}
+
+          {canManageLeague ? (
+            <Card className="p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Activity size={16} className="text-cyan-300" />
+                  <h2 className="text-sm font-semibold text-white">
+                    {t("historyTitle")}
+                  </h2>
+                </div>
+                <Badge variant="cyan" size="sm">
+                  {league.history.length}
+                </Badge>
+              </div>
+              <p className="mt-2 text-xs leading-5 text-gray-500">
+                {t("historyDescription")}
+              </p>
+
+              {league.history.length === 0 ? (
+                <p className="mt-4 rounded-lg border border-gray-800 bg-black/20 p-3 text-xs text-gray-500">
+                  {t("noHistory")}
+                </p>
+              ) : (
+                <>
+                  <div className="mt-4 space-y-2">
+                    {historyPreview.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="rounded-lg border border-gray-800 bg-black/20 p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-white">
+                            {formatHistoryTitle(entry, t)}
+                          </p>
+                          <p className="mt-1 truncate text-xs text-gray-500">
+                            {formatHistoryMeta(entry)}
+                          </p>
+                          {entry.createdAt ? (
+                            <p className="mt-1 text-[11px] text-gray-600">
+                              {formatRequestDate(entry.createdAt, locale)}
+                            </p>
+                          ) : null}
+                        </div>
+                        {entry.pointsChange !== 0 ? (
+                          <span className="shrink-0 rounded-md border border-green-400/20 bg-green-400/10 px-2 py-1 font-mono text-xs font-black text-green-300">
+                            +{entry.pointsChange.toLocaleString()}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    ))}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-3 w-full"
+                    onClick={() => setHistoryOpen(true)}
+                  >
+                    {t("viewAllHistory")}
+                  </Button>
+                </>
+              )}
+            </Card>
+          ) : null}
         </div>
       </div>
-    </div>
+      </div>
+
+      {canManageLeague ? (
+        <Modal
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          title={t("historyTitle")}
+          size="lg"
+          className="max-w-3xl p-4 sm:p-6"
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl border border-cyan-400/15 bg-cyan-400/[0.04] p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-white">
+                  {t("historyDescription")}
+                </p>
+                <Badge variant="cyan" size="sm">
+                  {filteredHistory.length}
+                </Badge>
+              </div>
+              <div className="relative mt-3">
+                <Search
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                />
+                <Input
+                  value={historySearch}
+                  onChange={(event) => setHistorySearch(event.target.value)}
+                  placeholder={t("historySearch")}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            {filteredHistory.length === 0 ? (
+              <p className="rounded-xl border border-gray-800 bg-black/20 p-4 text-sm text-gray-500">
+                {t("noHistory")}
+              </p>
+            ) : (
+              <div className="max-h-[min(62vh,620px)] space-y-2 overflow-y-auto pr-1">
+                {filteredHistory.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-xl border border-gray-800 bg-black/20 p-3"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {formatHistoryTitle(entry, t)}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-gray-500">
+                          {formatHistoryMeta(entry)}
+                        </p>
+                        {entry.createdAt ? (
+                          <p className="mt-1 text-[11px] text-gray-600">
+                            {formatRequestDate(entry.createdAt, locale)}
+                          </p>
+                        ) : null}
+                      </div>
+                      {entry.pointsChange !== 0 ? (
+                        <span className="w-fit shrink-0 rounded-md border border-green-400/20 bg-green-400/10 px-2 py-1 font-mono text-xs font-black text-green-300">
+                          +{entry.pointsChange.toLocaleString()}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Modal>
+      ) : null}
+    </>
   );
 }
 
@@ -972,8 +1131,10 @@ function joinedLeagueToDetail(
       id: league.isOwner ? currentUserId : "",
     },
     standings: [],
+    history: [],
     myRank: league.myRank || null,
     myPoints: league.myPoints,
+    totalFeesReceived: 0,
   };
 }
 
@@ -994,8 +1155,10 @@ function availableLeagueToDetail(league: AvailableLeague): LeagueDetail {
       id: "",
     },
     standings: [],
+    history: [],
     myRank: null,
     myPoints: null,
+    totalFeesReceived: 0,
   };
 }
 
@@ -1048,4 +1211,69 @@ function Rank({ rank }: { rank: number }) {
       #{rank}
     </div>
   );
+}
+
+function getDisplayLevel(level: number | null | undefined) {
+  if (level === undefined || level === null || !Number.isFinite(level)) return 1;
+  return Math.min(Math.max(Math.round(level), 1), 10);
+}
+
+function filterLeagueHistory(
+  history: LeagueDetail["history"],
+  query: string
+) {
+  const search = query.trim().toLowerCase();
+  if (!search) return history;
+
+  return history.filter((entry) =>
+    [
+      entry.id,
+      entry.userId,
+      entry.username,
+      entry.type,
+      entry.referenceType,
+      entry.createdAt,
+      stringValue(entry.metadata.league_name),
+      stringValue(entry.metadata.description),
+      stringValue(entry.metadata.currency),
+      numberValue(entry.metadata.entry_fee)?.toString() ?? null,
+      entry.pointsChange.toString(),
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(search))
+  );
+}
+
+function formatHistoryTitle(
+  entry: LeagueDetail["history"][number],
+  t: ReturnType<typeof useTranslations<"leagues">>
+) {
+  const username = entry.username || entry.userId || "Member";
+  if (entry.type === "league_joined") return t("historyLeagueJoined", { username });
+  if (entry.type === "points_earned") return t("historyPointsEarned", { username });
+  return t("historyActivity", { username });
+}
+
+function formatHistoryMeta(entry: LeagueDetail["history"][number]) {
+  const leagueName = stringValue(entry.metadata.league_name);
+  const entryFee = numberValue(entry.metadata.entry_fee);
+  const currency = stringValue(entry.metadata.currency);
+  const parts = [
+    leagueName,
+    entryFee !== null ? `${entryFee.toLocaleString()} Premium Credits` : null,
+    currency,
+    entry.referenceType,
+  ].filter(Boolean);
+
+  return parts.join(" · ");
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function numberValue(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
