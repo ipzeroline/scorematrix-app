@@ -21,6 +21,7 @@ import {
   Search,
   Send,
   Smile,
+  Trash2,
   UserMinus,
   ShieldCheck,
   Target,
@@ -49,16 +50,149 @@ import {
   type LeagueJoinRequest,
 } from "@/lib/leagues-api";
 import { ApiClientError, isAuthSessionExpiredError } from "@/lib/api-client";
+import {
+  createLeagueThread,
+  createLeagueThreadReply,
+  deleteLeagueThread,
+  deleteLeagueThreadReaction,
+  getLeagueThread,
+  getLeagueThreads,
+  setLeagueThreadLocked,
+  setLeagueThreadPinned,
+  setLeagueThreadReaction,
+  type LeagueWebboardChannel,
+  type LeagueWebboardDetailResult,
+  type LeagueWebboardReaction,
+  type LeagueWebboardReply,
+  type LeagueWebboardThread,
+} from "@/lib/league-webboard-api";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
 
 const LEAGUE_LOGO_OVERRIDE_KEY = "scorematrix:league-logo:";
 const LEAGUE_DETAIL_CACHE_KEY = "scorematrix:league-detail:";
-const LEAGUE_WEBBOARD_STORAGE_KEY = "scorematrix:league-webboard:";
+const WEBBOARD_PAGE_SIZE = 20;
+const WEBBOARD_EMOJI_GROUPS = [
+  {
+    id: "match",
+    icon: "⚽",
+    label: "Match",
+    emojis: [
+      "⚽",
+      "🥅",
+      "🏟️",
+      "📣",
+      "🏃",
+      "🥇",
+      "🥈",
+      "🥉",
+      "🏅",
+      "🎖️",
+      "🏆",
+      "👑",
+      "🧤",
+      "🥾",
+      "🟨",
+      "🟥",
+    ],
+  },
+  {
+    id: "hype",
+    icon: "🔥",
+    label: "Hype",
+    emojis: [
+      "🔥",
+      "⚡",
+      "🚀",
+      "💥",
+      "💯",
+      "✅",
+      "☑️",
+      "🎯",
+      "💪",
+      "👏",
+      "🙌",
+      "🤝",
+      "🫡",
+      "👌",
+      "👍",
+      "💎",
+    ],
+  },
+  {
+    id: "mood",
+    icon: "😀",
+    label: "Mood",
+    emojis: [
+      "😀",
+      "😄",
+      "😂",
+      "🤣",
+      "😎",
+      "🤩",
+      "🥳",
+      "😤",
+      "😮",
+      "😱",
+      "😭",
+      "😅",
+      "🤔",
+      "🫣",
+      "😬",
+      "🫠",
+    ],
+  },
+  {
+    id: "strategy",
+    icon: "🧠",
+    label: "Strategy",
+    emojis: [
+      "🧠",
+      "📊",
+      "📈",
+      "📉",
+      "🔍",
+      "👀",
+      "📝",
+      "📌",
+      "🧩",
+      "♟️",
+      "⏱️",
+      "🔒",
+      "🔓",
+      "🧪",
+      "🪄",
+      "💡",
+    ],
+  },
+  {
+    id: "celebrate",
+    icon: "🎉",
+    label: "Celebrate",
+    emojis: [
+      "🎉",
+      "🎊",
+      "🥂",
+      "🍻",
+      "🍾",
+      "💰",
+      "🪙",
+      "🎁",
+      "🌟",
+      "✨",
+      "💫",
+      "🔱",
+      "🛡️",
+      "⚔️",
+      "🦾",
+      "🖤",
+    ],
+  },
+];
 
 type LeagueTranslator = ReturnType<typeof useTranslations<"leagues">>;
-type WebboardChannel = "general" | "predictions" | "results";
-type WebboardReaction = "fire" | "target" | "smile";
+type WebboardChannel = LeagueWebboardChannel;
+type WebboardReaction = LeagueWebboardReaction;
 
 type WebboardReply = {
   id: string;
@@ -71,6 +205,7 @@ type WebboardReply = {
 
 type WebboardThread = {
   id: string;
+  source: "api" | "fallback";
   channel: WebboardChannel;
   author: string;
   avatarUrl: string | null;
@@ -80,9 +215,11 @@ type WebboardThread = {
   body: string;
   tags: string[];
   replies: WebboardReply[];
+  replyCount: number;
   reactions: Record<WebboardReaction, number>;
   reacted: WebboardReaction | null;
   views: number;
+  isLocked?: boolean;
   pinned?: boolean;
 };
 
@@ -398,6 +535,8 @@ export default function LeagueDetailPage() {
         <LeagueWebboardMockup
           league={league}
           standings={standings}
+          locale={locale}
+          canManageLeague={canManageLeague}
           currentUser={{
             username: currentUsername,
             displayName: currentDisplayName,
@@ -794,11 +933,15 @@ export default function LeagueDetailPage() {
 function LeagueWebboardMockup({
   league,
   standings,
+  locale,
+  canManageLeague,
   currentUser,
   t,
 }: {
   league: LeagueDetail;
   standings: LeagueStanding[];
+  locale: string;
+  canManageLeague: boolean;
   currentUser: {
     username: string;
     displayName: string;
@@ -819,20 +962,43 @@ function LeagueWebboardMockup({
     () => buildMockThreads(league, standings, t),
     [league, standings, t]
   );
-  const [threads, setThreads] = useState<WebboardThread[]>(seedThreads);
-  const [storageReady, setStorageReady] = useState(false);
+  const [threads, setThreads] = useState<WebboardThread[]>([]);
+  const [webboardLoading, setWebboardLoading] = useState(true);
+  const [webboardLoadingMore, setWebboardLoadingMore] = useState(false);
+  const [webboardFailed, setWebboardFailed] = useState(false);
+  const [postingThread, setPostingThread] = useState(false);
+  const [postingReply, setPostingReply] = useState(false);
+  const [reactionThreadId, setReactionThreadId] = useState<string | null>(null);
+  const [moderatingThreadId, setModeratingThreadId] = useState<string | null>(null);
   const [activeChannel, setActiveChannel] = useState<WebboardChannel>("general");
   const [searchQuery, setSearchQuery] = useState("");
   const [draftTitle, setDraftTitle] = useState("");
   const [draftBody, setDraftBody] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const [activeEmojiGroupId, setActiveEmojiGroupId] = useState(
+    WEBBOARD_EMOJI_GROUPS[0].id
+  );
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [activeThreadDetail, setActiveThreadDetail] =
+    useState<WebboardThread | null>(null);
   const [replyDraft, setReplyDraft] = useState("");
+  const [channelCounts, setChannelCounts] = useState<Record<WebboardChannel, number>>({
+    general: 0,
+    predictions: 0,
+    results: 0,
+  });
+  const [webboardPage, setWebboardPage] = useState(1);
+  const [webboardTotalPages, setWebboardTotalPages] = useState(1);
+  const [webboardAccessDenied, setWebboardAccessDenied] = useState(false);
+  const addToast = useNotificationStore((state) => state.addToast);
   const onlineCount = Math.max(
     1,
     Math.min(league.memberCount, topMembers.length + 2)
   );
   const activeThread =
-    threads.find((thread) => thread.id === activeThreadId) ?? null;
+    activeThreadDetail ??
+    threads.find((thread) => thread.id === activeThreadId) ??
+    null;
   const filteredThreads = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
@@ -847,26 +1013,81 @@ function LeagueWebboardMockup({
     });
   }, [activeChannel, searchQuery, threads]);
   const pinnedCount = threads.filter((thread) => thread.pinned).length;
+  const featuredPinnedThread =
+    threads.find((thread) => thread.pinned) ??
+    (webboardFailed ? seedThreads.find((thread) => thread.pinned) : undefined);
+  const totalThreadCount =
+    Object.values(channelCounts).reduce((sum, value) => sum + value, 0) ||
+    threads.length;
+  const activeEmojiGroup =
+    WEBBOARD_EMOJI_GROUPS.find((group) => group.id === activeEmojiGroupId) ??
+    WEBBOARD_EMOJI_GROUPS[0];
+  const canLoadMoreThreads =
+    !webboardLoading &&
+    !webboardLoadingMore &&
+    !webboardFailed &&
+    !webboardAccessDenied &&
+    webboardPage < webboardTotalPages;
 
   useEffect(() => {
     let cancelled = false;
 
-    queueMicrotask(() => {
-      if (cancelled) return;
-      const storedThreads = readStoredWebboardThreads(leagueId);
-      setThreads(storedThreads ?? seedThreads);
-      setStorageReady(true);
-    });
+    async function loadThreads() {
+      setWebboardLoading(true);
+      setWebboardFailed(false);
+      setWebboardAccessDenied(false);
+
+      try {
+        const response = await getLeagueThreads(
+          leagueId,
+          {
+            channel: activeChannel,
+            search: searchQuery.trim() || undefined,
+            page: 1,
+            limit: WEBBOARD_PAGE_SIZE,
+          },
+          { locale }
+        );
+        if (cancelled) return;
+        setThreads(
+          response.threads.map((thread) =>
+            mapLeagueThreadToWebboardThread(thread, locale, t)
+          )
+        );
+        setChannelCounts(response.channelCounts);
+        setWebboardPage(response.pagination.page);
+        setWebboardTotalPages(response.pagination.totalPages);
+      } catch (error) {
+        if (cancelled || isAuthSessionExpiredError(error)) return;
+        if (isWebboardAccessDeniedError(error)) {
+          setThreads([]);
+          setChannelCounts({ general: 0, predictions: 0, results: 0 });
+          setWebboardPage(1);
+          setWebboardTotalPages(1);
+          setWebboardAccessDenied(true);
+          return;
+        }
+        console.error("Error loading league webboard:", error);
+        setThreads(seedThreads);
+        setChannelCounts({
+          general: seedThreads.filter((thread) => thread.channel === "general").length,
+          predictions: seedThreads.filter((thread) => thread.channel === "predictions").length,
+          results: seedThreads.filter((thread) => thread.channel === "results").length,
+        });
+        setWebboardPage(1);
+        setWebboardTotalPages(1);
+        setWebboardFailed(true);
+      } finally {
+        if (!cancelled) setWebboardLoading(false);
+      }
+    }
+
+    void loadThreads();
 
     return () => {
       cancelled = true;
     };
-  }, [leagueId, seedThreads]);
-
-  useEffect(() => {
-    if (!storageReady) return;
-    storeWebboardThreads(leagueId, threads);
-  }, [leagueId, storageReady, threads]);
+  }, [activeChannel, leagueId, locale, searchQuery, seedThreads, t]);
 
   const channelOptions: Array<{
     id: WebboardChannel;
@@ -894,85 +1115,282 @@ function LeagueWebboardMockup({
     },
   ];
 
-  const createThread = () => {
+  const createThread = async () => {
     const body = draftBody.trim();
     const title = draftTitle.trim() || body.slice(0, 72);
-    if (!title || !body) return;
+    if (!title || !body || webboardAccessDenied) return;
 
-    const newThread: WebboardThread = {
-      id: `local-${Date.now()}`,
-      channel: activeChannel,
-      author: displayName,
-      avatarUrl: currentUser.avatarUrl ?? null,
-      level: getDisplayLevel(currentUser.level),
-      time: t("webboardTimeNow"),
-      title,
-      body,
-      tags: getWebboardChannelTags(activeChannel, t),
-      replies: [],
-      reactions: { fire: 0, target: 0, smile: 0 },
-      reacted: null,
-      views: 1,
-    };
-
-    setThreads((current) => [newThread, ...current]);
-    setDraftTitle("");
-    setDraftBody("");
+    setPostingThread(true);
+    try {
+      const thread = await createLeagueThread(
+        leagueId,
+        {
+          channel: activeChannel,
+          title,
+          body,
+          tags: getWebboardChannelTags(activeChannel, t).slice(0, 5),
+        },
+        { locale }
+      );
+      const nextThread = mapLeagueThreadToWebboardThread(thread, locale, t);
+      setThreads((current) => [nextThread, ...current]);
+      setChannelCounts((current) => ({
+        ...current,
+        [activeChannel]: current[activeChannel] + 1,
+      }));
+      setDraftTitle("");
+      setDraftBody("");
+    } catch (error) {
+      if (!isAuthSessionExpiredError(error)) {
+        const message =
+          error instanceof ApiClientError ? error.message : t("requestActionError");
+        addToast({ type: "error", title: t("requestActionError"), message });
+      }
+    } finally {
+      setPostingThread(false);
+    }
   };
 
-  const openThread = (threadId: string) => {
+  const loadMoreThreads = async () => {
+    if (!canLoadMoreThreads) return;
+
+    const nextPage = webboardPage + 1;
+    setWebboardLoadingMore(true);
+    try {
+      const response = await getLeagueThreads(
+        leagueId,
+        {
+          channel: activeChannel,
+          search: searchQuery.trim() || undefined,
+          page: nextPage,
+          limit: WEBBOARD_PAGE_SIZE,
+        },
+        { locale }
+      );
+      const nextThreads = response.threads.map((thread) =>
+        mapLeagueThreadToWebboardThread(thread, locale, t)
+      );
+      setThreads((current) => mergeUniqueWebboardThreads(current, nextThreads));
+      setChannelCounts(response.channelCounts);
+      setWebboardPage(response.pagination.page);
+      setWebboardTotalPages(response.pagination.totalPages);
+    } catch (error) {
+      if (!isAuthSessionExpiredError(error)) {
+        const message =
+          error instanceof ApiClientError ? error.message : t("requestActionError");
+        addToast({ type: "error", title: t("requestActionError"), message });
+      }
+    } finally {
+      setWebboardLoadingMore(false);
+    }
+  };
+
+  const openThread = async (threadId: string) => {
+    const localThread = threads.find((thread) => thread.id === threadId) ?? null;
     setActiveThreadId(threadId);
+    setActiveThreadDetail(localThread);
     setThreads((current) =>
       current.map((thread) =>
         thread.id === threadId ? { ...thread, views: thread.views + 1 } : thread
       )
     );
+
+    if (!localThread || localThread.source !== "api") {
+      return;
+    }
+
+    try {
+      const response = await getLeagueThread(leagueId, threadId, { locale });
+      const detail = mapLeagueThreadDetailToWebboardThread(response, locale, t);
+      setActiveThreadDetail(detail);
+      setThreads((current) =>
+        current.map((thread) => (thread.id === threadId ? detail : thread))
+      );
+    } catch (error) {
+      if (!isAuthSessionExpiredError(error)) {
+        console.error("Error loading league webboard thread:", error);
+      }
+    }
   };
 
-  const toggleReaction = (threadId: string, reaction: WebboardReaction) => {
+  const toggleReaction = async (threadId: string, reaction: WebboardReaction) => {
+    const previousThread = threads.find((thread) => thread.id === threadId);
+    if (!previousThread || reactionThreadId || webboardAccessDenied) return;
+
+    setReactionThreadId(threadId);
+    if (previousThread.source !== "api") {
+      setThreads((current) =>
+        current.map((thread) =>
+          thread.id === threadId ? applyOptimisticReaction(thread, reaction) : thread
+        )
+      );
+      setReactionThreadId(null);
+      return;
+    }
+
     setThreads((current) =>
       current.map((thread) => {
         if (thread.id !== threadId) return thread;
-
-        const nextReactions = { ...thread.reactions };
-        if (thread.reacted) {
-          nextReactions[thread.reacted] = Math.max(
-            0,
-            nextReactions[thread.reacted] - 1
-          );
-        }
-
-        const nextReacted = thread.reacted === reaction ? null : reaction;
-        if (nextReacted) {
-          nextReactions[nextReacted] += 1;
-        }
-
-        return { ...thread, reactions: nextReactions, reacted: nextReacted };
+        return applyOptimisticReaction(thread, reaction);
       })
     );
+
+    if (activeThreadDetail?.id === threadId) {
+      setActiveThreadDetail(applyOptimisticReaction(activeThreadDetail, reaction));
+    }
+
+    try {
+      const response =
+        previousThread.reacted === reaction
+          ? await deleteLeagueThreadReaction(leagueId, threadId, { locale })
+          : await setLeagueThreadReaction(leagueId, threadId, reaction, { locale });
+
+      setThreads((current) =>
+        current.map((thread) =>
+          thread.id === threadId
+            ? {
+                ...thread,
+                reacted: response.myReaction,
+                reactions: response.reactions,
+              }
+            : thread
+        )
+      );
+      if (activeThreadDetail?.id === threadId) {
+        setActiveThreadDetail((current) =>
+          current
+            ? {
+                ...current,
+                reacted: response.myReaction,
+                reactions: response.reactions,
+              }
+            : current
+        );
+      }
+    } catch (error) {
+      setThreads((current) =>
+        current.map((thread) => (thread.id === threadId ? previousThread : thread))
+      );
+      if (activeThreadDetail?.id === threadId) {
+        setActiveThreadDetail(previousThread);
+      }
+      if (!isAuthSessionExpiredError(error)) {
+        const message =
+          error instanceof ApiClientError ? error.message : t("requestActionError");
+        addToast({ type: "error", title: t("requestActionError"), message });
+      }
+    } finally {
+      setReactionThreadId(null);
+    }
   };
 
-  const submitReply = () => {
+  const submitReply = async () => {
     const body = replyDraft.trim();
-    if (!body || !activeThread) return;
+    if (
+      !body ||
+      !activeThread ||
+      activeThread.isLocked ||
+      activeThread.source !== "api" ||
+      webboardAccessDenied
+    ) {
+      return;
+    }
 
-    const reply: WebboardReply = {
-      id: `reply-${Date.now()}`,
-      author: displayName,
-      avatarUrl: currentUser.avatarUrl ?? null,
-      level: getDisplayLevel(currentUser.level),
-      body,
-      time: t("webboardTimeNow"),
-    };
+    setPostingReply(true);
+    try {
+      const reply = await createLeagueThreadReply(
+        leagueId,
+        activeThread.id,
+        { body },
+        { locale }
+      );
+      const nextReply = mapLeagueReplyToWebboardReply(reply, locale, t);
+      const updatedThread = {
+        ...activeThread,
+        replies: [...activeThread.replies, nextReply],
+        replyCount: activeThread.replyCount + 1,
+      };
+      setActiveThreadDetail(updatedThread);
+      setThreads((current) =>
+        current.map((thread) =>
+          thread.id === activeThread.id
+            ? {
+                ...updatedThread,
+                replies: updatedThread.replies,
+              }
+            : thread
+        )
+      );
+      setReplyDraft("");
+    } catch (error) {
+      if (!isAuthSessionExpiredError(error)) {
+        const message =
+          error instanceof ApiClientError ? error.message : t("requestActionError");
+        addToast({ type: "error", title: t("requestActionError"), message });
+      }
+    } finally {
+      setPostingReply(false);
+    }
+  };
 
-    setThreads((current) =>
-      current.map((thread) =>
-        thread.id === activeThread.id
-          ? { ...thread, replies: [...thread.replies, reply] }
-          : thread
-      )
-    );
-    setReplyDraft("");
+  const moderateThread = async (
+    thread: WebboardThread,
+    action: "pin" | "lock" | "delete"
+  ) => {
+    if (!canManageLeague || thread.source !== "api" || moderatingThreadId) return;
+
+    setModeratingThreadId(thread.id);
+    try {
+      if (action === "delete") {
+        await deleteLeagueThread(leagueId, thread.id, { locale });
+        setThreads((current) => current.filter((item) => item.id !== thread.id));
+        setActiveThreadId((current) => (current === thread.id ? null : current));
+        setActiveThreadDetail((current) => (current?.id === thread.id ? null : current));
+        setChannelCounts((current) => ({
+          ...current,
+          [thread.channel]: Math.max(0, current[thread.channel] - 1),
+        }));
+        return;
+      }
+
+      const updated =
+        action === "pin"
+          ? await setLeagueThreadPinned(leagueId, thread.id, !thread.pinned, { locale })
+          : await setLeagueThreadLocked(leagueId, thread.id, !thread.isLocked, { locale });
+      const nextThread = mapLeagueThreadToWebboardThread(updated, locale, t);
+      setThreads((current) =>
+        current.map((item) =>
+          item.id === thread.id
+            ? {
+                ...item,
+                pinned: nextThread.pinned,
+                isLocked: nextThread.isLocked,
+              }
+            : item
+        )
+      );
+      setActiveThreadDetail((current) =>
+        current?.id === thread.id
+          ? {
+              ...current,
+              pinned: nextThread.pinned,
+              isLocked: nextThread.isLocked,
+            }
+          : current
+      );
+    } catch (error) {
+      if (!isAuthSessionExpiredError(error)) {
+        const message =
+          error instanceof ApiClientError ? error.message : t("requestActionError");
+        addToast({ type: "error", title: t("requestActionError"), message });
+      }
+    } finally {
+      setModeratingThreadId(null);
+    }
+  };
+
+  const addEmojiToDraft = (emoji: string) => {
+    setDraftBody((current) => `${current}${current ? " " : ""}${emoji}`);
   };
 
   return (
@@ -985,14 +1403,13 @@ function LeagueWebboardMockup({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="cyan" size="sm">
                   <MessageSquare size={12} />
-                  {t("webboardMockup")}
-                </Badge>
-                <Badge variant="purple" size="sm">
                   {t("webboardEsportRoom")}
                 </Badge>
-                <Badge variant="gold" size="sm">
-                  {t("webboardLocalOnly")}
-                </Badge>
+                {webboardFailed ? (
+                  <Badge variant="gold" size="sm">
+                    {t("webboardLocalOnly")}
+                  </Badge>
+                ) : null}
               </div>
               <h2 className="mt-3 text-xl font-black leading-tight text-white sm:text-2xl">
                 {t("webboardTitle")}
@@ -1003,7 +1420,7 @@ function LeagueWebboardMockup({
             </div>
             <div className="grid grid-cols-3 gap-2 sm:min-w-[330px]">
               <WebboardStat label={t("webboardOnline")} value={onlineCount.toLocaleString()} tone="text-green-300" />
-              <WebboardStat label={t("webboardThreads")} value={threads.length.toLocaleString()} tone="text-cyan-300" />
+              <WebboardStat label={t("webboardThreads")} value={totalThreadCount.toLocaleString()} tone="text-cyan-300" />
               <WebboardStat label={t("webboardPinned")} value={pinnedCount.toLocaleString()} tone="text-amber-300" />
             </div>
           </div>
@@ -1013,8 +1430,11 @@ function LeagueWebboardMockup({
           <div className="min-w-0 space-y-4 p-4 sm:p-5">
             <button
               type="button"
-              onClick={() => openThread("rules")}
-              className="w-full rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 text-left transition-colors hover:border-amber-300/40"
+              onClick={() => {
+                if (featuredPinnedThread) void openThread(featuredPinnedThread.id);
+              }}
+              disabled={!featuredPinnedThread}
+              className="w-full rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-4 text-left transition-colors hover:border-amber-300/40 disabled:cursor-default disabled:opacity-80"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex min-w-0 gap-3">
@@ -1026,10 +1446,10 @@ function LeagueWebboardMockup({
                       {t("webboardPinnedTopic")}
                     </p>
                     <h3 className="mt-1 line-clamp-2 text-base font-black text-white">
-                      {t("webboardPinnedTitle")}
+                      {featuredPinnedThread?.title ?? t("webboardPinnedTitle")}
                     </h3>
                     <p className="mt-1 line-clamp-2 text-sm leading-6 text-gray-400">
-                      {t("webboardPinnedDescription")}
+                      {featuredPinnedThread?.body ?? t("webboardPinnedDescription")}
                     </p>
                   </div>
                 </div>
@@ -1039,6 +1459,12 @@ function LeagueWebboardMockup({
                 </Badge>
               </div>
             </button>
+
+            {webboardAccessDenied ? (
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5 text-sm font-semibold leading-6 text-amber-100">
+                {t("webboardMembersOnly")}
+              </div>
+            ) : null}
 
             <div className="rounded-2xl border border-cyan-400/15 bg-black/25 p-3 sm:p-4">
               <div className="flex items-start gap-3">
@@ -1084,22 +1510,52 @@ function LeagueWebboardMockup({
                   <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/5 pt-1">
                     <button
                       type="button"
-                      onClick={() =>
-                        setDraftBody((current) =>
-                          `${current}${current ? " " : ""}${t("webboardTagPrediction")}`
-                        )
-                      }
+                      onClick={() => setEmojiOpen((current) => !current)}
                       className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-purple-400/20 bg-purple-400/[0.06] px-3 text-xs font-black text-purple-200 transition-colors hover:border-purple-300/40 hover:bg-purple-400/10"
                       aria-label={t("webboardReaction")}
                     >
                       <Smile size={16} />
                       {t("webboardEmoji")}
                     </button>
+                    {emojiOpen ? (
+                      <div className="order-last w-full rounded-xl border border-purple-400/20 bg-[#0b111d] p-2 shadow-[0_18px_45px_rgba(0,0,0,0.35)]">
+                        <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+                          {WEBBOARD_EMOJI_GROUPS.map((group) => (
+                            <button
+                              key={group.id}
+                              type="button"
+                              title={group.label}
+                              onClick={() => setActiveEmojiGroupId(group.id)}
+                              className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg border text-lg transition-colors ${
+                                activeEmojiGroup.id === group.id
+                                  ? "border-purple-300/50 bg-purple-400/15"
+                                  : "border-transparent bg-black/20 hover:border-white/10 hover:bg-white/5"
+                              }`}
+                            >
+                              {group.icon}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="grid grid-cols-8 gap-1 sm:grid-cols-10 md:grid-cols-12">
+                          {activeEmojiGroup.emojis.map((emoji) => (
+                            <button
+                              key={`${activeEmojiGroup.id}-${emoji}`}
+                              type="button"
+                              onClick={() => addEmojiToDraft(emoji)}
+                              className="grid h-9 w-9 place-items-center rounded-lg text-lg transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300/70"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                     <Button
                       type="button"
                       size="sm"
                       className="min-h-9"
-                      disabled={!draftBody.trim()}
+                      disabled={!draftBody.trim() || postingThread || webboardAccessDenied}
+                      loading={postingThread}
                       onClick={createThread}
                     >
                       <Send size={14} />
@@ -1129,7 +1585,23 @@ function LeagueWebboardMockup({
             </div>
 
             <div className="space-y-3">
-              {filteredThreads.length === 0 ? (
+              {webboardLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <div
+                    key={`webboard-skeleton-${index}`}
+                    className="rounded-2xl border border-gray-800 bg-[#0b111d] p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Skeleton className="h-12 w-12 rounded-full" />
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <Skeleton className="h-4 w-44" />
+                        <Skeleton className="h-5 w-2/3" />
+                        <Skeleton className="h-4 w-full" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : filteredThreads.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-gray-800 bg-[#0b111d] p-6 text-center text-sm font-semibold text-gray-500">
                   {t("webboardNoThreads")}
                 </div>
@@ -1159,6 +1631,12 @@ function LeagueWebboardMockup({
                             <span className="inline-flex items-center gap-1 rounded-md border border-amber-400/20 bg-amber-400/10 px-2 py-0.5 text-[10px] font-black text-amber-200">
                               <Pin size={10} />
                               {t("webboardPinned")}
+                            </span>
+                          ) : null}
+                          {thread.isLocked ? (
+                            <span className="inline-flex items-center gap-1 rounded-md border border-red-400/20 bg-red-400/10 px-2 py-0.5 text-[10px] font-black text-red-200">
+                              <LockKeyhole size={10} />
+                              {t("webboardLocked")}
                             </span>
                           ) : null}
                           <span className="text-[11px] font-semibold text-gray-600">
@@ -1194,6 +1672,7 @@ function LeagueWebboardMockup({
                             active={thread.reacted === "fire"}
                             onClick={() => toggleReaction(thread.id, "fire")}
                             icon={<Flame size={13} />}
+                            disabled={reactionThreadId === thread.id}
                           />
                           <ReactionButton
                             label={t("webboardTarget")}
@@ -1201,6 +1680,7 @@ function LeagueWebboardMockup({
                             active={thread.reacted === "target"}
                             onClick={() => toggleReaction(thread.id, "target")}
                             icon={<Target size={13} />}
+                            disabled={reactionThreadId === thread.id}
                           />
                           <ReactionButton
                             label={t("webboardSmile")}
@@ -1208,8 +1688,32 @@ function LeagueWebboardMockup({
                             active={thread.reacted === "smile"}
                             onClick={() => toggleReaction(thread.id, "smile")}
                             icon={<Smile size={13} />}
+                            disabled={reactionThreadId === thread.id}
                           />
                         </div>
+                        {canManageLeague && thread.source === "api" ? (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <ThreadAdminButton
+                              label={thread.pinned ? t("webboardUnpin") : t("webboardPin")}
+                              icon={<Pin size={12} />}
+                              disabled={moderatingThreadId === thread.id}
+                              onClick={() => void moderateThread(thread, "pin")}
+                            />
+                            <ThreadAdminButton
+                              label={thread.isLocked ? t("webboardUnlock") : t("webboardLock")}
+                              icon={<LockKeyhole size={12} />}
+                              disabled={moderatingThreadId === thread.id}
+                              onClick={() => void moderateThread(thread, "lock")}
+                            />
+                            <ThreadAdminButton
+                              label={t("webboardDelete")}
+                              tone="danger"
+                              icon={<Trash2 size={12} />}
+                              disabled={moderatingThreadId === thread.id}
+                              onClick={() => void moderateThread(thread, "delete")}
+                            />
+                          </div>
+                        ) : null}
                       </div>
                       <button
                         type="button"
@@ -1221,13 +1725,25 @@ function LeagueWebboardMockup({
                       </button>
                     </div>
                     <div className="mt-4 grid grid-cols-3 gap-2 border-t border-gray-800 pt-3 text-center">
-                      <ThreadMetric label={t("webboardReplies")} value={thread.replies.length} />
+                      <ThreadMetric label={t("webboardReplies")} value={thread.replyCount} />
                       <ThreadMetric label={t("webboardReactions")} value={getReactionTotal(thread)} />
                       <ThreadMetric label={t("webboardViews")} value={thread.views} />
                     </div>
                   </div>
                 ))
               )}
+              {canLoadMoreThreads ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full border-cyan-400/20 bg-black/20 text-cyan-100 hover:border-cyan-300/45"
+                  loading={webboardLoadingMore}
+                  disabled={webboardLoadingMore}
+                  onClick={loadMoreThreads}
+                >
+                  {t("webboardLoadMore")}
+                </Button>
+              ) : null}
             </div>
           </div>
 
@@ -1270,9 +1786,7 @@ function LeagueWebboardMockup({
               </h3>
               <div className="mt-3 space-y-2">
                 {channelOptions.map((channel) => {
-                  const count = threads.filter(
-                    (thread) => thread.channel === channel.id
-                  ).length;
+                  const count = channelCounts[channel.id] ?? 0;
                   return (
                     <button
                       type="button"
@@ -1304,6 +1818,7 @@ function LeagueWebboardMockup({
         open={Boolean(activeThread)}
         onClose={() => {
           setActiveThreadId(null);
+          setActiveThreadDetail(null);
           setReplyDraft("");
         }}
         title={activeThread?.title}
@@ -1339,7 +1854,7 @@ function LeagueWebboardMockup({
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <ThreadMetric label={t("webboardReplies")} value={activeThread.replies.length} />
+              <ThreadMetric label={t("webboardReplies")} value={activeThread.replyCount} />
               <ThreadMetric label={t("webboardReactions")} value={getReactionTotal(activeThread)} />
               <ThreadMetric label={t("webboardViews")} value={activeThread.views} />
             </div>
@@ -1383,6 +1898,7 @@ function LeagueWebboardMockup({
                 onChange={(event) => setReplyDraft(event.target.value)}
                 placeholder={t("webboardReplyPlaceholder")}
                 className="border-gray-800 bg-[#070a10]"
+                disabled={activeThread.isLocked || activeThread.source !== "api" || postingReply}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
@@ -1393,7 +1909,13 @@ function LeagueWebboardMockup({
               <Button
                 type="button"
                 size="sm"
-                disabled={!replyDraft.trim()}
+                disabled={
+                  !replyDraft.trim() ||
+                  activeThread.isLocked ||
+                  activeThread.source !== "api" ||
+                  postingReply
+                }
+                loading={postingReply}
                 onClick={submitReply}
                 className="shrink-0"
               >
@@ -1414,18 +1936,21 @@ function ReactionButton({
   active,
   onClick,
   icon,
+  disabled,
 }: {
   label: string;
   value: number;
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-black transition-colors ${
+      disabled={disabled}
+      className={`inline-flex min-h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-black transition-colors disabled:cursor-wait disabled:opacity-60 ${
         active
           ? "border-cyan-300/45 bg-cyan-300/10 text-cyan-100"
           : "border-gray-800 bg-black/20 text-gray-500 hover:border-gray-700 hover:text-gray-300"
@@ -1435,6 +1960,149 @@ function ReactionButton({
       <span>{label}</span>
       <span className="font-mono">{value.toLocaleString()}</span>
     </button>
+  );
+}
+
+function ThreadAdminButton({
+  label,
+  icon,
+  onClick,
+  disabled,
+  tone = "neutral",
+}: {
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  tone?: "neutral" | "danger";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex min-h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[10px] font-black transition-colors disabled:cursor-wait disabled:opacity-60 ${
+        tone === "danger"
+          ? "border-red-400/20 bg-red-400/10 text-red-200 hover:border-red-300/40"
+          : "border-gray-800 bg-black/20 text-gray-400 hover:border-cyan-400/25 hover:text-cyan-100"
+      }`}
+    >
+      {icon}
+      {label}
+    </button>
+  );
+}
+
+function mapLeagueThreadToWebboardThread(
+  thread: LeagueWebboardThread,
+  locale: string,
+  t: LeagueTranslator
+): WebboardThread {
+  const author = getWebboardUserName(thread.author, t);
+
+  return {
+    id: thread.id,
+    source: "api",
+    channel: thread.channel,
+    author,
+    avatarUrl: thread.author.avatarUrl,
+    level: getDisplayLevel(thread.author.level ?? 1),
+    time: formatWebboardTime(thread.createdAt, locale, t),
+    title: thread.title,
+    body: thread.body || thread.bodyPreview,
+    tags: thread.tags,
+    replies: [],
+    replyCount: thread.repliesCount,
+    reactions: thread.reactions,
+    reacted: thread.myReaction,
+    views: thread.viewsCount,
+    isLocked: thread.isLocked,
+    pinned: thread.isPinned,
+  };
+}
+
+function mapLeagueThreadDetailToWebboardThread(
+  detail: LeagueWebboardDetailResult,
+  locale: string,
+  t: LeagueTranslator
+): WebboardThread {
+  const thread = mapLeagueThreadToWebboardThread(detail.thread, locale, t);
+
+  return {
+    ...thread,
+    replyCount: Math.max(detail.replies.length, detail.thread.repliesCount),
+    replies: detail.replies.map((reply) =>
+      mapLeagueReplyToWebboardReply(reply, locale, t)
+    ),
+  };
+}
+
+function mapLeagueReplyToWebboardReply(
+  reply: LeagueWebboardReply,
+  locale: string,
+  t: LeagueTranslator
+): WebboardReply {
+  const author = getWebboardUserName(reply.author, t);
+
+  return {
+    id: reply.id,
+    author,
+    avatarUrl: reply.author.avatarUrl,
+    level: getDisplayLevel(reply.author.level ?? 1),
+    body: reply.body,
+    time: formatWebboardTime(reply.createdAt, locale, t),
+  };
+}
+
+function getWebboardUserName(user: LeagueWebboardThread["author"], t: LeagueTranslator) {
+  return user.displayName || user.username || t("webboardMember");
+}
+
+function formatWebboardTime(
+  value: string | null,
+  locale: string,
+  t: LeagueTranslator
+) {
+  return value ? formatRequestDate(value, locale) : t("webboardTimeNow");
+}
+
+function applyOptimisticReaction(
+  thread: WebboardThread,
+  reaction: WebboardReaction
+): WebboardThread {
+  const reactions = { ...thread.reactions };
+
+  if (thread.reacted === reaction) {
+    reactions[reaction] = Math.max(0, reactions[reaction] - 1);
+    return { ...thread, reactions, reacted: null };
+  }
+
+  if (thread.reacted) {
+    reactions[thread.reacted] = Math.max(0, reactions[thread.reacted] - 1);
+  }
+  reactions[reaction] += 1;
+
+  return { ...thread, reactions, reacted: reaction };
+}
+
+function mergeUniqueWebboardThreads(
+  current: WebboardThread[],
+  next: WebboardThread[]
+) {
+  const seen = new Set(current.map((thread) => thread.id));
+  const uniqueNext = next.filter((thread) => {
+    if (seen.has(thread.id)) return false;
+    seen.add(thread.id);
+    return true;
+  });
+
+  return [...current, ...uniqueNext];
+}
+
+function isWebboardAccessDeniedError(error: unknown) {
+  return (
+    error instanceof ApiClientError &&
+    (error.status === 403 || error.status === 404)
   );
 }
 
@@ -1498,6 +2166,7 @@ function buildMockThreads(
   return [
     {
       id: "rules",
+      source: "fallback",
       channel: "general",
       author: fallbackAuthor,
       avatarUrl: null,
@@ -1507,6 +2176,7 @@ function buildMockThreads(
       body: t("webboardPinnedDescription"),
       tags: [t("webboardPinnedTopic"), t("webboardTagStrategy")],
       replies: [],
+      replyCount: 0,
       reactions: { fire: 12, target: 7, smile: 5 },
       reacted: null,
       views: 210,
@@ -1514,6 +2184,7 @@ function buildMockThreads(
     },
     {
       id: "lineup",
+      source: "fallback",
       channel: "general",
       author: primary ? getMemberDisplayName(primary, fallbackAuthor) : fallbackAuthor,
       avatarUrl: primary?.avatarUrl ?? null,
@@ -1534,12 +2205,14 @@ function buildMockThreads(
           time: t("webboardTimeRecent"),
         },
       ],
+      replyCount: 1,
       reactions: { fire: 18, target: 16, smile: 8 },
       reacted: null,
       views: 128,
     },
     {
       id: "prediction",
+      source: "fallback",
       channel: "predictions",
       author: secondary ? getMemberDisplayName(secondary, fallbackAuthor) : fallbackAuthor,
       avatarUrl: secondary?.avatarUrl ?? null,
@@ -1549,52 +2222,12 @@ function buildMockThreads(
       body: t("webboardThreadPredictionBody"),
       tags: [t("webboardTagPrediction"), t("webboardTagStats")],
       replies: [],
+      replyCount: 0,
       reactions: { fire: 10, target: 13, smile: 4 },
       reacted: null,
       views: 96,
     },
   ];
-}
-
-function readStoredWebboardThreads(leagueId: string): WebboardThread[] | null {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const raw = window.localStorage.getItem(`${LEAGUE_WEBBOARD_STORAGE_KEY}${leagueId}`);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return null;
-    return parsed.filter(isWebboardThread);
-  } catch {
-    return null;
-  }
-}
-
-function storeWebboardThreads(leagueId: string, threads: WebboardThread[]) {
-  if (typeof window === "undefined") return;
-
-  try {
-    window.localStorage.setItem(
-      `${LEAGUE_WEBBOARD_STORAGE_KEY}${leagueId}`,
-      JSON.stringify(threads)
-    );
-  } catch {
-    // Ignore storage quota/private-mode failures; the webboard remains usable in memory.
-  }
-}
-
-function isWebboardThread(value: unknown): value is WebboardThread {
-  if (!value || typeof value !== "object") return false;
-  const thread = value as Partial<WebboardThread>;
-  return (
-    typeof thread.id === "string" &&
-    typeof thread.author === "string" &&
-    typeof thread.title === "string" &&
-    typeof thread.body === "string" &&
-    Array.isArray(thread.tags) &&
-    Array.isArray(thread.replies) &&
-    Boolean(thread.reactions)
-  );
 }
 
 function LeagueLogo({

@@ -35,6 +35,8 @@ export type ApiRequestOptions = {
   authRefreshAttempted?: boolean;
 };
 
+type ApiMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+
 type AuthRefreshData = {
   accessToken?: string;
   refreshToken?: string;
@@ -186,8 +188,23 @@ export async function apiPatchRaw<T, B = unknown>(
   return apiRawRequest<T>("PATCH", path, body, options);
 }
 
+export async function apiPutRaw<T, B = unknown>(
+  path: string,
+  body?: B,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  return apiRawRequest<T>("PUT", path, body, options);
+}
+
+export async function apiDeleteRaw<T>(
+  path: string,
+  options: ApiRequestOptions = {}
+): Promise<T> {
+  return apiRawRequest<T>("DELETE", path, undefined, options);
+}
+
 export async function apiRequest<T, B = unknown>(
-  method: "GET" | "POST" | "PATCH",
+  method: ApiMethod,
   path: string,
   body?: B,
   options: ApiRequestOptions = {}
@@ -232,7 +249,7 @@ export async function apiRequest<T, B = unknown>(
 }
 
 export async function apiRawRequest<T, B = unknown>(
-  method: "GET" | "POST" | "PATCH",
+  method: ApiMethod,
   path: string,
   body?: B,
   options: ApiRequestOptions = {}
@@ -277,7 +294,7 @@ export async function apiRawRequest<T, B = unknown>(
 }
 
 async function fetchApi<B>(
-  method: "GET" | "POST" | "PATCH",
+  method: ApiMethod,
   path: string,
   body?: B,
   options: ApiRequestOptions = {}

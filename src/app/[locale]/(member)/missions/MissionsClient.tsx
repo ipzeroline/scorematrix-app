@@ -1029,25 +1029,23 @@ function HeroStat({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-2xl border border-white/10 bg-black/28 p-4",
+        "relative min-h-[138px] overflow-hidden rounded-2xl border border-white/10 bg-black/28 p-4 pr-12 sm:pr-16",
         className
       )}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent" />
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="min-w-0">
           <p className="text-sm font-bold text-gray-400">{label}</p>
-          <p className="mt-2 font-mono text-3xl font-black leading-none text-white sm:text-4xl">
+          <p className="mt-2 max-w-full whitespace-nowrap font-mono text-[clamp(1.45rem,5vw,3rem)] font-black leading-none text-white sm:text-4xl">
             {value}
           </p>
           <p className="mt-2 text-xs font-bold uppercase tracking-wider text-gray-500">
             {helper}
           </p>
-        </div>
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.04]">
-          <Icon size={22} className={tone} />
-        </span>
       </div>
+      <span className="absolute right-3 top-4 grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[0.04] sm:right-4 sm:h-11 sm:w-11">
+          <Icon size={20} className={tone} />
+      </span>
     </div>
   );
 }
