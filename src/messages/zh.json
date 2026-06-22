@@ -1665,6 +1665,12 @@
       "active": "进行中",
       "ended": "已结束"
     },
+    "eventTypeFilters": {
+      "all": "全部类型",
+      "tournament": "锦标赛",
+      "single-match": "单场比赛",
+      "season": "赛季"
+    },
     "empty": "没有{filter}活动",
     "statuses": {
       "upcoming": "即将开始",
@@ -1675,7 +1681,10 @@
       "worldCup": "世界杯",
       "ucl": "欧冠",
       "afc": "AFC",
-      "custom": "特别"
+      "custom": "特别",
+      "tournament": "锦标赛",
+      "single-match": "单场比赛",
+      "season": "赛季"
     },
     "startsInDays": "{days} 天后开始",
     "startingSoon": "即将开始",
@@ -1733,6 +1742,62 @@
     "confirm": "确认",
     "eventEntered": "已参加活动！",
     "registeredForEvent": "您已报名 {event}",
+    "searchPlaceholder": "搜索活动",
+    "search": "搜索",
+    "loading": "正在加载活动",
+    "loadFailed": "无法加载活动数据",
+    "pageStatus": "第 {page} 页，共 {total} 页",
+    "previousPage": "上一页",
+    "nextPage": "下一页",
+    "matches": {
+      "title": "本活动比赛",
+      "progress": "已预测 {done} / {total} 场",
+      "empty": "本活动暂无比赛",
+      "predicted": "已预测",
+      "live": "进行中",
+      "finished": "已结束",
+      "upcoming": "即将开始",
+      "viewAllPredicts": "在预测页查看全部比赛",
+      "upcomingProgress": "即将开始比赛已预测 {done} / {total} 场",
+      "noUpcoming": "暂无即将开始的比赛",
+      "yourPrediction": "你的预测",
+      "predictNow": "预测",
+      "editPrediction": "已预测",
+      "receipt": "预测记录",
+      "match": "比赛",
+      "status": "状态",
+      "actualResult": "实际结果",
+      "points": "积分",
+      "resultType": "结果类型",
+      "confidence": "信心",
+      "boost": "加成",
+      "halfTime": "半场比分",
+      "totalGoals": "总进球",
+      "firstScorer": "首位进球者",
+      "extraPicks": "额外选择",
+      "timeline": "时间线",
+      "summary": "摘要",
+      "on": "开启",
+      "off": "关闭",
+      "close": "关闭"
+    },
+    "leaderboard": {
+      "title": "排行榜",
+      "participants": "共 {count} 名参与者",
+      "empty": "暂无积分",
+      "player": "玩家",
+      "points": "积分",
+      "accuracy": "准确率",
+      "predictions": "预测",
+      "yourRank": "你的排名",
+      "yourPoints": "{points} 分",
+      "searchPlaceholder": "搜索玩家",
+      "search": "搜索",
+      "clearSearch": "清除",
+      "loadFailed": "无法加载排行榜",
+      "noSearchResults": "未找到 “{search}” 相关玩家",
+      "pageStatus": "第 {page} / {total} 页 · 共 {count} 人"
+    },
     "items": {
       "wc2026-predictor": {
         "name": "2026 世界杯预测锦标赛",
@@ -1793,6 +1858,60 @@
         "name": "夏季足球之王",
         "description": "赢得 2026 夏季联赛挑战"
       }
+    },
+    "rewardsTitle": "Rewards & Prizes",
+    "totalRewardPool": "Total pool: {points} pts + {credits} credits",
+    "rankColumn": "Rank",
+    "pointsColumn": "Points",
+    "creditsColumn": "Credits",
+    "badgeColumn": "Badge",
+    "rankShort": "R",
+    "noReward": "—",
+    "rewardsNote": "Rewards distributed after the event ends and results are finalized",
+    "badgeShowcaseTitle": "Exclusive Badges",
+    "badgeTypeWinner": "Winner Badge",
+    "badgeTypeParticipation": "Participation",
+    "whatYouCanWin": "What you can win",
+    "topReward": "Top reward",
+    "badgeCount": "{count} badges",
+    "moreTiers": "more tiers",
+    "noRewardsYet": "No rewards yet",
+    "pointsAmountShort": "{amount} pts",
+    "creditsAmountShort": "{amount} cr",
+    "tabs": {
+      "overview": "Overview",
+      "howToPlay": "How to Play",
+      "matches": "Matches",
+      "leaderboard": "Leaderboard"
+    },
+    "lockedAccess": {
+      "title": "Join this event to unlock competition data",
+      "description": "Members who have not joined can view the overview, rules, entry cost, and rewards only. Match details and the leaderboard are available to event participants.",
+      "visibleOverview": "Event overview",
+      "visibleRewards": "Rewards and badges",
+      "visibleRules": "Rules and how to play",
+      "unlockHint": "Use the registration panel to unlock matches and rankings."
+    },
+    "howToPlay": {
+      "title": "How to Compete",
+      "subtitle": "Follow these 5 steps to compete for rewards in this event",
+      "step1Title": "Register for the Event",
+      "step1Desc": "Pay {points} pts + {credits} credits to confirm your entry",
+      "step1FreeDesc": "This event is free to join! Just click enter and you're ready to compete",
+      "step2Title": "Predict Matches in this Event",
+      "step2Desc": "Go to the Predict page and predict scores for matches in this event. Every correct prediction adds points to your event ranking automatically.",
+      "step3Title": "Earn Points After Each Match",
+      "step3Desc": "Predictions are scored automatically after matches finish. Exact scores and correct results earn points.",
+      "step4Title": "Track Your Rank in Real-time",
+      "step4Desc": "Check your position against other competitors live in the Leaderboard tab.",
+      "step5Title": "Event Ends — Claim Rewards!",
+      "step5Desc": "When the event ends, final rankings are calculated and rewards are distributed automatically. {tiers} reward tiers up for grabs.",
+      "goPredict": "Go Predict Now"
+    },
+    "nextSteps": {
+      "title": "Next Steps",
+      "goPredict": "Predict matches to earn points",
+      "checkMatches": "View {count} matches in this event"
     }
   }
 }

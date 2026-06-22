@@ -8,7 +8,8 @@ import {
 } from "@/lib/auth-guard";
 import { getDataApiUrl } from "@/lib/backend-api-urls";
 
-const REFRESH_TOKEN_MAX_AGE_SECONDS = 60 * 60;
+const REFRESH_TOKEN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const REFRESH_TOKEN_PERSISTENT_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const ACCESS_TOKEN_MAX_AGE_SECONDS = 60 * 15;
 
 export type AuthTokens = {
@@ -119,7 +120,9 @@ export async function setRefreshSession(refreshToken: string, remember: boolean)
     path: "/",
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict" as const,
-    maxAge: REFRESH_TOKEN_MAX_AGE_SECONDS,
+    maxAge: remember
+      ? REFRESH_TOKEN_PERSISTENT_MAX_AGE_SECONDS
+      : REFRESH_TOKEN_SESSION_MAX_AGE_SECONDS,
   };
 
   cookieStore.set(REFRESH_TOKEN_COOKIE_NAME, refreshToken, {

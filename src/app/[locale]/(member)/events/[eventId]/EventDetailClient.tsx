@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { ArrowRight, CheckCircle2, Coins, Gift, Lock, ShieldCheck, Sparkles, Target, Ticket, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { registerEvent } from "@/lib/events-api";
 import { useEventStore } from "@/stores/event-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
@@ -20,15 +21,16 @@ export function EventDetailClient({
   const { locale } = useParams<{ locale: string }>();
   const [showConfirm, setShowConfirm] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const registerForEvent = useEventStore((state) => state.registerForEvent);
-  const isRegisteredInStore = useEventStore((state) => state.isRegistered);
-  const spendFreePoints = useUserStore((state) => state.spendFreePoints);
-  const spendCredits = useUserStore((state) => state.spendCredits);
   const freePoints = useUserStore((state) => state.freePoints);
   const premiumCredits = useUserStore((state) => state.premiumCredits);
+  const syncWallet = useUserStore((state) => state.syncWallet);
   const addToast = useNotificationStore((state) => state.addToast);
 
-  const alreadyRegistered = Boolean(event.isRegistered) || isRegisteredInStore(event.id) || entered;
+  const alreadyRegistered =
+    Boolean(event.isRegistered) ||
+    entered;
   const pointsFee = Number(event.entryFeePoints ?? 0);
   const creditsFee = Number(event.entryFeeCredits ?? 0);
   const canAffordPoints = freePoints >= pointsFee;
@@ -37,8 +39,8 @@ export function EventDetailClient({
   const isFree = pointsFee <= 0 && creditsFee <= 0;
   const registrationClosed = event.status === "ended";
 
-  const handleEnter = () => {
-    if (registrationClosed || alreadyRegistered) {
+  const handleEnter = async () => {
+    if (isSubmitting || registrationClosed || alreadyRegistered) {
       setShowConfirm(false);
       return;
     }
@@ -52,46 +54,48 @@ export function EventDetailClient({
       return;
     }
 
-    let pointsSpent = false;
-    let creditsSpent = false;
+    setIsSubmitting(true);
 
-    if (pointsFee > 0) {
-      pointsSpent = spendFreePoints(pointsFee);
-      if (!pointsSpent) {
-        addToast({
-          type: "error",
-          title: t("insufficientBalance"),
-          message: t("buyCreditsOrEarnPoints"),
-        });
-        return;
-      }
-    }
+    try {
+      const response = await registerEvent(event.id, { locale });
+      const wallet = response.data.wallet;
 
-    if (creditsFee > 0) {
-      creditsSpent = spendCredits(creditsFee);
-      if (!creditsSpent) {
-        if (pointsSpent) {
-          useUserStore.setState((state) => ({
-            freePoints: state.freePoints + pointsFee,
-          }));
+      if (wallet) {
+        const nextWallet: {
+          freePoints?: number;
+          premiumCredits?: number;
+        } = {};
+
+        if (typeof wallet.freePoints === "number") {
+          nextWallet.freePoints = wallet.freePoints;
         }
-        addToast({
-          type: "error",
-          title: t("insufficientBalance"),
-          message: t("buyCreditsOrEarnPoints"),
-        });
-        return;
-      }
-    }
+        if (typeof wallet.premiumCredits === "number") {
+          nextWallet.premiumCredits = wallet.premiumCredits;
+        }
 
-    registerForEvent(event.id);
-    setEntered(true);
-    setShowConfirm(false);
-    addToast({
-      type: "success",
-      title: t("eventEntered"),
-      message: t("registeredForEvent", { event: event.name }),
-    });
+        syncWallet(nextWallet);
+      }
+
+      registerForEvent(response.data.eventId || event.id);
+      setEntered(response.data.isRegistered);
+      setShowConfirm(false);
+      addToast({
+        type: "success",
+        title: t("eventEntered"),
+        message: t("registeredForEvent", { event: event.name }),
+      });
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: t("insufficientBalance"),
+        message:
+          error instanceof Error
+            ? error.message
+            : t("buyCreditsOrEarnPoints"),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -237,7 +241,7 @@ export function EventDetailClient({
 
               <button
                 onClick={() => setShowConfirm(true)}
-                disabled={registrationClosed || (!isFree && !canAfford)}
+                disabled={isSubmitting || registrationClosed || (!isFree && !canAfford)}
                 className={cn(
                   "w-full rounded-xl px-4 py-3 text-sm font-bold transition-colors",
                   registrationClosed
@@ -302,6 +306,7 @@ export function EventDetailClient({
               </button>
               <button
                 onClick={handleEnter}
+                disabled={isSubmitting}
                 className="flex-1 rounded-xl bg-cyan-500 px-4 py-3 text-sm font-bold text-black transition-colors hover:bg-cyan-400"
               >
                 {t("confirm")}

@@ -1666,6 +1666,12 @@
       "active": "กำลังแข่ง",
       "ended": "จบแล้ว"
     },
+    "eventTypeFilters": {
+      "all": "ทุกประเภท",
+      "tournament": "ทัวร์นาเมนต์",
+      "single-match": "แมตช์เดี่ยว",
+      "season": "ทั้งฤดูกาล"
+    },
     "empty": "ไม่มีอีเวนต์สถานะ {filter}",
     "statuses": {
       "upcoming": "กำลังจะมา",
@@ -1676,7 +1682,10 @@
       "worldCup": "ฟุตบอลโลก",
       "ucl": "แชมเปียนส์ลีก",
       "afc": "AFC",
-      "custom": "พิเศษ"
+      "custom": "พิเศษ",
+      "tournament": "ทัวร์นาเมนต์",
+      "single-match": "แมตช์เดี่ยว",
+      "season": "ทั้งฤดูกาล"
     },
     "startsInDays": "เริ่มใน {days} วัน",
     "startingSoon": "ใกล้เริ่มแล้ว",
@@ -1734,6 +1743,13 @@
     "confirm": "ยืนยัน",
     "eventEntered": "เข้าร่วมอีเวนต์แล้ว!",
     "registeredForEvent": "คุณลงทะเบียนสำหรับ {event} แล้ว",
+    "searchPlaceholder": "ค้นหาอีเวนต์",
+    "search": "ค้นหา",
+    "loading": "กำลังโหลดอีเวนต์",
+    "loadFailed": "โหลดข้อมูลอีเวนต์ไม่สำเร็จ",
+    "pageStatus": "หน้า {page} จาก {total}",
+    "previousPage": "ก่อนหน้า",
+    "nextPage": "ถัดไป",
     "rewardsTitle": "ผลตอบแทน & รางวัล",
     "totalRewardPool": "รางวัลรวม {points} แต้ม + {credits} เครดิต",
     "rankColumn": "อันดับ",
@@ -1759,6 +1775,14 @@
       "matches": "แมตช์",
       "leaderboard": "ลีดเดอร์บอร์ด"
     },
+    "lockedAccess": {
+      "title": "เข้าร่วมอีเวนต์เพื่อปลดล็อกข้อมูลการแข่งขัน",
+      "description": "สมาชิกที่ยังไม่เข้าร่วมจะเห็นข้อมูลภาพรวม กติกา ค่าเข้า และรางวัลเท่านั้น รายละเอียดแมตช์และกระดานคะแนนจะเปิดให้ผู้เข้าร่วมอีเวนต์ดู",
+      "visibleOverview": "ภาพรวมอีเวนต์",
+      "visibleRewards": "รางวัลและแบดจ์",
+      "visibleRules": "กติกาและวิธีแข่ง",
+      "unlockHint": "กดเข้าร่วมจากกล่องลงทะเบียนด้านขวาเพื่อดูแมตช์และอันดับ"
+    },
     "howToPlay": {
       "title": "วิธีเข้าร่วมแข่งขัน",
       "subtitle": "ทำตาม 5 ขั้นตอนเพื่อชิงรางวัลใน Event นี้",
@@ -1783,7 +1807,29 @@
       "live": "กำลังแข่ง",
       "finished": "จบแล้ว",
       "upcoming": "กำลังจะมา",
-      "viewAllPredicts": "ดูแมตช์ทั้งหมดในหน้าทายผล"
+      "viewAllPredicts": "ดูแมตช์ทั้งหมดในหน้าทายผล",
+      "upcomingProgress": "ทายแล้ว {done} จาก {total} แมตช์ที่กำลังจะมา",
+      "noUpcoming": "ยังไม่มีแมตช์ที่กำลังจะมาถึง",
+      "yourPrediction": "คำทายของคุณ",
+      "predictNow": "ทายผล",
+      "editPrediction": "ทายแล้ว",
+      "receipt": "ใบรับคำทาย",
+      "match": "แมตช์",
+      "status": "สถานะ",
+      "actualResult": "ผลจริง",
+      "points": "แต้ม",
+      "resultType": "ประเภทผลลัพธ์",
+      "confidence": "ความมั่นใจ",
+      "boost": "บูสต์",
+      "halfTime": "สกอร์ครึ่งแรก",
+      "totalGoals": "จำนวนประตูรวม",
+      "firstScorer": "ผู้ทำประตูแรก",
+      "extraPicks": "ตัวเลือกพิเศษ",
+      "timeline": "ไทม์ไลน์",
+      "summary": "สรุป",
+      "on": "เปิด",
+      "off": "ปิด",
+      "close": "ปิด"
     },
     "leaderboard": {
       "title": "กระดานคะแนน",
@@ -1794,7 +1840,13 @@
       "accuracy": "แม่นยำ",
       "predictions": "ทาย",
       "yourRank": "อันดับของคุณ",
-      "yourPoints": "{points} แต้ม"
+      "yourPoints": "{points} แต้ม",
+      "searchPlaceholder": "ค้นหาผู้เล่น",
+      "search": "ค้นหา",
+      "clearSearch": "ล้าง",
+      "loadFailed": "โหลดกระดานคะแนนไม่สำเร็จ",
+      "noSearchResults": "ไม่พบผู้เล่น “{search}”",
+      "pageStatus": "หน้า {page} จาก {total} · ทั้งหมด {count} คน"
     },
     "nextSteps": {
       "title": "ขั้นตอนต่อไป",

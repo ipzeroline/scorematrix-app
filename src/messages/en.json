@@ -1668,6 +1668,12 @@
       "active": "Active",
       "ended": "Ended"
     },
+    "eventTypeFilters": {
+      "all": "All types",
+      "tournament": "Tournament",
+      "single-match": "Single match",
+      "season": "Season"
+    },
     "empty": "No {filter} events",
     "statuses": {
       "upcoming": "UPCOMING",
@@ -1678,7 +1684,10 @@
       "worldCup": "World Cup",
       "ucl": "Champions League",
       "afc": "AFC",
-      "custom": "Special"
+      "custom": "Special",
+      "tournament": "Tournament",
+      "single-match": "Single match",
+      "season": "Season"
     },
     "startsInDays": "Starts in {days} days",
     "startingSoon": "Starting soon",
@@ -1736,6 +1745,13 @@
     "confirm": "Confirm",
     "eventEntered": "Event entered!",
     "registeredForEvent": "You're now registered for {event}",
+    "searchPlaceholder": "Search events",
+    "search": "Search",
+    "loading": "Loading events",
+    "loadFailed": "Unable to load events",
+    "pageStatus": "Page {page} of {total}",
+    "previousPage": "Previous",
+    "nextPage": "Next",
     "rewardsTitle": "Rewards & Prizes",
     "totalRewardPool": "Total pool: {points} pts + {credits} credits",
     "rankColumn": "Rank",
@@ -1761,6 +1777,14 @@
       "matches": "Matches",
       "leaderboard": "Leaderboard"
     },
+    "lockedAccess": {
+      "title": "Join this event to unlock competition data",
+      "description": "Members who have not joined can view the overview, rules, entry cost, and rewards only. Match details and the leaderboard are available to event participants.",
+      "visibleOverview": "Event overview",
+      "visibleRewards": "Rewards and badges",
+      "visibleRules": "Rules and how to play",
+      "unlockHint": "Use the registration panel to unlock matches and rankings."
+    },
     "howToPlay": {
       "title": "How to Compete",
       "subtitle": "Follow these 5 steps to compete for rewards in this event",
@@ -1785,7 +1809,29 @@
       "live": "Live",
       "finished": "Done",
       "upcoming": "Upcoming",
-      "viewAllPredicts": "View all matches in Predict"
+      "viewAllPredicts": "View all matches in Predict",
+      "upcomingProgress": "Predicted {done} of {total} upcoming matches",
+      "noUpcoming": "No upcoming matches available",
+      "yourPrediction": "Your prediction",
+      "predictNow": "Predict",
+      "editPrediction": "Predicted",
+      "receipt": "Prediction Receipt",
+      "match": "Match",
+      "status": "Status",
+      "actualResult": "Actual result",
+      "points": "Points",
+      "resultType": "Result type",
+      "confidence": "Confidence",
+      "boost": "Boost",
+      "halfTime": "Half-time score",
+      "totalGoals": "Total goals",
+      "firstScorer": "First scorer",
+      "extraPicks": "Extra picks",
+      "timeline": "Timeline",
+      "summary": "Summary",
+      "on": "On",
+      "off": "Off",
+      "close": "Close"
     },
     "leaderboard": {
       "title": "Leaderboard",
@@ -1796,7 +1842,13 @@
       "accuracy": "Accuracy",
       "predictions": "Preds",
       "yourRank": "Your rank",
-      "yourPoints": "{points} pts"
+      "yourPoints": "{points} pts",
+      "searchPlaceholder": "Search players",
+      "search": "Search",
+      "clearSearch": "Clear",
+      "loadFailed": "Unable to load leaderboard",
+      "noSearchResults": "No players found for “{search}”",
+      "pageStatus": "Page {page} of {total} · {count} players"
     },
     "nextSteps": {
       "title": "Next Steps",
@@ -1863,6 +1915,16 @@
         "name": "Summer Football King",
         "description": "Won the Summer Leagues 2026 challenge"
       }
-    }
+    },
+    "commandCenter": "Event command center",
+    "skillNotice": "Skill-based football events. No gambling, no cash withdrawal.",
+    "activeEvents": "Active events",
+    "upcomingEvents": "Upcoming events",
+    "registeredEvents": "Registered",
+    "featuredEvent": "Featured event",
+    "eventStatus": "Event status",
+    "eventPool": "events",
+    "eventArena": "Event arena",
+    "eventArenaHint": "Find football prediction events, register, and track rewards from one place."
   }
 }

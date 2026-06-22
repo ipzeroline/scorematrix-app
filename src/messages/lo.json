@@ -1666,6 +1666,12 @@
       "active": "ກຳລັງແຂ່ງ",
       "ended": "ຈົບແລ້ວ"
     },
+    "eventTypeFilters": {
+      "all": "ທຸກປະເພດ",
+      "tournament": "ທົວນາເມັນ",
+      "single-match": "ນັດດຽວ",
+      "season": "ທັງລະດູການ"
+    },
     "empty": "ບໍ່ມີອີເວັນສະຖານະ {filter}",
     "statuses": {
       "upcoming": "ກຳລັງຈະມາ",
@@ -1676,7 +1682,10 @@
       "worldCup": "ບານໂລກ",
       "ucl": "Champions League",
       "afc": "AFC",
-      "custom": "ພິເສດ"
+      "custom": "ພິເສດ",
+      "tournament": "ທົວນາເມັນ",
+      "single-match": "ນັດດຽວ",
+      "season": "ທັງລະດູການ"
     },
     "startsInDays": "ເລີ່ມໃນ {days} ມື້",
     "startingSoon": "ໃກ້ເລີ່ມແລ້ວ",
@@ -1734,6 +1743,62 @@
     "confirm": "ຢືນຢັນ",
     "eventEntered": "ເຂົ້າຮ່ວມອີເວັນແລ້ວ!",
     "registeredForEvent": "ທ່ານລົງທະບຽນສຳລັບ {event} ແລ້ວ",
+    "searchPlaceholder": "ຄົ້ນຫາອີເວັນ",
+    "search": "ຄົ້ນຫາ",
+    "loading": "ກຳລັງໂຫຼດອີເວັນ",
+    "loadFailed": "ໂຫຼດຂໍ້ມູນອີເວັນບໍ່ສຳເລັດ",
+    "pageStatus": "ໜ້າ {page} ຈາກ {total}",
+    "previousPage": "ກ່ອນໜ້າ",
+    "nextPage": "ຖັດໄປ",
+    "matches": {
+      "title": "ນັດໃນອີເວັນນີ້",
+      "progress": "ທາຍແລ້ວ {done} ຈາກ {total} ນັດ",
+      "empty": "ຍັງບໍ່ມີນັດໃນອີເວັນນີ້",
+      "predicted": "ທາຍແລ້ວ",
+      "live": "ກຳລັງແຂ່ງ",
+      "finished": "ຈົບແລ້ວ",
+      "upcoming": "ກຳລັງຈະມາ",
+      "viewAllPredicts": "ເບິ່ງນັດທັງໝົດໃນໜ້າທາຍຜົນ",
+      "upcomingProgress": "ທາຍແລ້ວ {done} ຈາກ {total} ນັດທີ່ກຳລັງຈະມາ",
+      "noUpcoming": "ຍັງບໍ່ມີນັດທີ່ກຳລັງຈະມາ",
+      "yourPrediction": "ຄຳທາຍຂອງທ່ານ",
+      "predictNow": "ທາຍຜົນ",
+      "editPrediction": "ທາຍແລ້ວ",
+      "receipt": "ໃບຮັບຄຳທາຍ",
+      "match": "ນັດ",
+      "status": "ສະຖານະ",
+      "actualResult": "ຜົນຈິງ",
+      "points": "ຄະແນນ",
+      "resultType": "ປະເພດຜົນລັບ",
+      "confidence": "ຄວາມໝັ້ນໃຈ",
+      "boost": "ບູສຕ໌",
+      "halfTime": "ສະກໍເຄິ່ງທຳອິດ",
+      "totalGoals": "ຈຳນວນປະຕູລວມ",
+      "firstScorer": "ຜູ້ຍິງປະຕູທຳອິດ",
+      "extraPicks": "ຕົວເລືອກພິເສດ",
+      "timeline": "ໄທມ໌ລາຍ",
+      "summary": "ສະຫຼຸບ",
+      "on": "ເປີດ",
+      "off": "ປິດ",
+      "close": "ປິດ"
+    },
+    "leaderboard": {
+      "title": "ກະດານຄະແນນ",
+      "participants": "ຈາກຜູ້ເຂົ້າຮ່ວມ {count} ຄົນ",
+      "empty": "ຍັງບໍ່ມີຄະແນນ",
+      "player": "ຜູ້ຫຼິ້ນ",
+      "points": "ຄະແນນ",
+      "accuracy": "ຄວາມແມ່ນຍຳ",
+      "predictions": "ທາຍ",
+      "yourRank": "ອັນດັບຂອງທ່ານ",
+      "yourPoints": "{points} ຄະແນນ",
+      "searchPlaceholder": "ຄົ້ນຫາຜູ້ຫຼິ້ນ",
+      "search": "ຄົ້ນຫາ",
+      "clearSearch": "ລ້າງ",
+      "loadFailed": "ໂຫຼດກະດານຄະແນນບໍ່ສຳເລັດ",
+      "noSearchResults": "ບໍ່ພົບຜູ້ຫຼິ້ນ “{search}”",
+      "pageStatus": "ໜ້າ {page} ຈາກ {total} · ທັງໝົດ {count} ຄົນ"
+    },
     "items": {
       "wc2026-predictor": {
         "name": "ທົວນາເມັນທາຍຜົນບານໂລກ 2026",
@@ -1794,6 +1859,60 @@
         "name": "ລາຊາບານລະດູຮ້ອນ",
         "description": "ຊະນະຊາເລນຈ໌ລີກລະດູຮ້ອນ 2026"
       }
+    },
+    "rewardsTitle": "Rewards & Prizes",
+    "totalRewardPool": "Total pool: {points} pts + {credits} credits",
+    "rankColumn": "Rank",
+    "pointsColumn": "Points",
+    "creditsColumn": "Credits",
+    "badgeColumn": "Badge",
+    "rankShort": "R",
+    "noReward": "—",
+    "rewardsNote": "Rewards distributed after the event ends and results are finalized",
+    "badgeShowcaseTitle": "Exclusive Badges",
+    "badgeTypeWinner": "Winner Badge",
+    "badgeTypeParticipation": "Participation",
+    "whatYouCanWin": "What you can win",
+    "topReward": "Top reward",
+    "badgeCount": "{count} badges",
+    "moreTiers": "more tiers",
+    "noRewardsYet": "No rewards yet",
+    "pointsAmountShort": "{amount} pts",
+    "creditsAmountShort": "{amount} cr",
+    "tabs": {
+      "overview": "Overview",
+      "howToPlay": "How to Play",
+      "matches": "Matches",
+      "leaderboard": "Leaderboard"
+    },
+    "lockedAccess": {
+      "title": "Join this event to unlock competition data",
+      "description": "Members who have not joined can view the overview, rules, entry cost, and rewards only. Match details and the leaderboard are available to event participants.",
+      "visibleOverview": "Event overview",
+      "visibleRewards": "Rewards and badges",
+      "visibleRules": "Rules and how to play",
+      "unlockHint": "Use the registration panel to unlock matches and rankings."
+    },
+    "howToPlay": {
+      "title": "How to Compete",
+      "subtitle": "Follow these 5 steps to compete for rewards in this event",
+      "step1Title": "Register for the Event",
+      "step1Desc": "Pay {points} pts + {credits} credits to confirm your entry",
+      "step1FreeDesc": "This event is free to join! Just click enter and you're ready to compete",
+      "step2Title": "Predict Matches in this Event",
+      "step2Desc": "Go to the Predict page and predict scores for matches in this event. Every correct prediction adds points to your event ranking automatically.",
+      "step3Title": "Earn Points After Each Match",
+      "step3Desc": "Predictions are scored automatically after matches finish. Exact scores and correct results earn points.",
+      "step4Title": "Track Your Rank in Real-time",
+      "step4Desc": "Check your position against other competitors live in the Leaderboard tab.",
+      "step5Title": "Event Ends — Claim Rewards!",
+      "step5Desc": "When the event ends, final rankings are calculated and rewards are distributed automatically. {tiers} reward tiers up for grabs.",
+      "goPredict": "Go Predict Now"
+    },
+    "nextSteps": {
+      "title": "Next Steps",
+      "goPredict": "Predict matches to earn points",
+      "checkMatches": "View {count} matches in this event"
     }
   }
 }

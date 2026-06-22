@@ -8,6 +8,8 @@ type DataProxyContext = {
   params: Promise<{ path: string[] }>;
 };
 
+const DATA_PROXY_TIMEOUT_MS = 10_000;
+
 const ALLOWED_DATA_PROXY_PREFIXES = [
   "achievements",
   "auth/forgot-password",
@@ -29,6 +31,7 @@ const ALLOWED_DATA_PROXY_PREFIXES = [
   "rewards",
   "scoring-rules",
   "stats",
+  "threads",
   "users/me",
 ];
 
@@ -85,16 +88,20 @@ async function proxyDataRequest(request: Request, context: DataProxyContext) {
       body: ["GET", "HEAD"].includes(request.method) ? undefined : await readRequestBody(request),
       cache: "no-store",
       redirect: "manual",
+      signal: AbortSignal.timeout(DATA_PROXY_TIMEOUT_MS),
     });
 
     return normalizeProxyResponse(response, request.method);
   } catch (error) {
     console.error("[data-proxy] request failed", error);
+    const isTimeout = isAbortTimeout(error);
     return Response.json(
       {
         success: false,
-        code: "data_proxy_error",
-        message: "Data backend request failed",
+        code: isTimeout ? "data_proxy_timeout" : "data_proxy_error",
+        message: isTimeout
+          ? "Data backend request timed out"
+          : "Data backend request failed",
       },
       { status: 502, headers: NO_CACHE_HEADERS }
     );
@@ -177,4 +184,11 @@ async function normalizeProxyResponse(response: Response, method: string) {
 
 function isJsonContentType(contentType: string) {
   return /(^|[/+])json($|;)/i.test(contentType);
+}
+
+function isAbortTimeout(error: unknown) {
+  return (
+    error instanceof DOMException &&
+    (error.name === "TimeoutError" || error.name === "AbortError")
+  );
 }

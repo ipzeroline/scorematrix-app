@@ -9,6 +9,7 @@ import { StoreInitializer } from "@/components/shared/StoreInitializer";
 import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { ToastContainer } from "@/components/ui/ToastContainer";
 import { LOCALE_CODES, type LocaleCode } from "@/i18n";
+import { hasAuthSession } from "@/lib/auth-session-server";
 
 function isLocale(value: string): value is LocaleCode {
   return LOCALE_CODES.includes(value as LocaleCode);
@@ -29,10 +30,11 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
   const messages = await getMessages({ locale });
+  const hasSession = await hasAuthSession();
 
   return (
     <NextIntlClientProvider key={locale} locale={locale} messages={messages}>
-      <StoreInitializer />
+      <StoreInitializer hasAuthSession={hasSession} />
       <ScrollToTop />
       <ToastContainer />
       <div className="flex min-h-screen flex-col pt-14">

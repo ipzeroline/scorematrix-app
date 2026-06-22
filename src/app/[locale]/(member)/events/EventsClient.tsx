@@ -1,13 +1,17 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   Calendar,
   CalendarClock,
+  ChevronLeft,
+  ChevronRight,
   Flame,
+  Loader2,
   Radio,
+  Search,
   ShieldCheck,
   Trophy,
   Users,
@@ -16,7 +20,6 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { EventCard } from '@/components/shared/EventCard';
 import {
-  DEFAULT_EVENTS_RESPONSE,
   getEvents,
   mapApiEvent,
 } from '@/lib/events-api';
@@ -24,36 +27,57 @@ import { cn } from '@/lib/utils';
 import type { SpecialEvent } from '@/types/event';
 
 type Filter = 'all' | 'upcoming' | 'active' | 'ended';
+type EventTypeFilter = 'all' | 'tournament' | 'single-match' | 'season';
+const PAGE_SIZE = 20;
 
 export default function EventsPage() {
   const t = useTranslations('events');
   const { locale } = useParams<{ locale: string }>();
   const [filter, setFilter] = useState<Filter>('all');
-  const [events, setEvents] = useState<SpecialEvent[]>(
-    DEFAULT_EVENTS_RESPONSE.data.map(mapApiEvent)
-  );
+  const [eventTypeFilter, setEventTypeFilter] = useState<EventTypeFilter>('all');
+  const [events, setEvents] = useState<SpecialEvent[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [searchInput, setSearchInput] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    getEvents({ locale })
+    getEvents(
+      {
+        status: filter === 'all' ? undefined : filter,
+        eventType: eventTypeFilter === 'all' ? undefined : eventTypeFilter,
+        search: searchTerm,
+        page,
+        limit: PAGE_SIZE,
+      },
+      { locale }
+    )
       .then((response) => {
         if (!active) return;
         setEvents(response.data.map(mapApiEvent));
+        setTotal(response.meta?.total ?? response.data.length);
       })
-      .catch(() => {
+      .catch((apiError) => {
         if (!active) return;
-        setEvents(DEFAULT_EVENTS_RESPONSE.data.map(mapApiEvent));
+        setEvents([]);
+        setTotal(0);
+        setError(apiError instanceof Error ? apiError.message : t('loadFailed'));
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [locale]);
+  }, [eventTypeFilter, filter, locale, page, searchTerm, t]);
 
-  const filtered = (filter === 'all'
-    ? events
-    : events.filter((e) => e.status === filter))
+  const filtered = events
     .slice()
     .sort(sortEventsByPriority);
 
@@ -66,11 +90,39 @@ export default function EventsPage() {
     0
   );
   const featuredEvent = activeEvent ?? filtered[0] ?? events[0];
-  const filterCounts: Record<Filter, number> = {
-    all: events.length,
-    upcoming: upcomingCount,
-    active: activeCount,
-    ended: events.filter((event) => event.status === 'ended').length,
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  const handleFilterChange = (nextFilter: Filter) => {
+    if (nextFilter === filter && page === 1) return;
+    setIsLoading(true);
+    setError(null);
+    setFilter(nextFilter);
+    setPage(1);
+  };
+
+  const handleEventTypeChange = (nextEventType: EventTypeFilter) => {
+    if (nextEventType === eventTypeFilter && page === 1) return;
+    setIsLoading(true);
+    setError(null);
+    setEventTypeFilter(nextEventType);
+    setPage(1);
+  };
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextSearchTerm = searchInput.trim();
+    if (nextSearchTerm === searchTerm && page === 1) return;
+    setIsLoading(true);
+    setError(null);
+    setSearchTerm(nextSearchTerm);
+    setPage(1);
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    if (nextPage === page) return;
+    setIsLoading(true);
+    setError(null);
+    setPage(nextPage);
   };
 
   return (
@@ -176,7 +228,7 @@ export default function EventsPage() {
       <section className="space-y-3">
         <SectionHeader
           icon={Radio}
-          eyebrow={`${filtered.length}/${events.length} ${t('eventPool')}`}
+          eyebrow={`${filtered.length}/${total} ${t('eventPool')}`}
           title={t('eventArena')}
           description={t('eventArenaHint')}
           action={
@@ -186,28 +238,73 @@ export default function EventsPage() {
           }
         />
 
-        <div className="flex gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-[#080d17] p-2">
-        {(['all', 'upcoming', 'active', 'ended'] as Filter[]).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={cn(
-              'inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-4 text-sm font-black transition-colors',
-              filter === f
-                ? 'border border-cyan-400/30 bg-cyan-500/12 text-white shadow-[0_0_18px_rgba(34,211,238,0.12)]'
-                : 'border border-transparent text-gray-400 hover:border-white/10 hover:bg-white/[0.03] hover:text-gray-200'
-            )}
-          >
-            {t(`filters.${f}`)}
-            <span className="rounded-full border border-white/10 bg-black/25 px-2 py-0.5 text-xs text-gray-300">
-              {filterCounts[f]}
-            </span>
-          </button>
-        ))}
+        <div className="rounded-2xl border border-white/10 bg-[#080d17]/95 p-3 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
+          <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] xl:items-center">
+          <div className="flex overflow-x-auto rounded-xl border border-cyan-400/10 bg-black/20 p-1">
+            {(['all', 'upcoming', 'active', 'ended'] as Filter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => handleFilterChange(f)}
+                className={cn(
+                  'inline-flex min-h-10 shrink-0 items-center rounded-lg px-4 text-sm font-black transition-colors',
+                  filter === f
+                    ? 'bg-cyan-500 text-black shadow-[0_0_18px_rgba(34,211,238,0.18)]'
+                    : 'text-gray-400 hover:bg-white/[0.04] hover:text-gray-200'
+                )}
+              >
+                {t(`filters.${f}`)}
+              </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSearch} className="flex min-h-12 items-center gap-2 rounded-xl border border-white/10 bg-black/28 px-3 shadow-inner shadow-black/20 focus-within:border-cyan-400/40">
+            <Search size={16} className="shrink-0 text-cyan-300" />
+            <input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder={t('searchPlaceholder')}
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-white outline-none placeholder:text-gray-500"
+            />
+            <button
+              type="submit"
+              className="rounded-lg bg-cyan-500 px-3 py-2 text-xs font-black text-black transition-colors hover:bg-cyan-400"
+            >
+              {t('search')}
+            </button>
+          </form>
+          </div>
+
+          <div className="mt-3 flex gap-3 overflow-x-auto">
+            {(['all', 'tournament', 'single-match', 'season'] as EventTypeFilter[]).map((eventType) => (
+              <button
+                key={eventType}
+                onClick={() => handleEventTypeChange(eventType)}
+                className={cn(
+                  'inline-flex min-h-9 shrink-0 items-center rounded-lg px-3 text-xs font-black transition-colors sm:text-sm',
+                  eventTypeFilter === eventType
+                    ? 'border border-white/15 bg-white/[0.09] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]'
+                    : 'border border-transparent text-gray-500 hover:text-gray-300'
+                )}
+              >
+                {t(`eventTypeFilters.${eventType}`)}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
-      {filtered.length === 0 ? (
+      {error ? (
+        <Card className="border-red-400/15 bg-[#0b111d] p-10 text-center">
+          <Calendar size={36} className="mx-auto mb-3 text-red-300/70" />
+          <p className="text-base font-bold text-gray-300">{t('loadFailed')}</p>
+          <p className="mt-2 text-sm text-gray-500">{error}</p>
+        </Card>
+      ) : isLoading ? (
+        <Card className="border-cyan-400/15 bg-[#0b111d] p-10 text-center">
+          <Loader2 size={36} className="mx-auto mb-3 animate-spin text-cyan-300" />
+          <p className="text-base font-bold text-gray-400">{t('loading')}</p>
+        </Card>
+      ) : filtered.length === 0 ? (
         <Card className="border-cyan-400/15 bg-[#0b111d] p-10 text-center">
           <Calendar size={36} className="mx-auto mb-3 text-gray-600" />
           <p className="text-base font-bold text-gray-400">
@@ -219,6 +316,32 @@ export default function EventsPage() {
           {filtered.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
+        </div>
+      )}
+
+      {!error && totalPages > 1 && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#080d17] p-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-bold text-gray-400">
+            {t('pageStatus', { page, total: totalPages })}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handlePageChange(Math.max(1, page - 1))}
+              disabled={isLoading || page <= 1}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-black text-gray-300 transition-colors hover:border-cyan-400/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ChevronLeft size={16} />
+              {t('previousPage')}
+            </button>
+            <button
+              onClick={() => handlePageChange(Math.min(totalPages, page + 1))}
+              disabled={isLoading || page >= totalPages}
+              className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-black text-gray-300 transition-colors hover:border-cyan-400/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {t('nextPage')}
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       )}
     </div>

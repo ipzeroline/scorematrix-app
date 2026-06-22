@@ -1666,6 +1666,12 @@
       "active": "လက်ရှိ",
       "ended": "ပြီးဆုံး"
     },
+    "eventTypeFilters": {
+      "all": "အမျိုးအစားအားလုံး",
+      "tournament": "ပြိုင်ပွဲ",
+      "single-match": "တစ်ပွဲတည်း",
+      "season": "ရာသီတစ်ခုလုံး"
+    },
     "empty": "{filter} ပွဲစဉ် မရှိပါ",
     "statuses": {
       "upcoming": "လာမည့်",
@@ -1676,7 +1682,10 @@
       "worldCup": "World Cup",
       "ucl": "Champions League",
       "afc": "AFC",
-      "custom": "အထူး"
+      "custom": "အထူး",
+      "tournament": "ပြိုင်ပွဲ",
+      "single-match": "တစ်ပွဲတည်း",
+      "season": "ရာသီတစ်ခုလုံး"
     },
     "startsInDays": "{days} ရက်အတွင်း စတင်မည်",
     "startingSoon": "မကြာမီ စတင်မည်",
@@ -1734,6 +1743,62 @@
     "confirm": "အတည်ပြု",
     "eventEntered": "ပွဲစဉ်ဝင်ပြီးပါပြီ!",
     "registeredForEvent": "သင်သည် {event} အတွက် စာရင်းသွင်းပြီးပါပြီ",
+    "searchPlaceholder": "အီဗင့်များ ရှာရန်",
+    "search": "ရှာရန်",
+    "loading": "အီဗင့်များ တင်နေသည်",
+    "loadFailed": "အီဗင့်ဒေတာ တင်မရပါ",
+    "pageStatus": "စာမျက်နှာ {page} / {total}",
+    "previousPage": "ယခင်",
+    "nextPage": "နောက်တစ်ခု",
+    "matches": {
+      "title": "ဤပွဲစဉ်ရှိ မက်ချ်များ",
+      "progress": "{total} ပွဲအနက် {done} ပွဲ ခန့်မှန်းပြီး",
+      "empty": "ဤပွဲစဉ်တွင် မက်ချ်မရှိသေးပါ",
+      "predicted": "ခန့်မှန်းပြီး",
+      "live": "Live",
+      "finished": "ပြီးဆုံး",
+      "upcoming": "လာမည်",
+      "viewAllPredicts": "Predict တွင် မက်ချ်အားလုံးကြည့်ရန်",
+      "upcomingProgress": "လာမည့် {total} ပွဲအနက် {done} ပွဲ ခန့်မှန်းပြီး",
+      "noUpcoming": "လာမည့် မက်ချ်မရှိသေးပါ",
+      "yourPrediction": "သင့်ခန့်မှန်းချက်",
+      "predictNow": "ခန့်မှန်းရန်",
+      "editPrediction": "ခန့်မှန်းပြီး",
+      "receipt": "ခန့်မှန်းချက်လက်ခံဖြတ်ပိုင်း",
+      "match": "မက်ချ်",
+      "status": "အခြေအနေ",
+      "actualResult": "ရလဒ်အစစ်",
+      "points": "အမှတ်",
+      "resultType": "ရလဒ်အမျိုးအစား",
+      "confidence": "ယုံကြည်မှု",
+      "boost": "ဘူစ်",
+      "halfTime": "ပထမပိုင်းစကอร์",
+      "totalGoals": "စုစုပေါင်းဂိုး",
+      "firstScorer": "ပထမဂိုးသွင်းသူ",
+      "extraPicks": "အပိုရွေးချယ်မှုများ",
+      "timeline": "အချိန်လိုင်း",
+      "summary": "အကျဉ်းချုပ်",
+      "on": "ဖွင့်",
+      "off": "ပိတ်",
+      "close": "ပိတ်"
+    },
+    "leaderboard": {
+      "title": "Leaderboard",
+      "participants": "ပါဝင်သူ {count} ဦးအနက်",
+      "empty": "အမှတ်မရှိသေးပါ",
+      "player": "ကစားသမား",
+      "points": "အမှတ်",
+      "accuracy": "တိကျမှု",
+      "predictions": "ခန့်မှန်း",
+      "yourRank": "သင့်အဆင့်",
+      "yourPoints": "{points} မှတ်",
+      "searchPlaceholder": "ကစားသမား ရှာရန်",
+      "search": "ရှာရန်",
+      "clearSearch": "ရှင်းရန်",
+      "loadFailed": "Leaderboard ကို မတင်နိုင်ပါ",
+      "noSearchResults": "“{search}” အတွက် ကစားသမားမတွေ့ပါ",
+      "pageStatus": "စာမျက်နှာ {page} / {total} · စုစုပေါင်း {count} ဦး"
+    },
     "items": {
       "wc2026-predictor": {
         "name": "World Cup 2026 ခန့်မှန်းပြိုင်ပွဲ",
@@ -1794,6 +1859,60 @@
         "name": "နွေရာသီဘောလုံးဘုရင်",
         "description": "Summer Leagues 2026 challenge တွင် အနိုင်ရခဲ့သည်"
       }
+    },
+    "rewardsTitle": "Rewards & Prizes",
+    "totalRewardPool": "Total pool: {points} pts + {credits} credits",
+    "rankColumn": "Rank",
+    "pointsColumn": "Points",
+    "creditsColumn": "Credits",
+    "badgeColumn": "Badge",
+    "rankShort": "R",
+    "noReward": "—",
+    "rewardsNote": "Rewards distributed after the event ends and results are finalized",
+    "badgeShowcaseTitle": "Exclusive Badges",
+    "badgeTypeWinner": "Winner Badge",
+    "badgeTypeParticipation": "Participation",
+    "whatYouCanWin": "What you can win",
+    "topReward": "Top reward",
+    "badgeCount": "{count} badges",
+    "moreTiers": "more tiers",
+    "noRewardsYet": "No rewards yet",
+    "pointsAmountShort": "{amount} pts",
+    "creditsAmountShort": "{amount} cr",
+    "tabs": {
+      "overview": "Overview",
+      "howToPlay": "How to Play",
+      "matches": "Matches",
+      "leaderboard": "Leaderboard"
+    },
+    "lockedAccess": {
+      "title": "Join this event to unlock competition data",
+      "description": "Members who have not joined can view the overview, rules, entry cost, and rewards only. Match details and the leaderboard are available to event participants.",
+      "visibleOverview": "Event overview",
+      "visibleRewards": "Rewards and badges",
+      "visibleRules": "Rules and how to play",
+      "unlockHint": "Use the registration panel to unlock matches and rankings."
+    },
+    "howToPlay": {
+      "title": "How to Compete",
+      "subtitle": "Follow these 5 steps to compete for rewards in this event",
+      "step1Title": "Register for the Event",
+      "step1Desc": "Pay {points} pts + {credits} credits to confirm your entry",
+      "step1FreeDesc": "This event is free to join! Just click enter and you're ready to compete",
+      "step2Title": "Predict Matches in this Event",
+      "step2Desc": "Go to the Predict page and predict scores for matches in this event. Every correct prediction adds points to your event ranking automatically.",
+      "step3Title": "Earn Points After Each Match",
+      "step3Desc": "Predictions are scored automatically after matches finish. Exact scores and correct results earn points.",
+      "step4Title": "Track Your Rank in Real-time",
+      "step4Desc": "Check your position against other competitors live in the Leaderboard tab.",
+      "step5Title": "Event Ends — Claim Rewards!",
+      "step5Desc": "When the event ends, final rankings are calculated and rewards are distributed automatically. {tiers} reward tiers up for grabs.",
+      "goPredict": "Go Predict Now"
+    },
+    "nextSteps": {
+      "title": "Next Steps",
+      "goPredict": "Predict matches to earn points",
+      "checkMatches": "View {count} matches in this event"
     }
   }
 }

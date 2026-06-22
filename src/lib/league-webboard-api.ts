@@ -133,8 +133,26 @@ export async function getLeagueThreads(
   options?: ApiRequestOptions
 ): Promise<LeagueWebboardListResult> {
   const params = new URLSearchParams();
+  const search = input.search?.trim();
+  if (search) {
+    params.set("q", search);
+    if (input.page) params.set("page", String(input.page));
+    if (input.limit) params.set("limit", String(input.limit));
+    const searchQuery = params.toString();
+    try {
+      const payload = await apiGetRaw<unknown>(
+        `/threads/search${searchQuery ? `?${searchQuery}` : ""}`,
+        options
+      );
+
+      return normalizeThreadList(payload, input.page ?? 1, input.limit ?? 20);
+    } catch {
+      params.delete("q");
+      params.set("search", search);
+    }
+  }
+
   if (input.channel) params.set("channel", input.channel);
-  if (input.search?.trim()) params.set("search", input.search.trim());
   if (input.page) params.set("page", String(input.page));
   if (input.limit) params.set("limit", String(input.limit));
   const query = params.toString();

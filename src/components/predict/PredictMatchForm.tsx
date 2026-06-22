@@ -985,7 +985,7 @@ export function PredictMatchForm({
                 </p>
                 <div className="mt-3 border-t border-gray-800/70 pt-3">
                   <p className="mb-2 text-xs font-black uppercase tracking-wider text-gray-400">
-                    {locale === "th" ? "โบนัสเพิ่มเติมจาก API" : "Additional bonuses from API"}
+                    {locale === "th" ? "โบนัสเพิ่มเติมจากระบบ" : "Additional system bonuses"}
                   </p>
                   <div className="grid gap-2 sm:grid-cols-3">
                     <TierRow

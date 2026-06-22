@@ -1,4 +1,4 @@
-import { apiGetRaw, type ApiRequestOptions } from "@/lib/api-client";
+import { apiGetRaw, apiPostRaw, type ApiRequestOptions } from "@/lib/api-client";
 import type { SpecialEvent, EventReward, EventBadge, EventMatchData, EventLeaderboardEntry } from "@/types/event";
 
 export type ApiEvent = {
@@ -18,12 +18,90 @@ export type ApiEvent = {
   rewards?: EventReward[];
   badges?: EventBadge[];
   rules?: string[];
-  matches?: EventMatchData[];
-  leaderboard?: EventLeaderboardEntry[];
+  matches?: unknown[];
+  leaderboard?: ApiEventLeaderboardPayload;
+};
+
+export type ApiEventLeaderboardPayload =
+  | ApiEventLeaderboardEntry[]
+  | {
+      entries?: ApiEventLeaderboardEntry[];
+      userEntry?: {
+        rank?: number | string | null;
+        totalPoints?: number | string | null;
+        total_points?: number | string | null;
+      } | null;
+      pagination?: {
+        page?: number | string | null;
+        limit?: number | string | null;
+        total?: number | string | null;
+        totalPages?: number | string | null;
+        total_pages?: number | string | null;
+      } | null;
+    };
+
+export type ApiEventLeaderboardEntry = EventLeaderboardEntry & {
+  avatarUrl?: string | null;
+  avatar_url?: string | null;
+  totalPoints?: number;
+  total_points?: number;
+  level?: number | null;
+  xp?: number | null;
+  member?: unknown;
+  user?: unknown;
+  profile?: unknown;
+  stats?: unknown;
+  userStats?: unknown;
+  user_stats?: unknown;
+};
+
+export type EventLeaderboardResponse = {
+  entries: EventLeaderboardEntry[];
+  userEntry: {
+    rank: number;
+    totalPoints: number;
+  } | null;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
 };
 
 export type EventsResponse = {
   data: ApiEvent[];
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+};
+
+export type EventResponse = {
+  data: ApiEvent;
+};
+
+export type RegisterEventResponse = {
+  data: {
+    eventId: string;
+    isRegistered: boolean;
+    entryFeePoints: number;
+    entryFeeCredits: number;
+    wallet?: {
+      freePoints?: number;
+      premiumCredits?: number;
+    };
+    registeredAt: string;
+  };
+};
+
+export type GetEventsParams = {
+  status?: ApiEvent["status"];
+  eventType?: ApiEvent["eventType"];
+  search?: string;
+  page?: number;
+  limit?: number;
 };
 
 type EventsApiPayload =
@@ -31,6 +109,26 @@ type EventsApiPayload =
   | EventsResponse
   | {
       events?: ApiEvent[];
+    };
+
+type EventApiPayload =
+  | ApiEvent
+  | EventResponse
+  | {
+      event?: ApiEvent;
+      entries?: ApiEventLeaderboardEntry[];
+      userEntry?: {
+        rank?: number | string | null;
+        totalPoints?: number | string | null;
+        total_points?: number | string | null;
+      } | null;
+      pagination?: {
+        page?: number | string | null;
+        limit?: number | string | null;
+        total?: number | string | null;
+        totalPages?: number | string | null;
+        total_pages?: number | string | null;
+      } | null;
     };
 
 export const DEFAULT_EVENTS_RESPONSE: EventsResponse = {
@@ -319,9 +417,31 @@ export const DEFAULT_EVENTS_RESPONSE: EventsResponse = {
   ],
 };
 
-export async function getEvents(options?: ApiRequestOptions) {
-  const response = await apiGetRaw<EventsApiPayload>("/events", options);
+export async function getEvents(
+  params: GetEventsParams = {},
+  options?: ApiRequestOptions
+) {
+  const response = await apiGetRaw<EventsApiPayload>(
+    buildEventsPath(params),
+    options
+  );
   return normalizeEventsResponse(response);
+}
+
+export async function getEvent(eventId: string, options?: ApiRequestOptions) {
+  const response = await apiGetRaw<EventApiPayload>(
+    `/events/${encodeURIComponent(eventId)}`,
+    options
+  );
+  return normalizeEventResponse(response);
+}
+
+export async function registerEvent(eventId: string, options?: ApiRequestOptions) {
+  return apiPostRaw<RegisterEventResponse>(
+    `/events/${encodeURIComponent(eventId)}/register`,
+    undefined,
+    options
+  );
 }
 
 export function normalizeEventsResponse(response: EventsApiPayload): EventsResponse {
@@ -330,10 +450,72 @@ export function normalizeEventsResponse(response: EventsApiPayload): EventsRespo
   if ("events" in response && Array.isArray(response.events)) {
     return { data: response.events };
   }
-  return DEFAULT_EVENTS_RESPONSE;
+  throw new Error("Invalid events response");
+}
+
+export function normalizeEventResponse(response: EventApiPayload): EventResponse {
+  const record = readRecord(response);
+  const dataRecord = readRecord(record?.data);
+
+  if (dataRecord && "event" in dataRecord && isApiEvent(dataRecord.event)) {
+    return {
+      data: mergeEventLeaderboard(dataRecord.event, dataRecord),
+    };
+  }
+
+  if (record && "event" in record && isApiEvent(record.event)) {
+    return {
+      data: mergeEventLeaderboard(record.event, record),
+    };
+  }
+
+  if (record && "data" in record && isApiEvent(record.data)) {
+    return {
+      data: mergeEventLeaderboard(record.data, record),
+    };
+  }
+
+  if (isApiEvent(response)) return { data: response };
+  throw new Error("Invalid event response");
+}
+
+function mergeEventLeaderboard(event: ApiEvent, source: Record<string, unknown>): ApiEvent {
+  const dataRecord = readRecord(source.data);
+  const entries =
+    readArray(source.entries) ??
+    readArray(dataRecord?.entries) ??
+    readArray(readRecord(source.leaderboard)?.entries) ??
+    readArray(readRecord(dataRecord?.leaderboard)?.entries);
+  const userEntry =
+    readRecord(source.userEntry) ??
+    readRecord(source.user_entry) ??
+    readRecord(dataRecord?.userEntry) ??
+    readRecord(dataRecord?.user_entry) ??
+    readRecord(readRecord(source.leaderboard)?.userEntry) ??
+    readRecord(readRecord(source.leaderboard)?.user_entry) ??
+    readRecord(readRecord(dataRecord?.leaderboard)?.userEntry) ??
+    readRecord(readRecord(dataRecord?.leaderboard)?.user_entry);
+  const pagination =
+    readRecord(source.pagination) ??
+    readRecord(dataRecord?.pagination) ??
+    readRecord(readRecord(source.leaderboard)?.pagination) ??
+    readRecord(readRecord(dataRecord?.leaderboard)?.pagination);
+
+  if (!entries && !userEntry && !pagination) return event;
+
+  return {
+    ...event,
+    leaderboard: {
+      entries: entries as ApiEventLeaderboardEntry[] | undefined,
+      userEntry,
+      pagination,
+    },
+  };
 }
 
 export function mapApiEvent(event: ApiEvent): SpecialEvent {
+  const leaderboard = normalizeEventLeaderboard(event.leaderboard);
+
   return {
     id: event.id,
     name: event.title,
@@ -346,8 +528,10 @@ export function mapApiEvent(event: ApiEvent): SpecialEvent {
     entryFeeCredits: Number(event.entryFeeCredits ?? 0),
     rewards: event.rewards ?? [],
     badges: event.badges ?? [],
-    matches: event.matches ?? [],
-    leaderboard: event.leaderboard ?? [],
+    matches: normalizeEventMatches(event.matches),
+    leaderboard: leaderboard.entries,
+    leaderboardUserEntry: leaderboard.userEntry,
+    leaderboardPagination: leaderboard.pagination,
     participantCount: Number(event.currentParticipants ?? 0),
     maxParticipants: event.maxParticipants,
     bannerUrl: event.bannerUrl,
@@ -357,9 +541,397 @@ export function mapApiEvent(event: ApiEvent): SpecialEvent {
   };
 }
 
+function normalizeEventLeaderboard(payload: ApiEventLeaderboardPayload | undefined) {
+  if (!payload) {
+    return {
+      entries: [],
+      userEntry: null,
+      pagination: null,
+    };
+  }
+
+  if (Array.isArray(payload)) {
+    return {
+      entries: payload.map((entry) => normalizeEventLeaderboardEntry(entry)),
+      userEntry: null,
+      pagination: null,
+    };
+  }
+
+  const userEntryRecord = readRecord(payload.userEntry);
+  const userEntry = userEntryRecord
+    ? {
+        rank: readNumber(userEntryRecord.rank) ?? 0,
+        totalPoints:
+          readNumber(userEntryRecord.totalPoints, userEntryRecord.total_points) ?? 0,
+      }
+    : null;
+  const paginationRecord = readRecord(payload.pagination);
+  const entries = (payload.entries ?? []).map((entry) =>
+    normalizeEventLeaderboardEntry(entry, userEntry)
+  );
+
+  return {
+    entries,
+    userEntry,
+    pagination: paginationRecord
+      ? {
+          page: readNumber(paginationRecord.page) ?? 1,
+          limit: readNumber(paginationRecord.limit) ?? entries.length,
+          total: readNumber(paginationRecord.total) ?? entries.length,
+          totalPages:
+            readNumber(paginationRecord.totalPages, paginationRecord.total_pages) ?? 1,
+        }
+      : null,
+  };
+}
+
+export function normalizeEventLeaderboardResponse(
+  response: unknown
+): EventLeaderboardResponse {
+  const record = readRecord(response);
+  const data = readRecord(record?.data);
+  const source = data ?? record;
+  const leaderboard = readRecord(source?.leaderboard);
+  const entries =
+    readArray(source?.entries) ??
+    readArray(leaderboard?.entries) ??
+    (Array.isArray(response) ? response : undefined);
+  const userEntry =
+    readRecord(source?.userEntry) ??
+    readRecord(source?.user_entry) ??
+    readRecord(leaderboard?.userEntry) ??
+    readRecord(leaderboard?.user_entry);
+  const pagination =
+    readRecord(source?.pagination) ?? readRecord(leaderboard?.pagination);
+
+  return normalizeEventLeaderboard({
+    entries: (entries ?? []) as ApiEventLeaderboardEntry[],
+    userEntry: userEntry
+      ? {
+          rank: readNumber(userEntry.rank) ?? 0,
+          totalPoints:
+            readNumber(userEntry.totalPoints, userEntry.total_points) ?? 0,
+        }
+      : null,
+    pagination: pagination
+      ? {
+          page: readNumber(pagination.page) ?? 1,
+          limit: readNumber(pagination.limit) ?? entries?.length ?? 0,
+          total: readNumber(pagination.total) ?? entries?.length ?? 0,
+          totalPages:
+            readNumber(pagination.totalPages, pagination.total_pages) ?? 1,
+        }
+      : null,
+  });
+}
+
+function normalizeEventLeaderboardEntry(
+  entry: ApiEventLeaderboardEntry,
+  userEntry?: { rank: number; totalPoints: number } | null
+): EventLeaderboardEntry {
+  const member = readRecord(entry.member);
+  const user = readRecord(entry.user);
+  const profile = readRecord(entry.profile);
+  const stats =
+    readRecord(entry.userStats) ??
+    readRecord(entry.user_stats) ??
+    readRecord(entry.stats) ??
+    readRecord(member?.userStats) ??
+    readRecord(member?.user_stats) ??
+    readRecord(member?.stats) ??
+    readRecord(user?.userStats) ??
+    readRecord(user?.user_stats) ??
+    readRecord(user?.stats);
+  const totalPoints =
+    readNumber(entry.totalPoints, entry.total_points, entry.points) ?? 0;
+
+  return {
+    rank: readNumber(entry.rank) ?? 0,
+    username:
+      readString(entry.username, member?.username, user?.username, profile?.username) ??
+      "Unknown",
+    avatarUrl: readString(
+      entry.avatarUrl,
+      entry.avatar_url,
+      member?.avatarUrl,
+      member?.avatar_url,
+      user?.avatarUrl,
+      user?.avatar_url,
+      profile?.avatarUrl,
+      profile?.avatar_url
+    ),
+    points: totalPoints,
+    totalPoints,
+    accuracy:
+      readNumber(entry.accuracy, stats?.accuracy, stats?.predictionAccuracy) ?? 0,
+    predictions:
+      readNumber(entry.predictions, stats?.predictions, stats?.totalPredictions) ?? 0,
+    level: readNumber(entry.level, stats?.level, member?.level, user?.level),
+    xp: readNumber(entry.xp, stats?.xp, member?.xp, user?.xp),
+    isCurrentUser:
+      entry.isCurrentUser ??
+      (userEntry
+        ? userEntry.rank === (readNumber(entry.rank) ?? 0) &&
+          userEntry.totalPoints === totalPoints
+        : undefined),
+  };
+}
+
+function normalizeEventMatches(matches: unknown[] | undefined): EventMatchData[] {
+  if (!Array.isArray(matches)) return [];
+
+  return matches.map((match, index) => {
+    const record = readRecord(match) ?? {};
+    const homeTeam = readTeamName(
+      record.homeTeam,
+      record.home_team,
+      record.home,
+      record.homeTeamName,
+      record.home_team_name
+    );
+    const awayTeam = readTeamName(
+      record.awayTeam,
+      record.away_team,
+      record.away,
+      record.awayTeamName,
+      record.away_team_name
+    );
+    const predictedScore = readScore(
+      record.predictedScore,
+      record.predicted_score,
+      record.prediction,
+      record.userPrediction,
+      record.user_prediction,
+      record.myPrediction,
+      record.my_prediction,
+      record.predictions
+    );
+    const predictionRecord =
+      readRecord(record.prediction) ??
+      readRecord(record.userPrediction) ??
+      readRecord(record.user_prediction) ??
+      readRecord(record.myPrediction) ??
+      readRecord(record.my_prediction) ??
+      readFirstRecord(record.predictions);
+    const predictionStatus = readString(
+      record.predictionStatus,
+      record.prediction_status,
+      predictionRecord?.status
+    );
+    const isPredicted =
+      readBoolean(
+        record.isPredicted,
+        record.is_predicted,
+        record.hasPrediction,
+        record.has_prediction,
+        record.predicted,
+        record.is_predicted_by_user,
+        record.has_user_prediction,
+        predictionRecord?.isPredicted,
+        predictionRecord?.is_predicted
+      ) ??
+      Boolean(predictedScore || predictionRecord || predictionStatus === "predicted");
+
+    return {
+      id:
+        readString(record.id, record.matchId, record.match_id, record.fixtureId, record.fixture_id) ??
+        `event-match-${index + 1}`,
+      homeTeam: homeTeam ?? "-",
+      awayTeam: awayTeam ?? "-",
+      homeLogo: readTeamLogo(record.homeTeam, record.home_team, record.home),
+      awayLogo: readTeamLogo(record.awayTeam, record.away_team, record.away),
+      date:
+        readString(
+          record.date,
+          record.matchDate,
+          record.match_date,
+          record.kickoffAt,
+          record.kickoff_at,
+          record.startAt,
+          record.start_at
+        ) ?? "",
+      status: normalizeEventMatchStatus(
+        readString(record.status, predictionStatus),
+        isPredicted
+      ),
+      predictedScore,
+      actualScore: readScore(record.actualScore, record.actual_score, record.score),
+      isPredicted,
+    };
+  });
+}
+
+function readTeamName(...values: unknown[]) {
+  for (const value of values) {
+    const text = readString(value);
+    if (text) return text;
+
+    const record = readRecord(value);
+    const name = readString(
+      record?.name,
+      record?.displayName,
+      record?.display_name,
+      record?.shortName,
+      record?.short_name
+    );
+    if (name) return name;
+  }
+
+  return null;
+}
+
+function readTeamLogo(...values: unknown[]) {
+  for (const value of values) {
+    const record = readRecord(value);
+    const logo = readString(
+      record?.logo,
+      record?.logoUrl,
+      record?.logo_url,
+      record?.image,
+      record?.imageUrl,
+      record?.image_url
+    );
+    if (logo) return logo;
+  }
+
+  return null;
+}
+
+function readScore(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    const text = readString(value);
+    if (text) return text;
+
+    const firstRecord = readFirstRecord(value);
+    if (firstRecord) {
+      const firstScore = readScore(firstRecord);
+      if (firstScore) return firstScore;
+    }
+
+    const record = readRecord(value);
+    const home = readNumber(
+      record?.home,
+      record?.homeScore,
+      record?.home_score,
+      record?.homeTeamScore,
+      record?.home_team_score,
+      record?.predictedHomeScore,
+      record?.predicted_home_score
+    );
+    const away = readNumber(
+      record?.away,
+      record?.awayScore,
+      record?.away_score,
+      record?.awayTeamScore,
+      record?.away_team_score,
+      record?.predictedAwayScore,
+      record?.predicted_away_score
+    );
+    if (home !== null && away !== null) return `${home}-${away}`;
+  }
+
+  return undefined;
+}
+
+function readFirstRecord(value: unknown) {
+  if (!Array.isArray(value)) return undefined;
+  return value.map(readRecord).find(Boolean);
+}
+
+function normalizeEventMatchStatus(
+  status: string | null,
+  isPredicted = false
+): EventMatchData["status"] {
+  const normalizedStatus = status?.trim().toLowerCase() ?? "";
+  const liveStatuses = new Set(["live", "1h", "2h", "ht", "et", "bt", "p", "pen"]);
+  const finishedStatuses = new Set([
+    "finished",
+    "ended",
+    "ft",
+    "aet",
+    "awarded",
+    "cancelled",
+    "canceled",
+    "postponed",
+    "suspended",
+    "abandoned",
+  ]);
+
+  if (liveStatuses.has(normalizedStatus)) return "live";
+  if (finishedStatuses.has(normalizedStatus)) return "finished";
+  if (normalizedStatus === "predicted") return "predicted";
+  if (isPredicted) return "predicted";
+  return "upcoming";
+}
+
+function readBoolean(...values: unknown[]): boolean | null {
+  for (const value of values) {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "number" && Number.isFinite(value)) return value !== 0;
+    if (typeof value === "string" && value.trim()) {
+      const normalized = value.trim().toLowerCase();
+      if (["true", "1", "yes"].includes(normalized)) return true;
+      if (["false", "0", "no"].includes(normalized)) return false;
+    }
+  }
+  return null;
+}
+
+function readRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function readArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value) ? value : undefined;
+}
+
+function readString(...values: unknown[]): string | null {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return null;
+}
+
+function readNumber(...values: unknown[]): number | null {
+  for (const value of values) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
 function mapEventType(eventType: ApiEvent["eventType"]): SpecialEvent["tournamentType"] {
-  if (eventType === "tournament") return "custom";
-  if (eventType === "season") return "custom";
-  if (eventType === "single-match") return "custom";
+  if (eventType === "tournament") return "tournament";
+  if (eventType === "season") return "season";
+  if (eventType === "single-match") return "single-match";
   return "custom";
+}
+
+function isApiEvent(value: unknown): value is ApiEvent {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "title" in value
+  );
+}
+
+function buildEventsPath(params: GetEventsParams) {
+  const searchParams = new URLSearchParams();
+
+  if (params.status) searchParams.set("status", params.status);
+  if (params.eventType) searchParams.set("eventType", params.eventType);
+  if (params.search?.trim()) searchParams.set("search", params.search.trim());
+  if (params.page) searchParams.set("page", String(params.page));
+  if (params.limit) searchParams.set("limit", String(params.limit));
+
+  const query = searchParams.toString();
+  return query ? `/events?${query}` : "/events";
 }

@@ -7,9 +7,11 @@ import { Card } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 import {
   Calendar,
+  CheckCircle2,
   ChevronRight,
   Clock,
   Globe,
+  Radio,
   Star,
   Trophy,
   Users,
@@ -21,6 +23,9 @@ const TOURNAMENT_ICONS: Record<string, React.ReactNode> = {
   ucl: <Star size={16} className="text-cyan-400" />,
   afc: <Globe size={16} className="text-emerald-400" />,
   custom: <Calendar size={16} className="text-violet-400" />,
+  tournament: <Trophy size={16} className="text-amber-400" />,
+  'single-match': <Radio size={16} className="text-cyan-400" />,
+  season: <Calendar size={16} className="text-violet-400" />,
 };
 
 const STATUS_BADGE: Record<string, string> = {
@@ -128,8 +133,16 @@ export function EventCard({ event }: { event: SpecialEvent }) {
           <span className={cn('text-sm font-black', isFree ? 'text-green-400' : 'text-amber-400')}>
             {formatEntryFee(event, t)}
           </span>
-          <span className="inline-flex min-h-9 items-center gap-1 rounded-xl bg-cyan-500 px-3 text-xs font-black text-black transition-colors group-hover:bg-cyan-400">
-            {isRegistered ? t('registeredStatus') : isActive ? t('viewEvent') : t('details')}
+          <span
+            className={cn(
+              'inline-flex min-h-9 items-center gap-1 rounded-xl px-3 text-xs font-black transition-colors',
+              isRegistered
+                ? 'border border-green-400/30 bg-green-400/10 text-green-200 group-hover:border-green-300/50 group-hover:bg-green-400/15'
+                : 'bg-cyan-500 text-black group-hover:bg-cyan-400'
+            )}
+          >
+            {isRegistered && <CheckCircle2 size={14} />}
+            {isRegistered ? t('viewEvent') : isActive ? t('viewEvent') : t('details')}
             <ChevronRight size={14} />
           </span>
         </div>

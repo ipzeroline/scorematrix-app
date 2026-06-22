@@ -1013,16 +1013,11 @@ function LeagueWebboardMockup({
     threads.find((thread) => thread.id === activeThreadId) ??
     null;
   const filteredThreads = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
+    if (searchQuery.trim()) return threads;
 
     return threads.filter((thread) => {
       const matchesChannel = thread.channel === activeChannel || thread.pinned;
-      if (!matchesChannel) return false;
-      if (!query) return true;
-
-      return [thread.author, thread.title, thread.body, ...thread.tags].some(
-        (value) => value.toLowerCase().includes(query)
-      );
+      return matchesChannel;
     });
   }, [activeChannel, searchQuery, threads]);
   const pinnedCount = threads.filter((thread) => thread.pinned).length;
@@ -1090,7 +1085,10 @@ function LeagueWebboardMockup({
           setWebboardAccessDenied(true);
           return;
         }
-        console.error("Error loading league webboard:", error);
+        console.warn(
+          "Error loading league webboard:",
+          error instanceof ApiClientError ? error.message : "request failed"
+        );
         setThreads(seedThreads);
         setChannelCounts({
           general: seedThreads.filter((thread) => thread.channel === "general").length,

@@ -8,7 +8,9 @@ import { EventHowToPlay } from "@/components/shared/EventHowToPlay";
 import { EventLeaderboard } from "@/components/shared/EventLeaderboard";
 import { EventMatches } from "@/components/shared/EventMatches";
 import { RewardsTable } from "@/components/shared/RewardsTable";
-import { DEFAULT_EVENTS_RESPONSE, getEvents, mapApiEvent } from "@/lib/events-api";
+import { mapApiEvent } from "@/lib/events-api";
+import { getVisibleEventMatches } from "@/lib/event-match-visibility";
+import { getEventServer, ServerEventApiError } from "@/lib/events-api-server";
 import { THAILAND_TIME_ZONE_LABEL, formatDateTime } from "@/lib/utils";
 import { EventDetailClient } from "./EventDetailClient";
 import { EventDetailTabs } from "./EventDetailTabs";
@@ -20,11 +22,35 @@ type Props = {
 export default async function EventDetailPage({ params }: Props) {
   const { locale, eventId } = await params;
   const t = await getTranslations({ locale, namespace: "events" });
-  const response = await getEvents({ locale }).catch(() => DEFAULT_EVENTS_RESPONSE);
-  const event = response.data.map(mapApiEvent).find((item) => item.id === eventId);
+  const eventResult = await getEventServer(eventId, { locale })
+    .then((response) => ({
+      event: mapApiEvent(response.data),
+      error: null as string | null,
+    }))
+    .catch((error) => {
+      if (error instanceof ServerEventApiError && error.status === 404) {
+        notFound();
+      }
+
+      return {
+        event: null,
+        error: error instanceof Error ? error.message : t("loadFailed"),
+      };
+    });
+  const { event } = eventResult;
 
   if (!event) {
-    notFound();
+    return (
+      <div className="mx-auto max-w-3xl pb-8">
+        <Card className="border-red-400/15 bg-[#0b111d] p-10 text-center">
+          <CalendarDays size={36} className="mx-auto mb-3 text-red-300/70" />
+          <h1 className="text-xl font-black text-white">{t("loadFailed")}</h1>
+          <p className="mt-2 text-sm leading-6 text-gray-400">
+            {eventResult.error}
+          </p>
+        </Card>
+      </div>
+    );
   }
 
   const descriptionBlocks = event.description
@@ -32,6 +58,15 @@ export default async function EventDetailPage({ params }: Props) {
     .map((block) => block.trim())
     .filter(Boolean);
   const hasEntryCost = (event.entryFeePoints ?? 0) > 0 || (event.entryFeeCredits ?? 0) > 0;
+  const currentUserLeaderboardEntry = event.leaderboard?.find((entry) => entry.isCurrentUser);
+  const currentUserRank =
+    event.leaderboardUserEntry?.rank ?? currentUserLeaderboardEntry?.rank;
+  const currentUserPoints =
+    event.leaderboardUserEntry?.totalPoints ??
+    (currentUserLeaderboardEntry
+      ? currentUserLeaderboardEntry.totalPoints ?? currentUserLeaderboardEntry.points
+      : undefined);
+  const visibleMatches = getVisibleEventMatches(event.matches ?? []);
 
   // ─── Overview tab content (existing detail content) ───
   const overviewContent = (
@@ -223,19 +258,18 @@ export default async function EventDetailPage({ params }: Props) {
         <div className="min-w-0">
           <EventDetailTabs
             event={event}
+            matchCount={visibleMatches.length}
             overviewContent={overviewContent}
             howToPlayContent={<EventHowToPlay event={event} />}
             matchesContent={<EventMatches matches={event.matches ?? []} />}
             leaderboardContent={
               <EventLeaderboard
+                eventId={event.id}
                 entries={event.leaderboard ?? []}
-                currentUserRank={
-                  event.leaderboard?.find((e) => e.isCurrentUser)?.rank
-                }
-                currentUserPoints={
-                  event.leaderboard?.find((e) => e.isCurrentUser)?.points
-                }
+                currentUserRank={currentUserRank}
+                currentUserPoints={currentUserPoints}
                 totalParticipants={event.participantCount}
+                pagination={event.leaderboardPagination}
               />
             }
           />
