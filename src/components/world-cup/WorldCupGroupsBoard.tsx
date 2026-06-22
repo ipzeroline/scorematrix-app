@@ -62,7 +62,10 @@ export function WorldCupGroupsBoard({ groups, copy, locale }: Props) {
 
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <section className="overflow-hidden rounded-xl border border-gray-800 bg-[#0a0d13] lg:col-start-1">
+      <section
+        id={`group-${selectedGroup.id.toLowerCase()}`}
+        className="overflow-hidden rounded-xl border border-gray-800 bg-[#0a0d13] lg:col-start-1"
+      >
         <div className="border-b border-gray-800 bg-white/[0.02] p-3 md:p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>

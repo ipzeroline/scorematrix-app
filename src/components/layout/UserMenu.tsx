@@ -68,7 +68,7 @@ export function UserMenu({
       });
     } finally {
       logoutUser();
-      router.push(`/${locale}`);
+      router.push(`/${locale}/auth/login`);
       router.refresh();
     }
   };

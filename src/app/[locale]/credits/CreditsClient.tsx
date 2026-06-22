@@ -26,7 +26,6 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CREDIT_PACKAGES } from "@/data/credit-packages";
 import {
-  DEFAULT_CREDIT_PACKAGES_RESPONSE,
   getCreditPackages,
   type CreditPackageApiItem,
 } from "@/lib/credits-api";
@@ -123,20 +122,12 @@ export default function CreditsPage() {
       addCredits: s.addCredits,
     }))
   );
-  const [packages, setPackages] = useState<CreditPackage[]>(
-    DEFAULT_CREDIT_PACKAGES_RESPONSE.packages.map(mapApiPackage)
-  );
+  const [packages, setPackages] = useState<CreditPackage[]>([]);
   const [firstPurchaseBonus, setFirstPurchaseBonus] =
-    useState<FirstPurchaseBonus | null>(
-      DEFAULT_CREDIT_PACKAGES_RESPONSE.firstPurchaseBonus ?? null
-    );
-  const [selected, setSelected] = useState(
-    DEFAULT_CREDIT_PACKAGES_RESPONSE.packages.find((pkg) => pkg.isFeatured)
-      ?.id ??
-      DEFAULT_CREDIT_PACKAGES_RESPONSE.packages[0]?.id ??
-      ""
-  );
-  const [loadingPackages, setLoadingPackages] = useState(false);
+    useState<FirstPurchaseBonus | null>(null);
+  const [selected, setSelected] = useState("");
+  const [loadingPackages, setLoadingPackages] = useState(true);
+  const [packagesError, setPackagesError] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -157,6 +148,7 @@ export default function CreditsPage() {
       .then((response) => {
         if (!active) return;
         const apiPackages = response.packages.map(mapApiPackage);
+        setPackagesError(apiPackages.length === 0);
         setPackages(apiPackages);
         setFirstPurchaseBonus(response.firstPurchaseBonus ?? null);
         setSelected((current) => {
@@ -166,16 +158,10 @@ export default function CreditsPage() {
       })
       .catch(() => {
         if (!active) return;
-        const apiPackages =
-          DEFAULT_CREDIT_PACKAGES_RESPONSE.packages.map(mapApiPackage);
-        setPackages(apiPackages);
-        setFirstPurchaseBonus(
-          DEFAULT_CREDIT_PACKAGES_RESPONSE.firstPurchaseBonus ?? null
-        );
-        setSelected((current) => {
-          if (apiPackages.some((pkg) => pkg.id === current)) return current;
-          return apiPackages.find((pkg) => pkg.popular)?.id ?? apiPackages[0]?.id ?? "";
-        });
+        setPackages([]);
+        setFirstPurchaseBonus(null);
+        setSelected("");
+        setPackagesError(true);
       })
       .finally(() => {
         if (active) setLoadingPackages(false);
@@ -395,6 +381,11 @@ export default function CreditsPage() {
             />
           ))}
       </div>
+      {!loadingPackages && packagesError && (
+        <Card className="border-red-400/20 bg-red-500/[0.06] p-5">
+          <p className="text-sm font-bold text-red-200">{t("loadError")}</p>
+        </Card>
+      )}
       </section>
 
       {pkg && (

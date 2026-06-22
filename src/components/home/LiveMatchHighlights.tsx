@@ -6,7 +6,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { Activity, ChevronRight, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { MatchStatus } from "@/types";
@@ -95,18 +94,17 @@ export function LiveMatchHighlights({
   return (
     <div className="flex flex-col gap-3">
       {/* Title row */}
-      <div className="cyber-live-header relative overflow-hidden rounded-lg border border-lime-300/20 bg-[#07100e] px-3 py-2.5 shadow-[0_12px_34px_rgba(0,0,0,0.26)]">
+      <div className="cyber-live-header relative overflow-hidden rounded-xl border border-white/[0.08] bg-[#0a0d14]/95 px-3 py-2 shadow-[0_10px_26px_rgba(0,0,0,0.22)]">
         <div className="absolute inset-0 cyber-live-header-scan" />
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-lime-300 via-cyan-300 to-amber-300" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-lime-300/70 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-lime-300 via-cyan-300 to-amber-300" />
         <div className="relative flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-lime-300/30 bg-lime-300/10 text-lime-200">
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_16px_rgba(190,242,100,0.95)] animate-ping" />
-              <Activity size={17} strokeWidth={2.4} aria-hidden="true" />
+            <span className="relative grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/[0.08] text-lime-200">
+              <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-lime-300 shadow-[0_0_12px_rgba(190,242,100,0.9)] animate-ping" />
+              <Activity size={15} strokeWidth={2.4} aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <h2 className="truncate bg-gradient-to-r from-lime-200 via-cyan-100 to-white bg-clip-text text-base font-black leading-tight text-transparent drop-shadow-[0_0_12px_rgba(190,242,100,0.22)] md:text-lg">
+              <h2 className="truncate text-sm font-black leading-tight text-lime-100 md:text-base">
                 {t("dashboard.liveNow")}
               </h2>
               <p className="truncate text-[11px] font-semibold text-lime-100/70">
@@ -116,7 +114,7 @@ export function LiveMatchHighlights({
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <span className="whitespace-nowrap rounded-md border border-lime-300/30 bg-lime-300/10 px-2 py-1 text-[11px] font-black text-lime-200 shadow-[0_0_14px_rgba(16,185,129,0.12)]">
+            <span className="whitespace-nowrap rounded-md border border-lime-300/25 bg-lime-300/[0.08] px-2 py-1 text-[11px] font-black text-lime-100">
               {t("dashboard.matchCount", { count: displayMatches.length })}
             </span>
             <Button
@@ -151,121 +149,97 @@ export function LiveMatchHighlights({
           {t("livescore.noMatches")}
         </Card>
       ) : displayMatches.length > 0 ? (
-        <div className="overflow-hidden rounded-xl border border-lime-300/20 bg-[#070b12] shadow-[0_18px_44px_rgba(0,0,0,0.34)]">
-          <div className="hidden grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-lime-300/10 bg-[#0a101a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white md:grid">
-            <span className="pl-1">{labels.dateTime}</span>
-            <span className="pr-3 text-right">{labels.home}</span>
-            <span className="text-center">{labels.vs}</span>
-            <span className="pl-3 text-left">{labels.away}</span>
-            <span className="pr-4 text-right">{labels.detail}</span>
-          </div>
-
+        <div className="space-y-2">
           {leagueGroups.map((group) => (
-            <div key={group.name} className="border-b border-lime-300/10 last:border-b-0">
-              <div className="relative overflow-hidden border-b border-lime-300/10 bg-[linear-gradient(90deg,rgba(18,44,31,0.78),rgba(10,17,28,0.94)_62%,rgba(70,51,13,0.36))] px-3 py-2.5 sm:px-5 sm:py-3">
-                <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-lime-300 via-cyan-300 to-amber-300" />
-                <div className="flex items-center justify-between gap-3 sm:gap-4">
-                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-lime-300/20 bg-lime-300/[0.04] shadow-[0_0_20px_rgba(190,242,100,0.08)] sm:h-10 sm:w-10">
-                      <ApiLeagueLogo name={group.name} logo={group.logo} size="sm" />
-                    </span>
-                    <div className="min-w-0">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <h3 className="truncate text-[13px] font-black uppercase tracking-[0.06em] text-white sm:text-sm md:text-[15px]">
-                          {group.name}
-                        </h3>
-                      </div>
-                      <div className="mt-1 h-px w-24 max-w-full rounded-full bg-gradient-to-r from-lime-300 via-cyan-300 to-transparent sm:mt-1.5 sm:w-28" />
-                    </div>
-                  </div>
-                  <span className="shrink-0 rounded-lg border border-lime-300/20 bg-[#0b1624]/80 px-2 py-1 text-[11px] font-black text-lime-100 sm:px-2.5 sm:py-1.5 sm:text-xs">
-                    {group.matches.length} {labels.matches}
+            <div key={group.name} className="space-y-2">
+              <div className="flex items-center justify-between gap-3 px-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <ApiLeagueLogo name={group.name} logo={group.logo} size="xs" />
+                  <span className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-lime-100/80">
+                    {group.name}
                   </span>
                 </div>
+                <span className="shrink-0 rounded-md border border-lime-300/20 bg-lime-300/[0.06] px-2 py-1 text-[10px] font-black text-lime-100/80">
+                  {group.matches.length} {labels.matches}
+                </span>
               </div>
 
-              {group.matches.map((match) => (
-                <Link
-                  key={match.id}
-                  href={`/${locale}/livescore/match/${match.id}`}
-                  className="group block border-b border-white/[0.06] bg-[#07090d] transition-colors duration-150 last:border-b-0 hover:bg-[#101a18]"
-                >
-                  <div className="hidden min-w-0 grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 md:grid">
-                    <div className="flex min-w-0 flex-col items-start justify-center gap-1 md:pl-1">
-                      <span className="whitespace-nowrap text-[10px] font-bold leading-none text-slate-500">
-                        {match.kickoffDate}
-                      </span>
-                      <span className="inline-flex items-center gap-1.5 font-mono text-xs font-black tracking-wider text-lime-300">
-                        <span className="relative flex h-2 w-2 shrink-0">
-                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
-                          <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400" />
-                        </span>
-                        {match.minute}&apos;
-                      </span>
-                      <StatusBadge
-                        status={match.status}
-                        className="w-fit shrink-0 border border-green-500/20 bg-green-500/15 text-[8px] text-green-300"
-                      />
-                    </div>
-
-                    <LiveTeamCell name={match.homeTeam} logo={match.homeCrest} align="right" />
-
-                    <div className="text-center">
-                      <span className="inline-flex min-w-[58px] items-center justify-center rounded-lg border border-lime-300/30 bg-lime-300/10 px-2.5 py-1.5 font-mono text-xs font-black tracking-wider text-lime-100 shadow-[0_0_18px_rgba(190,242,100,0.08)]">
-                        {match.homeScore} - {match.awayScore}
-                      </span>
-                      <span className="mt-1 hidden text-[10px] font-bold uppercase tracking-wider text-slate-500 md:block">
-                        LIVE
-                      </span>
-                    </div>
-
-                    <LiveTeamCell name={match.awayTeam} logo={match.awayCrest} align="left" className="hidden md:flex" />
-
-                    <div className="flex justify-end">
-                      <span className="grid h-8 w-8 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100 transition-colors group-hover:border-lime-200/50 group-hover:bg-lime-300/15">
-                        <ChevronRight size={14} />
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="border-l-2 border-l-lime-500/35 px-3 py-2.5 md:hidden">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="mb-1 truncate text-xs font-bold leading-none text-slate-500">
-                          {match.kickoffDate}
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-sm font-black leading-none text-lime-300">
-                          <span className="relative flex h-2 w-2 shrink-0">
+              <div className="overflow-hidden rounded-xl border border-lime-300/20 bg-[#070b12] shadow-[0_16px_38px_rgba(0,0,0,0.3)]">
+                {group.matches.map((match) => (
+                  <Link
+                    key={match.id}
+                    href={`/${locale}/livescore/match/${match.id}`}
+                    className="group block border-b border-white/[0.06] bg-[linear-gradient(90deg,rgba(18,44,31,0.72),rgba(7,11,18,0.98)_48%,rgba(9,12,18,0.98))] transition-colors duration-150 last:border-b-0 hover:bg-[#101a18]"
+                  >
+                    <div className="hidden min-w-0 grid-cols-[104px_minmax(220px,1fr)_104px_minmax(220px,1fr)_44px] items-center gap-3 px-4 py-3 md:grid">
+                      <div className="flex min-w-0 flex-col items-start justify-center gap-1">
+                        <span className="inline-flex items-center gap-1.5 whitespace-nowrap font-mono text-sm font-black leading-none tracking-wider text-lime-300">
+                          <span className="relative flex h-2.5 w-2.5 shrink-0">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-lime-400" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-lime-400" />
                           </span>
                           {match.minute}&apos;
-                        </div>
-                        <div className="mt-1 truncate text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                          LIVE
-                        </div>
-                      </div>
-                      <StatusBadge
-                        status={match.status}
-                        className="shrink-0 border border-green-500/20 bg-green-500/15 text-[9px] text-green-300"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-[minmax(0,1fr)_48px_minmax(0,1fr)_30px] items-center gap-2">
-                      <LiveMobileTeamCell name={match.homeTeam} logo={match.homeCrest} />
-                      <div className="flex justify-center">
-                        <span className="grid min-h-8 min-w-10 place-items-center rounded-lg border border-lime-300/30 bg-lime-300/10 px-1.5 font-mono text-[11px] font-black text-lime-100">
-                          {match.homeScore}-{match.awayScore}
+                        </span>
+                        <span className="rounded-full border border-rose-300/30 bg-rose-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-200">
+                          Live
+                        </span>
+                        <span className="whitespace-nowrap text-[10px] font-bold leading-none text-slate-500">
+                          {match.kickoffDate}
                         </span>
                       </div>
-                      <LiveMobileTeamCell name={match.awayTeam} logo={match.awayCrest} />
-                      <span className="grid h-8 w-8 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100">
-                        <ChevronRight size={13} />
-                      </span>
+
+                      <LiveTeamCell name={match.homeTeam} logo={match.homeCrest} align="right" />
+
+                      <div className="text-center">
+                        <span className="inline-flex min-w-[72px] items-center justify-center rounded-xl border border-lime-300/35 bg-lime-300/10 px-3 py-2 font-mono text-base font-black tracking-wider text-lime-50 shadow-[0_0_18px_rgba(190,242,100,0.08)]">
+                          {match.homeScore} - {match.awayScore}
+                        </span>
+                      </div>
+
+                      <LiveTeamCell name={match.awayTeam} logo={match.awayCrest} align="left" />
+
+                      <div className="flex justify-end">
+                        <span className="grid h-9 w-9 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100 transition-colors group-hover:border-lime-200/50 group-hover:bg-lime-300/15">
+                          <ChevronRight size={15} />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+
+                    <div className="border-l-2 border-l-lime-400/55 px-3 py-3 md:hidden">
+                      <div className="mb-2 flex items-center justify-between gap-3">
+                        <div className="inline-flex items-center gap-2">
+                          <span className="relative flex h-2.5 w-2.5 shrink-0">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-lime-300 opacity-75" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-lime-400" />
+                          </span>
+                          <span className="font-mono text-sm font-black leading-none text-lime-300">
+                            {match.minute}&apos;
+                          </span>
+                          <span className="rounded-full border border-rose-300/30 bg-rose-300/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-rose-200">
+                            Live
+                          </span>
+                        </div>
+                        <span className="truncate text-[10px] font-bold leading-none text-slate-500">
+                          {match.kickoffDate}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-[minmax(0,1fr)_62px_minmax(0,1fr)_30px] items-center gap-2">
+                        <LiveMobileTeamCell name={match.homeTeam} logo={match.homeCrest} />
+                        <div className="flex justify-center">
+                          <span className="grid min-h-9 min-w-[56px] place-items-center rounded-xl border border-lime-300/30 bg-lime-300/10 px-2 font-mono text-sm font-black text-lime-50">
+                            {match.homeScore}-{match.awayScore}
+                          </span>
+                        </div>
+                        <LiveMobileTeamCell name={match.awayTeam} logo={match.awayCrest} />
+                        <span className="grid h-8 w-8 place-items-center rounded-lg border border-lime-300/25 bg-lime-300/10 text-lime-100">
+                          <ChevronRight size={13} />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           ))}
         </div>
@@ -358,23 +332,11 @@ function LiveMobileTeamCell({ name, logo }: { name: string; logo: string }) {
 function getBoardLabels(locale: string) {
   if (locale === "th") {
     return {
-      time: "เวลา",
-      dateTime: "วัน / เวลา",
-      home: "เจ้าบ้าน",
-      vs: "VS",
-      away: "ทีมเยือน",
-      detail: "รายละเอียด",
       matches: "คู่",
     };
   }
 
   return {
-    time: "Time",
-    dateTime: "Date / Time",
-    home: "Home",
-    vs: "VS",
-    away: "Away",
-    detail: "Details",
     matches: "matches",
   };
 }

@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start  -p 7777",
-    "lint": "eslint"
+    "lint": "eslint",
+    "mcp:index": "sh scripts/mcp-index.sh",
+    "mcp:status": "sh scripts/mcp-status.sh"
   },
   "dependencies": {
     "date-fns": "^4.1.0",

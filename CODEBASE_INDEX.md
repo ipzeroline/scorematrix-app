@@ -1,6 +1,6 @@
 # ScoreMatrix Codebase Index
 
-Last indexed: 2026-05-24
+Last indexed: 2026-06-22
 
 ## Purpose
 
@@ -18,9 +18,19 @@ Use this file as the first reference before opening many source files.
 - Client state: Zustand stores in `src/stores`
 - Charts/icons: `recharts`, `lucide-react`
 - Package manager files: `package-lock.json` present, use npm unless user says otherwise
-- Scripts: `npm run dev`, `npm run build`, `npm run start` (`next start -p 7777`), `npm run lint`
+- Scripts: `npm run dev`, `npm run build`, `npm run start` (`next start -p 7777`), `npm run lint`, `npm run mcp:index`, `npm run mcp:status`
 
 Note: AGENTS.md asks to read `node_modules/next/dist/docs/` before writing Next.js code. `node_modules` is installed in this workspace.
+
+## Codebase Memory MCP
+
+- Project name: `Users-zeroline-Documents-scorematrix-app`
+- Persistent artifact: `.codebase-memory/graph.db.zst`
+- Current indexed graph: 12224 nodes, 18563 edges
+- Run `npm run mcp:index` after broad code changes or when the graph looks stale.
+- Run `npm run mcp:status` to confirm indexed projects from the CLI.
+- The MCP database lives in `~/.cache/codebase-memory-mcp`; Codex sandboxed commands may show `nodes: 0` or fail at `dump` unless the command is allowed to run outside the sandbox.
+- If Codex MCP tools return `Transport closed` while the CLI status is ready, restart the Codex session from this repo so the MCP bridge reconnects to the indexed artifact.
 
 ## Routing
 
@@ -43,8 +53,8 @@ Locale shell:
 Main pages:
 
 - `src/app/[locale]/page.tsx` dashboard/home
-- Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `credits`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
-- Protected member routes live under `src/app/[locale]/(member)/*` and include `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`, and `wallet/credit-history`
+- Public routes include `livescore`, `matches`, `predict`, `ai-insight`, `news`, `world-cup-2026`, plus auth pages under `src/app/[locale]/(public)/auth/*`
+- Protected member routes include `credits`, `leaderboard`, `missions`, `events`, `rewards`, `stats`, `affiliate`, `leagues`, `notifications`, `profile`, `settings`, `wallet`, and `wallet/credit-history`
 - Detail routes include `predict/[matchId]` for legacy redirects, `predict/[matchId]/[homeTeamId]/[awayTeamId]` as the canonical predict URL, `ai-insight/[matchId]`, `news/[slug]`, `events/[eventId]`, `rewards/[rewardId]`, `livescore/[matchId]`, `livescore/match/[providerId]`, `matches/detail/[id]`, `match/[providerId]`
 - `src/app/[locale]/(member)/leagues/[id]/page.tsx` renders private-league details and standings from `GET /leagues/{id}` without exposing backend league, owner, or member IDs. League owners additionally see `totalFeesReceived` from the detail payload as an owner-only total entry-fee metric and an owner-only recent `history` preview with a responsive searchable modal for joins and entry-fee activity. The league detail client includes an esport-style league webboard backed by scorm `GET/POST /leagues/{leagueId}/threads`, thread detail/replies, and reaction endpoints, with mock threads only as a frontend fallback when the webboard API fails.
 - `src/app/[locale]/(member)/leagues/page.tsx` renders joined and available private leagues from `GET /leagues`; owner cards show `totalFeesReceived` only for leagues where `isOwner` is true, using the list payload when present and fetching detail as fallback when missing.
@@ -125,7 +135,8 @@ Static data:
 - Login SEO copy, metadata text, keywords, and FAQ entries live in `src/data/login-seo-content.ts` and are used by `src/app/[locale]/(public)/auth/login/page.tsx` for localized metadata, visible FAQ content, LoginAction JSON-LD, and sitemap inclusion.
 - Team contact SEO/support copy lives in `src/data/team-contact-content.ts`; `src/app/[locale]/legal/contact/page.tsx` uses it for localized metadata, official support email `helloscorematrix@gmail.com`, visible FAQ content, ContactPage/Organization JSON-LD, and support-channel content.
 - World Cup data: `src/data/world-cup-2026.ts`
-- `src/app/[locale]/world-cup-2026/page.tsx` builds live World Cup groups from league detail data, preserves provider team IDs for links to localized team profiles, assigns collision-free team codes, and filters duplicate or invalid self-match fixtures before rendering. When the soccer Backend fails or returns no standings, the page falls back to `src/data/world-cup-2026.ts` so the group board remains available.
+- World Cup SEO content: `src/data/world-cup-2026-seo-content.ts`
+- `src/app/[locale]/world-cup-2026/page.tsx` builds live World Cup groups from league detail data, preserves provider team IDs for links to localized team profiles, assigns collision-free team codes, filters duplicate or invalid self-match fixtures before rendering, and emits localized SEO metadata plus WebPage/SportsEvent/FAQ/Breadcrumb JSON-LD. When the soccer Backend fails or returns no standings, the page falls back to `src/data/world-cup-2026.ts` so the group board remains available.
 - `src/components/home/WorldFootballFeature.tsx` displays live World Cup standings and matches of the day on the home page, with data server-fetched and passed down from `src/app/[locale]/page.tsx`.
 
 
@@ -195,7 +206,7 @@ Local Backend modules:
 - `src/lib/backend-api-urls.ts`: server-only URL builder for the two backend env variables; strips duplicate leading/trailing namespace segments before producing URLs with exactly one `/soccer` or `/scorm`.
 - `src/lib/api-client.ts`: shared `apiGet`, `apiPost`, `apiPatch`, raw/form helpers, access-token cookie helpers, locale headers, and expired-token refresh-and-retry through same-origin `POST /api/auth/refresh`. General data requests use same-origin `/api/data/**`, which proxies to `DATA_BASE_URL setting`. Auth token cookie name is `scorematrix-auth-token` and its persistent cookie cap matches the 15-minute access-token lifetime; the browser-readable `scorematrix-refresh-session` cookie is only a non-secret remember-me marker. Generic 401, token-expired, and missing-token payloads receive one refresh/retry attempt, allowing legacy refresh cookies to migrate to HttpOnly on their next rotation. If refresh fails, it clears client auth state, asks the auth BFF to clear the HttpOnly refresh cookie, and dispatches a client session-expired event. Non-JSON error responses are converted into structured `invalid_backend_response` failures with a truncated response-body detail; successful non-JSON responses still throw as invalid backend responses.
 - `src/lib/auth-session-server.ts`: server-only auth BFF helpers for scorm backend requests, same-origin mutation checks, token extraction/redaction, and rotating `scorematrix-auth-token` plus `scorematrix-refresh-token` HttpOnly/Secure/SameSite=Strict cookie management. Access cookies are capped at 15 minutes and refresh cookies at one hour.
-- `src/lib/auth-guard.ts`: shared auth route guard. Protected routes include leaderboard, missions, events, rewards, stats, affiliate, leagues, profile, wallet, settings, and notifications.
+- `src/lib/auth-guard.ts`: shared auth route guard. Protected routes include credits, leaderboard, missions, events, rewards, stats, affiliate, leagues, profile, wallet, settings, and notifications.
 - `src/lib/auth-api.ts`: typed wrappers for auth/member endpoints from the Backend reference. `GET/PATCH /users/me` responses are normalized from production snake_case stats/preferences into the camelCase fields used by the UI.
 - `src/lib/checkins-api.ts`: typed wrapper for `GET /checkins/rewards` and `POST /checkins`; the homepage `DailyCheckIn` loads the daily reward schedule from the backend, submits check-ins before updating local streak/points, and shows backend error messages through toast and inline copy.
 - `src/lib/achievements-api.ts`: typed wrapper for `GET /achievements`; the `/missions` achievements tab maps unlocked and locked Backend achievements into the existing mission dashboard card grid.
@@ -216,8 +227,8 @@ Local Backend modules:
 - `src/app/[locale]/(public)/auth/login/page.tsx`: server wrapper for the login route; emits localized SEO metadata, canonical/hreflang alternates, visible FAQ content, FAQ/Breadcrumb/LoginAction JSON-LD, and renders `LoginClient`. `LoginClient` submits through same-origin `POST /api/auth/login`; the BFF stores access and refresh tokens as HttpOnly cookies, strips tokens from browser-visible JSON, then the client updates `useUserStore` and redirects to locale home or `next` target.
 - `src/app/api/auth/session/route.ts`: no-store same-origin session probe used by the header to discover HttpOnly-cookie sessions without making the locale layout dynamic.
 - `src/app/api/profile/avatar/route.ts`: authenticated same-origin profile-avatar upload fallback; stores local files under `public/uploads/profile-avatars`, accepts `previousAvatarUrl`, and removes the previous local avatar file after a successful replacement so each account keeps a single active uploaded image.
-- `src/components/layout/UserMenu.tsx`: profile dropdown logout calls same-origin `POST /api/auth/logout`, which forwards backend logout and clears the HttpOnly refresh session; the client then clears its access token/user store and redirects to locale home.
-- `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and redirects to locale login after a 3-second delay with `next` set to the current URL.
+- `src/components/layout/UserMenu.tsx`: profile dropdown logout calls same-origin `POST /api/auth/logout`, which forwards backend logout and clears the HttpOnly refresh session; the client then clears its access token/user store and redirects to locale login.
+- `src/components/shared/StoreInitializer.tsx`: listens for session-expired events from `api-client`, clears the user store, shows a localized toast, and immediately redirects to locale login with `next` set to the current URL.
 - `src/components/layout/Header.tsx`: uses the server-provided auth cookie hint plus `useUserStore.isLoggedIn` for first-paint navbar state; when logged in, syncs navbar points, credits, rank, XP, and level from normalized `GET /users/me` stats into `useUserStore`; `UserMenu` shows rank and XP progress in the account dropdown.
 - Mobile hamburger navigation in `src/components/layout/Header.tsx` uses the full app menu set with icons, locked member routes linking to login, and a scrollable dropdown so every route remains reachable on small screens. The fixed `MobileBottomNav` remains a short primary-action bar.
 - `src/app/[locale]/(member)/profile/page.tsx`: profile dashboard UI loads current profile data through `getCurrentUser()` (`GET /api/data/users/me`, proxied to the scorm data backend), syncs known fields into `useUserStore`, and falls back to the last store values on load failure.
@@ -226,7 +237,7 @@ Local Backend modules:
 - `src/proxy.ts`: redirects unauthenticated access to protected member routes to `/{locale}/auth/login?next=...` only when both access and refresh token cookies are missing.
 - `src/components/layout/Header.tsx`, `Sidebar.tsx`, and `Footer.tsx` expose a localized public "contact team" link to `/{locale}/legal/contact`.
 - `src/app/sitemap.ts` includes only public indexable locale routes plus public login/register pages and news articles; protected member routes are intentionally omitted because unauthenticated users are redirected to login.
-- `src/app/robots.ts` disallows forgot-password, protected member areas, Backend routes, and protected predict detail URLs while allowing public pages such as home, login, register, contact, livescore, matches, predict index, AI insight index, credits, football league pages, legal pages, news, and World Cup pages.
+- `src/app/robots.ts` disallows forgot-password, protected member areas including credits, Backend routes, and protected predict detail URLs while allowing public pages such as home, login, register, contact, livescore, matches, predict index, AI insight index, football league pages, legal pages, news, and World Cup pages.
 
 ## News
 

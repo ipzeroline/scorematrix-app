@@ -61,7 +61,7 @@ const MOBILE_NAV_LINKS = [
   { href: "/missions", label: "missions", icon: Zap, authRequired: true },
   { href: "/events", label: "events", icon: Sparkles, authRequired: true },
   { href: "/rewards", label: "rewards", icon: Gift, authRequired: true },
-  { href: "/credits", label: "credits", icon: Coins },
+  { href: "/credits", label: "credits", icon: Coins, authRequired: true },
   { href: "/stats", label: "stats", icon: BarChart3, authRequired: true },
   { href: "/affiliate", label: "affiliate", icon: Share2, authRequired: true },
   { href: "/leagues", label: "leagues", icon: Users, authRequired: true },

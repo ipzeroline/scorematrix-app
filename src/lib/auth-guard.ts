@@ -9,6 +9,7 @@ const PROTECTED_ROUTE_PREFIXES = [
   "/missions",
   "/events",
   "/rewards",
+  "/credits",
   "/stats",
   "/affiliate",
   "/leagues",

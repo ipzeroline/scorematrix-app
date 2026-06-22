@@ -16,7 +16,6 @@ const staticRoutes = [
   "/ai-insight",
   "/auth/login",
   "/auth/register",
-  "/credits",
   "/football/leagues",
   "/news",
   "/world-cup-2026",
@@ -28,6 +27,20 @@ const staticRoutes = [
   "/legal/reward-rules",
   "/legal/terms",
 ] as const;
+
+const routeSeoWeight: Partial<
+  Record<
+    typeof staticRoutes[number],
+    {
+      changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+      priority: number;
+    }
+  >
+> = {
+  "": { changeFrequency: "daily", priority: 1 },
+  "/news": { changeFrequency: "daily", priority: 0.9 },
+  "/world-cup-2026": { changeFrequency: "daily", priority: 0.92 },
+};
 
 function absoluteUrl(pathname: string) {
   return `${SITE_URL}${pathname}`;
@@ -92,12 +105,16 @@ async function getNewsEntries(): Promise<MetadataRoute.Sitemap> {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const routeEntries = LOCALE_CODES.flatMap((locale) =>
-    staticRoutes.map((route) => ({
-      url: absoluteUrl(`/${locale}${route}`),
-      lastModified: now,
-      changeFrequency: route === "" || route === "/news" ? "daily" as const : "weekly" as const,
-      priority: route === "" ? 1 : route === "/news" ? 0.9 : 0.75,
-    })),
+    staticRoutes.map((route) => {
+      const weight = routeSeoWeight[route] ?? { changeFrequency: "weekly" as const, priority: 0.75 };
+
+      return {
+        url: absoluteUrl(`/${locale}${route}`),
+        lastModified: now,
+        changeFrequency: weight.changeFrequency,
+        priority: weight.priority,
+      };
+    }),
   );
 
   const newsEntries = await getNewsEntries();

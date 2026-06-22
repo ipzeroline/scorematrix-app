@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/Badge";
 import { WorldCupGroupsBoard } from "@/components/world-cup/WorldCupGroupsBoard";
 import { LOCALE_CODES } from "@/i18n";
+import { getWorldCup2026SeoContent } from "@/data/world-cup-2026-seo-content";
 import {
   worldCupGroups,
   type WorldCupGroup,
@@ -18,10 +19,15 @@ import {
   type ApiLeagueDetailStanding,
   type ApiLeagueDetailFixture,
 } from "@/lib/api-football";
-import { SITE_URL } from "@/lib/site";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 const WORLD_CUP_LEAGUE_ID = 1;
 const WORLD_CUP_SEASON = 2026;
+const WORLD_CUP_OFFICIAL_URL =
+  "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026";
+const WORLD_CUP_SCHEDULE_URL =
+  "https://www.fifa.com/en/tournaments/mens/worldcup/canadamexicousa2026/articles/match-schedule-fixtures-results-groups-teams-stadiums";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -29,25 +35,62 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "worldCup2026" });
+  const seo = getWorldCup2026SeoContent(locale);
   const canonical = `${SITE_URL}/${locale}/world-cup-2026`;
+  const image = `${SITE_URL}/brand/fifa-world-cup-2026.png`;
+  const languages = Object.fromEntries(
+    LOCALE_CODES.map((code) => [code, `${SITE_URL}/${code}/world-cup-2026`])
+  );
 
   return {
-    title: `${t("title")} | ScoreMatrix`,
-    description: t("description"),
+    title: seo.metaTitle,
+    description: seo.metaDescription,
+    keywords: seo.keywords,
     alternates: {
       canonical,
-      languages: Object.fromEntries(
-        LOCALE_CODES.map((code) => [code, `${SITE_URL}/${code}/world-cup-2026`])
-      ),
+      languages: {
+        ...languages,
+        "x-default": `${SITE_URL}/th/world-cup-2026`,
+      },
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+        "max-video-preview": -1,
+      },
     },
     openGraph: {
-      title: `${t("title")} | ScoreMatrix`,
-      description: t("description"),
+      title: seo.ogTitle,
+      description: seo.ogDescription,
       type: "website",
       locale,
       url: canonical,
-      siteName: "ScoreMatrix",
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: image,
+          width: 1024,
+          height: 1536,
+          alt: "FIFA World Cup 2026 groups and fixtures on ScoreMatrix",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: seo.ogTitle,
+      description: seo.ogDescription,
+      images: [image],
+    },
+    category: "sports",
+    other: {
+      "article:section": "Football",
+      "sports:event": "FIFA World Cup 2026",
+      "sports:season": "2026",
     },
   };
 }
@@ -56,6 +99,8 @@ export default async function WorldCup2026Page({ params }: Props) {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "worldCup2026" });
   const groups = await getWorldCupGroups();
+  const seo = getWorldCup2026SeoContent(locale);
+  const structuredData = buildWorldCupStructuredData(locale, seo, groups);
   const copy = {
     title: t("title"),
     description: t("description"),
@@ -156,8 +201,168 @@ export default async function WorldCup2026Page({ params }: Props) {
       </section>
 
       <WorldCupGroupsBoard groups={groups} copy={copy} locale={locale} />
+
+      <section className="rounded-xl border border-cyan-300/15 bg-[#080d16] p-4 md:p-6">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-cyan-300">
+              FIFA World Cup 2026
+            </p>
+            <h2 className="mt-2 text-2xl font-black leading-tight text-white md:text-3xl">
+              {seo.contentTitle}
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm font-semibold leading-7 text-gray-400">
+              {seo.contentIntro}
+            </p>
+
+            <h3 className="mt-5 text-sm font-black uppercase tracking-wide text-white">
+              {seo.factsTitle}
+            </h3>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {seo.facts.map((fact) => (
+                <div
+                  key={fact}
+                  className="rounded-lg border border-white/10 bg-black/20 px-3 py-2 text-sm font-semibold leading-6 text-gray-300"
+                >
+                  {fact}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-white/10 bg-black/20 p-4">
+            <h3 className="text-base font-black text-white">{seo.faqTitle}</h3>
+            <div className="mt-3 space-y-3">
+              {seo.faqs.map((faq) => (
+                <article key={faq.question} className="border-t border-white/10 pt-3 first:border-t-0 first:pt-0">
+                  <h4 className="text-sm font-black leading-6 text-cyan-100">
+                    {faq.question}
+                  </h4>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-gray-400">
+                    {faq.answer}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
+      />
     </div>
   );
+}
+
+function buildWorldCupStructuredData(
+  locale: string,
+  seo: ReturnType<typeof getWorldCup2026SeoContent>,
+  groups: WorldCupGroup[]
+) {
+  const url = `${SITE_URL}/${locale}/world-cup-2026`;
+  const image = `${SITE_URL}/brand/fifa-world-cup-2026.png`;
+  const groupItems = groups.map((group, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name: group.name,
+    item: {
+      "@type": "Thing",
+      name: group.name,
+      description: group.teams.map((team) => team.name).join(", "),
+    },
+  }));
+
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": `${url}#webpage`,
+      url,
+      name: seo.metaTitle,
+      headline: seo.contentTitle,
+      description: seo.metaDescription,
+      inLanguage: locale,
+      image,
+      dateModified: "2026-06-22",
+      isPartOf: {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}#website`,
+        name: SITE_NAME,
+        url: SITE_URL,
+      },
+      about: [
+        {
+          "@type": "SportsEvent",
+          "@id": `${url}#fifa-world-cup-2026`,
+          name: "FIFA World Cup 2026",
+          alternateName: ["FIFA World Cup 26", "2026 FIFA World Cup"],
+          sport: "Soccer",
+          startDate: "2026-06-11",
+          endDate: "2026-07-19",
+          eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+          eventStatus: "https://schema.org/EventScheduled",
+          image,
+          url: WORLD_CUP_OFFICIAL_URL,
+          sameAs: [WORLD_CUP_OFFICIAL_URL, WORLD_CUP_SCHEDULE_URL],
+          organizer: {
+            "@type": "Organization",
+            name: "FIFA",
+            url: "https://www.fifa.com",
+          },
+          location: [
+            { "@type": "Country", name: "Canada" },
+            { "@type": "Country", name: "Mexico" },
+            { "@type": "Country", name: "United States" },
+          ],
+        },
+        "World Cup 2026 groups",
+        "World Cup 2026 fixtures",
+        "World Cup 2026 standings",
+        "football predictions",
+      ],
+      mainEntity: {
+        "@type": "ItemList",
+        "@id": `${url}#groups`,
+        name: "FIFA World Cup 2026 groups",
+        numberOfItems: groups.length,
+        itemListElement: groupItems,
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "@id": `${url}#faq`,
+      mainEntity: seo.faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "@id": `${url}#breadcrumb`,
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: SITE_NAME,
+          item: `${SITE_URL}/${locale}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "FIFA World Cup 2026",
+          item: url,
+        },
+      ],
+    },
+  ];
 }
 
 export async function getWorldCupGroups(): Promise<WorldCupGroup[]> {
