@@ -532,13 +532,25 @@ export function mapApiEvent(event: ApiEvent): SpecialEvent {
     leaderboard: leaderboard.entries,
     leaderboardUserEntry: leaderboard.userEntry,
     leaderboardPagination: leaderboard.pagination,
-    participantCount: Number(event.currentParticipants ?? 0),
+    participantCount: resolveEventParticipantCount(event, leaderboard),
     maxParticipants: event.maxParticipants,
     bannerUrl: event.bannerUrl,
     isRegistered: event.isRegistered,
     status: event.status,
     rules: event.rules ?? [],
   };
+}
+
+function resolveEventParticipantCount(
+  event: ApiEvent,
+  leaderboard: ReturnType<typeof normalizeEventLeaderboard>
+) {
+  const leaderboardTotal = leaderboard.pagination?.total;
+  if (typeof leaderboardTotal === "number" && Number.isFinite(leaderboardTotal)) {
+    return leaderboardTotal;
+  }
+
+  return Number(event.currentParticipants ?? 0);
 }
 
 function normalizeEventLeaderboard(payload: ApiEventLeaderboardPayload | undefined) {
