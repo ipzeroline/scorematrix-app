@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { ArrowRight, CheckCircle2, Coins, Gift, Lock, ShieldCheck, Sparkles, Target, Ticket, Wallet } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { registerEvent } from "@/lib/events-api";
+import { ApiClientError } from "@/lib/api-client";
 import { useEventStore } from "@/stores/event-store";
 import { useNotificationStore } from "@/stores/notification-store";
 import { useUserStore } from "@/stores/user-store";
@@ -85,9 +86,23 @@ export function EventDetailClient({
         message: t("registeredForEvent", { event: event.name }),
       });
     } catch (error) {
+      if (isAlreadyRegisteredError(error)) {
+        registerForEvent(event.id);
+        setEntered(true);
+        setShowConfirm(false);
+        addToast({
+          type: "success",
+          title: t("registeredStatus"),
+          message: t("registeredForEvent", { event: event.name }),
+        });
+        return;
+      }
+
       addToast({
         type: "error",
-        title: t("insufficientBalance"),
+        title: isInsufficientBalanceError(error)
+          ? t("insufficientBalance")
+          : t("registration"),
         message:
           error instanceof Error
             ? error.message
@@ -317,6 +332,53 @@ export function EventDetailClient({
       )}
     </>
   );
+}
+
+function isAlreadyRegisteredError(error: unknown) {
+  return getEventErrorText(error).some((value) =>
+    value.includes("already_registered") ||
+    value.includes("already registered") ||
+    value.includes("ลงทะเบียนแล้ว") ||
+    value.includes("สมัครแล้ว")
+  );
+}
+
+function isInsufficientBalanceError(error: unknown) {
+  return getEventErrorText(error).some((value) =>
+    value.includes("insufficient") ||
+    value.includes("not enough") ||
+    value.includes("ยอดคงเหลือไม่พอ") ||
+    value.includes("เครดิตไม่พอ") ||
+    value.includes("แต้มไม่เพียงพอ")
+  );
+}
+
+function getEventErrorText(error: unknown) {
+  const values: string[] = [];
+
+  if (error instanceof Error) values.push(error.message);
+  if (error instanceof ApiClientError) {
+    if (error.code) values.push(error.code);
+    values.push(String(error.status));
+    collectPayloadText(error.payload, values);
+  }
+
+  return values.map((value) => value.toLowerCase());
+}
+
+function collectPayloadText(payload: unknown, values: string[]) {
+  if (!payload || typeof payload !== "object") return;
+  const record = payload as Record<string, unknown>;
+
+  for (const key of ["code", "error_code", "message"]) {
+    const value = record[key];
+    if (typeof value === "string") values.push(value);
+  }
+
+  const details = record.details;
+  if (details && typeof details === "object") {
+    collectPayloadText(details, values);
+  }
 }
 
 function BalanceRow({
