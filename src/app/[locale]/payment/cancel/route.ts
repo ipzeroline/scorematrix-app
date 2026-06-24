@@ -1,11 +1,12 @@
+import { getPublicRequestOrigin } from "@/lib/public-origin";
+
 type PaymentReturnContext = {
   params: Promise<{ locale: string }>;
 };
 
 export async function GET(request: Request, context: PaymentReturnContext) {
   const { locale } = await context.params;
-  const requestUrl = new URL(request.url);
-  const redirectUrl = new URL(`/${locale}/credits`, requestUrl.origin);
+  const redirectUrl = new URL(`/${locale}/credits`, getPublicRequestOrigin(request));
 
   redirectUrl.searchParams.set("checkout", "cancelled");
 
