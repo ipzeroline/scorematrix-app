@@ -166,6 +166,9 @@ export function PredictMatchForm({
   };
 
   const freePoints = useUserStore((s) => s.freePoints);
+  const entitlements = useUserStore((s) => s.entitlements);
+  const canUseDeepPrediction = entitlements.DEEP_PREDICTION === "true";
+  const canUseConfidenceBoost = entitlements.CONFIDENCE_BOOST === "true";
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -336,6 +339,8 @@ export function PredictMatchForm({
     { value: "confident", label: t("confidence.confident") },
     { value: "bold", label: t("confidence.bold") },
   ];
+  const effectiveConfidence: ConfidenceLevel = canUseConfidenceBoost ? confidence : "safe";
+  const effectiveUseBoost = canUseConfidenceBoost && useBoost;
   const activeScoringRules = mergeScoringRules(scoringRules);
   const exactTier = activeScoringRules.resultTiers.exact;
   const goalDiffTier = activeScoringRules.resultTiers.goalDiff;
@@ -344,15 +349,17 @@ export function PredictMatchForm({
   const totalGoalsBonus = activeScoringRules.bonuses.totalGoals?.points ?? 0;
   const halfTimeScoreBonus = activeScoringRules.bonuses.halfTimeScore?.points ?? 0;
   const basePoints = exactTier.basePoints ?? goalDiffTier.basePoints ?? resultTier.basePoints ?? 0;
-  const confidenceMultiplier = getConfidenceMultiplier(confidence, activeScoringRules);
-  const boostMultiplier = useBoost ? activeScoringRules.boost.multiplier ?? 1 : 1;
+  const confidenceMultiplier = getConfidenceMultiplier(effectiveConfidence, activeScoringRules);
+  const boostMultiplier = effectiveUseBoost ? activeScoringRules.boost.multiplier ?? 1 : 1;
   const streakPreview = 3;
   const streakPointsPreview = streakPreview * (activeScoringRules.streak.bonusPerLevel ?? 0);
   const effectivePointsWagered = Math.round(pointsWagered * confidenceMultiplier);
   const selectedBonusPoints =
-    (firstScorerPlayerId ? firstScorerBonus : 0) +
-    (totalGoals !== null ? totalGoalsBonus : 0) +
-    (halfHomeScore !== null && halfAwayScore !== null ? halfTimeScoreBonus : 0);
+    canUseDeepPrediction
+      ? (firstScorerPlayerId ? firstScorerBonus : 0) +
+        (totalGoals !== null ? totalGoalsBonus : 0) +
+        (halfHomeScore !== null && halfAwayScore !== null ? halfTimeScoreBonus : 0)
+      : 0;
   const exactPointsPreview = Math.round(
     pointsWagered +
       ((exactTier.totalPoints ?? (basePoints + (exactTier.bonusPoints ?? 0))) + selectedBonusPoints) *
@@ -376,9 +383,11 @@ export function PredictMatchForm({
   );
   const expectedProfitPreview = Math.max(0, exactPointsPreview - pointsWagered);
   const wrongPointsPreview = 0;
-  const selectedFirstScorer = findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, firstScorerPlayerId);
+  const selectedFirstScorer = canUseDeepPrediction
+    ? findPlayerById({ home: { players: homePlayers }, away: { players: awayPlayers } }, firstScorerPlayerId)
+    : null;
   const selectedConfidenceLabel =
-    confidenceOptions.find((option) => option.value === confidence)?.label ?? confidence;
+    confidenceOptions.find((option) => option.value === effectiveConfidence)?.label ?? effectiveConfidence;
   const predictedOutcomeLabel =
     homeScore === null || awayScore === null
       ? "-"
@@ -417,12 +426,15 @@ export function PredictMatchForm({
     matchId: /^\d+$/.test(String(match.matchId)) ? Number(match.matchId) : match.matchId,
     predictedHomeScore: homeScore,
     predictedAwayScore: awayScore,
-    firstScorerPlayerId: firstScorerPlayerId && /^\d+$/.test(String(firstScorerPlayerId)) ? Number(firstScorerPlayerId) : null,
-    totalGoals,
-    halfTimeHome: halfHomeScore,
-    halfTimeAway: halfAwayScore,
-    confidenceLevel: confidence,
-    useBoost,
+    firstScorerPlayerId:
+      canUseDeepPrediction && firstScorerPlayerId && /^\d+$/.test(String(firstScorerPlayerId))
+        ? Number(firstScorerPlayerId)
+        : null,
+    totalGoals: canUseDeepPrediction ? totalGoals : null,
+    halfTimeHome: canUseDeepPrediction ? halfHomeScore : null,
+    halfTimeAway: canUseDeepPrediction ? halfAwayScore : null,
+    confidenceLevel: effectiveConfidence,
+    useBoost: effectiveUseBoost,
     pointsWagered: effectivePointsWagered,
   };
   const aiSuggestionPreview = buildAiPredictionSuggestion({
@@ -559,7 +571,16 @@ export function PredictMatchForm({
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div
+        className={cn(
+          "grid gap-3",
+          canUseDeepPrediction && canUseConfidenceBoost
+            ? "md:grid-cols-3"
+            : canUseDeepPrediction || canUseConfidenceBoost
+              ? "md:grid-cols-2"
+              : "md:grid-cols-1"
+        )}
+      >
         <FlowStep
           number="01"
           title={t("basic.fullScore")}
@@ -568,22 +589,26 @@ export function PredictMatchForm({
           active={homeScore !== null && awayScore !== null}
           tone="cyan"
         />
-        <FlowStep
-          number="02"
-          title={t("deep.firstScorer")}
-          value={firstScorerValue}
-          description={firstScorerHelper}
-          active={Boolean(selectedFirstScorer)}
-          tone="magenta"
-        />
-        <FlowStep
-          number="03"
-          title={t("confidence.title")}
-          value={selectedConfidenceLabel}
-          description={confidenceHelper}
-          active
-          tone="gold"
-        />
+        {canUseDeepPrediction && (
+          <FlowStep
+            number="02"
+            title={t("deep.firstScorer")}
+            value={firstScorerValue}
+            description={firstScorerHelper}
+            active={Boolean(selectedFirstScorer)}
+            tone="magenta"
+          />
+        )}
+        {canUseConfidenceBoost && (
+          <FlowStep
+            number={canUseDeepPrediction ? "03" : "02"}
+            title={t("confidence.title")}
+            value={selectedConfidenceLabel}
+            description={confidenceHelper}
+            active
+            tone="gold"
+          />
+        )}
       </div>
 
       {/* Unified Scoreboard Console Header */}
@@ -649,14 +674,16 @@ export function PredictMatchForm({
             </div>
           </div>
 
-          <div className="mt-5 grid w-full gap-2 border-t border-gray-800/70 pt-4 sm:grid-cols-3">
+          <div className={cn("mt-5 grid w-full gap-2 border-t border-gray-800/70 pt-4", canUseDeepPrediction ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
             <HeroMetric label={t("basic.result")} value={predictedOutcomeLabel} tone="text-cyan-200" />
             <HeroMetric
               label={t("payload.pointsWagered")}
               value={`${effectivePointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
               tone="text-amber-200"
             />
-            <HeroMetric label={t("summary.halfTime")} value={`${halfHomeScore ?? "-"} : ${halfAwayScore ?? "-"}`} tone="text-fuchsia-200" />
+            {canUseDeepPrediction && (
+              <HeroMetric label={t("summary.halfTime")} value={`${halfHomeScore ?? "-"} : ${halfAwayScore ?? "-"}`} tone="text-fuchsia-200" />
+            )}
           </div>
         </div>
       </Card>
@@ -700,13 +727,14 @@ export function PredictMatchForm({
         <div className="flex min-w-0 flex-col gap-6">
           
           {/* Section 1: Scorer & Stats HUD (Deep Prediction) */}
-          <PredictionSection
-            icon={Sparkles}
-            title={t("deep.title")}
-            subtitle={t("deep.subtitle")}
-            className="order-3 lg:order-1"
-          >
-            <div className="grid gap-5">
+          {canUseDeepPrediction && (
+            <PredictionSection
+              icon={Sparkles}
+              title={t("deep.title")}
+              subtitle={t("deep.subtitle")}
+              className="order-3 lg:order-1"
+            >
+              <div className="grid gap-5">
               {/* Tactical pitch player picker */}
               <PlayerPicker
                 label={t("deep.firstScorer")}
@@ -850,8 +878,9 @@ export function PredictMatchForm({
                   </div>
                 </div>
               </div>
-            </div>
-          </PredictionSection>
+              </div>
+            </PredictionSection>
+          )}
 
           <Card className="order-1 relative overflow-hidden border border-amber-500/20 bg-gradient-to-br from-[#140f06] to-[#07080b] p-4 sm:p-5 lg:order-2">
             <div className="absolute right-0 top-0 h-24 w-24 rounded-full bg-amber-400/5 blur-2xl" />
@@ -929,11 +958,13 @@ export function PredictMatchForm({
                     value={`x${confidenceMultiplier.toFixed(1)}`}
                     tone="text-cyan-300"
                   />
-                  <FormulaValue
-                    label={t("formula.boost")}
-                    value={`x${boostMultiplier.toFixed(1)}`}
-                    tone={useBoost ? "text-fuchsia-300" : "text-gray-300"}
-                  />
+                  {canUseConfidenceBoost && (
+                    <FormulaValue
+                      label={t("formula.boost")}
+                      value={`x${boostMultiplier.toFixed(1)}`}
+                      tone={effectiveUseBoost ? "text-fuchsia-300" : "text-gray-300"}
+                    />
+                  )}
                   <FormulaValue
                     label={t("formula.streak")}
                     value={`${streakPreview} x ${activeScoringRules.streak.bonusPerLevel ?? 0} = ${streakPointsPreview}`}
@@ -983,57 +1014,61 @@ export function PredictMatchForm({
                 <p className="mt-2 text-xs text-red-300/80">
                   {t("formula.wrongNote")}
                 </p>
-                <div className="mt-3 border-t border-gray-800/70 pt-3">
-                  <p className="mb-2 text-xs font-black uppercase tracking-wider text-gray-400">
-                    {locale === "th" ? "โบนัสเพิ่มเติมจากระบบ" : "Additional system bonuses"}
-                  </p>
-                  <div className="grid gap-2 sm:grid-cols-3">
-                    <TierRow
-                      label={activeScoringRules.bonuses.firstScorer?.name ?? t("deep.firstScorer")}
-                      description={selectedFirstScorer ? selectedFirstScorer.name : locale === "th" ? "ได้รับเมื่อทายถูก" : "Earned if correct"}
-                      bonus={`+${firstScorerBonus}`}
-                      tone="text-fuchsia-300"
-                    />
-                    <TierRow
-                      label={activeScoringRules.bonuses.totalGoals?.name ?? t("deep.totalGoals")}
-                      description={totalGoals !== null ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}` : locale === "th" ? "คำนวณจากสกอร์รวม" : "Calculated from final score"}
-                      bonus={`+${totalGoalsBonus}`}
-                      tone="text-amber-300"
-                    />
-                    <TierRow
-                      label={activeScoringRules.bonuses.halfTimeScore?.name ?? t("summary.halfTime")}
-                      description={`${halfHomeScore ?? "-"} : ${halfAwayScore ?? "-"}`}
-                      bonus={`+${halfTimeScoreBonus}`}
-                      tone="text-cyan-300"
-                    />
+                {canUseDeepPrediction && (
+                  <div className="mt-3 border-t border-gray-800/70 pt-3">
+                    <p className="mb-2 text-xs font-black uppercase tracking-wider text-gray-400">
+                      {locale === "th" ? "โบนัสเพิ่มเติมจากระบบ" : "Additional system bonuses"}
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <TierRow
+                        label={activeScoringRules.bonuses.firstScorer?.name ?? t("deep.firstScorer")}
+                        description={selectedFirstScorer ? selectedFirstScorer.name : locale === "th" ? "ได้รับเมื่อทายถูก" : "Earned if correct"}
+                        bonus={`+${firstScorerBonus}`}
+                        tone="text-fuchsia-300"
+                      />
+                      <TierRow
+                        label={activeScoringRules.bonuses.totalGoals?.name ?? t("deep.totalGoals")}
+                        description={totalGoals !== null ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}` : locale === "th" ? "คำนวณจากสกอร์รวม" : "Calculated from final score"}
+                        bonus={`+${totalGoalsBonus}`}
+                        tone="text-amber-300"
+                      />
+                      <TierRow
+                        label={activeScoringRules.bonuses.halfTimeScore?.name ?? t("summary.halfTime")}
+                        description={`${halfHomeScore ?? "-"} : ${halfAwayScore ?? "-"}`}
+                        bonus={`+${halfTimeScoreBonus}`}
+                        tone="text-cyan-300"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </Card>
 
           {/* Section 2: Confidence Tactical Cards */}
-          <PredictionSection
-            icon={Medal}
-            title={t("confidence.title")}
-            subtitle={t("confidence.subtitle")}
-            className="order-2 lg:order-3"
-          >
-            <div className="space-y-4">
-              <ConfidenceCards
-                options={confidenceOptions}
-                value={confidence}
-                onChange={(value) => setConfidence(value as ConfidenceLevel)}
-              />
-              
-              <BoostToggle 
-                checked={useBoost} 
-                onChange={setUseBoost} 
-                label={t("boost.label")} 
-                description={t("boost.description")} 
-              />
-            </div>
-          </PredictionSection>
+          {canUseConfidenceBoost && (
+            <PredictionSection
+              icon={Medal}
+              title={t("confidence.title")}
+              subtitle={t("confidence.subtitle")}
+              className="order-2 lg:order-3"
+            >
+              <div className="space-y-4">
+                <ConfidenceCards
+                  options={confidenceOptions}
+                  value={confidence}
+                  onChange={(value) => setConfidence(value as ConfidenceLevel)}
+                />
+
+                <BoostToggle
+                  checked={useBoost}
+                  onChange={setUseBoost}
+                  label={t("boost.label")}
+                  description={t("boost.description")}
+                />
+              </div>
+            </PredictionSection>
+          )}
         </div>
 
         {/* Right Column (Sidebar Ticket & Actions) */}
@@ -1072,25 +1107,33 @@ export function PredictMatchForm({
               
               <div className="grid gap-2">
                 <SlipMetric label={t("basic.result")} value={predictedOutcomeLabel} tone="text-cyan-200" />
-                <SlipMetric
-                  label={t("deep.firstScorer")}
-                  value={selectedFirstScorer ? selectedFirstScorer.name : "-"}
-                />
-                <SlipMetric
-                  label={t("deep.totalGoals")}
-                  value={`${formatNullableNumber(payload.totalGoals)} ${locale === "th" ? "ประตู" : "goals"}`}
-                />
-                <SlipMetric
-                  label={t("summary.halfTime")}
-                  value={`${formatNullableNumber(payload.halfTimeHome)} : ${formatNullableNumber(payload.halfTimeAway)}`}
-                />
+                {canUseDeepPrediction && (
+                  <>
+                    <SlipMetric
+                      label={t("deep.firstScorer")}
+                      value={selectedFirstScorer ? selectedFirstScorer.name : "-"}
+                    />
+                    <SlipMetric
+                      label={t("deep.totalGoals")}
+                      value={`${formatNullableNumber(payload.totalGoals)} ${locale === "th" ? "ประตู" : "goals"}`}
+                    />
+                    <SlipMetric
+                      label={t("summary.halfTime")}
+                      value={`${formatNullableNumber(payload.halfTimeHome)} : ${formatNullableNumber(payload.halfTimeAway)}`}
+                    />
+                  </>
+                )}
                 <SlipMetric
                   label={t("payload.pointsWagered")}
                   value={`${payload.pointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
                   tone="text-amber-200"
                 />
-                <SlipMetric label={t("confidence.title")} value={selectedConfidenceLabel} tone="text-fuchsia-200" />
-                <SlipMetric label={t("payload.useBoost")} value={payload.useBoost ? t("common.yes") : t("common.no")} />
+                {canUseConfidenceBoost && (
+                  <>
+                    <SlipMetric label={t("confidence.title")} value={selectedConfidenceLabel} tone="text-fuchsia-200" />
+                    <SlipMetric label={t("payload.useBoost")} value={payload.useBoost ? t("common.yes") : t("common.no")} />
+                  </>
+                )}
               </div>
 
               {/* Soccer Digital Ticket Barcode */}
@@ -1121,10 +1164,12 @@ export function PredictMatchForm({
 
                 setHomeScore(aiSuggestion.homeScore);
                 setAwayScore(aiSuggestion.awayScore);
-                setHalfHomeScore(aiSuggestion.halfHomeScore);
-                setHalfAwayScore(aiSuggestion.halfAwayScore);
-                setFirstScorerPlayerId(aiSuggestion.firstScorerPlayerId);
-                setConfidence(aiSuggestion.confidence);
+                if (canUseDeepPrediction) {
+                  setHalfHomeScore(aiSuggestion.halfHomeScore);
+                  setHalfAwayScore(aiSuggestion.halfAwayScore);
+                  setFirstScorerPlayerId(aiSuggestion.firstScorerPlayerId);
+                }
+                setConfidence(canUseConfidenceBoost ? aiSuggestion.confidence : "safe");
                 setUseBoost(false);
                 
                 addToast({
@@ -1284,9 +1329,11 @@ export function PredictMatchForm({
                   <p className="text-xs font-black uppercase tracking-[0.16em] text-gray-500">
                     {locale === "th" ? "สรุปก่อนส่ง" : "Submission summary"}
                   </p>
-                  <Badge variant={useBoost ? "gold" : "default"}>
-                    {useBoost ? t("boost.label") : t("common.no")}
-                  </Badge>
+                  {canUseConfidenceBoost && (
+                    <Badge variant={effectiveUseBoost ? "gold" : "default"}>
+                      {effectiveUseBoost ? t("boost.label") : t("common.no")}
+                    </Badge>
+                  )}
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2">
                   <ConfirmMetric
@@ -1294,57 +1341,62 @@ export function PredictMatchForm({
                     value={`${homeScore ?? "-"} : ${awayScore ?? "-"}`}
                     tone="text-white"
                   />
-                  <ConfirmMetric
-                    label={t("confidence.title")}
-                    value={
-                      confidenceOptions.find((option) => option.value === confidence)
-                        ?.label ?? confidence
-                    }
-                    tone="text-cyan-300"
-                  />
+                  {canUseConfidenceBoost && (
+                    <ConfirmMetric
+                      label={t("confidence.title")}
+                      value={selectedConfidenceLabel}
+                      tone="text-cyan-300"
+                    />
+                  )}
                   <ConfirmMetric
                     label={t("payload.pointsWagered")}
                     value={`${effectivePointsWagered.toLocaleString()} ${locale === "th" ? "แต้ม" : "pts"}`}
                     tone="text-amber-300"
                   />
-                  <ConfirmMetric
-                    label={locale === "th" ? "บูสต์" : "Boost"}
-                    value={
-                      useBoost
-                        ? locale === "th"
-                          ? "ใช้บูสต์"
-                          : "Boost enabled"
-                        : locale === "th"
-                          ? "ไม่ใช้บูสต์"
-                          : "No boost"
-                    }
-                    tone={useBoost ? "text-fuchsia-300" : "text-gray-300"}
-                  />
+                  {canUseConfidenceBoost && (
+                    <ConfirmMetric
+                      label={locale === "th" ? "บูสต์" : "Boost"}
+                      value={
+                        effectiveUseBoost
+                          ? locale === "th"
+                            ? "ใช้บูสต์"
+                            : "Boost enabled"
+                          : locale === "th"
+                            ? "ไม่ใช้บูสต์"
+                            : "No boost"
+                      }
+                      tone={effectiveUseBoost ? "text-fuchsia-300" : "text-gray-300"}
+                    />
+                  )}
                 </div>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
-                <ConfirmDetailCard label={t("deep.firstScorer")}>
-                  {selectedFirstScorer ? (
-                    <span className="inline-flex min-w-0 items-center gap-2">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 font-mono text-xs font-black text-cyan-300">
-                        {selectedFirstScorer.number ?? "?"}
-                      </span>
-                      <span className="truncate">{selectedFirstScorer.name}</span>
-                    </span>
-                  ) : (
-                    "—"
-                  )}
-                </ConfirmDetailCard>
-                <ConfirmDetailCard label={t("deep.totalGoals")}>
-                  {totalGoals !== null
-                    ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}`
-                    : "-"}
-                </ConfirmDetailCard>
-                <ConfirmDetailCard label={t("summary.halfTime")}>
-                  {halfHomeScore !== null ? halfHomeScore : "-"} :{" "}
-                  {halfAwayScore !== null ? halfAwayScore : "-"}
-                </ConfirmDetailCard>
+                {canUseDeepPrediction && (
+                  <>
+                    <ConfirmDetailCard label={t("deep.firstScorer")}>
+                      {selectedFirstScorer ? (
+                        <span className="inline-flex min-w-0 items-center gap-2">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-cyan-500/20 font-mono text-xs font-black text-cyan-300">
+                            {selectedFirstScorer.number ?? "?"}
+                          </span>
+                          <span className="truncate">{selectedFirstScorer.name}</span>
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </ConfirmDetailCard>
+                    <ConfirmDetailCard label={t("deep.totalGoals")}>
+                      {totalGoals !== null
+                        ? `${totalGoals} ${locale === "th" ? "ประตู" : "goals"}`
+                        : "-"}
+                    </ConfirmDetailCard>
+                    <ConfirmDetailCard label={t("summary.halfTime")}>
+                      {halfHomeScore !== null ? halfHomeScore : "-"} :{" "}
+                      {halfAwayScore !== null ? halfAwayScore : "-"}
+                    </ConfirmDetailCard>
+                  </>
+                )}
                 <ConfirmDetailCard label={t("formula.streak")}>
                   {streakPreview} x {activeScoringRules.streak.bonusPerLevel ?? 0} = {streakPointsPreview}
                 </ConfirmDetailCard>
@@ -1367,7 +1419,8 @@ export function PredictMatchForm({
                   {locale === "th" ? "คะแนนที่เป็นไปได้" : "Possible outcomes"}
                 </p>
                 <span className="font-mono text-xs text-gray-500">
-                  base {basePoints} / boost x{boostMultiplier.toFixed(1)}
+                  base {basePoints}
+                  {canUseConfidenceBoost ? ` / boost x${boostMultiplier.toFixed(1)}` : ""}
                 </span>
               </div>
               <div className="space-y-2">

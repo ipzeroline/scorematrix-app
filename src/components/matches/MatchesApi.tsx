@@ -19,6 +19,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Clock3,
   Filter,
   LoaderCircle,
   RotateCcw,
@@ -60,6 +61,7 @@ interface MatchesApiProps {
   fixtures: ApiFootballFixture[];
   counts: ApiFootballFixtureCounts;
   selectedDate: string;
+  lastUpdatedAt: string;
   initialLoadError?: boolean;
   initialHasAuthSession?: boolean;
 }
@@ -93,6 +95,10 @@ type MatchTableLabels = {
   vs: string;
   today: string;
   tomorrow: string;
+  yesterday: string;
+  matchCenter: string;
+  signInToPredict: string;
+  lastUpdated: string;
   viewDetails: string;
   statusLabels: FootballStatusLabels;
 };
@@ -101,6 +107,7 @@ export function MatchesApi({
   fixtures: initialFixtures,
   counts: initialCounts,
   selectedDate,
+  lastUpdatedAt,
   initialLoadError = false,
   initialHasAuthSession = false,
 }: MatchesApiProps) {
@@ -198,6 +205,10 @@ export function MatchesApi({
       vs: t("common.vs"),
       today: t("common.today"),
       tomorrow: t("common.tomorrow"),
+      yesterday: t("matches.yesterday"),
+      matchCenter: t("matches.matchCenter"),
+      signInToPredict: t("matches.signInToPredict"),
+      lastUpdated: t("matches.lastUpdated"),
       viewDetails: t("matches.viewDetails"),
       statusLabels: buildFootballStatusLabels(t),
     }),
@@ -246,6 +257,14 @@ export function MatchesApi({
     activeLeague !== "all" ||
     activeStatusTab !== "all" ||
     Boolean(searchQuery.trim());
+  const lastUpdatedLabel = useMemo(
+    () => formatTime(lastUpdatedAt, locale),
+    [lastUpdatedAt, locale]
+  );
+  const matchdayItems = useMemo(
+    () => buildMatchdayItems(selectedDate, locale, tableLabels),
+    [locale, selectedDate, tableLabels]
+  );
 
   function updateUrl(key: string, value?: string) {
     const query = new URLSearchParams(searchParams.toString());
@@ -275,33 +294,61 @@ export function MatchesApi({
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 pb-8 px-4 sm:px-0">
-      <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_420px]">
+    <div className="mx-auto flex max-w-6xl flex-col gap-5 pb-8 px-4 sm:px-0">
+      <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_390px]">
         <Card
           neon="cyan"
-          className="relative overflow-hidden border-cyan-500/20 bg-gradient-to-br from-cyan-500/12 via-[#0c0d12] to-purple-500/8 p-4 md:p-5"
+          className="relative overflow-hidden border-cyan-500/15 bg-[#0b111d] p-4 shadow-[0_18px_60px_rgba(0,0,0,0.22)] md:p-5"
         >
-          {/* Futuristic grid background decoration */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,26,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,26,0.5)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-cyan-300/70 via-fuchsia-300/40 to-transparent" />
 
-          <div className="relative flex min-h-0 flex-col justify-center gap-3">
+          <div className="relative flex min-h-0 flex-col justify-center gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-cyan-300">
-                <Sparkles size={11} className="animate-pulse" />
-                {t("matches.boardTitle")}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-full border border-cyan-500/25 bg-cyan-500/10 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-cyan-200">
+                  <Sparkles size={11} />
+                  {t("matches.boardTitle")}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs font-bold text-gray-400">
+                  <Clock3 size={12} className="text-cyan-300" />
+                  {tableLabels.lastUpdated} {lastUpdatedLabel}
+                </span>
               </div>
-              <h1 className="mt-3 font-display text-3xl font-black tracking-tight text-white md:text-4xl">
+              <h1 className="mt-3 font-display text-3xl font-black tracking-normal text-white md:text-4xl">
                 {t("matches.title")}
               </h1>
               <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-gray-400 md:text-[15px]">
                 {t("matches.subtitle")}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 pt-1">
+
+            <div className="grid grid-cols-5 gap-2">
+              {matchdayItems.map((item) => (
+                <button
+                  key={item.dateKey}
+                  type="button"
+                  onClick={() => updateUrl("date", item.dateKey)}
+                  className={cn(
+                    "min-h-16 rounded-xl border px-2 py-2 text-center transition-colors",
+                    item.active
+                      ? "border-cyan-300/50 bg-cyan-300/12 text-white"
+                      : "border-white/10 bg-black/18 text-gray-400 hover:border-cyan-300/25 hover:text-white"
+                  )}
+                >
+                  <span className="block truncate text-[10px] font-black uppercase tracking-wide">
+                    {item.label}
+                  </span>
+                  <span className="mt-1 block font-mono text-sm font-black">
+                    {item.displayDate}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
               <Link href={`/${locale}/livescore`}>
                 <Button size="sm" neon className="min-h-10 cursor-pointer font-bold tracking-wide">
-                  <Activity size={14} className="animate-pulse" />
+                  <Activity size={14} />
                   {t("matches.liveCenter")}
                 </Button>
               </Link>
@@ -326,7 +373,6 @@ export function MatchesApi({
               value: matchStats.live,
               color: "text-green-400",
               indicatorBg: "bg-green-500",
-              glowColor: "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
               icon: Activity,
             },
             {
@@ -334,7 +380,6 @@ export function MatchesApi({
               value: matchStats.upcoming,
               color: "text-cyan-400",
               indicatorBg: "bg-cyan-500",
-              glowColor: "shadow-[0_0_8px_rgba(56,189,248,0.5)]",
               icon: CalendarDays,
             },
             {
@@ -342,7 +387,6 @@ export function MatchesApi({
               value: matchStats.finished,
               color: "text-gray-400",
               indicatorBg: "bg-gray-500",
-              glowColor: "shadow-[0_0_8px_rgba(156,163,175,0.3)]",
               icon: ShieldCheck,
             },
             {
@@ -350,7 +394,6 @@ export function MatchesApi({
               value: matchStats.postponed,
               color: "text-amber-400",
               indicatorBg: "bg-amber-500",
-              glowColor: "shadow-[0_0_8px_rgba(245,158,11,0.5)]",
               icon: AlertTriangle,
             },
             {
@@ -358,7 +401,6 @@ export function MatchesApi({
               value: matchStats.cancelled,
               color: "text-red-400",
               indicatorBg: "bg-red-500",
-              glowColor: "shadow-[0_0_8px_rgba(239,68,68,0.5)]",
               icon: X,
             },
           ].map((item, index) => {
@@ -380,7 +422,7 @@ export function MatchesApi({
                     <p className="truncate text-sm font-black leading-5 text-white">
                       {item.label}
                     </p>
-                    <span className={cn("mt-1 block h-1 w-8 rounded-full", item.indicatorBg, item.glowColor)} />
+                    <span className={cn("mt-1 block h-1 w-8 rounded-full", item.indicatorBg)} />
                   </div>
                 </div>
                 {isPending ? (
@@ -779,6 +821,46 @@ function getStatusTabLabel(
   return labels.cancelled;
 }
 
+function buildMatchdayItems(
+  selectedDate: string,
+  locale: string,
+  labels: Pick<MatchTableLabels, "today" | "tomorrow" | "yesterday">
+) {
+  const todayKey = getThailandDateKey();
+  const formatter = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "short",
+    timeZone: THAILAND_TIME_ZONE,
+  });
+
+  return [-2, -1, 0, 1, 2].map((offset) => {
+    const date = new Date(`${selectedDate}T12:00:00+07:00`);
+    date.setUTCDate(date.getUTCDate() + offset);
+    const dateKey = getThailandDateKey(date);
+    const relativeToToday = dayOffset(dateKey, todayKey);
+
+    return {
+      dateKey,
+      active: dateKey === selectedDate,
+      label:
+        relativeToToday === -1
+          ? labels.yesterday
+          : relativeToToday === 0
+            ? labels.today
+            : relativeToToday === 1
+              ? labels.tomorrow
+              : formatter.format(date),
+      displayDate: formatter.format(date),
+    };
+  });
+}
+
+function dayOffset(dateKey: string, baseDateKey: string) {
+  const date = new Date(`${dateKey}T12:00:00+07:00`);
+  const baseDate = new Date(`${baseDateKey}T12:00:00+07:00`);
+  return Math.round((date.getTime() - baseDate.getTime()) / 86400000);
+}
+
 function FilterLabel({
   icon: Icon,
   label,
@@ -897,9 +979,8 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-gray-800/70 bg-[#07080b]">
-      {/* Desktop Table Header */}
-      <div className="hidden md:grid grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-white">
+    <section className="overflow-hidden rounded-xl border border-gray-800/80 bg-[#07080b]">
+      <div className="hidden md:grid grid-cols-[104px_minmax(180px,1fr)_92px_minmax(180px,1fr)_154px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-400">
         <div className="pl-1">{labels.dateTime}</div>
         <div className="text-right pr-3">{labels.home}</div>
         <div className="text-center">{labels.vs}</div>
@@ -909,35 +990,25 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
 
       {groups.map((group) => (
         <div key={group.key}>
-          {/* League Subheader */}
-          <div className="relative overflow-hidden border-b border-cyan-300/10 bg-gradient-to-r from-cyan-300/[0.14] via-[#0b1018] to-fuchsia-400/[0.08] px-4 py-3.5 sm:px-5">
-            <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-300 via-fuchsia-400 to-amber-300" />
-            <div className="absolute right-0 top-0 h-full w-40 bg-[linear-gradient(135deg,transparent_0%,rgba(34,211,238,0.08)_42%,transparent_43%,transparent_58%,rgba(217,70,239,0.08)_59%,transparent_100%)]" />
+          <div className="relative overflow-hidden border-b border-cyan-300/10 bg-[#0c121d] px-4 py-2.5 sm:px-5">
+            <div className="absolute inset-y-0 left-0 w-0.5 bg-cyan-300/70" />
             <div className="relative flex min-w-0 items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="relative">
-                  <span className="absolute -inset-1 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] shadow-[0_0_22px_rgba(34,211,238,0.12)]" />
-                  <span className="relative block">
-                    <ApiLeagueLogo name={group.label} logo={group.logo} size="sm" />
-                  </span>
-                </div>
+                <ApiLeagueLogo name={group.label} logo={group.logo} size="sm" />
                 <div className="min-w-0">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <p className="min-w-0 truncate text-base font-black uppercase tracking-widest text-white">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <p className="min-w-0 truncate text-sm font-black tracking-normal text-white">
                       {group.label}
                     </p>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="h-0.5 w-20 rounded-full bg-gradient-to-r from-cyan-300 via-fuchsia-400 to-transparent" />
                     {group.country ? (
-                      <span className="truncate text-[10px] font-bold uppercase tracking-wider text-cyan-200/70">
+                      <span className="shrink-0 rounded border border-white/10 bg-black/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
                         {group.country}
                       </span>
                     ) : null}
                   </div>
                 </div>
               </div>
-              <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-cyan-300/20 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100 shadow-[inset_0_0_18px_rgba(34,211,238,0.08)]">
+              <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-white/10 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100">
                 <span>{group.matches.length}</span>
                 <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
                   {labels.matches}
@@ -1002,7 +1073,19 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
       ),
     [locale, match]
   );
-  const showPredictAction = isLoggedIn && statusGroup === MatchStatus.UPCOMING;
+  const isUpcoming = statusGroup === MatchStatus.UPCOMING;
+  const primaryActionHref = isUpcoming
+    ? isLoggedIn
+      ? predictMatchHref
+      : `/${locale}/auth/login?next=${encodeURIComponent(predictMatchHref)}`
+    : matchDetailHref;
+  const primaryActionLabel = isUpcoming
+    ? isLoggedIn
+      ? labels.predict
+      : labels.signInToPredict
+    : statusGroup === MatchStatus.LIVE
+      ? labels.matchCenter
+      : labels.viewDetails;
 
   return (
     <article
@@ -1020,7 +1103,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
       {/* Desktop Grid Row */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[118px_minmax(190px,1fr)_92px_minmax(190px,1fr)_210px] items-center gap-3 px-5 py-3 transition-all duration-200 border-l-2",
+          "hidden md:grid grid-cols-[104px_minmax(180px,1fr)_92px_minmax(180px,1fr)_154px] items-center gap-3 px-5 py-2.5 transition-all duration-200 border-l-2",
           statusGroup === MatchStatus.LIVE
             ? "border-l-green-500 bg-gradient-to-r from-green-500/[0.04] via-transparent to-transparent"
             : statusGroup === MatchStatus.UPCOMING
@@ -1031,22 +1114,24 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
         )}
       >
         {/* Column 1: Time / Status */}
-        <div className="flex flex-col justify-center items-start pl-1">
-          <span className="whitespace-nowrap text-[10px] font-bold leading-none text-gray-500">
+        <div className="flex items-center gap-3 pl-1">
+          <div className="min-w-0">
+          <span className="block whitespace-nowrap text-[10px] font-bold leading-none text-gray-500">
             {matchDate}
           </span>
-          <span className="font-mono text-xs font-black tracking-wider text-cyan-200">
+          <span className="mt-1 block font-mono text-sm font-black tracking-normal text-cyan-200">
             {matchTime}
           </span>
+          </div>
           <div className="mt-0.5">
             {statusGroup === MatchStatus.LIVE ? (
-              <span className="inline-flex items-center gap-1 rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-green-300 animate-pulse">
+              <span className="inline-flex items-center gap-1 rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-green-300">
                 <span className="h-1 w-1 rounded-full bg-green-400 live-status-dot" />
                 {labels.live}
               </span>
             ) : (
               <span className={cn(
-                "text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md border border-white/5 bg-white/[0.03] text-gray-400",
+                "text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/5 bg-white/[0.03] text-gray-400",
                 statusGroup === MatchStatus.POSTPONED && "bg-amber-500/10 text-amber-400 border-amber-500/20",
                 statusGroup === MatchStatus.CANCELLED && "bg-red-500/10 text-red-400 border-red-500/20"
               )}>
@@ -1058,7 +1143,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
 
         {/* Column 2: Home Team */}
         <div className="flex items-center justify-end gap-2 text-right min-w-0 pr-1">
-          <span className="truncate text-sm font-black text-gray-300 group-hover:text-cyan-300 transition-colors tracking-wide">
+          <span className="truncate text-sm font-bold text-gray-200 group-hover:text-cyan-200 transition-colors tracking-normal">
             {match.home.name}
           </span>
           <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
@@ -1074,7 +1159,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
         {/* Column 3: Score / VS Pill */}
         <div className="flex flex-col items-center justify-center shrink-0">
           <div className={cn(
-            "flex min-w-[58px] items-center justify-center px-2.5 py-1.5 rounded-lg border font-mono text-xs font-black tracking-wider transition-all duration-200",
+            "flex min-w-[62px] items-center justify-center px-2.5 py-1.5 rounded-lg border font-mono text-sm font-black tracking-normal transition-all duration-200",
             statusGroup === MatchStatus.LIVE
               ? "bg-green-500/15 border-green-500/35 text-green-400"
               : statusGroup === MatchStatus.FINISHED
@@ -1092,7 +1177,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
             )}
           </div>
           {statusDetail && (
-            <span className="text-[8px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wider truncate max-w-[92px]">
+            <span className="text-[9px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wide truncate max-w-[92px]">
               {statusDetail}
             </span>
           )}
@@ -1108,30 +1193,26 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
               accent="magenta"
             />
           </div>
-          <span className="truncate text-sm font-black text-gray-300 group-hover:text-magenta-300 transition-colors tracking-wide">
+          <span className="truncate text-sm font-bold text-gray-200 group-hover:text-magenta-200 transition-colors tracking-normal">
             {match.away.name}
           </span>
         </div>
 
         {/* Column 5: Actions / Navigation */}
         <div className="flex items-center justify-end gap-2 pr-1">
-          {showPredictAction ? (
-            <Link
-              href={predictMatchHref}
-              onClick={(event) => event.stopPropagation()}
-              className="inline-flex h-8 items-center justify-center whitespace-nowrap rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 px-3 text-[11px] font-black tracking-wide text-black transition-all duration-200 shadow-md shadow-amber-500/10 hover:scale-[1.02]"
-            >
-              {labels.predict}
-            </Link>
-          ) : null}
           <Link
-            href={matchDetailHref}
+            href={primaryActionHref}
             onClick={(event) => event.stopPropagation()}
-            aria-label={labels.viewDetails}
-            title={labels.viewDetails}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.06] text-cyan-100 transition-all duration-200 hover:border-cyan-200/40 hover:bg-cyan-300/10"
+            className={cn(
+              "inline-flex h-8 min-w-[104px] items-center justify-center whitespace-nowrap rounded-lg border px-3 text-[11px] font-black tracking-normal transition-colors",
+              isUpcoming
+                ? "border-amber-300/30 bg-amber-300/12 text-amber-100 hover:border-amber-200/50"
+                : statusGroup === MatchStatus.LIVE
+                  ? "border-green-300/30 bg-green-300/10 text-green-100 hover:border-green-200/50"
+                  : "border-cyan-300/20 bg-cyan-300/[0.06] text-cyan-100 hover:border-cyan-200/40"
+            )}
           >
-            <ChevronRight size={14} />
+            {primaryActionLabel}
           </Link>
         </div>
       </div>
@@ -1230,22 +1311,19 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
             {match.league.round ?? labels.viewDetails}
           </span>
           <div className="flex shrink-0 items-center gap-1.5">
-            {showPredictAction ? (
-              <Link
-                href={predictMatchHref}
-                onClick={(event) => event.stopPropagation()}
-                className="inline-flex h-8 items-center justify-center rounded-lg bg-gradient-to-r from-amber-500 to-yellow-400 px-3 text-xs font-black uppercase tracking-wide text-black transition-colors"
-              >
-                {labels.predict}
-              </Link>
-            ) : null}
             <Link
-              href={matchDetailHref}
+              href={primaryActionHref}
               onClick={(event) => event.stopPropagation()}
-              aria-label={labels.viewDetails}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200 transition-colors hover:border-cyan-200/40 hover:bg-cyan-300/10"
+              className={cn(
+                "inline-flex h-8 items-center justify-center rounded-lg border px-3 text-xs font-black tracking-wide transition-colors",
+                isUpcoming
+                  ? "border-amber-300/30 bg-amber-300/12 text-amber-100"
+                  : statusGroup === MatchStatus.LIVE
+                    ? "border-green-300/30 bg-green-300/10 text-green-100"
+                    : "border-cyan-300/15 bg-cyan-300/[0.06] text-cyan-200"
+              )}
             >
-              <ChevronRight size={14} />
+              {primaryActionLabel}
             </Link>
           </div>
         </div>
@@ -1299,11 +1377,7 @@ function getMatchStatusDetail(
   const statusShort = match.statusShort?.trim();
   const statusLong = match.statusLong?.trim();
 
-  if (statusShort && statusLong) {
-    return `${statusShort} • ${statusLong}`;
-  }
-
-  return statusLong || statusShort || fallbackLabel;
+  return statusShort || statusLong || fallbackLabel;
 }
 
 

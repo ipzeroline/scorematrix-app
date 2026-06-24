@@ -19,15 +19,22 @@ function getLinearXpProgress(xp: number, level: number) {
 interface XPProgressBarProps {
   currentXP: number;
   level: number;
+  maxLevel?: number;
+  maxLabel?: string;
   className?: string;
 }
 
 export function XPProgressBar({
   currentXP,
   level,
+  maxLevel,
+  maxLabel = "Max level reached",
   className,
 }: XPProgressBarProps) {
-  const { progressInLevel, currentLevelXP, xpNeeded } = getLinearXpProgress(currentXP, level);
+  const displayLevel = maxLevel ? Math.min(level, maxLevel) : level;
+  const isMaxLevel = Boolean(maxLevel && level >= maxLevel);
+  const { progressInLevel, currentLevelXP, xpNeeded } = getLinearXpProgress(currentXP, displayLevel);
+  const progressValue = isMaxLevel ? currentLevelXP : progressInLevel;
 
   // Level badge colors by range
   const levelBadgeColor = (lvl: number): string => {
@@ -46,18 +53,18 @@ export function XPProgressBar({
         <span
           className={cn(
             "shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border",
-            levelBadgeColor(level)
+            levelBadgeColor(displayLevel)
           )}
         >
-          Lv.{level}
+          Lv.{displayLevel}
         </span>
 
         {/* Progress bar */}
         <div className="flex-1">
           <ProgressBar
-            value={progressInLevel}
+            value={progressValue}
             max={currentLevelXP}
-            color={level >= 30 ? "magenta" : level >= 15 ? "cyan" : "green"}
+            color={isMaxLevel ? "gold" : displayLevel >= 30 ? "magenta" : displayLevel >= 15 ? "cyan" : "green"}
             size="md"
           />
         </div>
@@ -66,20 +73,20 @@ export function XPProgressBar({
         <span
           className={cn(
             "shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border",
-            levelBadgeColor(level + 1)
+            isMaxLevel ? levelBadgeColor(displayLevel) : levelBadgeColor(displayLevel + 1)
           )}
         >
-          Lv.{level + 1}
+          {isMaxLevel ? "MAX" : `Lv.${displayLevel + 1}`}
         </span>
       </div>
 
       {/* XP text */}
       <div className="flex justify-between text-[10px]">
         <span className="text-gray-500">
-          {progressInLevel.toLocaleString()} / {currentLevelXP.toLocaleString()} XP
+          {isMaxLevel ? maxLabel : `${progressInLevel.toLocaleString()} / ${currentLevelXP.toLocaleString()} XP`}
         </span>
-        <span className="text-gray-600">
-          {xpNeeded.toLocaleString()} XP to Level {level + 1}
+        <span className={cn(isMaxLevel ? "text-amber-300" : "text-gray-600")}>
+          {isMaxLevel ? "MAX" : `${xpNeeded.toLocaleString()} XP to Level ${displayLevel + 1}`}
         </span>
       </div>
     </div>

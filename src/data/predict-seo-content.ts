@@ -16,7 +16,7 @@ type PredictSeoContent = {
 };
 
 const fallback: PredictSeoContent = {
-  title: "Football Predictions Today | Skill-Based Match Prediction Hub | ScoreMatrix",
+  title: "Football Predictions Today | Skill-Based Match Prediction Hub",
   description:
     "Make skill-based football predictions on ScoreMatrix using match context, AI insights, fixtures, confidence levels and points-based scoring with no real-money gambling.",
   keywords: [
@@ -57,7 +57,7 @@ const fallback: PredictSeoContent = {
 
 const content: Partial<Record<LocaleCode, PredictSeoContent>> = {
   th: {
-    title: "ทายผลบอลวันนี้ | ศูนย์ทายผลฟุตบอลแบบใช้ทักษะ | ScoreMatrix",
+    title: "ทายผลบอลวันนี้ | ศูนย์ทายผลฟุตบอลแบบใช้ทักษะ",
     description:
       "ทายผลบอลบน ScoreMatrix ด้วยข้อมูลแมตช์ AI วิเคราะห์ โปรแกรมแข่งขัน ระดับความมั่นใจ และระบบคะแนนแบบใช้ทักษะ โดยไม่มีการพนันด้วยเงินจริง",
     keywords: [
@@ -97,7 +97,7 @@ const content: Partial<Record<LocaleCode, PredictSeoContent>> = {
   },
   en: fallback,
   lo: {
-    title: "ທາຍຜົນບານມື້ນີ້ | ສູນທາຍຜົນແບບໃຊ້ທັກສະ | ScoreMatrix",
+    title: "ທາຍຜົນບານມື້ນີ້ | ສູນທາຍຜົນແບບໃຊ້ທັກສະ",
     description:
       "ທາຍຜົນບານໃນ ScoreMatrix ດ້ວຍບໍລິບົດແມັດ, AI ວິເຄາະ, ຕາຕະລາງແຂ່ງ, ລະດັບຄວາມໝັ້ນໃຈ ແລະ ລະບົບຄະແນນແບບໃຊ້ທັກສະ.",
     keywords: [
@@ -134,7 +134,7 @@ const content: Partial<Record<LocaleCode, PredictSeoContent>> = {
     ],
   },
   my: {
-    title: "ယနေ့ ဘောလုံးခန့်မှန်းချက် | Skill-Based Match Prediction Hub | ScoreMatrix",
+    title: "ယနေ့ ဘောလုံးခန့်မှန်းချက် | Skill-Based Match Prediction Hub",
     description:
       "ScoreMatrix တွင် match context၊ AI insights၊ fixtures၊ confidence levels နှင့် points-based scoring ဖြင့် skill-based ဘောလုံးခန့်မှန်းချက်များ ပြုလုပ်ပါ။",
     keywords: [
@@ -171,7 +171,7 @@ const content: Partial<Record<LocaleCode, PredictSeoContent>> = {
     ],
   },
   km: {
-    title: "ទស្សន៍ទាយបាល់ទាត់ថ្ងៃនេះ | មជ្ឈមណ្ឌលទស្សន៍ទាយផ្អែកលើជំនាញ | ScoreMatrix",
+    title: "ទស្សន៍ទាយបាល់ទាត់ថ្ងៃនេះ | មជ្ឈមណ្ឌលទស្សន៍ទាយផ្អែកលើជំនាញ",
     description:
       "ទស្សន៍ទាយបាល់ទាត់លើ ScoreMatrix ដោយប្រើបរិបទប្រកួត AI insights កាលវិភាគ កម្រិតទំនុកចិត្ត និងប្រព័ន្ធពិន្ទុផ្អែកលើជំនាញ។",
     keywords: [
@@ -208,7 +208,7 @@ const content: Partial<Record<LocaleCode, PredictSeoContent>> = {
     ],
   },
   zh: {
-    title: "今日足球预测 | 技巧型比赛预测中心 | ScoreMatrix",
+    title: "今日足球预测 | 技巧型比赛预测中心",
     description:
       "在 ScoreMatrix 使用比赛背景、AI 分析、赛程、信心等级和积分计分系统进行技巧型足球预测，不涉及真钱赌博。",
     keywords: [

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore, memo } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore, memo } from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -18,16 +18,22 @@ import { buildPredictMatchHref } from "@/lib/predict-route";
 import { cn, formatDate, formatTime } from "@/lib/utils";
 import { apiGetRaw, isAuthSessionExpiredError } from "@/lib/api-client";
 import { useUserStore } from "@/stores/user-store";
+import type { LocaleCode } from "@/i18n";
 import {
   Brain,
+  CalendarDays,
   CheckCheck,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  ListFilter,
   LogIn,
+  Medal,
   Search,
   ShieldCheck,
   Sparkles,
+  Target,
+  Timer,
   Trophy,
   Users,
   X,
@@ -222,6 +228,7 @@ type PredictionHistoryItem = {
 };
 
 type PredictionHistoryStatusFilter = "all" | "pending" | "won" | "lost";
+type PredictMatchFilter = "all" | "open" | "predicted" | "live";
 
 type PredictionHistoryPagination = {
   page: number;
@@ -304,9 +311,241 @@ type ScoringApiBreakdown = {
   total?: number | null;
 };
 
+type PredictPageCopy = {
+  heroBadge: string;
+  heroTitle: string;
+  heroText: string;
+  primaryCta: string;
+  rulesCta: string;
+  guestCta: string;
+  skillFirst: string;
+  noCash: string;
+  aiReady: string;
+  aiSignal: string;
+  openForPrediction: string;
+  startsIn: string;
+  startsSoon: string;
+  filtersTitle: string;
+  filtersDescription: string;
+  searchPlaceholder: string;
+  allMatches: string;
+  openMatches: string;
+  predictedMatches: string;
+  liveMatches: string;
+  totalMatches: string;
+  availableMatches: string;
+  personalStats: string;
+  platformPreview: string;
+  accuracyLabel: string;
+  pointsLabel: string;
+  correctLabel: string;
+  predictionsLabel: string;
+  predictAction: string;
+};
+
+const PREDICT_PAGE_COPY: Record<LocaleCode, PredictPageCopy> = {
+  th: {
+    heroBadge: "ศูนย์ทายผลหลัก",
+    heroTitle: "ทายผลบอลแบบใช้ทักษะ สะสมแต้ม และไต่อันดับ",
+    heroText:
+      "เลือกคู่ที่เปิดให้ทาย ตรวจบริบทแมตช์ ใช้ AI Insight ประกอบการตัดสินใจ แล้วส่งสกอร์ก่อนเริ่มแข่ง ไม่มีเงินจริงหรือการเดิมพัน",
+    primaryCta: "ดูคู่ที่เปิดให้ทาย",
+    rulesCta: "ดูกติกาคะแนน",
+    guestCta: "สมัครเพื่อเริ่มทาย",
+    skillFirst: "ใช้ทักษะฟุตบอล",
+    noCash: "ไม่มีเงินจริง",
+    aiReady: "ต่อยอดด้วย AI Insight",
+    aiSignal: "AI",
+    openForPrediction: "เปิดให้ทาย",
+    startsIn: "เริ่มใน",
+    startsSoon: "ใกล้เริ่ม",
+    filtersTitle: "ค้นหาคู่ทายผล",
+    filtersDescription: "กรองลีก ทีม สถานะคำทาย และคู่สดได้ในมุมมองเดียว",
+    searchPlaceholder: "ค้นหาทีมหรือลีก...",
+    allMatches: "ทั้งหมด",
+    openMatches: "ยังไม่ทาย",
+    predictedMatches: "ทายแล้ว",
+    liveMatches: "สด",
+    totalMatches: "คู่ทั้งหมด",
+    availableMatches: "เปิดให้ทาย",
+    personalStats: "สถิติของคุณ",
+    platformPreview: "ภาพรวมสำหรับผู้เล่นใหม่",
+    accuracyLabel: "ความแม่นยำ",
+    pointsLabel: "แต้ม",
+    correctLabel: "ทายถูก",
+    predictionsLabel: "ทั้งหมด",
+    predictAction: "ทายผลคู่นี้",
+  },
+  en: {
+    heroBadge: "Primary Prediction Hub",
+    heroTitle: "Predict football with skill, earn points, and climb the table",
+    heroText:
+      "Pick eligible fixtures, review match context, use AI Insight as support, and submit scores before kickoff. No real-money betting or cash wagering.",
+    primaryCta: "View eligible matches",
+    rulesCta: "Scoring rules",
+    guestCta: "Create account",
+    skillFirst: "Skill-first football",
+    noCash: "No real-money betting",
+    aiReady: "AI Insight ready",
+    aiSignal: "AI",
+    openForPrediction: "Open pick",
+    startsIn: "Starts in",
+    startsSoon: "Starting soon",
+    filtersTitle: "Find prediction matches",
+    filtersDescription: "Filter by league, team, prediction status, and live fixtures in one view.",
+    searchPlaceholder: "Search team or league...",
+    allMatches: "All",
+    openMatches: "Unpredicted",
+    predictedMatches: "Predicted",
+    liveMatches: "Live",
+    totalMatches: "Total matches",
+    availableMatches: "Open picks",
+    personalStats: "Your stats",
+    platformPreview: "New player preview",
+    accuracyLabel: "Accuracy",
+    pointsLabel: "Points",
+    correctLabel: "Correct",
+    predictionsLabel: "Total",
+    predictAction: "Predict match",
+  },
+  lo: {
+    heroBadge: "ສູນທາຍຜົນຫຼັກ",
+    heroTitle: "ທາຍຜົນບານດ້ວຍທັກສະ ສະສົມແຕ້ມ ແລະ ໄຕ່ອັນດັບ",
+    heroText:
+      "ເລືອກຄູ່ທີ່ເປີດໃຫ້ທາຍ, ກວດບໍລິບົດແມັດ, ໃຊ້ AI Insight ແລະ ສົ່ງສະກໍກ່ອນເລີ່ມແຂ່ງ ໂດຍບໍ່ມີເງິນຈິງ.",
+    primaryCta: "ເບິ່ງຄູ່ທີ່ທາຍໄດ້",
+    rulesCta: "ກະຕິກາຄະແນນ",
+    guestCta: "ສ້າງບັນຊີ",
+    skillFirst: "ເນັ້ນທັກສະບານ",
+    noCash: "ບໍ່ມີເງິນຈິງ",
+    aiReady: "ພ້ອມ AI Insight",
+    aiSignal: "AI",
+    openForPrediction: "ເປີດໃຫ້ທາຍ",
+    startsIn: "ເລີ່ມໃນ",
+    startsSoon: "ໃກ້ເລີ່ມ",
+    filtersTitle: "ຄົ້ນຫາຄູ່ທາຍຜົນ",
+    filtersDescription: "ກັ່ນຕອງລີກ, ທີມ, ສະຖານະຄຳທາຍ ແລະ ຄູ່ສົດ.",
+    searchPlaceholder: "ຄົ້ນຫາທີມ ຫຼື ລີກ...",
+    allMatches: "ທັງໝົດ",
+    openMatches: "ຍັງບໍ່ທາຍ",
+    predictedMatches: "ທາຍແລ້ວ",
+    liveMatches: "ສົດ",
+    totalMatches: "ຄູ່ທັງໝົດ",
+    availableMatches: "ເປີດໃຫ້ທາຍ",
+    personalStats: "ສະຖິຕິຂອງທ່ານ",
+    platformPreview: "ພາບລວມຜູ້ໃຊ້ໃໝ່",
+    accuracyLabel: "ຄວາມແມ່ນຍຳ",
+    pointsLabel: "ແຕ້ມ",
+    correctLabel: "ຖືກ",
+    predictionsLabel: "ທັງໝົດ",
+    predictAction: "ທາຍຄູ່ນີ້",
+  },
+  my: {
+    heroBadge: "Prediction Hub",
+    heroTitle: "Skill ဖြင့် ဘောလုံးခန့်မှန်းပြီး points စုကာ ranking တက်ပါ",
+    heroText:
+      "ခန့်မှန်းနိုင်သောပွဲများကိုရွေး၊ match context နှင့် AI Insight ကိုစစ်ပြီး kickoff မတိုင်မီ score တင်ပါ။ Real-money betting မရှိပါ။",
+    primaryCta: "ခန့်မှန်းနိုင်သောပွဲများ",
+    rulesCta: "Scoring rules",
+    guestCta: "Account ဖွင့်ရန်",
+    skillFirst: "Skill-first football",
+    noCash: "Real money မရှိ",
+    aiReady: "AI Insight ပါသည်",
+    aiSignal: "AI",
+    openForPrediction: "Open pick",
+    startsIn: "Starts in",
+    startsSoon: "Starting soon",
+    filtersTitle: "Prediction matches ရှာရန်",
+    filtersDescription: "League, team, prediction status နှင့် live fixtures ကို filter လုပ်ပါ။",
+    searchPlaceholder: "Team သို့မဟုတ် league ရှာပါ...",
+    allMatches: "အားလုံး",
+    openMatches: "မခန့်မှန်းရသေး",
+    predictedMatches: "ခန့်မှန်းပြီး",
+    liveMatches: "Live",
+    totalMatches: "စုစုပေါင်း",
+    availableMatches: "Open picks",
+    personalStats: "သင့် stats",
+    platformPreview: "New player preview",
+    accuracyLabel: "Accuracy",
+    pointsLabel: "Points",
+    correctLabel: "Correct",
+    predictionsLabel: "Total",
+    predictAction: "Predict match",
+  },
+  km: {
+    heroBadge: "មជ្ឈមណ្ឌលទស្សន៍ទាយ",
+    heroTitle: "ទស្សន៍ទាយបាល់ទាត់ដោយជំនាញ សន្សំពិន្ទុ និងឡើងចំណាត់ថ្នាក់",
+    heroText:
+      "ជ្រើសការប្រកួតដែលអាចទាយបាន ពិនិត្យបរិបទ ប្រើ AI Insight ហើយដាក់ពិន្ទុមុនចាប់ផ្តើម។ មិនមានការភ្នាល់ប្រាក់ពិត។",
+    primaryCta: "មើលការប្រកួតដែលអាចទាយបាន",
+    rulesCta: "ច្បាប់ពិន្ទុ",
+    guestCta: "បង្កើតគណនី",
+    skillFirst: "ផ្អែកលើជំនាញ",
+    noCash: "គ្មានប្រាក់ពិត",
+    aiReady: "មាន AI Insight",
+    aiSignal: "AI",
+    openForPrediction: "បើកឱ្យទាយ",
+    startsIn: "ចាប់ផ្តើមក្នុង",
+    startsSoon: "ជិតចាប់ផ្តើម",
+    filtersTitle: "ស្វែងរកការប្រកួតទស្សន៍ទាយ",
+    filtersDescription: "តម្រងលីគ ក្រុម ស្ថានភាព និងការប្រកួតផ្ទាល់ក្នុងមួយទំព័រ។",
+    searchPlaceholder: "ស្វែងរកក្រុម ឬ លីគ...",
+    allMatches: "ទាំងអស់",
+    openMatches: "មិនទាន់ទាយ",
+    predictedMatches: "ទាយរួច",
+    liveMatches: "ផ្ទាល់",
+    totalMatches: "ការប្រកួតសរុប",
+    availableMatches: "បើកឱ្យទាយ",
+    personalStats: "ស្ថិតិរបស់អ្នក",
+    platformPreview: "ទិដ្ឋភាពអ្នកលេងថ្មី",
+    accuracyLabel: "ភាពត្រឹមត្រូវ",
+    pointsLabel: "ពិន្ទុ",
+    correctLabel: "ត្រឹមត្រូវ",
+    predictionsLabel: "សរុប",
+    predictAction: "ទាយការប្រកួតនេះ",
+  },
+  zh: {
+    heroBadge: "预测主中心",
+    heroTitle: "用足球判断预测比分，累积积分并冲击排名",
+    heroText:
+      "选择可预测赛程，查看比赛背景，用 AI Insight 辅助判断，并在开赛前提交比分。无真钱投注或现金下注。",
+    primaryCta: "查看可预测比赛",
+    rulesCta: "计分规则",
+    guestCta: "创建账号",
+    skillFirst: "技巧型足球",
+    noCash: "无真钱投注",
+    aiReady: "支持 AI Insight",
+    aiSignal: "AI",
+    openForPrediction: "可预测",
+    startsIn: "开始于",
+    startsSoon: "即将开始",
+    filtersTitle: "查找预测比赛",
+    filtersDescription: "按联赛、球队、预测状态和实时比赛筛选。",
+    searchPlaceholder: "搜索球队或联赛...",
+    allMatches: "全部",
+    openMatches: "未预测",
+    predictedMatches: "已预测",
+    liveMatches: "实时",
+    totalMatches: "比赛总数",
+    availableMatches: "可预测",
+    personalStats: "你的数据",
+    platformPreview: "新玩家概览",
+    accuracyLabel: "准确率",
+    pointsLabel: "积分",
+    correctLabel: "正确",
+    predictionsLabel: "总数",
+    predictAction: "预测本场",
+  },
+};
+
+function getPredictPageCopy(locale: string): PredictPageCopy {
+  return PREDICT_PAGE_COPY[locale as LocaleCode] ?? PREDICT_PAGE_COPY.en;
+}
+
 export function PredictApi() {
   const t = useTranslations();
   const { locale } = useParams<{ locale: string }>();
+  const copy = getPredictPageCopy(locale);
   const scoreCopy = getScoringBreakdownCopy(locale);
   const pathname = usePathname();
   const [tab, setTab] = useState("upcoming");
@@ -321,6 +560,8 @@ export function PredictApi() {
   const [historyDateFilter, setHistoryDateFilter] = useState("");
   const [historyPage, setHistoryPage] = useState(1);
   const [historyLimit, setHistoryLimit] = useState(20);
+  const [matchSearch, setMatchSearch] = useState("");
+  const [matchFilter, setMatchFilter] = useState<PredictMatchFilter>("all");
   const [historyPagination, setHistoryPagination] =
     useState<PredictionHistoryPagination>({
       page: 1,
@@ -351,9 +592,40 @@ export function PredictApi() {
     () => new Set(history.map((item) => item.matchId)),
     [history]
   );
+  const matchSummary = useMemo(() => {
+    const predicted = matches.filter((match) => match.hasPredicted || predictedMatchIds.has(match.id)).length;
+    const live = matches.filter((match) => match.isLive || match.status === MatchStatus.LIVE).length;
+    return {
+      total: matches.length,
+      predicted,
+      open: Math.max(0, matches.length - predicted),
+      live,
+      leagues: new Set(matches.map((match) => match.leagueKey)).size,
+    };
+  }, [matches, predictedMatchIds]);
+
+  const filteredMatches = useMemo(() => {
+    const q = matchSearch.trim().toLowerCase();
+
+    return matches.filter((match) => {
+      const hasPredicted = match.hasPredicted || predictedMatchIds.has(match.id);
+      if (matchFilter === "open" && hasPredicted) return false;
+      if (matchFilter === "predicted" && !hasPredicted) return false;
+      if (matchFilter === "live" && !(match.isLive || match.status === MatchStatus.LIVE)) return false;
+
+      if (!q) return true;
+
+      return (
+        match.home.name.toLowerCase().includes(q) ||
+        match.away.name.toLowerCase().includes(q) ||
+        match.league.name.toLowerCase().includes(q)
+      );
+    });
+  }, [matchFilter, matchSearch, matches, predictedMatchIds]);
+
   const groupedMatches = useMemo(
-    () => groupPredictableMatchesByLeague(matches),
-    [matches]
+    () => groupPredictableMatchesByLeague(filteredMatches),
+    [filteredMatches]
   );
 
   const stats = useMemo(() => {
@@ -363,6 +635,30 @@ export function PredictApi() {
     const accuracy = history.length > 0 ? Math.round((correct / history.length) * 100) : 0;
     return { total, correct, points, accuracy };
   }, [history, historyPagination.total]);
+
+  const loadScoringRules = useCallback(async () => {
+    if (scoringRules || loadingRules) return;
+
+    setLoadingRules(true);
+    setRulesRequestFailed(false);
+    try {
+      const resp = await apiGetRaw<{ data?: ScoringRules } & ScoringRules>(
+        "/scoring-rules",
+        { locale }
+      );
+      setScoringRules(resp?.data ?? resp);
+    } catch (error) {
+      console.error("Error loading scoring rules:", error);
+      setRulesRequestFailed(true);
+    } finally {
+      setLoadingRules(false);
+    }
+  }, [loadingRules, locale, scoringRules]);
+
+  const openRulesModal = useCallback(() => {
+    setShowRulesModal(true);
+    void loadScoringRules();
+  }, [loadScoringRules, setShowRulesModal]);
 
   const handleSelectPrediction = (item: PredictionHistoryItem) => {
     setPlayerName(null);
@@ -572,95 +868,118 @@ export function PredictApi() {
       <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_420px]">
         <Card
           neon="cyan"
-          className="relative overflow-hidden border-cyan-300/20 bg-gradient-to-br from-cyan-400/10 via-[#08111b] to-blue-500/10 p-4 md:p-5"
+          className="relative overflow-hidden border-cyan-300/20 bg-[#08111b] p-4 md:p-6"
         >
-          {/* Futuristic grid background decoration */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(18,18,26,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(18,18,26,0.5)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-20" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cyan-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-cyan-200 via-sky-400 to-transparent" />
+          <div className="absolute right-0 top-0 h-full w-40 bg-[linear-gradient(135deg,transparent_0%,rgba(34,211,238,0.08)_42%,transparent_43%,transparent_58%,rgba(59,130,246,0.08)_59%,transparent_100%)] pointer-events-none" />
 
-          <div className="relative flex min-h-0 flex-col justify-center gap-3">
+          <div className="relative flex min-h-0 flex-col justify-center gap-5">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-extrabold uppercase tracking-wide text-cyan-300">
-                <Sparkles size={11} className="animate-pulse" />
-                {t("prediction.title")} HUB
+                <Sparkles size={11} aria-hidden="true" />
+                {copy.heroBadge}
               </div>
-              <h1 className="mt-3 font-display text-3xl font-black tracking-tight text-white md:text-4xl">
-                {t("prediction.title")}
+              <h1 className="mt-3 max-w-3xl font-display text-3xl font-black leading-tight text-white md:text-5xl">
+                {copy.heroTitle}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm font-medium leading-6 text-gray-400 md:text-[15px]">
-                ทายสกอร์การแข่งขันล่วงหน้าเพื่อรับแต้ม แข่งขันชิงความเป็นหนึ่งบนลีดเดอร์บอร์ด และปลดล็อกรางวัลสุดพิเศษ!
+              <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-gray-400 md:text-base md:leading-7">
+                {copy.heroText}
               </p>
             </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {[
+                { icon: Target, label: copy.skillFirst, tone: "text-cyan-200" },
+                { icon: ShieldCheck, label: copy.noCash, tone: "text-emerald-200" },
+                { icon: Brain, label: copy.aiReady, tone: "text-violet-200" },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.label}
+                    className="flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs font-black text-gray-300"
+                  >
+                    <Icon size={15} className={item.tone} aria-hidden="true" />
+                    <span className="min-w-0 truncate">{item.label}</span>
+                  </div>
+                );
+              })}
+            </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              <Button
-                size="sm"
-                neon
-                onClick={() => {
-                  setShowRulesModal(true);
-                  if (!scoringRules && !loadingRules) {
-                    void (async () => {
-                      setLoadingRules(true);
-                      setRulesRequestFailed(false);
-                      try {
-                        const resp = await apiGetRaw<{ data?: ScoringRules } & ScoringRules>(
-                          "/scoring-rules",
-                          { locale }
-                        );
-                        setScoringRules(resp?.data ?? resp);
-                      } catch (error) {
-                        console.error("Error loading scoring rules:", error);
-                        setRulesRequestFailed(true);
-                      } finally {
-                        setLoadingRules(false);
-                      }
-                    })();
-                  }
-                }}
-                className="min-h-10 cursor-pointer font-bold tracking-wide"
+              <Link
+                href="#predict-matches"
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-cyan-500 px-3.5 py-2 text-sm font-black text-black transition-colors hover:bg-cyan-400"
               >
-                กติกาการให้คะแนน
-              </Button>
+                <Target size={15} aria-hidden="true" />
+                {copy.primaryCta}
+              </Link>
+              <button
+                type="button"
+                onClick={openRulesModal}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-gray-600 px-3.5 py-2 text-sm font-bold text-gray-300 transition-colors hover:border-cyan-400/50 hover:text-cyan-200"
+              >
+                <Medal size={15} aria-hidden="true" />
+                {copy.rulesCta}
+              </button>
+              {!effectiveIsLoggedIn && (
+                <Link
+                  href={`/${locale}/auth/register?next=${encodeURIComponent(pathname)}`}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-emerald-400/25 bg-emerald-400/[0.07] px-3.5 py-2 text-sm font-bold text-emerald-100 transition-colors hover:border-emerald-300/50"
+                >
+                  <LogIn size={15} aria-hidden="true" />
+                  {copy.guestCta}
+                </Link>
+              )}
             </div>
           </div>
         </Card>
 
         <Card className="grid grid-cols-2 gap-2 border-cyan-300/10 bg-[#090b10] p-2.5 shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+          <div className="col-span-2 flex items-center justify-between px-1 pb-1">
+            <p className="text-xs font-black uppercase tracking-wide text-cyan-300">
+              {effectiveIsLoggedIn ? copy.personalStats : copy.platformPreview}
+            </p>
+            {!effectiveIsLoggedIn && (
+              <span className="rounded-full border border-emerald-400/20 bg-emerald-400/[0.06] px-2 py-1 text-[10px] font-black text-emerald-200">
+                {copy.noCash}
+              </span>
+            )}
+          </div>
           {[
             {
-              label: "การทายทั้งหมด",
-              shortLabel: "ทั้งหมด",
-              value: effectiveIsLoggedIn ? stats.total : 0,
+              label: copy.predictionsLabel,
+              shortLabel: copy.predictionsLabel,
+              value: effectiveIsLoggedIn ? stats.total : matchSummary.total,
               color: "text-cyan-400",
               indicatorBg: "bg-cyan-500",
               glowColor: "shadow-[0_0_8px_rgba(56,189,248,0.5)]",
               icon: Users,
             },
             {
-              label: "ทายถูกต้อง",
-              shortLabel: "ถูก",
-              value: effectiveIsLoggedIn ? stats.correct : 0,
+              label: copy.correctLabel,
+              shortLabel: copy.correctLabel,
+              value: effectiveIsLoggedIn ? stats.correct : matchSummary.open,
               color: "text-green-400",
               indicatorBg: "bg-green-500",
               glowColor: "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
               icon: CheckCheck,
             },
             {
-              label: "ความแม่นยำ",
-              shortLabel: "แม่นยำ",
-              value: effectiveIsLoggedIn ? `${stats.accuracy}%` : "0%",
+              label: copy.accuracyLabel,
+              shortLabel: copy.accuracyLabel,
+              value: effectiveIsLoggedIn ? `${stats.accuracy}%` : matchSummary.live,
               color: "text-amber-400",
               indicatorBg: "bg-amber-500",
               glowColor: "shadow-[0_0_8px_rgba(245,158,11,0.5)]",
-              icon: ShieldCheck,
+              icon: effectiveIsLoggedIn ? ShieldCheck : Timer,
             },
             {
-              label: "แต้มสะสมจากทายผล",
-              shortLabel: "แต้ม",
-              value: effectiveIsLoggedIn ? stats.points.toLocaleString() : "0",
+              label: copy.pointsLabel,
+              shortLabel: copy.pointsLabel,
+              value: effectiveIsLoggedIn ? stats.points.toLocaleString() : matchSummary.leagues,
               color: "text-emerald-400",
               indicatorBg: "bg-emerald-500",
               glowColor: "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
-              icon: Trophy,
+              icon: effectiveIsLoggedIn ? Trophy : CalendarDays,
             },
           ].map((item) => {
             const Icon = item.icon;
@@ -692,7 +1011,10 @@ export function PredictApi() {
         </Card>
       </section>
 
-      <Card className="relative overflow-hidden border-cyan-300/15 bg-[#07080b] p-0 shadow-[0_18px_70px_rgba(0,0,0,0.32)]">
+      <Card
+        id="predict-matches"
+        className="relative overflow-hidden border-cyan-300/15 bg-[#07080b] p-0 shadow-[0_18px_70px_rgba(0,0,0,0.32)]"
+      >
         {/* Esports accent line */}
         <div className="absolute left-0 right-0 top-0 h-[2px] bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500/70" />
 
@@ -703,7 +1025,7 @@ export function PredictApi() {
               {
                 key: "upcoming",
                 label: t("prediction.upcomingMatches"),
-                count: matches.length,
+                count: filteredMatches.length,
               },
               {
                 key: "history",
@@ -718,7 +1040,7 @@ export function PredictApi() {
           <div className="flex items-center gap-2 py-2 sm:py-0 self-end sm:self-auto">
             {tab === "upcoming" ? (
               <Badge variant="cyan" size="sm" className="font-bold tracking-wide">
-                คู่แข่งทั้งหมด {matches.length} คู่
+                {copy.totalMatches} {matches.length}
               </Badge>
             ) : (
               effectiveIsLoggedIn && (
@@ -733,11 +1055,82 @@ export function PredictApi() {
         <div className="bg-[#050508] p-3 sm:p-4">
           {tab === "upcoming" ? (
             <div className="space-y-3">
-              <p className="rounded-xl border border-cyan-300/10 bg-cyan-300/[0.03] px-4 py-3 text-sm font-semibold text-gray-300">
-                {effectiveIsLoggedIn
-                  ? t("prediction.filterHelpLoggedIn")
-                  : t("prediction.filterHelpGuest")}
-              </p>
+              <div className="rounded-2xl border border-cyan-300/10 bg-[#080d14] p-3">
+                <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h2 className="flex items-center gap-2 text-sm font-black text-white">
+                      <ListFilter size={15} className="text-cyan-300" aria-hidden="true" />
+                      {copy.filtersTitle}
+                    </h2>
+                    <p className="mt-1 text-xs font-semibold text-gray-500">
+                      {copy.filtersDescription}
+                    </p>
+                  </div>
+                  {(matchSearch || matchFilter !== "all") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMatchSearch("");
+                        setMatchFilter("all");
+                      }}
+                      className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-gray-700/80 px-2.5 py-1.5 text-xs font-semibold text-gray-300 transition-colors hover:border-cyan-400/40 hover:text-cyan-200"
+                    >
+                      <X size={13} aria-hidden="true" />
+                      {t("matches.clearFilters")}
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_auto] lg:items-center">
+                  <div className="relative">
+                    <Search
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                      aria-hidden="true"
+                    />
+                    <input
+                      value={matchSearch}
+                      onChange={(event) => setMatchSearch(event.target.value)}
+                      placeholder={copy.searchPlaceholder}
+                      className="min-h-10 w-full rounded-lg border border-gray-700 bg-black/30 py-2 pl-9 pr-10 text-sm font-semibold text-white placeholder-gray-500 outline-none transition-colors focus:border-cyan-300/50"
+                    />
+                    {matchSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setMatchSearch("")}
+                        aria-label={t("matches.clearSearch")}
+                        className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-gray-500 transition-colors hover:bg-white/5 hover:text-cyan-200"
+                      >
+                        <X size={13} aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex min-w-0 flex-wrap gap-2">
+                    {([
+                      ["all", copy.allMatches, matchSummary.total],
+                      ["open", copy.openMatches, matchSummary.open],
+                      ["predicted", copy.predictedMatches, matchSummary.predicted],
+                      ["live", copy.liveMatches, matchSummary.live],
+                    ] as const).map(([key, label, count]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setMatchFilter(key)}
+                        className={cn(
+                          "inline-flex min-h-9 items-center gap-2 rounded-lg border px-3 text-xs font-black transition-colors",
+                          matchFilter === key
+                            ? "border-cyan-300 bg-cyan-300/15 text-cyan-100"
+                            : "border-white/10 bg-white/[0.03] text-gray-400 hover:border-cyan-300/30 hover:text-cyan-200"
+                        )}
+                      >
+                        <span>{label}</span>
+                        <span className="font-mono text-[11px] opacity-80">{count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {loadingMatches ? (
                 <div className="space-y-3 animate-pulse">
@@ -772,6 +1165,12 @@ export function PredictApi() {
                   title={t("prediction.noUpcomingMatches")}
                   description={t("prediction.checkBackLater")}
                 />
+              ) : filteredMatches.length === 0 ? (
+                <EmptyState
+                  icon={<Search size={28} />}
+                  title={t("prediction.noMatchesAfterFilterTitle")}
+                  description={t("prediction.noMatchesAfterFilterDescription")}
+                />
               ) : (
                 <div className="overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#07080b] shadow-[0_14px_44px_rgba(0,0,0,0.24)]">
                   {/* Desktop Table Header */}
@@ -782,7 +1181,7 @@ export function PredictApi() {
                     <div className="text-right pr-3">{t("football.table.home")}</div>
                     <div className="text-center">VS</div>
                     <div className="text-left pl-3">{t("football.table.away")}</div>
-                    <div className="text-right pr-4">ทายผล</div>
+                    <div className="text-right pr-4">{t("prediction.predictResult")}</div>
                   </div>
                   <div>
                     {groupedMatches.map((group) => (
@@ -814,7 +1213,7 @@ export function PredictApi() {
                             <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-cyan-300/20 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100 shadow-[inset_0_0_18px_rgba(34,211,238,0.08)]">
                               <span>{group.matches.length}</span>
                               <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
-                                คู่
+                                {t("matches.metricMatches")}
                               </span>
                             </span>
                           </div>
@@ -840,6 +1239,7 @@ export function PredictApi() {
                                 isLoggedIn={effectiveIsLoggedIn}
                                 hasPredicted={hasPredicted}
                                 predictMatchHref={predictMatchHref}
+                                copy={copy}
                               />
                             );
                           })}
@@ -1740,6 +2140,53 @@ function formatHistoryTimestamp(value: string | null, locale: string) {
   return date.toLocaleString(locale);
 }
 
+function formatHistoryDate(value: string | null, locale: string) {
+  if (!value) return "-";
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return value;
+  return formatDate(date.toISOString(), locale);
+}
+
+function formatHistoryTime(value: string | null, locale: string) {
+  if (!value) return "-";
+  const normalized = value.includes("T") ? value : value.replace(" ", "T");
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return value;
+  return formatTime(date.toISOString(), locale);
+}
+
+function getPredictRowStatusLabel(match: PredictableMatch, copy: PredictPageCopy) {
+  if (match.status === MatchStatus.UPCOMING) return copy.openForPrediction;
+  return match.statusLabel;
+}
+
+function formatKickoffCountdown(kickoffTime: string, copy: PredictPageCopy) {
+  const kickoff = new Date(kickoffTime).getTime();
+  if (!Number.isFinite(kickoff)) return null;
+
+  const diffMs = kickoff - Date.now();
+  if (diffMs <= 0) return null;
+
+  const totalMinutes = Math.ceil(diffMs / 60_000);
+  if (totalMinutes <= 30) return copy.startsSoon;
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    return `${copy.startsIn} ${days}d${remainingHours > 0 ? ` ${remainingHours}h` : ""}`;
+  }
+
+  if (hours > 0) {
+    return `${copy.startsIn} ${hours}h${minutes > 0 ? ` ${minutes}m` : ""}`;
+  }
+
+  return `${copy.startsIn} ${minutes}m`;
+}
+
 function getPlayerNameFromProfilePayload(payload: unknown): string | null {
   if (!isRecord(payload)) return null;
 
@@ -1830,6 +2277,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
   isLoggedIn,
   hasPredicted,
   predictMatchHref,
+  copy,
 }: {
   match: PredictableMatch;
   index: number;
@@ -1838,22 +2286,27 @@ const PredictMatchRow = memo(function PredictMatchRow({
   isLoggedIn: boolean;
   hasPredicted: boolean;
   predictMatchHref: string;
+  copy: PredictPageCopy;
 }) {
   const router = useRouter();
   const matchDate = formatDate(match.kickoffTime, locale);
   const matchTime = formatTime(match.kickoffTime, locale);
   const statusGroup = match.status;
-  const statusLabel = match.statusLabel;
+  const statusLabel = getPredictRowStatusLabel(match, copy);
+  const timeUntilKickoff = formatKickoffCountdown(match.kickoffTime, copy);
+  const actionHref = isLoggedIn
+    ? predictMatchHref
+    : `/${locale}/auth/login?next=${encodeURIComponent(predictMatchHref)}`;
 
   return (
     <article
       role="link"
       tabIndex={0}
-      onClick={() => router.push(predictMatchHref)}
+      onClick={() => router.push(actionHref)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          router.push(predictMatchHref);
+          router.push(actionHref);
         }
       }}
       className="group relative cursor-pointer transition-all duration-200 outline-none"
@@ -1861,7 +2314,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
       {/* Desktop Grid Row */}
       <div
         className={cn(
-          "hidden min-h-[68px] grid-cols-[118px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 border-l-2 px-5 py-2 transition-all duration-200 md:grid",
+          "hidden min-h-[62px] grid-cols-[190px_minmax(150px,1fr)_58px_minmax(150px,1fr)_138px] items-center gap-3 border-l-2 px-4 py-2 transition-all duration-200 md:grid",
           hasPredicted
             ? "border-l-emerald-400 bg-gradient-to-r from-emerald-400/[0.08] via-[#0b1118] to-[#090b10]"
             : "border-l-cyan-400/30 group-hover:border-l-cyan-300",
@@ -1870,28 +2323,35 @@ const PredictMatchRow = memo(function PredictMatchRow({
         )}
       >
         {/* Column 1: Time / Status */}
-        <div className="flex flex-col items-start justify-center gap-1 pl-1">
-          <span className="whitespace-nowrap text-[10px] font-bold leading-none text-gray-500">
-            {matchDate}
-          </span>
-          <span className="whitespace-nowrap text-xs font-black leading-none tracking-wide text-cyan-200">
-            {matchTime}
-          </span>
-          <div>
+        <div className="min-w-0 pl-1">
+          <div className="inline-flex min-w-[172px] flex-col rounded-xl border border-cyan-300/12 bg-black/20 px-3 py-2">
+            <span className="mb-1 block whitespace-nowrap text-[11px] font-bold leading-none text-gray-500">
+              {matchDate}
+            </span>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="min-w-[48px] font-mono text-lg font-black leading-none tracking-wide text-cyan-100">
+                {matchTime}
+              </span>
             <span className={cn(
-              "rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-gray-300",
+              "whitespace-nowrap rounded-md border border-cyan-300/15 bg-cyan-300/[0.05] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-cyan-100",
               statusGroup === MatchStatus.LIVE && "bg-green-500/10 text-green-400 border-green-500/20",
               statusGroup === MatchStatus.POSTPONED && "bg-amber-500/10 text-amber-400 border-amber-500/20",
               statusGroup === MatchStatus.CANCELLED && "bg-red-500/10 text-red-400 border-red-500/20"
             )}>
               {statusLabel}
             </span>
+            {timeUntilKickoff && (
+              <span className="whitespace-nowrap rounded-md border border-white/10 bg-white/[0.03] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-gray-400">
+                {timeUntilKickoff}
+              </span>
+            )}
+            </div>
           </div>
         </div>
 
         {/* Column 2: Home Team */}
         <div className="flex min-w-0 items-center justify-end gap-2 pr-2 text-right">
-          <span className="truncate text-sm font-extrabold tracking-wide text-gray-300 transition-colors group-hover:text-cyan-300">
+          <span className="max-w-[240px] truncate text-sm font-extrabold tracking-wide text-gray-300 transition-colors group-hover:text-cyan-300">
             {match.home.name}
           </span>
           <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
@@ -1906,7 +2366,7 @@ const PredictMatchRow = memo(function PredictMatchRow({
 
         {/* Column 3: VS Pill */}
         <div className="flex shrink-0 flex-col items-center justify-center">
-          <div className="flex min-w-10 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.07] px-2.5 py-1 text-[11px] font-black tracking-wider text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.08)]">
+          <div className="flex min-w-10 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.06] px-2 py-1 text-[11px] font-black tracking-wider text-cyan-200">
             <span className="px-1 text-[11px] font-black uppercase text-cyan-200">
               VS
             </span>
@@ -1923,16 +2383,21 @@ const PredictMatchRow = memo(function PredictMatchRow({
               accent="magenta"
             />
           </div>
-          <span className="truncate text-sm font-extrabold tracking-wide text-gray-300 transition-colors group-hover:text-violet-300">
+          <span className="max-w-[240px] truncate text-sm font-extrabold tracking-wide text-gray-300 transition-colors group-hover:text-violet-300">
             {match.away.name}
           </span>
         </div>
 
         {/* Column 5: Actions */}
         <div className="flex items-center justify-end gap-2 pr-1">
+          {!hasPredicted && (
+            <span className="hidden rounded-md border border-violet-300/20 bg-violet-300/[0.06] px-1.5 py-1 text-[9px] font-black text-violet-200 xl:inline-flex">
+              {copy.aiSignal}
+            </span>
+          )}
           {isLoggedIn ? (
             hasPredicted ? (
-              <span className="inline-flex h-8 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-400/10 px-3 text-[10px] font-black uppercase tracking-wide text-emerald-300">
+              <span className="inline-flex h-7 items-center justify-center rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-2.5 text-[10px] font-black uppercase tracking-wide text-emerald-300">
                 <CheckCheck size={13} className="mr-1.5" />
                 {t("prediction.alreadyPredicted")}
               </span>
@@ -1940,30 +2405,27 @@ const PredictMatchRow = memo(function PredictMatchRow({
               <Link
                 href={predictMatchHref}
                 onClick={(event) => event.stopPropagation()}
-                className="inline-flex h-8 items-center justify-center rounded-xl border border-cyan-200/30 bg-gradient-to-r from-cyan-300 to-sky-400 px-3 text-[10px] font-black uppercase tracking-wide text-[#031018] shadow-md shadow-cyan-500/15 transition-all duration-200 hover:scale-[1.02] hover:from-cyan-200 hover:to-sky-300"
+                className="inline-flex h-7 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/[0.12] px-2.5 text-[10px] font-black uppercase tracking-wide text-cyan-100 transition-colors hover:border-cyan-200/50 hover:bg-cyan-300/20"
               >
-                {t("prediction.predictScore")}
+                {copy.predictAction}
               </Link>
             )
           ) : (
-            <Badge
-              variant="default"
-              className="whitespace-nowrap border-cyan-300/20 bg-cyan-300/[0.04] px-2.5 py-1 text-[11px] font-bold text-gray-300"
+            <Link
+              href={actionHref}
+              onClick={(event) => event.stopPropagation()}
+              className="inline-flex h-7 items-center justify-center rounded-lg border border-cyan-300/20 bg-cyan-300/[0.05] px-2.5 text-[10px] font-black uppercase tracking-wide text-cyan-100 transition-colors hover:border-cyan-300/45"
             >
               {t("prediction.signInToPredict")}
-            </Badge>
+            </Link>
           )}
-          <ChevronRight
-            size={18}
-            className="text-gray-600 transition-all duration-200 group-hover:translate-x-1 group-hover:text-cyan-300"
-          />
         </div>
       </div>
 
       {/* Mobile Row Layout */}
       <div
         className={cn(
-          "border-b border-gray-900/60 border-l-4 px-3.5 py-4 transition-all duration-200 md:hidden",
+          "border-b border-gray-900/60 border-l-4 px-3.5 py-3.5 transition-all duration-200 md:hidden",
           hasPredicted
             ? "border-l-emerald-500 bg-gradient-to-r from-emerald-500/[0.03] to-transparent"
             : "border-l-cyan-500/20",
@@ -1971,15 +2433,24 @@ const PredictMatchRow = memo(function PredictMatchRow({
         )}
       >
         <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="mb-1 text-xs font-bold leading-none text-gray-500">
-              {matchDate}
-            </div>
-            <div className="whitespace-nowrap text-base font-black leading-none text-cyan-200">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="grid h-10 min-w-14 place-items-center rounded-lg border border-cyan-300/15 bg-cyan-300/[0.05] px-2">
+              <span className="font-mono text-base font-black leading-none text-cyan-100">
               {matchTime}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-xs font-bold leading-none text-gray-500">
+                {matchDate}
+              </div>
+              {timeUntilKickoff && (
+                <span className="mt-1 inline-flex rounded-md border border-white/10 bg-black/20 px-1.5 py-0.5 text-[10px] font-black text-gray-400">
+                  {timeUntilKickoff}
+                </span>
+              )}
             </div>
           </div>
-          <span className="shrink-0 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-gray-300">
+          <span className="shrink-0 rounded-lg border border-cyan-300/15 bg-cyan-300/[0.05] px-2 py-1 text-[10px] font-black uppercase tracking-wide text-cyan-100">
             {statusLabel}
           </span>
         </div>
@@ -2021,9 +2492,11 @@ const PredictMatchRow = memo(function PredictMatchRow({
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
-          <span className="truncate text-xs font-semibold text-gray-500">
-            {match.season ? t("prediction.seasonLabel", { season: match.season }) : t("prediction.kickoffLabel")}
-          </span>
+          <div className="min-w-0">
+            <span className="block truncate text-xs font-semibold text-gray-500">
+              {match.season ? t("prediction.seasonLabel", { season: match.season }) : t("prediction.kickoffLabel")}
+            </span>
+          </div>
           <div className="shrink-0">
             {isLoggedIn ? (
               hasPredicted ? (
@@ -2035,18 +2508,18 @@ const PredictMatchRow = memo(function PredictMatchRow({
                 <Link
                   href={predictMatchHref}
                   onClick={(event) => event.stopPropagation()}
-                  className="inline-flex h-8 items-center justify-center rounded-lg border border-cyan-200/30 bg-gradient-to-r from-cyan-300 to-sky-400 px-3 text-xs font-black uppercase tracking-wide text-[#031018] transition-colors"
-                >
-                  {t("prediction.predictScore")}
+                className="inline-flex h-8 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/[0.12] px-3 text-xs font-black uppercase tracking-wide text-cyan-100 transition-colors"
+              >
+                  {copy.predictAction}
                 </Link>
               )
             ) : (
               <Link
-                href={`/${locale}/auth/login?next=${encodeURIComponent(predictMatchHref)}`}
+                href={actionHref}
                 onClick={(event) => event.stopPropagation()}
                 className="inline-flex h-8 items-center justify-center rounded-lg border border-cyan-300/15 bg-cyan-300/[0.05] px-3 text-xs font-black text-gray-300"
               >
-                {t("prediction.signIn")}
+                {t("prediction.signInToPredict")}
               </Link>
             )}
           </div>
@@ -2071,7 +2544,9 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
 }) {
   const statusLabel = t(`prediction.${item.result}`);
   const resultClass = historyTierTextClass(item.result);
-  const matchTime = formatHistoryTimestamp(item.createdAt, locale);
+  const submittedDate = formatHistoryDate(item.createdAt, locale);
+  const submittedTime = formatHistoryTime(item.createdAt, locale);
+  const pointsLabel = item.points > 0 ? `+${item.points} PTS` : "0 PTS";
 
   return (
     <article
@@ -2089,9 +2564,9 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
       {/* Desktop Grid Row */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[130px_140px_1fr_120px_1fr_120px] items-center gap-2 px-5 py-2.5 transition-all duration-200 border-l-2",
+          "hidden min-h-[66px] grid-cols-[190px_minmax(170px,1fr)_minmax(150px,1fr)_108px_minmax(150px,1fr)_128px] items-center gap-3 border-l-2 px-4 py-2 transition-all duration-200 md:grid",
           item.result === "correct"
-            ? "border-l-emerald-500 bg-gradient-to-r from-emerald-500/[0.04] via-transparent to-transparent"
+            ? "border-l-emerald-500 bg-gradient-to-r from-emerald-500/[0.04] via-[#09100f] to-transparent"
             : item.result === "incorrect"
             ? "border-l-rose-500/30 group-hover:border-l-rose-500"
             : "border-l-cyan-500/20 group-hover:border-l-cyan-400",
@@ -2100,13 +2575,17 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
         )}
       >
         {/* Column 1: Time / Status */}
-        <div className="flex flex-col justify-center items-start pl-1">
-          <span className="font-mono text-[10px] text-gray-400">
-            {matchTime}
-          </span>
-          <div className="mt-0.5">
+        <div className="min-w-0 pl-1">
+          <div className="inline-flex min-w-[172px] flex-col rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+            <span className="mb-1 block whitespace-nowrap text-[11px] font-bold leading-none text-gray-500">
+              {submittedDate}
+            </span>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="min-w-[54px] font-mono text-sm font-black leading-none tracking-wide text-gray-200">
+                {submittedTime}
+              </span>
             <span className={cn(
-              "text-[8px] font-bold uppercase tracking-widest px-1 py-0.2 rounded border",
+              "whitespace-nowrap rounded-md border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide",
               item.result === "correct" && "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
               item.result === "incorrect" && "bg-rose-500/10 text-rose-400 border-rose-500/20",
               item.result === "pending" && "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
@@ -2115,22 +2594,23 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
             )}>
               {statusLabel}
             </span>
+            </div>
           </div>
         </div>
 
         {/* Column 2: Tournament (League) */}
-        <div className="flex flex-col justify-center min-w-0 pr-2">
-          <span className="truncate text-[11px] font-extrabold text-gray-300 group-hover:text-cyan-400 transition-colors uppercase tracking-wider">
+        <div className="flex min-w-0 flex-col justify-center pr-2">
+          <span className="truncate text-sm font-black text-gray-200 transition-colors group-hover:text-cyan-200">
             {item.home} vs {item.away}
           </span>
-          <span className="truncate text-[9px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wide">
+          <span className="mt-1 truncate text-[10px] font-bold text-gray-500">
             {t("prediction.yourPrediction")}
           </span>
         </div>
 
         {/* Column 3: Home Team */}
-        <div className="flex items-center justify-end gap-2 text-right min-w-0 pr-1">
-          <span className="truncate text-xs font-extrabold text-gray-200 group-hover:text-cyan-200 transition-colors tracking-wide">
+        <div className="flex min-w-0 items-center justify-end gap-2 pr-1 text-right">
+          <span className="max-w-[210px] truncate text-sm font-extrabold tracking-wide text-gray-200 transition-colors group-hover:text-cyan-200">
             {item.home}
           </span>
           <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
@@ -2144,19 +2624,19 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
         </div>
 
         {/* Column 4: Prediction & Actual Scores */}
-        <div className="flex flex-col items-center justify-center shrink-0">
-          <div className="flex items-center justify-center gap-1.5 font-mono text-xs font-bold">
-            <span className="text-cyan-300 font-extrabold">{item.predicted}</span>
-            <span className="text-gray-650">/</span>
+        <div className="flex shrink-0 flex-col items-center justify-center">
+          <div className="inline-flex min-h-8 min-w-[82px] items-center justify-center gap-1.5 rounded-lg border border-cyan-300/15 bg-cyan-300/[0.05] px-2 font-mono text-sm font-black">
+            <span className="text-cyan-200">{item.predicted}</span>
+            <span className="text-gray-600">/</span>
             <span className="text-white">{item.actual}</span>
           </div>
-          <span className="text-[8px] text-gray-500 font-semibold uppercase mt-0.5 tracking-wider">
+          <span className="mt-1 text-[9px] font-bold text-gray-500">
             {t("prediction.predicted")} / {t("prediction.actualResult")}
           </span>
         </div>
 
         {/* Column 5: Away Team */}
-        <div className="flex items-center justify-start gap-2 text-left min-w-0 pl-1">
+        <div className="flex min-w-0 items-center justify-start gap-2 pl-1 text-left">
           <div className="shrink-0 transition-transform duration-300 group-hover:scale-105">
             <ApiTeamLogo
               name={item.away}
@@ -2165,18 +2645,21 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
               accent="magenta"
             />
           </div>
-          <span className="truncate text-xs font-extrabold text-gray-200 group-hover:text-magenta-200 transition-colors tracking-wide">
+          <span className="max-w-[210px] truncate text-sm font-extrabold tracking-wide text-gray-200 transition-colors group-hover:text-magenta-200">
             {item.away}
           </span>
         </div>
 
         {/* Column 6: Reward / Detail */}
         <div className="flex items-center justify-end gap-2 pr-1">
-          <div className="text-right">
-            <span className={cn("font-mono text-xs font-bold", item.points > 0 ? "text-green-400" : "text-gray-500")}>
-              {item.points > 0 ? `+${item.points}` : "0"} PTS
-            </span>
-          </div>
+          <span className={cn(
+            "inline-flex min-h-8 min-w-[82px] items-center justify-center rounded-lg border px-2 font-mono text-xs font-black",
+            item.points > 0
+              ? "border-emerald-400/25 bg-emerald-400/[0.08] text-emerald-300"
+              : "border-white/10 bg-white/[0.03] text-gray-500"
+          )}>
+            {pointsLabel}
+          </span>
           <ChevronRight
             size={15}
             className="text-gray-650 group-hover:text-cyan-400 group-hover:translate-x-1 transition-all duration-200"
@@ -2197,11 +2680,14 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
         )}
       >
         {/* Left column */}
-        <div className="flex flex-col justify-center gap-0.5 min-w-[50px] shrink-0">
-          <span className="font-mono text-[10px] text-gray-400">
-            {matchTime}
+        <div className="flex min-w-[84px] shrink-0 flex-col justify-center gap-1">
+          <span className="font-mono text-xs font-black text-gray-300">
+            {submittedTime}
           </span>
-          <span className={cn("text-[8px] font-bold uppercase", resultClass)}>
+          <span className="text-[9px] font-semibold text-gray-500">
+            {submittedDate}
+          </span>
+          <span className={cn("w-fit rounded-md border border-white/10 px-1.5 py-0.5 text-[8px] font-bold uppercase", resultClass)}>
             {statusLabel}
           </span>
         </div>
@@ -2245,7 +2731,7 @@ const HistoryMatchRow = memo(function HistoryMatchRow({
         {/* Right column */}
         <div className="flex items-center justify-end gap-1 shrink-0 pl-1">
           <span className={cn("font-mono text-[10px] font-bold", item.points > 0 ? "text-green-400" : "text-gray-500")}>
-            +{item.points}
+            {item.points > 0 ? `+${item.points}` : "0"}
           </span>
           <ChevronRight size={14} className="text-gray-500" />
         </div>

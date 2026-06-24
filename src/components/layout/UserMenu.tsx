@@ -75,17 +75,17 @@ export function UserMenu({
 
   if (!isLoggedIn) {
     return (
-      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+      <div className="flex min-w-0 shrink-0 items-center gap-1 sm:gap-2">
         <Link
           href={`/${locale}/auth/register`}
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-cyan-500 px-3 text-sm font-bold leading-none text-black transition-colors hover:bg-cyan-400 max-[380px]:px-2.5 max-[380px]:text-[13px] sm:px-3.5"
+          className="inline-flex min-h-10 min-w-[4.7rem] shrink-0 items-center justify-center rounded-lg bg-cyan-500 px-3 text-sm font-bold leading-none text-black transition-colors hover:bg-cyan-400 max-[380px]:min-w-[4.25rem] max-[380px]:px-2 max-[380px]:text-[13px] sm:px-3.5"
         >
           <span className="whitespace-nowrap sm:hidden">{compactAuthLabel.register}</span>
           <span className="hidden whitespace-nowrap sm:inline">{t("auth.register")}</span>
         </Link>
         <Link
           href={`/${locale}/auth/login`}
-          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 text-sm font-bold leading-none text-cyan-100 transition-colors hover:border-cyan-400/50 hover:text-white max-[380px]:px-2.5 max-[380px]:text-[13px] sm:border-transparent sm:bg-transparent sm:px-3.5 sm:font-semibold sm:text-gray-300"
+          className="hidden min-h-10 shrink-0 items-center justify-center rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 text-sm font-bold leading-none text-cyan-100 transition-colors hover:border-cyan-400/50 hover:text-white min-[390px]:inline-flex sm:border-transparent sm:bg-transparent sm:px-3.5 sm:font-semibold sm:text-gray-300"
         >
           <span className="whitespace-nowrap sm:hidden">{compactAuthLabel.login}</span>
           <span className="hidden whitespace-nowrap sm:inline">{t("auth.login")}</span>

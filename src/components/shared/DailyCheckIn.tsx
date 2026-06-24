@@ -193,14 +193,14 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
   };
 
   return (
-    <Card className="daily-checkin-panel relative overflow-hidden p-0 border border-border bg-surface hover:border-cyan/35 transition-colors duration-300">
+    <Card className="daily-checkin-panel relative overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#0b111d] p-0 shadow-[0_18px_54px_rgba(0,0,0,0.24)] transition-colors duration-300 hover:border-cyan/35">
       {/* Top accent line */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-cyan via-cyan-dim to-green" />
       
       {!isMounted ? (
-        <div className="relative grid gap-2.5 p-2.5 md:grid-cols-[minmax(170px,0.42fr)_minmax(0,1fr)_auto] md:items-center md:p-3">
+        <div className="relative grid gap-3 p-3 md:grid-cols-[minmax(190px,0.36fr)_minmax(0,1fr)_auto] md:items-center md:p-4">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-cyan/20 bg-cyan/10 text-cyan">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-cyan/20 bg-cyan/10 text-cyan">
               <Sparkles size={17} />
             </div>
             <div className="min-w-0">
@@ -216,7 +216,7 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
             {placeholderDays.map((i) => (
               <div
                 key={i}
-                className="daily-checkin-day relative flex h-13 flex-col items-center justify-center gap-1 overflow-hidden rounded-md border border-border bg-black/20 px-1"
+                className="daily-checkin-day relative flex h-12 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-border bg-black/20 px-1"
               >
                 <span className="max-w-full truncate text-[10px] font-bold uppercase leading-tight tracking-wide text-text-muted">
                   {t(`days.${dayLabelKeys[i]}`)}
@@ -228,15 +228,15 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
             ))}
           </div>
           <div className="flex items-center gap-2 md:justify-end">
-            <span className="daily-checkin-button flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-cyan/20 bg-[#151620] px-4 py-2 text-xs font-bold text-cyan opacity-70 md:flex-none">
+            <span className="daily-checkin-button flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-cyan/20 bg-[#151620] px-4 py-2 text-xs font-bold text-cyan opacity-70 md:flex-none">
               <Gift size={14} /> {t('claimReward')}
             </span>
           </div>
         </div>
       ) : (
-      <div className="relative grid gap-2.5 p-2.5 md:grid-cols-[minmax(170px,0.42fr)_minmax(0,1fr)_auto] md:items-center md:p-3">
+      <div className="relative grid gap-3 p-3 md:grid-cols-[minmax(190px,0.36fr)_minmax(0,1fr)_auto] md:items-center md:p-4">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-cyan/20 bg-cyan/10 text-cyan">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-cyan/20 bg-cyan/10 text-cyan">
             <Flame size={18} className={cn(!hasClaimedToday && canClaimToday && "animate-pulse")} />
           </div>
           <div className="min-w-0">
@@ -265,8 +265,8 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
                 return (
                   <div
                     key={`${reward.day}-${reward.dayName}`}
-                    className={cn(
-                      'daily-checkin-day relative flex h-13 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border px-1 transition-all duration-200',
+                  className={cn(
+                      'daily-checkin-day relative flex h-12 flex-col items-center justify-center gap-0.5 overflow-hidden rounded-lg border px-1 transition-all duration-200',
                       isChecked && 'border-green/50 bg-green/10 text-green',
                       isToday && !isChecked && 'border-cyan bg-cyan/15 text-cyan shadow-[0_0_12px_rgba(56,189,248,0.15)] scale-[1.02] z-10',
                       !isChecked && !isToday && 'border-border bg-black/40 text-text-secondary hover:border-text-muted',
@@ -319,7 +319,7 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
               placeholderDays.map((i) => (
                 <div
                   key={i}
-                  className="daily-checkin-day relative flex h-13 flex-col items-center justify-center gap-1 overflow-hidden rounded-md border border-border bg-black/40 px-1"
+                  className="daily-checkin-day relative flex h-12 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-border bg-black/40 px-1"
                 >
                   <span className="max-w-full truncate text-[10px] font-semibold uppercase leading-tight tracking-wide text-text-muted">
                     {t(`days.${dayLabelKeys[i]}`)}
@@ -334,19 +334,19 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
         </div>
 
         <div className="flex items-center gap-2 md:justify-end">
-          <span className="hidden items-center gap-1.5 rounded-md border border-green/20 bg-green/5 px-2.5 py-1.5 text-xs text-green lg:flex">
+          <span className="hidden items-center gap-1.5 rounded-lg border border-green/20 bg-green/5 px-3 py-2 text-xs font-bold text-green lg:flex">
             <Shield size={13} className="text-green" />
             {daysToBonus} {t('bonusIn')}
           </span>
           {hasClaimedToday ? (
-            <span className="daily-checkin-claimed flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-green/20 bg-green/5 px-3 py-2 text-xs font-bold text-green md:flex-none">
+            <span className="daily-checkin-claimed flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-green/20 bg-green/5 px-4 py-2 text-xs font-bold text-green md:flex-none">
               <Check size={14} /> {t('checkedIn')}
             </span>
           ) : (
             <button
               onClick={handleCheckIn}
               disabled={isCheckingIn || rewardsLoading || !canClaimToday}
-              className="daily-checkin-button flex min-h-9 flex-1 items-center justify-center gap-1.5 rounded-md border border-cyan/40 bg-[#151620] px-4 py-2 text-xs font-bold text-cyan transition-all duration-150 hover:bg-cyan/10 hover:border-cyan/70 disabled:cursor-not-allowed disabled:opacity-60 md:flex-none"
+              className="daily-checkin-button flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-cyan/40 bg-cyan px-5 py-2 text-xs font-black text-black shadow-[0_0_18px_rgba(34,211,238,0.18)] transition-all duration-150 hover:bg-cyan/90 disabled:cursor-not-allowed disabled:opacity-60 md:flex-none"
             >
               <Gift size={14} /> {isCheckingIn ? tCommon('loading') : t('claimReward')}
             </button>
@@ -359,87 +359,82 @@ export function DailyCheckIn({ initialHasAuthSession = false }: DailyCheckInProp
         )}
       </div>
       )}
-      {/* Premium E-sports Daily Check-in Success Streak Modal */}
       {checkInModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <style dangerouslySetInnerHTML={{ __html: `
             @keyframes pop-streak {
-              0% { transform: scale(0.6); opacity: 0; }
-              50% { transform: scale(1.1); }
+              0% { transform: translateY(10px) scale(0.96); opacity: 0; }
               100% { transform: scale(1); opacity: 1; }
             }
             .streak-pop {
-              animation: pop-streak 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.2) forwards;
+              animation: pop-streak 0.28s ease-out forwards;
             }
           `}} />
-          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300"
+            className="absolute inset-0 bg-black/82 backdrop-blur-md transition-opacity duration-300"
             onClick={() => setCheckInModal((prev) => ({ ...prev, isOpen: false }))}
           />
 
-          {/* Modal Container */}
-          <div className="relative w-full max-w-sm overflow-hidden rounded-xl border border-border bg-surface p-6 text-center shadow-2xl transition-all duration-300">
-            <div className="relative z-10 space-y-5">
-              {/* E-sports Flame badge */}
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-cyan/10 p-2 border border-cyan/20">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-elevated border border-orange-500/20">
-                  <Flame size={32} className="text-orange-500 animate-pulse" />
+          <div className="streak-pop relative w-full max-w-md overflow-hidden rounded-2xl border border-cyan-300/20 bg-[#0b111d] p-0 text-center shadow-[0_28px_90px_rgba(0,0,0,0.55)]">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+            <div className="absolute -left-24 -top-24 h-48 w-48 rounded-full bg-cyan-400/10 blur-3xl" />
+            <div className="absolute -bottom-28 -right-20 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
+
+            <div className="relative z-10 space-y-5 p-6 sm:p-7">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-amber-400/20 bg-amber-400/10 p-2 shadow-[0_0_34px_rgba(245,158,11,0.12)]">
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-xl border border-amber-400/25 bg-black/25">
+                  <Flame size={29} className="text-amber-400" />
                 </div>
               </div>
 
               <div>
-                <span className="inline-block rounded-full bg-cyan/10 px-3 py-1 text-[10px] font-bold tracking-wider text-cyan uppercase border border-cyan/20">
-                  {t('claimed')} SECURED
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan/25 bg-cyan/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-cyan">
+                  <Check size={13} />
+                  {t('secured')}
                 </span>
-                <h2 className="mt-3 font-display text-xl font-bold text-white">
-                  {t('checkedIn')}!
+                <h2 className="mt-4 font-display text-3xl font-black leading-tight text-white">
+                  {t('checkedIn')}
                 </h2>
-                <p className="mt-1 text-xs text-text-secondary font-mono">
-                  STREAK MULTIPLIER ACTIVE
+                <p className="mt-2 text-sm font-semibold text-text-secondary">
+                  {t('multiplierActive')}
                 </p>
               </div>
 
-              {/* Streak info & rewards */}
               <div className="grid grid-cols-2 gap-3 py-1">
-                {/* Streak count */}
-                <div className="streak-pop opacity-0 rounded-xl border border-orange-500/20 bg-orange-500/5 p-3 text-center" style={{ animationDelay: '0.05s' }}>
-                  <div className="font-mono text-2xl font-bold text-orange-500">
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.07] p-4 text-center">
+                  <div className="font-mono text-3xl font-black text-amber-400">
                     {checkInModal.streak}
                   </div>
-                  <div className="mt-1 text-[9px] uppercase font-bold tracking-wider text-text-secondary">
-                    Day Streak
+                  <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-text-secondary">
+                    {t('dayStreak')}
                   </div>
                 </div>
 
-                {/* Points Earned */}
-                <div className="streak-pop opacity-0 rounded-xl border border-cyan/20 bg-cyan/5 p-3 text-center" style={{ animationDelay: '0.1s' }}>
-                  <div className="font-mono text-2xl font-bold text-cyan">
+                <div className="rounded-xl border border-cyan/20 bg-cyan/[0.07] p-4 text-center">
+                  <div className="font-mono text-3xl font-black text-cyan">
                     +{checkInModal.points}
                   </div>
-                  <div className="mt-1 text-[9px] uppercase font-bold tracking-wider text-text-secondary">
-                    {t('pointsShort')}
+                  <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-text-secondary">
+                    {t('pointsEarned')}
                   </div>
                 </div>
               </div>
 
-              {/* Special Streak Shield Bonus */}
               {checkInModal.bonusShield && (
-                <div className="streak-pop opacity-0 flex items-center justify-center gap-2 rounded-xl border border-green/20 bg-green/5 p-3 text-green" style={{ animationDelay: '0.15s' }}>
-                  <Shield size={18} className="text-green animate-pulse" />
+                <div className="flex items-center justify-center gap-3 rounded-xl border border-green/20 bg-green/5 p-3 text-green">
+                  <Shield size={18} className="text-green" />
                   <div className="text-left">
-                    <div className="text-xs font-bold font-mono">STREAK SHIELD EARNED</div>
-                    <div className="text-[9px] text-text-secondary">Protects your streak for 1 missed day!</div>
+                    <div className="text-xs font-black">{t('shieldEarned')}</div>
+                    <div className="mt-0.5 text-[11px] text-text-secondary">{t('shieldProtects')}</div>
                   </div>
                 </div>
               )}
 
-              {/* CTA Button */}
               <button
-                className="w-full rounded-lg border border-cyan/40 bg-[#151620] hover:bg-cyan/10 text-cyan py-2.5 text-xs font-bold uppercase tracking-wider transition-all duration-150 shadow-lg"
+                className="w-full rounded-xl border border-cyan/45 bg-cyan px-4 py-3 text-sm font-black text-black shadow-[0_0_28px_rgba(34,211,238,0.2)] transition-all duration-150 hover:bg-cyan/90"
                 onClick={() => setCheckInModal((prev) => ({ ...prev, isOpen: false }))}
               >
-                RESUME MISSION
+                {t('continueMission')}
               </button>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { CurrentUserEntitlements } from '@/lib/credit-entitlements';
 
 interface UserState {
   isLoggedIn: boolean;
@@ -29,6 +30,7 @@ interface UserState {
   achievementsUnlocked: number;
   streakShields: number;
   predictionBoosts: number;
+  entitlements: CurrentUserEntitlements;
   preferences: {
     pushNotifications: boolean;
     matchReminder30min: boolean;
@@ -101,6 +103,7 @@ const initialState: UserState = {
   achievementsUnlocked: 14,
   streakShields: 1,
   predictionBoosts: 2,
+  entitlements: {},
   preferences: defaultPreferences,
   referralCode: 'SM-FAN99',
   referralCount: 3,
@@ -137,6 +140,7 @@ export const useUserStore = create<UserState & UserActions>()(
           playerType: '',
           language: '',
           marketingConsent: false,
+          entitlements: {},
         }),
 
       addFreePoints: (amount) =>

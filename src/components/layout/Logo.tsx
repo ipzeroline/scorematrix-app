@@ -9,12 +9,12 @@ interface LogoProps {
 
 const logoSize = {
   sm: {
-    shell: "h-11 w-48",
+    shell: "h-10 w-[clamp(9rem,38vw,12rem)] sm:h-11 sm:w-48",
     width: 1600,
     height: 400,
   },
   md: {
-    shell: "h-14 w-56 sm:h-16 sm:w-64",
+    shell: "h-12 w-[clamp(9.25rem,42vw,13rem)] sm:h-14 sm:w-56 lg:h-16 lg:w-64",
     width: 1600,
     height: 400,
   },
@@ -28,7 +28,7 @@ export function Logo({ size = "md" }: LogoProps) {
     <Link
       href={`/${locale || "th"}`}
       aria-label="ScoreMatrix"
-      className="group flex shrink-0 items-center no-underline"
+      className="group flex min-w-0 shrink items-center no-underline"
     >
       <span
         className={`scorematrix-logo-shell relative flex ${config.shell} items-center justify-center overflow-hidden px-1 transition-transform duration-300 group-hover:-translate-y-0.5`}

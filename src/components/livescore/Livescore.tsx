@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Activity, ChevronRight, RefreshCw, Search } from "lucide-react";
+import {
+  Activity,
+  ChevronRight,
+  Clock3,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/Card";
@@ -20,6 +27,7 @@ import {
 } from "@/lib/football-status";
 import { buildFixtureSeoSlug } from "@/lib/football-slugs";
 import {
+  cn,
   formatDate,
   formatTime,
 } from "@/lib/utils";
@@ -92,54 +100,74 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
     [apiMatches]
   );
 
-  const filtered = liveMatches.filter((m) => {
-    if (league && m.league.name !== league) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      return (
-        m.home.name.toLowerCase().includes(q) ||
-        m.away.name.toLowerCase().includes(q) ||
-        m.league.name.toLowerCase().includes(q)
-      );
-    }
-    return true;
-  });
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
 
-  const leagues = [...new Set(liveMatches.map((m) => m.league.name))];
+    return liveMatches.filter((m) => {
+      if (league && m.league.name !== league) return false;
+      if (q) {
+        return (
+          m.home.name.toLowerCase().includes(q) ||
+          m.away.name.toLowerCase().includes(q) ||
+          m.league.name.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [league, liveMatches, search]);
+
+  const leagues = useMemo(
+    () => [...new Set(liveMatches.map((m) => m.league.name))].sort((a, b) => a.localeCompare(b)),
+    [liveMatches]
+  );
+  const hasFilters = Boolean(league || search.trim());
+  const lastUpdatedLabel = useMemo(
+    () => formatTime(payload.fetchedAt, locale),
+    [locale, payload.fetchedAt]
+  );
 
   return (
     <div className="w-full space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold font-display text-white">
-            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-green-400/30 bg-green-400/10 text-green-300 shadow-[0_0_18px_rgba(16,185,129,0.16)]">
-              <Activity
-                size={20}
-                strokeWidth={2.35}
-                className="drop-shadow-[0_0_8px_rgba(16,185,129,0.75)]"
-                aria-hidden="true"
-              />
+      <Card className="relative overflow-hidden border-green-400/15 bg-[#0b111d] p-4 sm:p-5">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-green-300/80 via-cyan-300/45 to-transparent" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-green-400/25 bg-green-400/10 text-green-300 shadow-[0_0_18px_rgba(16,185,129,0.12)]">
+              <Activity size={20} strokeWidth={2.35} aria-hidden="true" />
             </span>
-            <span className="min-w-0 truncate">{t("livescore.title")}</span>
-          </h1>
-        </div>
-        <div className="flex items-center justify-end gap-2">
-          <div className="inline-flex items-center gap-2 rounded-full border border-green-400/20 bg-green-400/[0.06] px-2.5 py-1 text-[11px] font-semibold text-green-200">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
-            {t("dashboard.matchCount", { count: liveMatches.length })}
+            <div className="min-w-0">
+              <h1 className="truncate font-display text-2xl font-black text-white sm:text-3xl">
+                {t("livescore.title")}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-gray-400">
+                <span className="inline-flex items-center gap-2 rounded-full border border-green-400/20 bg-green-400/[0.06] px-2.5 py-1 text-green-200">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-400" />
+                  {t("dashboard.matchCount", { count: liveMatches.length })}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-400/15 bg-cyan-400/[0.05] px-2.5 py-1 text-cyan-100">
+                  <Clock3 size={13} aria-hidden="true" />
+                  {t("matches.lastUpdated")} {lastUpdatedLabel}
+                </span>
+              </div>
+            </div>
           </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => void loadFixtures()}
-            disabled={isLoading}
-            className="w-fit"
-          >
-            <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
-            {t("livescore.sync")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-gray-700/70 bg-black/20 px-3 py-1.5 text-xs font-semibold text-gray-300">
+              {filtered.length} / {liveMatches.length} {t("matches.metricMatches")}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void loadFixtures()}
+              disabled={isLoading}
+              className="border-cyan-400/25 bg-cyan-400/[0.04] text-cyan-100 hover:border-cyan-300/50 hover:text-cyan-200"
+            >
+              <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+              {t("livescore.sync")}
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
 
       {hasError && (
         <Card className="flex items-center justify-between gap-3 border-red-500/20 bg-red-500/5 p-3 text-xs text-red-300">
@@ -155,30 +183,62 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
         </Card>
       )}
 
-      <div className="flex gap-3 flex-wrap">
-        <Select
-          options={[
-            { value: "", label: t("livescore.allLeagues") },
-            ...leagues.map((l) => ({ value: l, label: l })),
-          ]}
-          value={league}
-          onChange={setLeague}
-          placeholder={t("livescore.filterLeague")}
-          className="min-w-[180px]"
-        />
-        <div className="relative flex-1 min-w-[200px]">
-          <Search
-            size={14}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-          />
-          <input
-            className="w-full rounded-lg border border-gray-700 bg-[#0a0a0f] pl-9 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500/50"
-            placeholder={t("livescore.searchTeams")}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
+      <Card className="border-gray-800/90 bg-[#080b12] p-3 sm:p-4">
+        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-white">{t("matches.filtersTitle")}</h2>
+            <p className="text-xs text-gray-500">{t("matches.filtersDescription")}</p>
+          </div>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={() => {
+                setLeague("");
+                setSearch("");
+              }}
+              className="inline-flex w-fit items-center gap-1.5 rounded-lg border border-gray-700/80 px-2.5 py-1.5 text-xs font-semibold text-gray-300 transition-colors hover:border-cyan-400/40 hover:text-cyan-200"
+            >
+              <X size={13} aria-hidden="true" />
+              {t("matches.clearFilters")}
+            </button>
+          )}
         </div>
-      </div>
+        <div className="flex flex-wrap gap-3">
+          <Select
+            options={[
+              { value: "", label: t("livescore.allLeagues") },
+              ...leagues.map((l) => ({ value: l, label: l })),
+            ]}
+            value={league}
+            onChange={setLeague}
+            placeholder={t("livescore.filterLeague")}
+            className="min-w-[210px]"
+          />
+          <div className="relative min-w-[220px] flex-1">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              aria-hidden="true"
+            />
+            <input
+              className="min-h-10 w-full rounded-lg border border-gray-700 bg-[#05070c] py-2 pl-9 pr-10 text-sm text-white placeholder-gray-500 transition-colors focus:border-cyan-500/50 focus:outline-none"
+              placeholder={t("livescore.searchTeams")}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label={t("matches.clearSearch")}
+                className="absolute right-2 top-1/2 grid h-6 w-6 -translate-y-1/2 place-items-center rounded-md text-gray-500 transition-colors hover:bg-white/5 hover:text-cyan-200"
+              >
+                <X size={13} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        </div>
+      </Card>
 
       {isLoading ? (
         <div className="space-y-2">
@@ -188,8 +248,17 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
         </div>
       ) : hasError && liveMatches.length === 0 ? null : filtered.length === 0 ? (
         <EmptyState
+          icon={<Activity size={28} />}
           title={t("livescore.noMatches")}
           description={t("livescore.tryAdjustingFilters")}
+          action={
+            <Link
+              href={`/${locale}/matches`}
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-cyan-400/30 bg-cyan-400/[0.08] px-3 py-2 text-xs font-semibold text-cyan-100 transition-colors hover:border-cyan-300/60 hover:text-cyan-50"
+            >
+              {t("matches.title")}
+            </Link>
+          }
         />
       ) : (
         <div className="space-y-4">
@@ -197,28 +266,29 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             const leagueMatches = filtered.filter((m) => m.league.name === leagueName);
             const leagueInfo = leagueMatches[0]?.league;
             return (
-              <div key={leagueName}>
-                <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-gray-800 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_42%),linear-gradient(90deg,rgba(34,211,238,0.08),rgba(18,18,26,0.96)_52%,rgba(217,70,239,0.08))] px-3 py-2.5">
+              <div key={leagueName} className="overflow-hidden rounded-xl border border-gray-800/90 bg-[#070a10]">
+                <div className="flex items-center justify-between gap-3 border-b border-gray-800/80 bg-[#0c121d] px-3 py-3 sm:px-4">
                   <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="h-9 w-0.5 rounded-full bg-gradient-to-b from-green-300 via-cyan-300 to-fuchsia-300" />
                     <ApiLeagueLogo
                       name={leagueName}
                       logo={leagueInfo?.logo}
                       size="sm"
                     />
                     <div className="min-w-0">
-                      <h3 className="truncate text-xs font-semibold uppercase tracking-wider text-white">
+                      <h3 className="truncate text-sm font-black text-white">
                         {leagueName}
                       </h3>
-                      <span className="block truncate text-[10px] text-gray-500">
+                      <span className="block truncate text-xs font-medium text-gray-500">
                         {leagueInfo?.country}
                       </span>
                     </div>
                   </div>
-                  <span className="shrink-0 rounded-md border border-cyan-500/20 bg-black/25 px-2 py-1 text-[10px] font-semibold text-cyan-300">
-                    {leagueMatches.length} matches
+                  <span className="shrink-0 rounded-lg border border-cyan-500/20 bg-black/30 px-2.5 py-1.5 text-xs font-bold text-cyan-200">
+                    {leagueMatches.length} {t("matches.metricMatches")}
                   </span>
                 </div>
-                <div className="overflow-hidden rounded-xl border border-border bg-surface divide-y divide-border/60">
+                <div className="divide-y divide-gray-800/70">
                   {leagueMatches.map((match) => {
                     const detailHref = buildMatchDetailHref(match, locale);
 
@@ -226,68 +296,66 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                       <Link
                         key={match.id}
                         href={detailHref}
-                        className="group block bg-surface hover:bg-[#12121a]/40 transition-all duration-150 px-4 py-2 sm:py-2.5"
+                        className="group block bg-[#070a10] px-3 py-3 transition-colors duration-150 hover:bg-[#101722] sm:px-4"
                       >
-                        <div className="flex items-center justify-between gap-2 sm:gap-4">
-                          {/* Left: Time and League */}
-                          <div className="flex items-center gap-2 sm:gap-3 w-[55px] sm:w-1/4 shrink-0 min-w-0">
-                            <div className="flex flex-col gap-0.5 min-w-[50px] sm:min-w-[70px]">
-                              <span className="font-mono text-sm font-bold text-cyan-300">
+                        <div className="grid items-center gap-3 lg:grid-cols-[180px_minmax(0,1fr)_190px]">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex min-w-[64px] flex-col gap-0.5">
+                              <span className="font-mono text-sm font-black text-cyan-200">
                                 {formatTime(match.kickoffTime, locale)}
                               </span>
-                              <span className="text-[10px] text-gray-500 font-medium truncate">
+                              <span className="truncate text-[11px] font-semibold text-gray-500">
                                 {formatDate(match.kickoffTime, locale)}
                               </span>
                             </div>
-                            <div className="hidden sm:flex items-center gap-1.5 min-w-0">
+                            <div className="hidden min-w-0 items-center gap-1.5 rounded-full border border-gray-800/80 bg-black/20 px-2 py-1 sm:flex">
                               <ApiLeagueLogo name={match.league.name} logo={match.league.logo} size="xs" />
-                              <span className="text-xs text-gray-400 truncate max-w-[120px]">
+                              <span className="max-w-[92px] truncate text-[11px] font-semibold text-gray-400">
                                 {match.league.name}
                               </span>
                             </div>
                           </div>
 
-                          {/* Center: Teams and Score/VS */}
-                          <div className="flex items-center justify-center gap-2 sm:gap-3 flex-1 min-w-0 px-1">
-                            {/* Home team */}
-                            <div className="flex items-center justify-end gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-right">
-                              <span className="text-xs sm:text-sm font-medium text-gray-200 group-hover:text-white transition-colors truncate">
+                          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] items-center gap-2 sm:gap-3">
+                            <div className="flex min-w-0 items-center justify-end gap-1.5 text-right sm:gap-2.5">
+                              <span className="truncate text-sm font-bold text-gray-200 transition-colors group-hover:text-white">
                                 {match.home.name}
                               </span>
                               <ApiTeamLogo name={match.home.name} logo={match.home.logo} size="xs" />
                             </div>
 
-                            {/* Score or VS Box with elapsed time */}
-                            <div className="shrink-0 min-w-[54px] sm:min-w-[64px] text-center flex flex-col items-center">
-                              <span className="inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 rounded bg-black/40 border border-border/80 font-mono text-[10px] sm:text-xs font-bold text-white group-hover:border-cyan-500/30 transition-colors">
+                            <div className="flex min-w-[76px] flex-col items-center text-center">
+                              <span className="inline-flex min-h-9 min-w-[64px] items-center justify-center rounded-lg border border-gray-700/90 bg-black/45 px-2 font-mono text-sm font-black text-white transition-colors group-hover:border-cyan-500/40">
                                 {match.score.home !== null && match.score.away !== null
                                   ? `${match.score.home} - ${match.score.away}`
                                   : t("common.vs")}
                               </span>
-                              <span className="mt-1 font-mono text-[9px] font-bold text-green-400">
+                              <span className="mt-1 font-mono text-[10px] font-black text-green-300">
                                 {formatElapsed(match)}
                               </span>
                             </div>
 
-                            {/* Away team */}
-                            <div className="flex items-center justify-start gap-1.5 sm:gap-2.5 flex-1 min-w-0 text-left">
+                            <div className="flex min-w-0 items-center justify-start gap-1.5 text-left sm:gap-2.5">
                               <ApiTeamLogo name={match.away.name} logo={match.away.logo} size="xs" />
-                              <span className="text-xs sm:text-sm font-medium text-gray-200 group-hover:text-white transition-colors truncate">
+                              <span className="truncate text-sm font-bold text-gray-200 transition-colors group-hover:text-white">
                                 {match.away.name}
                               </span>
                             </div>
                           </div>
 
-                          {/* Right: Status and Chevron Link */}
-                          <div className="flex items-center justify-end gap-2 sm:gap-3 w-[75px] sm:w-1/4 shrink-0 min-w-0">
+                          <div className="flex min-w-0 items-center justify-between gap-2 lg:justify-end">
                             <StatusBadge
                               status={getFixtureStatusGroup(match)}
                               label={getFixtureStatusLabel(match, statusLabels)}
-                              className="text-[9px] sm:text-[10px] shrink-0"
+                              className="shrink-0 text-[9px] sm:text-[10px]"
                             />
-                            <div className="hidden sm:flex h-6 w-6 items-center justify-center rounded border border-border bg-black/20 group-hover:border-cyan-500/40 group-hover:text-cyan-300 transition-colors">
-                              <ChevronRight size={12} className="text-gray-500 group-hover:text-cyan-300 transition-colors" />
-                            </div>
+                            <span className={cn(
+                              "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/[0.05] px-2.5 text-xs font-bold text-cyan-100 transition-colors",
+                              "group-hover:border-cyan-300/50 group-hover:text-cyan-50"
+                            )}>
+                              <span className="hidden sm:inline">{t("matches.matchCenter")}</span>
+                              <ChevronRight size={14} aria-hidden="true" />
+                            </span>
                           </div>
                         </div>
                       </Link>

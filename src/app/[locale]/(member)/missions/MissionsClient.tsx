@@ -54,6 +54,7 @@ import { cn } from "@/lib/utils";
 import { useUserStore } from "@/stores/user-store";
 
 type TabKey = "daily" | "weekly" | "special" | "achievements";
+const MAX_LEVEL = 10;
 
 const categoryColors: Record<string, "cyan" | "green" | "gold" | "purple" | "magenta"> = {
   predict: "cyan",
@@ -276,6 +277,8 @@ export default function MissionsPage() {
   const [achievementsLoadFailed, setAchievementsLoadFailed] = useState(false);
   const [now, setNow] = useState<number>(() => Date.now());
   const resetRefreshRef = useRef<Record<string, boolean>>({});
+  const displayLevel = Math.min(heroStats.level, MAX_LEVEL);
+  const isMaxLevel = heroStats.level >= MAX_LEVEL;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -346,7 +349,7 @@ export default function MissionsPage() {
     const nextPoints = store.freePoints + mission.rewardPoints;
     const nextCredits = store.premiumCredits + getPositiveRewardCredits(mission);
     const nextXP = store.xp + mission.rewardXP;
-    const nextLevel = Math.floor(nextXP / 1000) + 1;
+    const nextLevel = Math.min(Math.floor(nextXP / 1000) + 1, MAX_LEVEL);
     const nextCompleted = store.missionsCompleted + 1;
 
     const nextStats = {
@@ -539,12 +542,14 @@ export default function MissionsPage() {
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-cyan-200/80">
-                    {copy.levelLine
-                      .replace("{level}", heroStats.level.toLocaleString())
-                      .replace("{xp}", heroStats.xp.toLocaleString())}
+                    {isMaxLevel
+                      ? copy.maxLevelReached
+                      : copy.levelLine
+                        .replace("{level}", displayLevel.toLocaleString())
+                        .replace("{xp}", heroStats.xp.toLocaleString())}
                   </p>
                   <p className="mt-1 text-sm text-gray-400">
-                    {copy.xpProgress}
+                    {isMaxLevel ? copy.maxLevelMessage : copy.xpProgress}
                   </p>
                 </div>
                 <span className="grid h-11 w-11 place-items-center rounded-xl border border-cyan-300/30 bg-cyan-300/10 text-cyan-200">
@@ -554,6 +559,8 @@ export default function MissionsPage() {
               <XPProgressBar
                 currentXP={heroStats.xp}
                 level={heroStats.level}
+                maxLevel={MAX_LEVEL}
+                maxLabel={copy.maxLevelMessage}
               />
             </div>
           </div>
@@ -792,7 +799,7 @@ export default function MissionsPage() {
               <div className="rounded-lg bg-black/40 border border-gray-800/80 p-3 text-xs text-gray-400 space-y-1.5 font-mono">
                 <div className="flex justify-between">
                   <span>LEVEL STATE:</span>
-                  <span className="text-white font-bold">Lvl {heroStats.level}</span>
+                  <span className="text-white font-bold">Lvl {displayLevel}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>CURRENT BALANCE:</span>

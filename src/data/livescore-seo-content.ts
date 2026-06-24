@@ -16,7 +16,7 @@ type LivescoreSeoContent = {
 };
 
 const fallback: LivescoreSeoContent = {
-  title: "Live Football Scores Today | ScoreMatrix Real-Time Match Center",
+  title: "Live Football Scores Today | Real-Time Match Center",
   description:
     "Follow live football scores, match status, kickoff times, leagues, teams and real-time score updates on ScoreMatrix. Track global football matches in one fast match center.",
   keywords: [
@@ -57,7 +57,7 @@ const fallback: LivescoreSeoContent = {
 
 const content: Partial<Record<LocaleCode, LivescoreSeoContent>> = {
   th: {
-    title: "ผลบอลสดวันนี้ | ScoreMatrix ศูนย์ผลฟุตบอลสดแบบเรียลไทม์",
+    title: "ผลบอลสดวันนี้ | ศูนย์ผลฟุตบอลสดแบบเรียลไทม์",
     description:
       "ติดตามผลบอลสดวันนี้ สถานะแข่งขัน เวลาแข่ง ลีก ทีม และสกอร์แบบเรียลไทม์บน ScoreMatrix รวมคู่ฟุตบอลทั่วโลกไว้ในหน้าที่อ่านง่ายและรวดเร็ว",
     keywords: [
@@ -97,7 +97,7 @@ const content: Partial<Record<LocaleCode, LivescoreSeoContent>> = {
   },
   en: fallback,
   lo: {
-    title: "ຜົນບານສົດມື້ນີ້ | ScoreMatrix ສູນຜົນບານແບບເວລາຈິງ",
+    title: "ຜົນບານສົດມື້ນີ້ | ສູນຜົນບານແບບເວລາຈິງ",
     description:
       "ຕິດຕາມຜົນບານສົດ, ສະຖານະແຂ່ງ, ເວລາເລີ່ມ, ລີກ, ທີມ ແລະ ສະກໍແບບເວລາຈິງໃນ ScoreMatrix.",
     keywords: [
@@ -135,7 +135,7 @@ const content: Partial<Record<LocaleCode, LivescoreSeoContent>> = {
     ],
   },
   my: {
-    title: "ယနေ့ တိုက်ရိုက်ဘောလုံးရလဒ် | ScoreMatrix Real-Time Match Center",
+    title: "ယနေ့ တိုက်ရိုက်ဘောလုံးရလဒ် | Real-Time Match Center",
     description:
       "ScoreMatrix တွင် တိုက်ရိုက်ဘောလုံးရလဒ်၊ ပွဲအခြေအနေ၊ စတင်ချိန်၊ လိဂ်၊ အသင်းများနှင့် စကောကို အချိန်နှင့်တပြေးညီ ကြည့်ရှုပါ။",
     keywords: [
@@ -172,7 +172,7 @@ const content: Partial<Record<LocaleCode, LivescoreSeoContent>> = {
     ],
   },
   km: {
-    title: "ពិន្ទុបាល់ទាត់ផ្ទាល់ថ្ងៃនេះ | ScoreMatrix មជ្ឈមណ្ឌលប្រកួតពេលវេលាពិត",
+    title: "ពិន្ទុបាល់ទាត់ផ្ទាល់ថ្ងៃនេះ | មជ្ឈមណ្ឌលប្រកួតពេលវេលាពិត",
     description:
       "តាមដានពិន្ទុបាល់ទាត់ផ្ទាល់ ស្ថានភាពប្រកួត ម៉ោងចាប់ផ្តើម លីគ ក្រុម និងពិន្ទុបច្ចុប្បន្ននៅលើ ScoreMatrix។",
     keywords: [
@@ -209,7 +209,7 @@ const content: Partial<Record<LocaleCode, LivescoreSeoContent>> = {
     ],
   },
   zh: {
-    title: "今日足球即时比分 | ScoreMatrix 实时比赛中心",
+    title: "今日足球即时比分 | 实时比赛中心",
     description:
       "在 ScoreMatrix 追踪足球即时比分、比赛状态、开球时间、联赛、球队和实时赛果，一个页面查看全球足球比赛动态。",
     keywords: [

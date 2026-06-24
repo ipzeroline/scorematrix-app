@@ -16,7 +16,7 @@ type MatchesSeoContent = {
 };
 
 const fallback: MatchesSeoContent = {
-  title: "Football Matches Today | Fixtures, Live Status & Schedule | ScoreMatrix",
+  title: "Football Matches Today | Fixtures, Live Status & Schedule",
   description:
     "Browse today's football matches, fixtures, kickoff times, live status, finished results, leagues and prediction entry points on ScoreMatrix.",
   keywords: [
@@ -57,7 +57,7 @@ const fallback: MatchesSeoContent = {
 
 const content: Partial<Record<LocaleCode, MatchesSeoContent>> = {
   th: {
-    title: "ตารางบอลวันนี้ | โปรแกรมบอล สถานะสด และการแข่งขัน | ScoreMatrix",
+    title: "ตารางบอลวันนี้ | โปรแกรมบอล สถานะสด และการแข่งขัน",
     description:
       "ดูตารางบอลวันนี้ โปรแกรมแข่งขัน เวลาแข่ง สถานะสด ผลจบแล้ว ลีก และทางเข้าทายผลบน ScoreMatrix ในหน้าที่ค้นหาและกรองได้ง่าย",
     keywords: [
@@ -97,7 +97,7 @@ const content: Partial<Record<LocaleCode, MatchesSeoContent>> = {
   },
   en: fallback,
   lo: {
-    title: "ຕາຕະລາງບານມື້ນີ້ | ໂປຣແກຣມແຂ່ງ ແລະ ສະຖານະສົດ | ScoreMatrix",
+    title: "ຕາຕະລາງບານມື້ນີ້ | ໂປຣແກຣມແຂ່ງ ແລະ ສະຖານະສົດ",
     description:
       "ເບິ່ງຕາຕະລາງບານມື້ນີ້, ເວລາແຂ່ງ, ສະຖານະສົດ, ຜົນທີ່ຈົບແລ້ວ, ລີກ ແລະ ທາງເຂົ້າທາຍຜົນໃນ ScoreMatrix.",
     keywords: [
@@ -134,7 +134,7 @@ const content: Partial<Record<LocaleCode, MatchesSeoContent>> = {
     ],
   },
   my: {
-    title: "ယနေ့ ဘောလုံးပွဲစဉ်များ | ပွဲဇယား၊ Live Status နှင့် Schedule | ScoreMatrix",
+    title: "ယနေ့ ဘောလုံးပွဲစဉ်များ | ပွဲဇယား၊ Live Status နှင့် Schedule",
     description:
       "ScoreMatrix တွင် ယနေ့ဘောလုံးပွဲစဉ်များ၊ စတင်ချိန်၊ live status၊ ပြီးဆုံးရလဒ်၊ လိဂ်များနှင့် ခန့်မှန်းရန် ဝင်ပေါက်များကို ကြည့်ရှုပါ။",
     keywords: [
@@ -171,7 +171,7 @@ const content: Partial<Record<LocaleCode, MatchesSeoContent>> = {
     ],
   },
   km: {
-    title: "ការប្រកួតបាល់ទាត់ថ្ងៃនេះ | កាលវិភាគ ស្ថានភាពផ្ទាល់ | ScoreMatrix",
+    title: "ការប្រកួតបាល់ទាត់ថ្ងៃនេះ | កាលវិភាគ ស្ថានភាពផ្ទាល់",
     description:
       "មើលការប្រកួតបាល់ទាត់ថ្ងៃនេះ កាលវិភាគ ម៉ោងចាប់ផ្តើម ស្ថានភាពផ្ទាល់ លទ្ធផល លីគ និងច្រកចូលទស្សន៍ទាយនៅលើ ScoreMatrix។",
     keywords: [
@@ -208,7 +208,7 @@ const content: Partial<Record<LocaleCode, MatchesSeoContent>> = {
     ],
   },
   zh: {
-    title: "今日足球比赛 | 赛程、实时状态与比赛中心 | ScoreMatrix",
+    title: "今日足球比赛 | 赛程、实时状态与比赛中心",
     description:
       "在 ScoreMatrix 浏览今日足球比赛、赛程、开球时间、实时状态、已完赛结果、联赛和预测入口。",
     keywords: [

@@ -30,6 +30,7 @@ import {
   type ApiFootballFixture,
   getApiFootballAIInsightDetail,
   getApiFootballFixtureDetails,
+  isApiFootballAIInsightEntitlementError,
 } from "@/lib/api-football";
 import { extractApiFixtureId } from "@/lib/football-slugs";
 import { serializeJsonLd } from "@/lib/json-ld";
@@ -77,9 +78,22 @@ type Props = {
   params: Promise<{ locale: string; matchId: string }>;
 };
 
-type DetailContext = {
-  fixture: ApiFootballFixture;
-  insight: ApiFootballAIInsightDetail;
+type DetailContext =
+  | {
+      status: "ready";
+      fixture: ApiFootballFixture;
+      insight: ApiFootballAIInsightDetail;
+    }
+  | {
+      status: "blocked";
+      access: AIInsightAccessState;
+    };
+
+type AIInsightAccessState = {
+  message: string;
+  loginRequired: boolean;
+  quota: number | null;
+  used: number | null;
 };
 
 const SEO_COPY = {
@@ -268,6 +282,63 @@ const UI_COPY = {
   },
 } as const;
 
+const ACCESS_COPY = {
+  th: {
+    loginTitle: "เข้าสู่ระบบเพื่อดู AI วิเคราะห์บอล",
+    entitlementTitle: "แพ็กเกจของคุณยังไม่มีสิทธิ์ใช้งาน AI",
+    description: "หน้านี้ใช้สิทธิ์ AI Analysis จากแพ็กเกจสมาชิก ระบบจึงต้องยืนยันสิทธิ์ก่อนแสดงโมเดลและข้อมูลเชิงลึก",
+    loginAction: "เข้าสู่ระบบ",
+    packageAction: "ดูแพ็กเกจ",
+    quota: "โควต้า",
+    used: "ใช้ไปแล้ว",
+  },
+  en: {
+    loginTitle: "Sign in to view AI football analysis",
+    entitlementTitle: "Your package does not include AI analysis",
+    description: "This page uses AI Analysis entitlement from member packages, so ScoreMatrix verifies access before showing model insights.",
+    loginAction: "Sign in",
+    packageAction: "View packages",
+    quota: "Quota",
+    used: "Used",
+  },
+  lo: {
+    loginTitle: "ເຂົ້າສູ່ລະບົບເພື່ອເບິ່ງ AI ວິເຄາະບານ",
+    entitlementTitle: "ແພັກເກດຂອງທ່ານຍັງບໍ່ມີສິດ AI",
+    description: "ໜ້ານີ້ໃຊ້ສິດ AI Analysis ຈາກແພັກເກດສະມາຊິກ ລະບົບຈຶ່ງຕ້ອງກວດສິດກ່ອນສະແດງຂໍ້ມູນ",
+    loginAction: "ເຂົ້າສູ່ລະບົບ",
+    packageAction: "ເບິ່ງແພັກເກດ",
+    quota: "ໂຄຕ້າ",
+    used: "ໃຊ້ແລ້ວ",
+  },
+  my: {
+    loginTitle: "AI ဘောလုံးသုံးသပ်ချက်ကြည့်ရန် ဝင်ရောက်ပါ",
+    entitlementTitle: "သင့် package တွင် AI သုံးသပ်ခွင့် မပါဝင်သေးပါ",
+    description: "ဤစာမျက်နှာသည် member package မှ AI Analysis entitlement ကိုအသုံးပြုသောကြောင့် insight မပြမီ ခွင့်ပြုချက်စစ်ဆေးသည်။",
+    loginAction: "ဝင်ရောက်ရန်",
+    packageAction: "Package ကြည့်ရန်",
+    quota: "Quota",
+    used: "Used",
+  },
+  km: {
+    loginTitle: "ចូលគណនីដើម្បីមើលការវិភាគបាល់ទាត់ AI",
+    entitlementTitle: "កញ្ចប់របស់អ្នកមិនទាន់មានសិទ្ធិ AI",
+    description: "ទំព័រនេះប្រើសិទ្ធិ AI Analysis ពីកញ្ចប់សមាជិក ដូច្នេះប្រព័ន្ធត្រូវពិនិត្យសិទ្ធិមុនបង្ហាញទិន្នន័យវិភាគ។",
+    loginAction: "ចូលគណនី",
+    packageAction: "មើលកញ្ចប់",
+    quota: "កូតា",
+    used: "បានប្រើ",
+  },
+  zh: {
+    loginTitle: "登录后查看 AI 足球分析",
+    entitlementTitle: "你的套餐尚未包含 AI 分析权限",
+    description: "此页面使用会员套餐中的 AI Analysis 权限，ScoreMatrix 会先验证权限再展示模型洞察。",
+    loginAction: "登录",
+    packageAction: "查看套餐",
+    quota: "额度",
+    used: "已用",
+  },
+} as const;
+
 const localeMap: Record<string, string> = {
   th: "th-TH",
   en: "en-US",
@@ -289,6 +360,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const context = await getDetailContext(matchId);
   if (!context) return fallback;
+  if (context.status === "blocked") {
+    return {
+      ...fallback,
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
+  }
 
   const { fixture, insight } = context;
   const title = copy.title(fixture.home.name, fixture.away.name, fixture.league.name);
@@ -371,6 +451,16 @@ export default async function AIInsightDetailPage({ params }: Props) {
   const context = await getDetailContext(matchId);
 
   if (!context) notFound();
+  if (context.status === "blocked") {
+    return (
+      <AIInsightAccessGate
+        locale={locale}
+        matchId={matchId}
+        access={context.access}
+        backLabel={details.back}
+      />
+    );
+  }
 
   const { fixture, insight } = context;
   const confidenceTone = getConfidenceTone(insight.confidenceScore);
@@ -686,6 +776,105 @@ export default async function AIInsightDetailPage({ params }: Props) {
   );
 }
 
+function AIInsightAccessGate({
+  locale,
+  matchId,
+  access,
+  backLabel,
+}: {
+  locale: string;
+  matchId: string;
+  access: AIInsightAccessState;
+  backLabel: string;
+}) {
+  const copy = ACCESS_COPY[locale as keyof typeof ACCESS_COPY] ?? ACCESS_COPY.th;
+  const title = access.loginRequired ? copy.loginTitle : copy.entitlementTitle;
+  const next = `/${locale}/ai-insight/${matchId}`;
+  const primaryHref = access.loginRequired
+    ? `/${locale}/auth/login?next=${encodeURIComponent(next)}`
+    : `/${locale}/credits`;
+  const primaryLabel = access.loginRequired ? copy.loginAction : copy.packageAction;
+
+  return (
+    <div className="mx-auto w-full max-w-5xl space-y-5 px-3 pb-10 sm:px-4 md:px-6">
+      <Link
+        href={`/${locale}/ai-insight`}
+        className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-bold text-text-secondary transition-colors hover:border-primary/40 hover:text-primary"
+      >
+        <ArrowLeft size={16} />
+        {backLabel}
+      </Link>
+
+      <Card className="relative overflow-hidden border-cyan-300/20 bg-[#07101d] p-0 shadow-[0_24px_80px_rgba(0,0,0,0.42)]">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+        <div className="grid gap-0 lg:grid-cols-[1fr_320px]">
+          <div className="p-6 sm:p-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-cyan-200">
+              <Shield size={13} />
+              AI entitlement
+            </div>
+            <h1 className="mt-5 max-w-2xl text-2xl font-black tracking-tight text-white sm:text-4xl">
+              {title}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-text-secondary">
+              {access.message || copy.description}
+            </p>
+            <p className="mt-2 max-w-2xl text-xs leading-6 text-text-muted">
+              {copy.description}
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href={primaryHref}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/45 bg-cyan-300 px-5 py-3 text-sm font-black text-black shadow-[0_0_26px_rgba(34,211,238,0.25)] transition-all hover:-translate-y-0.5 hover:bg-cyan-200"
+              >
+                <Sparkles size={17} />
+                {primaryLabel}
+              </Link>
+              <Link
+                href={`/${locale}/credits`}
+                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-5 py-3 text-sm font-bold text-text-secondary transition-colors hover:border-primary/30 hover:text-primary"
+              >
+                {copy.packageAction}
+              </Link>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 bg-black/22 p-6 sm:p-8 lg:border-l lg:border-t-0">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+              <div className="flex items-center gap-2 text-sm font-black text-white">
+                <AlertTriangle size={18} className="text-warning" />
+                no_entitlement
+              </div>
+              <div className="mt-4 grid gap-3">
+                <EntitlementMetric label={copy.quota} value={access.quota} />
+                <EntitlementMetric label={copy.used} value={access.used} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function EntitlementMetric({ label, value }: { label: string; value: number | null }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5">
+      <span className="text-xs font-bold text-text-muted">{label}</span>
+      <span className="font-mono text-lg font-black text-cyan-100">
+        {value === null ? "-" : value.toLocaleString("en-US")}
+      </span>
+    </div>
+  );
+}
+
+function normalizeEntitlementNumber(value: unknown) {
+  if (value === null || value === undefined || value === "") return null;
+  const numberValue = Number(value);
+  return Number.isFinite(numberValue) ? numberValue : null;
+}
+
 const getDetailContext = cache(async (matchId: string): Promise<DetailContext | null> => {
   const fixtureId = extractApiFixtureId(matchId);
   if (!fixtureId) return null;
@@ -694,14 +883,23 @@ const getDetailContext = cache(async (matchId: string): Promise<DetailContext | 
     const insight = await getApiFootballAIInsightDetail(fixtureId);
 
     return {
+      status: "ready",
       fixture: insight.fixture,
       insight,
     };
   } catch (error) {
+    if (isApiFootballAIInsightEntitlementError(error)) {
+      return {
+        status: "blocked",
+        access: buildAccessStateFromEntitlementError(error),
+      };
+    }
+
     if (error instanceof ApiFootballError && error.status === 404) {
       try {
         const fixtureDetails = await getApiFootballFixtureDetails(fixtureId);
         return {
+          status: "ready",
           fixture: fixtureDetails.fixture,
           insight: buildFallbackInsight(fixtureDetails.fixture),
         };
@@ -710,9 +908,51 @@ const getDetailContext = cache(async (matchId: string): Promise<DetailContext | 
         throw fixtureError;
       }
     }
+
+    if (error instanceof ApiFootballError) {
+      return {
+        status: "blocked",
+        access: buildAccessStateFromApiError(error),
+      };
+    }
+
     throw error;
   }
 });
+
+function buildAccessStateFromEntitlementError(
+  error: ApiFootballError & {
+    details: {
+      message: string;
+      loginRequired: boolean;
+      data?: { quota?: unknown; used?: unknown } | null;
+    };
+  }
+): AIInsightAccessState {
+  return {
+    message: error.details.message,
+    loginRequired: error.details.loginRequired,
+    quota: normalizeEntitlementNumber(error.details.data?.quota),
+    used: normalizeEntitlementNumber(error.details.data?.used),
+  };
+}
+
+function buildAccessStateFromApiError(error: ApiFootballError): AIInsightAccessState {
+  const loginRequired = error.status === 401;
+  const genericMessage =
+    !error.message || error.message === "ScoreMatrix AI insight request failed";
+
+  return {
+    message: loginRequired
+      ? "กรุณา login ก่อนใช้งาน AI วิเคราะห์บอล"
+      : genericMessage
+        ? "คุณไม่มีสิทธิ์ใช้งาน AI วิเคราะห์บอล"
+        : error.message,
+    loginRequired,
+    quota: null,
+    used: null,
+  };
+}
 
 function buildFallbackInsight(fixture: ApiFootballFixture): ApiFootballAIInsightDetail {
   const generatedAt = new Date().toISOString();

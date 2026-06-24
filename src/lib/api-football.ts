@@ -1,5 +1,6 @@
 import { normalizeFixtureDetailsPayload } from "@/lib/api-football-fixture-details";
-import { getFootballApiUrl } from "@/lib/backend-api-urls";
+import { getDataApiUrl, getFootballApiUrl } from "@/lib/backend-api-urls";
+import { getAccessToken } from "@/lib/auth-session-server";
 import { proxyFootballMediaValue } from "@/lib/football-media";
 import { MatchStatus } from "@/types/common";
 
@@ -1055,18 +1056,40 @@ export interface ApiFootballAIInsightDetail {
 }
 
 interface SoccerAIInsightDetailResponse {
-  data?: Omit<ApiFootballAIInsightDetail, "fixture" | "standings"> & {
-    fixture?: SoccerLiveFixture | ApiFootballFixture | null;
-    standings?: unknown;
-    provider_id?: number;
-    league?: SoccerLiveFixture["league"];
-    season?: number | null;
-    status?: SoccerLiveFixture["status"];
-    goals?: SoccerLiveFixture["goals"];
-    teams?: SoccerLiveFixture["teams"];
-    starts_at?: string;
-    is_live?: boolean;
-  };
+  data?: SoccerAIInsightDetailData;
+}
+
+type SoccerAIInsightDetailData = Omit<ApiFootballAIInsightDetail, "fixture" | "standings"> & {
+  fixture?: SoccerLiveFixture | ApiFootballFixture | null;
+  standings?: unknown;
+  provider_id?: number;
+  league?: SoccerLiveFixture["league"];
+  season?: number | null;
+  status?: SoccerLiveFixture["status"];
+  goals?: SoccerLiveFixture["goals"];
+  teams?: SoccerLiveFixture["teams"];
+  starts_at?: string;
+  is_live?: boolean;
+};
+
+export type ApiFootballAIInsightEntitlementErrorDetails = {
+  error: "no_entitlement";
+  message: string;
+  loginRequired: boolean;
+  data?: {
+    quota?: unknown;
+    used?: unknown;
+  } | null;
+};
+
+export function isApiFootballAIInsightEntitlementError(
+  error: unknown
+): error is ApiFootballError & { details: ApiFootballAIInsightEntitlementErrorDetails } {
+  return (
+    error instanceof ApiFootballError &&
+    isRecord(error.details) &&
+    error.details.error === "no_entitlement"
+  );
 }
 
 export class ApiFootballError extends Error {
@@ -1203,10 +1226,7 @@ function normalizeAIInsightPagination(
 export async function getApiFootballAIInsightDetail(
   fixtureId: number
 ): Promise<ApiFootballAIInsightDetail> {
-  const payload = await fetchSoccerBackend<SoccerAIInsightDetailResponse>(
-    `/ai-insights/${fixtureId}`,
-    {}
-  );
+  const payload = await fetchScormAIInsightDetail(fixtureId);
 
   const data = payload.data;
   if (!data) {
@@ -1229,6 +1249,123 @@ export async function getApiFootballAIInsightDetail(
     standings: normalizeInsightStandings(data.standings),
     fixture,
   };
+}
+
+async function fetchScormAIInsightDetail(
+  fixtureId: number
+): Promise<SoccerAIInsightDetailResponse> {
+  const url = getDataApiUrl(`/ai-insights/${fixtureId}`);
+  const token = await getAccessToken();
+  const startedAt = Date.now();
+  const headers = new Headers({ Accept: "application/json" });
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  try {
+    const response = await fetch(url, {
+      headers,
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+    const payload = await parseSoccerBackendResponse(response);
+    const payloadRecord = isRecord(payload) ? payload : {};
+    const payloadError = isRecord(payloadRecord.error) ? payloadRecord.error : null;
+    const errorCode =
+      toNullableString(payloadRecord.error) ?? toNullableString(payloadError?.code);
+    const message =
+      toNullableString(payloadRecord.message) ??
+      toNullableString(payloadError?.message) ??
+      "ScoreMatrix AI insight request failed";
+    const normalizedErrorCode = normalizeBackendErrorCode(errorCode);
+    const normalizedMessage = message.toLowerCase();
+    const loginRequired = response.status === 401;
+    const entitlementDenied =
+      normalizedErrorCode === "no_entitlement" ||
+      normalizedErrorCode === "forbidden" ||
+      response.status === 402 ||
+      response.status === 403 ||
+      normalizedMessage.includes("no_entitlement") ||
+      normalizedMessage.includes("entitlement") ||
+      normalizedMessage.includes("สิทธิ์");
+
+    if (loginRequired || entitlementDenied) {
+      const entitlementMessage = loginRequired
+        ? "กรุณา login ก่อนใช้งาน AI วิเคราะห์บอล"
+        : message === "ScoreMatrix AI insight request failed"
+          ? "คุณไม่มีสิทธิ์ใช้งาน AI วิเคราะห์บอล"
+          : message;
+
+      throw new ApiFootballError(entitlementMessage, response.status, {
+        error: "no_entitlement",
+        message: entitlementMessage,
+        loginRequired,
+        data: isRecord(payloadRecord.data) ? payloadRecord.data : null,
+      } satisfies ApiFootballAIInsightEntitlementErrorDetails);
+    }
+
+    if (!response.ok && response.status !== 404) {
+      const entitlementMessage = loginRequired
+        ? "กรุณา login ก่อนใช้งาน AI วิเคราะห์บอล"
+        : message === "ScoreMatrix AI insight request failed"
+          ? "คุณไม่มีสิทธิ์ใช้งาน AI วิเคราะห์บอล"
+          : message;
+
+      throw new ApiFootballError(entitlementMessage, response.status, {
+        error: "no_entitlement",
+        message: entitlementMessage,
+        loginRequired,
+        data: isRecord(payloadRecord.data) ? payloadRecord.data : null,
+      } satisfies ApiFootballAIInsightEntitlementErrorDetails);
+    }
+
+    if (!response.ok) {
+      throw new ApiFootballError(
+        "ScoreMatrix AI insight request failed",
+        response.status,
+        payloadRecord.error ?? payloadRecord.message ?? payload
+      );
+    }
+
+    if (isRecord(payloadRecord.data)) {
+      return normalizeSoccerBackendValue(
+        proxyFootballMediaValue(payloadRecord)
+      ) as SoccerAIInsightDetailResponse;
+    }
+
+    if (isRecord(payloadRecord)) {
+      return normalizeSoccerBackendValue(
+        proxyFootballMediaValue({ data: payloadRecord as SoccerAIInsightDetailData })
+      ) as SoccerAIInsightDetailResponse;
+    }
+
+    throw new ApiFootballError("ScoreMatrix AI insight returned an invalid response", 502, payload);
+  } catch (error) {
+    const apiError =
+      error instanceof ApiFootballError
+        ? error
+        : new ApiFootballError(
+            error instanceof Error && error.name === "TimeoutError"
+              ? "ScoreMatrix AI insight request timed out"
+              : "ScoreMatrix AI insight request failed",
+            error instanceof Error && error.name === "TimeoutError" ? 504 : 502,
+            error instanceof Error ? error.message : error
+          );
+
+    if (!isApiFootballAIInsightEntitlementError(apiError)) {
+      console.warn("[scorematrix:ai-insight-api]", {
+        endpoint: `${url.pathname}${url.search}`,
+        status: apiError.status,
+        durationMs: Date.now() - startedAt,
+        message: apiError.message,
+        details: formatSoccerApiLogDetails(apiError.details),
+      });
+    }
+
+    throw apiError;
+  }
+}
+
+function normalizeBackendErrorCode(value: string | null | undefined) {
+  return value?.trim().toLowerCase().replace(/[\s-]+/g, "_");
 }
 
 function hasPredictedGoals(

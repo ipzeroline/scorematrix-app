@@ -124,6 +124,7 @@ export default async function MatchesPage({ params, searchParams }: Props) {
         fixtures={fixtures}
         counts={counts}
         selectedDate={selectedDate}
+        lastUpdatedAt={new Date().toISOString()}
         initialLoadError={loadError}
         initialHasAuthSession={initialHasAuthSession}
       />
