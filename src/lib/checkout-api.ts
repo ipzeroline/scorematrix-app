@@ -4,8 +4,10 @@ import { apiGetRaw, apiPostRaw, type ApiRequestOptions } from "@/lib/api-client"
 
 export interface CheckoutSessionRequest {
   packageId: string;
+  paymentMethod: string;
   successUrl: string;
   cancelUrl: string;
+  couponCode?: string;
 }
 
 // ── Responses ────────────────────────────────────────────────────────────
@@ -13,6 +15,7 @@ export interface CheckoutSessionRequest {
 export interface CheckoutSessionResponse {
   sessionId: string;
   checkoutUrl: string;
+  purchaseId?: string;
 }
 
 export type CheckoutSessionStatus =
@@ -34,22 +37,26 @@ export interface CheckoutSessionStatusResponse {
 
 /**
  * Create a Stripe Checkout Session via the backend.
- * Falls back to a mock response while the backend endpoint is being built.
  */
 export async function createCheckoutSession(
   body: CheckoutSessionRequest,
   options?: ApiRequestOptions
 ): Promise<CheckoutSessionResponse> {
-  try {
-    return await apiPostRaw<CheckoutSessionResponse>(
-      "/credits/checkout",
-      body,
-      options
-    );
-  } catch {
-    // ── Mock fallback ──────────────────────────────────────────────
-    return mockCreateCheckoutSession(body);
-  }
+  const response = await apiPostRaw<unknown>(
+    "/credits/purchase",
+    {
+      packageId: body.packageId,
+      paymentMethod: body.paymentMethod,
+      couponCode: body.couponCode,
+      successUrl: body.successUrl,
+      cancelUrl: body.cancelUrl,
+      success_url: body.successUrl,
+      cancel_url: body.cancelUrl,
+    },
+    options
+  );
+
+  return normalizeCheckoutSessionResponse(response);
 }
 
 /**
@@ -70,18 +77,102 @@ export async function getCheckoutSessionStatus(
   }
 }
 
-// ── Mock helpers ─────────────────────────────────────────────────────────
+// ── Normalizers ──────────────────────────────────────────────────────────
 
-function mockCreateCheckoutSession(
-  body: CheckoutSessionRequest
-): CheckoutSessionResponse {
-  void body;
-  const sessionId = `cs_mock_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+function normalizeCheckoutSessionResponse(response: unknown): CheckoutSessionResponse {
+  const record = toRecord(response);
+  const data = toRecord(record?.data);
+  const result = toRecord(record?.result);
+  const payment = toRecord(data?.payment) ?? toRecord(result?.payment) ?? null;
+  const session = toRecord(data?.session) ?? toRecord(result?.session) ?? null;
+  const purchase = toRecord(data?.purchase) ?? toRecord(result?.purchase) ?? null;
+
+  const checkoutUrl = pickString(
+    record?.checkoutUrl,
+    record?.checkout_url,
+    record?.paymentUrl,
+    record?.payment_url,
+    record?.redirectUrl,
+    record?.redirect_url,
+    record?.url,
+    data?.checkoutUrl,
+    data?.checkout_url,
+    data?.paymentUrl,
+    data?.payment_url,
+    data?.redirectUrl,
+    data?.redirect_url,
+    data?.url,
+    result?.checkoutUrl,
+    result?.checkout_url,
+    result?.paymentUrl,
+    result?.payment_url,
+    result?.redirectUrl,
+    result?.redirect_url,
+    result?.url,
+    payment?.checkoutUrl,
+    payment?.checkout_url,
+    payment?.paymentUrl,
+    payment?.payment_url,
+    payment?.redirectUrl,
+    payment?.redirect_url,
+    payment?.url,
+    session?.url
+  );
+
+  if (!checkoutUrl) {
+    throw new Error("Checkout response did not include a Stripe redirect URL");
+  }
+
+  const sessionId =
+    pickString(
+      record?.sessionId,
+      record?.session_id,
+      record?.checkoutSessionId,
+      record?.checkout_session_id,
+      data?.sessionId,
+      data?.session_id,
+      data?.checkoutSessionId,
+      data?.checkout_session_id,
+      result?.sessionId,
+      result?.session_id,
+      result?.checkoutSessionId,
+      result?.checkout_session_id,
+      session?.id,
+      session?.sessionId,
+      session?.session_id
+    ) ?? "";
+
+  const purchaseId = pickString(
+    record?.purchaseId,
+    record?.purchase_id,
+    data?.purchaseId,
+    data?.purchase_id,
+    result?.purchaseId,
+    result?.purchase_id,
+    purchase?.id,
+    purchase?.purchaseId,
+    purchase?.purchase_id
+  );
 
   return {
     sessionId,
-    checkoutUrl: `https://checkout.stripe.com/c/pay/${sessionId}`,
+    checkoutUrl,
+    purchaseId,
   };
+}
+
+function toRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function pickString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return undefined;
 }
 
 function mockGetCheckoutSessionStatus(

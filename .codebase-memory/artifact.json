@@ -1,11 +1,11 @@
 {
     "schema_version": 1,
-    "commit": "2d6f0cb61ec3ffc1a0836a8ae95e800ff1e85336",
-    "indexed_at": "2026-06-22T13:51:33Z",
+    "commit": "9c9b163d14a67a6a34763e5e0cd972fb7e4cfe35",
+    "indexed_at": "2026-06-24T02:30:15Z",
     "project": "Users-zeroline-Documents-scorematrix-app",
-    "nodes": 12224,
-    "edges": 18563,
-    "original_size": 18808832,
-    "compressed_size": 1821525,
+    "nodes": 12316,
+    "edges": 18971,
+    "original_size": 22347776,
+    "compressed_size": 3099114,
     "compression_level": 3
 }

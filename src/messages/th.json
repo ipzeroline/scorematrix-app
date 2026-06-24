@@ -1553,6 +1553,8 @@
       "successMessage": "เพิ่ม {credits} เครดิตในกระเป๋าของคุณแล้ว",
       "goToWallet": "ไปที่กระเป๋า",
       "goPredict": "เริ่มทายผล",
+      "stripeVerified": "Verified by Stripe",
+      "stripeSecure": "การชำระเงินด้วยบัตรประมวลผลอย่างปลอดภัยผ่าน Stripe",
       "secureCheckout": "ชำระเงินอย่างปลอดภัย",
       "encrypted": "เข้ารหัส 256-bit",
       "noAutoRenew": "นี่คือการซื้อครั้งเดียว ไม่มีการต่ออายุอัตโนมัติ"

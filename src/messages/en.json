@@ -1565,6 +1565,8 @@
       "successMessage": "{credits} Credits have been added to your wallet.",
       "goToWallet": "Go to Wallet",
       "goPredict": "Start Predicting",
+      "stripeVerified": "Verified by Stripe",
+      "stripeSecure": "Card payments are processed securely through Stripe.",
       "secureCheckout": "Secure checkout",
       "encrypted": "256-bit encrypted payment",
       "noAutoRenew": "This is a one-time purchase. No automatic renewal."

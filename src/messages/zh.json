@@ -1552,6 +1552,8 @@
       "successMessage": "{credits} 点数已添加到您的钱包。",
       "goToWallet": "前往钱包",
       "goPredict": "开始预测",
+      "stripeVerified": "Verified by Stripe",
+      "stripeSecure": "银行卡支付由 Stripe 安全处理。",
       "secureCheckout": "安全结算",
       "encrypted": "256位加密支付",
       "noAutoRenew": "这是一次性购买，不会自动续费。"

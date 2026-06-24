@@ -1,3 +1,5 @@
+import type { CurrentUserEntitlements } from "@/lib/credit-entitlements";
+
 export interface CreditPackage {
   id: string;
   name: string;
@@ -9,6 +11,7 @@ export interface CreditPackage {
   tier: "free" | "starter" | "fan" | "pro" | "elite" | "legend";
   color: "slate" | "emerald" | "cyan" | "violet" | "amber";
   features: CreditFeature[];
+  entitlements: CurrentUserEntitlements;
   popular?: boolean;
   savingsLabel?: string;
 }
@@ -30,13 +33,16 @@ export interface FirstPurchaseBonus {
 
 export interface CheckoutSessionRequest {
   packageId: string;
+  paymentMethod: string;
   successUrl: string;
   cancelUrl: string;
+  couponCode?: string;
 }
 
 export interface CheckoutSessionResponse {
   sessionId: string;
   checkoutUrl: string;
+  purchaseId?: string;
 }
 
 export type CheckoutSessionStatus =

@@ -1553,6 +1553,8 @@
       "successMessage": "ເພີ່ມ {credits} ພຣີມຽມເຄຣດິດໃນກະເປົ໋າຂອງທ່ານແລ້ວ",
       "goToWallet": "ໄປທີ່ກະເປົ໋າ",
       "goPredict": "ເລີ່ມທາຍຜົນ",
+      "stripeVerified": "Verified by Stripe",
+      "stripeSecure": "ການຊຳລະດ້ວຍບັດຖືກປະມວນຜົນຢ່າງປອດໄພຜ່ານ Stripe",
       "secureCheckout": "ຊຳລະເງິນຢ່າງປອດໄພ",
       "encrypted": "ເຂົ້າລະຫັດ 256-bit",
       "noAutoRenew": "ນີ້ແມ່ນການຊື້ຄັ້ງດຽວ ບໍ່ມີການຕໍ່ອາຍຸອັດຕະໂນມັດ"

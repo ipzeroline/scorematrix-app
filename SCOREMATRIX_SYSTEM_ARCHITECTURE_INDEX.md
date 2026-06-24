@@ -258,7 +258,7 @@ Events:
 - `GET /credits/purchases`
   - Query: `status: pending|completed|failed|refunded`, `page`, `limit`
   - Returns purchase history and `totalSpentThb`.
-- `POST /webhooks/payment`
+- `POST /webhooks/stripe`
   - HMAC-SHA256 via `X-Signature`.
   - Body includes gateway `transactionId`, `purchaseId`, `status: success|failed|expired`, amount, currency, paidAt.
   - Idempotent by `transactionId`.

@@ -74,21 +74,14 @@ const TIER_BADGE: Record<string, string> = {
   legend: "bg-amber-500/10 text-amber-400 border-amber-500/20",
 };
 
-const PAYMENT_METHODS = [
-  { id: "promptpay", icon: "📱", labelKey: "promptpay" },
-  { id: "truemoney", icon: "💳", labelKey: "truemoney" },
-  { id: "rabbit", icon: "🐰", labelKey: "rabbit" },
-  { id: "creditCard", icon: "🏦", labelKey: "creditCard" },
-];
-
 const STYLE_PACKAGES = CREDIT_PACKAGES.filter((pkg) => pkg.id !== "free");
 
 function pickPackageTemplate(apiPackage: CreditPackageApiItem, index: number) {
-  const featured = apiPackage.isFeatured
-    ? STYLE_PACKAGES.find((pkg) => pkg.tier === "pro")
-    : undefined;
-
-  return featured ?? STYLE_PACKAGES[index % STYLE_PACKAGES.length];
+  return (
+    STYLE_PACKAGES.find((pkg) => pkg.priceTHB === apiPackage.amountThb) ??
+    STYLE_PACKAGES.find((pkg) => pkg.id === apiPackage.id) ??
+    STYLE_PACKAGES[index % STYLE_PACKAGES.length]
+  );
 }
 
 function mapApiPackage(apiPackage: CreditPackageApiItem, index: number): CreditPackage {
@@ -107,7 +100,7 @@ function mapApiPackage(apiPackage: CreditPackageApiItem, index: number): CreditP
     bonusPercent,
     bonusCredits: apiPackage.bonusCredits,
     totalCredits: apiPackage.totalCredits,
-    popular: apiPackage.isFeatured,
+    popular: template.popular || apiPackage.isFeatured,
     savingsLabel: undefined,
   };
 }
@@ -116,10 +109,9 @@ export default function CreditsPage() {
   const t = useTranslations("credits");
   const tc = useTranslations("common");
   const { locale } = useParams<{ locale: string }>();
-  const { isLoggedIn, addCredits } = useUserStore(
+  const { isLoggedIn } = useUserStore(
     useShallow((s) => ({
       isLoggedIn: s.isLoggedIn,
-      addCredits: s.addCredits,
     }))
   );
   const [packages, setPackages] = useState<CreditPackage[]>([]);
@@ -129,7 +121,6 @@ export default function CreditsPage() {
   const [loadingPackages, setLoadingPackages] = useState(true);
   const [packagesError, setPackagesError] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("promptpay");
   const [showSuccess, setShowSuccess] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [redirectingToStripe, setRedirectingToStripe] = useState(false);
@@ -178,17 +169,28 @@ export default function CreditsPage() {
     const checkoutResult = params.get("checkout");
     const sessionId = params.get("session_id");
 
-    if (checkoutResult === "success" && sessionId) {
+    if (checkoutResult === "success") {
+      if (!sessionId) {
+        void Promise.resolve().then(() => {
+          dispatchMemberWalletRefresh();
+          setShowSuccess(true);
+          window.history.replaceState({}, "", `/${locale}/credits`);
+        });
+        return;
+      }
+
       getCheckoutSessionStatus(sessionId)
         .then((status) => {
           if (status.status === "complete") {
-            addCredits(status.totalCredits);
             dispatchMemberWalletRefresh();
             setShowSuccess(true);
           }
         })
         .catch(() => {
-          // Silently fail — the webhook will handle crediting eventually
+          // The payment webhook is server-authoritative; refresh wallet even
+          // when the status endpoint is not available yet.
+          dispatchMemberWalletRefresh();
+          setShowSuccess(true);
         })
         .finally(() => {
           window.history.replaceState({}, "", `/${locale}/credits`);
@@ -211,47 +213,21 @@ export default function CreditsPage() {
 
     try {
       const origin = window.location.origin;
-      const successUrl = `${origin}/${locale}/credits?checkout=success`;
-      const cancelUrl = `${origin}/${locale}/credits?checkout=cancelled`;
+      const successUrl = `${origin}/${locale}/payment/success`;
+      const cancelUrl = `${origin}/${locale}/payment/cancel`;
 
       const session = await createCheckoutSession({
         packageId: pkg.id,
+        paymentMethod: "credit_card",
         successUrl,
         cancelUrl,
       });
 
-      // ── Mock: simulate Stripe redirect + return ──────────────────
-      // In production, this would be: window.location.href = session.checkoutUrl;
-      // For now we simulate the full flow locally so the UX is visible.
       setRedirectingToStripe(true);
-
-      // Simulate the user paying on Stripe and being redirected back
-      setTimeout(async () => {
-        try {
-          const status = await getCheckoutSessionStatus(session.sessionId);
-          if (status.status === "complete") {
-            addCredits(status.totalCredits);
-            dispatchMemberWalletRefresh();
-            setProcessing(false);
-            setRedirectingToStripe(false);
-            setShowCheckout(false);
-            setShowSuccess(true);
-          } else {
-            setProcessing(false);
-            setRedirectingToStripe(false);
-          }
-        } catch {
-          // Even if status check fails, simulate success in mock mode
-          addCredits(pkg.totalCredits);
-          dispatchMemberWalletRefresh();
-          setProcessing(false);
-          setRedirectingToStripe(false);
-          setShowCheckout(false);
-          setShowSuccess(true);
-        }
-      }, 2000);
+      window.location.assign(session.checkoutUrl);
     } catch {
       setProcessing(false);
+      setRedirectingToStripe(false);
     }
   };
 
@@ -635,26 +611,22 @@ export default function CreditsPage() {
                 </div>
               </div>
 
-              <div>
-                <p className="text-sm font-semibold text-white mb-3">
-                  {t("checkout.paymentMethod")}
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {PAYMENT_METHODS.map((pm) => (
-                    <button
-                      key={pm.id}
-                      onClick={() => setPaymentMethod(pm.id)}
-                      className={cn(
-                        "flex items-center gap-2 p-3 rounded-xl border text-sm font-medium transition-all",
-                        paymentMethod === pm.id
-                          ? "border-cyan-500/50 bg-cyan-500/10 text-white"
-                          : "border-gray-800 text-gray-400 hover:text-white hover:border-gray-700"
-                      )}
-                    >
-                      <span className="text-lg">{pm.icon}</span>
-                      {t(`checkout.${pm.labelKey}`)}
-                    </button>
-                  ))}
+              <div className="rounded-xl border border-[#635bff]/30 bg-[#635bff]/10 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="inline-flex h-9 shrink-0 items-center rounded-lg bg-white px-3 text-lg font-black tracking-normal text-[#635bff]">
+                      stripe
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-white">
+                        {t("checkout.stripeVerified")}
+                      </p>
+                      <p className="mt-0.5 text-xs font-medium leading-5 text-gray-400">
+                        {t("checkout.stripeSecure")}
+                      </p>
+                    </div>
+                  </div>
+                  <Shield size={18} className="shrink-0 text-[#a5b4fc]" />
                 </div>
               </div>
 

@@ -222,10 +222,11 @@ Important fields:
 - `favoriteTeamId`, `birthYear`, `country`, `locale`, `createdAt`
 - `stats`: snake_case keys such as `free_points`, `premium_credits`, `total_predictions`, `correct_predictions`, `missions_completed`, `achievements_unlocked`
 - `preferences`: snake_case keys such as `public_profile`, `push_notifications`, `match_reminder_1hr`, `match_reminder_30min`, `result_notification`, `rank_change_alert`
+- `entitlements`: whitelisted feature quota/access map with string values. Members with no purchases return `{}`. The allowed keys/values come from the package table in `src/lib/credit-entitlements.ts`; frontend normalization drops unknown keys and values so purchased rights cannot exceed the 50/100/200/500/1000 THB entitlement table. Example: `{ "AI_ANALYSIS_MONTHLY": "5", "DEEP_PREDICTION": "true", "CONFIDENCE_BOOST": "true", "PRIVATE_LEAGUE_LIMIT": "5", "PRIVATE_LEAGUE_MEMBER_LIMIT": "50", "STREAK_SHIELD_MONTHLY": "2", "PREDICTION_BOOST_MONTHLY": "1" }`
 
 Frontend note:
 
-- `src/lib/auth-api.ts` normalizes production snake_case stats/preferences into camelCase aliases used by existing UI code.
+- `src/lib/auth-api.ts` normalizes production snake_case stats/preferences into camelCase aliases used by existing UI code and defaults missing `entitlements` to `{}`.
 
 ### `PATCH /users/me`
 

@@ -10,6 +10,12 @@ import {
   type ApiSuccess,
   type ApiRequestOptions,
 } from "@/lib/api-client";
+import {
+  sanitizeCurrentUserEntitlements,
+  type CurrentUserEntitlements,
+} from "@/lib/credit-entitlements";
+
+export type { CurrentUserEntitlements } from "@/lib/credit-entitlements";
 
 export type RegisterAppRequest = {
   username: string;
@@ -192,6 +198,7 @@ export type CurrentUserData = {
   achievementsUnlocked?: number | string | null;
   stats?: CurrentUserStats | null;
   preferences?: CurrentUserPreferences | null;
+  entitlements?: CurrentUserEntitlements | null;
   createdAt?: string | null;
   [key: string]: unknown;
 };
@@ -613,6 +620,7 @@ function normalizeCurrentUserResponse(response: CurrentUserResponse): CurrentUse
 function normalizeCurrentUserData(user: CurrentUserData): CurrentUserData {
   const stats = normalizeCurrentUserStats(user.stats);
   const preferences = normalizeCurrentUserPreferences(user.preferences);
+  const entitlements = normalizeCurrentUserEntitlements(user.entitlements);
 
   return {
     ...user,
@@ -644,7 +652,14 @@ function normalizeCurrentUserData(user: CurrentUserData): CurrentUserData {
     ),
     stats,
     preferences,
+    entitlements,
   };
+}
+
+function normalizeCurrentUserEntitlements(
+  entitlements?: CurrentUserEntitlements | null
+): CurrentUserEntitlements {
+  return sanitizeCurrentUserEntitlements(isRecord(entitlements) ? entitlements : null);
 }
 
 function normalizeCurrentUserStats(stats?: CurrentUserStats | null) {

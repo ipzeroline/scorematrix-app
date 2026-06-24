@@ -1,4 +1,11 @@
+import { getCreditPackageEntitlementSpec } from "@/lib/credit-entitlements";
 import type { CreditPackage } from "@/types/credits";
+
+function packageSpec(priceTHB: number) {
+  const spec = getCreditPackageEntitlementSpec(priceTHB);
+  if (!spec) throw new Error(`Missing credit package entitlement spec for ${priceTHB} THB`);
+  return spec;
+}
 
 export const CREDIT_PACKAGES: CreditPackage[] = [
   {
@@ -11,6 +18,7 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     totalCredits: 0,
     tier: "free",
     color: "slate",
+    entitlements: {},
     features: [
       { key: "aiInsightDaily", name: "aiInsightDaily", included: true, value: "1" },
       { key: "deepPrediction", name: "deepPrediction", included: false },
@@ -33,63 +41,33 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     totalCredits: 50,
     tier: "starter",
     color: "slate",
-    features: [
-      { key: "aiInsightDaily", name: "aiInsightDaily", included: true, value: "3" },
-      { key: "deepPrediction", name: "deepPrediction", included: true },
-      { key: "confidenceBoost", name: "confidenceBoost", included: false },
-      { key: "proStats", name: "proStats", included: false },
-      { key: "privateLeagues", name: "privateLeagues", included: true, value: "3" },
-      { key: "maxLeagueMembers", name: "maxLeagueMembers", included: true, value: "25" },
-      { key: "streakShield", name: "streakShield", included: true, value: "1" },
-      { key: "predictionBoost", name: "predictionBoost", included: false },
-      { key: "prioritySupport", name: "prioritySupport", included: false },
-    ],
+    ...packageSpec(50),
   },
   {
     id: "fan",
     name: "Fan",
-    priceTHB: 150,
-    baseCredits: 150,
+    priceTHB: 100,
+    baseCredits: 100,
     bonusPercent: 10,
-    bonusCredits: 15,
-    totalCredits: 165,
+    bonusCredits: 10,
+    totalCredits: 110,
     tier: "fan",
     color: "emerald",
-    features: [
-      { key: "aiInsightDaily", name: "aiInsightDaily", included: true, value: "5" },
-      { key: "deepPrediction", name: "deepPrediction", included: true },
-      { key: "confidenceBoost", name: "confidenceBoost", included: true, highlighted: true },
-      { key: "proStats", name: "proStats", included: false },
-      { key: "privateLeagues", name: "privateLeagues", included: true, value: "5" },
-      { key: "maxLeagueMembers", name: "maxLeagueMembers", included: true, value: "50" },
-      { key: "streakShield", name: "streakShield", included: true, value: "2" },
-      { key: "predictionBoost", name: "predictionBoost", included: true, value: "1" },
-      { key: "prioritySupport", name: "prioritySupport", included: false },
-    ],
+    ...packageSpec(100),
   },
   {
     id: "pro",
     name: "Pro",
-    priceTHB: 300,
-    baseCredits: 300,
+    priceTHB: 200,
+    baseCredits: 200,
     bonusPercent: 15,
-    bonusCredits: 45,
-    totalCredits: 345,
+    bonusCredits: 30,
+    totalCredits: 230,
     tier: "pro",
     color: "cyan",
     popular: true,
     savingsLabel: "bestValue",
-    features: [
-      { key: "aiInsightDaily", name: "aiInsightDaily", included: true, value: "10" },
-      { key: "deepPrediction", name: "deepPrediction", included: true },
-      { key: "confidenceBoost", name: "confidenceBoost", included: true },
-      { key: "proStats", name: "proStats", included: true, highlighted: true },
-      { key: "privateLeagues", name: "privateLeagues", included: true, value: "10" },
-      { key: "maxLeagueMembers", name: "maxLeagueMembers", included: true, value: "100" },
-      { key: "streakShield", name: "streakShield", included: true, value: "3" },
-      { key: "predictionBoost", name: "predictionBoost", included: true, value: "2" },
-      { key: "prioritySupport", name: "prioritySupport", included: false },
-    ],
+    ...packageSpec(200),
   },
   {
     id: "elite",
@@ -101,17 +79,7 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     totalCredits: 600,
     tier: "elite",
     color: "violet",
-    features: [
-      { key: "aiInsightDaily", name: "aiInsightDaily", included: true, value: "unlimited" },
-      { key: "deepPrediction", name: "deepPrediction", included: true },
-      { key: "confidenceBoost", name: "confidenceBoost", included: true },
-      { key: "proStats", name: "proStats", included: true },
-      { key: "privateLeagues", name: "privateLeagues", included: true, value: "20" },
-      { key: "maxLeagueMembers", name: "maxLeagueMembers", included: true, value: "200" },
-      { key: "streakShield", name: "streakShield", included: true, value: "5" },
-      { key: "predictionBoost", name: "predictionBoost", included: true, value: "3" },
-      { key: "prioritySupport", name: "prioritySupport", included: true, highlighted: true },
-    ],
+    ...packageSpec(500),
   },
   {
     id: "legend",
@@ -124,16 +92,6 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     tier: "legend",
     color: "amber",
     savingsLabel: "bestDeal",
-    features: [
-      { key: "aiInsightDaily", name: "aiInsightDaily", included: true, value: "unlimited" },
-      { key: "deepPrediction", name: "deepPrediction", included: true },
-      { key: "confidenceBoost", name: "confidenceBoost", included: true },
-      { key: "proStats", name: "proStats", included: true },
-      { key: "privateLeagues", name: "privateLeagues", included: true, value: "unlimited" },
-      { key: "maxLeagueMembers", name: "maxLeagueMembers", included: true, value: "500" },
-      { key: "streakShield", name: "streakShield", included: true, value: "unlimited" },
-      { key: "predictionBoost", name: "predictionBoost", included: true, value: "5" },
-      { key: "prioritySupport", name: "prioritySupport", included: true },
-    ],
+    ...packageSpec(1000),
   },
 ];
