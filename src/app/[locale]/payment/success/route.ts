@@ -1,3 +1,4 @@
+import { paymentReturnBridgeResponse } from "@/lib/payment-return-bridge";
 import { getPublicRequestOrigin } from "@/lib/public-origin";
 
 type PaymentReturnContext = {
@@ -13,5 +14,5 @@ export async function GET(request: Request, context: PaymentReturnContext) {
   redirectUrl.searchParams.set("checkout", "success");
   if (sessionId) redirectUrl.searchParams.set("session_id", sessionId);
 
-  return Response.redirect(redirectUrl, 307);
+  return paymentReturnBridgeResponse(redirectUrl);
 }
