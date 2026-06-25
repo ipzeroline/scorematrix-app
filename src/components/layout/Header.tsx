@@ -195,7 +195,7 @@ export function Header({ initialHasAuthSession = false }: HeaderProps) {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 border-b border-gray-800 bg-[#0a0a0f]/95 shadow-[0_8px_24px_rgba(0,0,0,0.32)] backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-[1440px] min-w-0 items-center gap-1.5 overflow-hidden px-2 sm:gap-3 sm:px-3 lg:px-4">
+      <div className="mx-auto flex h-14 w-full max-w-[1440px] min-w-0 items-center gap-1.5 overflow-visible px-2 sm:gap-3 sm:px-3 lg:px-4">
         {/* Mobile hamburger */}
         <button
           type="button"

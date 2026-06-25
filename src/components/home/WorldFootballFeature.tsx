@@ -7,7 +7,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, Calendar, MapPinned, Rows3 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatDate, formatMatchTimeWithZone } from "@/lib/utils";
 import {
   worldCupGroups as mockWorldCupGroups,
@@ -121,13 +120,13 @@ export function WorldFootballFeature({
             </div>
 
             {activeTab === "matches" ? (
-              <div className="flex max-h-[360px] flex-col gap-2 overflow-y-auto pr-1 scrollbar-thin sm:max-h-[232px]">
+              <div className="flex max-h-[252px] flex-col gap-2 overflow-y-auto pr-1 scrollbar-thin">
                 {wcTodayMatches.length > 0 ? (
                   wcTodayMatches.map((match) => (
                     <Link
                       key={match.id}
                       href={`/${locale}/matches/detail/${match.id}`}
-                      className="grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-gray-800/60 bg-black/20 px-2.5 py-2.5 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:min-h-[68px] sm:grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)] sm:items-center sm:py-2"
+                      className="grid min-h-[72px] min-w-0 grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-gray-800/60 bg-black/20 px-2.5 py-2 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)]"
                     >
                       {/* Home team */}
                       <div className="flex min-w-0 items-center gap-2">
@@ -138,24 +137,20 @@ export function WorldFootballFeature({
                       </div>
 
                       {/* Score or time */}
-                      <div className="flex min-w-0 shrink-0 flex-col items-center justify-center">
+                      <div className="flex min-w-0 shrink-0 flex-col items-center justify-center gap-1">
                         <span className="min-w-[62px] rounded-md border border-gray-800 bg-black/55 px-2 py-1 text-center font-mono text-sm font-black leading-none text-white">
                           {formatScore(match.score, formatMatchTimeWithZone(match.kickoffTime))}
                         </span>
-                        <span className="mt-1 max-w-full truncate text-[10px] font-bold leading-none text-gray-500">
+                        <span className="max-w-full truncate text-[10px] font-bold leading-none text-gray-500">
                           {formatDate(match.kickoffTime, locale)}
                         </span>
-                        <span className="mt-1 flex max-w-full items-center justify-center overflow-hidden">
-                          <StatusBadge
-                            status={match.status}
-                            label={match.statusShort ?? undefined}
-                            className="border-none bg-transparent p-0 text-[11px] font-bold leading-none"
-                          />
+                        <span className="max-w-full truncate font-mono text-[10px] font-black leading-none text-gray-500">
+                          {match.statusShort ?? match.status}
                         </span>
                       </div>
 
                       {/* Away team */}
-                      <div className="flex min-w-0 items-center justify-start gap-2 text-left sm:justify-end sm:text-right">
+                      <div className="flex min-w-0 items-center justify-end gap-2 text-right">
                         <span className="min-w-0 truncate text-sm font-bold text-gray-200">
                           {match.away.name}
                         </span>

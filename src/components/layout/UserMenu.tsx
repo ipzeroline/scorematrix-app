@@ -96,6 +96,7 @@ export function UserMenu({
 
   return (
     <Dropdown
+      containerClassName="z-50 shrink-0"
       className="w-[min(90vw,286px)] overflow-hidden rounded-2xl border-cyan-400/20 bg-[#080d16] p-0 shadow-[0_18px_48px_rgba(0,0,0,0.5),0_0_0_1px_rgba(103,232,249,0.08)]"
       trigger={
         <div className="group flex min-h-12 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] p-1.5 pr-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors hover:border-cyan-300/30 hover:bg-cyan-300/[0.06]">
