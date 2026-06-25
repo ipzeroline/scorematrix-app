@@ -89,16 +89,6 @@ export const EMPTY_REFERRALS_VIEW_DATA: AffiliateViewData = {
 };
 
 export async function getReferrals(options?: ApiRequestOptions) {
-  try {
-    return normalizeReferralsResponse(
-      await apiGetRaw<unknown>("/referral", options)
-    );
-  } catch (error) {
-    if (error instanceof ApiClientError && error.status === 401) {
-      throw error;
-    }
-  }
-
   let referralCodeData: ReferralsResponse | null = null;
 
   try {

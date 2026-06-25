@@ -979,54 +979,52 @@ const FlatMatchesSection = memo(function FlatMatchesSection({
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-gray-800/80 bg-[#07080b]">
-      <div className="hidden md:grid grid-cols-[104px_minmax(180px,1fr)_92px_minmax(180px,1fr)_154px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-400">
-        <div className="pl-1">{labels.dateTime}</div>
-        <div className="text-right pr-3">{labels.home}</div>
-        <div className="text-center">{labels.vs}</div>
-        <div className="text-left pl-3">{labels.away}</div>
-        <div className="text-right pr-4">{labels.predict}</div>
-      </div>
-
+    <section className="space-y-3">
       {groups.map((group) => (
-        <div key={group.key}>
-          <div className="relative overflow-hidden border-b border-cyan-300/10 bg-[#0c121d] px-4 py-2.5 sm:px-5">
-            <div className="absolute inset-y-0 left-0 w-0.5 bg-cyan-300/70" />
-            <div className="relative flex min-w-0 items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <ApiLeagueLogo name={group.label} logo={group.logo} size="sm" />
-                <div className="min-w-0">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <p className="min-w-0 truncate text-sm font-black tracking-normal text-white">
-                      {group.label}
-                    </p>
-                    {group.country ? (
-                      <span className="shrink-0 rounded border border-white/10 bg-black/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                        {group.country}
-                      </span>
-                    ) : null}
-                  </div>
+        <div key={group.key} className="space-y-2">
+          <div className="flex items-center justify-between gap-3 px-1 py-1">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <ApiLeagueLogo name={group.label} logo={group.logo} size="xl" />
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <p className="min-w-0 truncate text-[13px] font-black uppercase tracking-[0.11em] text-cyan-100/85 sm:text-sm">
+                    {group.label}
+                  </p>
+                  {group.country ? (
+                    <span className="hidden shrink-0 rounded-md border border-white/10 bg-black/25 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-cyan-100/70 sm:inline-flex">
+                      {group.country}
+                    </span>
+                  ) : null}
                 </div>
               </div>
-              <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-white/10 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100">
-                <span>{group.matches.length}</span>
-                <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
-                  {labels.matches}
-                </span>
-              </span>
             </div>
+            <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-cyan-300/20 bg-cyan-300/[0.06] px-2.5 font-mono text-xs font-black text-cyan-100/85">
+              <span>{group.matches.length}</span>
+              <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
+                {labels.matches}
+              </span>
+            </span>
           </div>
-          <div className="divide-y divide-gray-800/30">
-            {group.matches.map((match, index) => (
-              <MatchFixtureRow
-                key={match.id}
-                match={match}
-                index={index}
-                locale={locale}
-                labels={labels}
-                isLoggedIn={isLoggedIn}
-              />
-            ))}
+          <div className="overflow-hidden rounded-xl border border-gray-800/80 bg-[#07080b]">
+            <div className="hidden md:grid grid-cols-[132px_minmax(180px,1fr)_92px_minmax(180px,1fr)_154px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-2.5 text-[11px] font-black uppercase tracking-wide text-gray-400">
+              <div className="pl-1">{labels.dateTime}</div>
+              <div className="text-right pr-3">{labels.home}</div>
+              <div className="text-center">{labels.vs}</div>
+              <div className="text-left pl-3">{labels.away}</div>
+              <div className="text-right pr-4">{labels.predict}</div>
+            </div>
+            <div className="divide-y divide-gray-800/30">
+              {group.matches.map((match, index) => (
+                <MatchFixtureRow
+                  key={match.id}
+                  match={match}
+                  index={index}
+                  locale={locale}
+                  labels={labels}
+                  isLoggedIn={isLoggedIn}
+                />
+              ))}
+            </div>
           </div>
         </div>
       ))}
@@ -1103,7 +1101,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
       {/* Desktop Grid Row */}
       <div
         className={cn(
-          "hidden md:grid grid-cols-[104px_minmax(180px,1fr)_92px_minmax(180px,1fr)_154px] items-center gap-3 px-5 py-2.5 transition-all duration-200 border-l-2",
+          "hidden md:grid grid-cols-[132px_minmax(180px,1fr)_92px_minmax(180px,1fr)_154px] items-center gap-3 px-5 py-2.5 transition-all duration-200 border-l-2",
           statusGroup === MatchStatus.LIVE
             ? "border-l-green-500 bg-gradient-to-r from-green-500/[0.04] via-transparent to-transparent"
             : statusGroup === MatchStatus.UPCOMING
@@ -1114,7 +1112,7 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
         )}
       >
         {/* Column 1: Time / Status */}
-        <div className="flex items-center gap-3 pl-1">
+        <div className="flex items-center gap-2 pl-1">
           <div className="min-w-0">
           <span className="block whitespace-nowrap text-[10px] font-bold leading-none text-gray-500">
             {matchDate}
@@ -1125,13 +1123,13 @@ const MatchFixtureRow = memo(function MatchFixtureRow({
           </div>
           <div className="mt-0.5">
             {statusGroup === MatchStatus.LIVE ? (
-              <span className="inline-flex items-center gap-1 rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-green-300">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-green-500/10 border border-green-500/30 px-1.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wide text-green-300">
                 <span className="h-1 w-1 rounded-full bg-green-400 live-status-dot" />
                 {labels.live}
               </span>
             ) : (
               <span className={cn(
-                "text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/5 bg-white/[0.03] text-gray-400",
+                "whitespace-nowrap text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md border border-white/5 bg-white/[0.03] text-gray-400",
                 statusGroup === MatchStatus.POSTPONED && "bg-amber-500/10 text-amber-400 border-amber-500/20",
                 statusGroup === MatchStatus.CANCELLED && "bg-red-500/10 text-red-400 border-red-500/20"
               )}>

@@ -94,10 +94,10 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
         <div className="space-y-2">
           {leagueGroups.map((group) => (
             <div key={group.name} className="space-y-2">
-              <div className="flex items-center justify-between gap-3 px-1">
-                <div className="flex min-w-0 items-center gap-2">
-                  <ApiLeagueLogo name={group.name} logo={group.logo} size="xs" />
-                  <span className="truncate text-[11px] font-black uppercase tracking-[0.08em] text-cyan-100/80">
+              <div className="flex items-center justify-between gap-3 px-1 py-1">
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <ApiLeagueLogo name={group.name} logo={group.logo} size="xl" />
+                  <span className="truncate text-[13px] font-black uppercase tracking-[0.11em] text-cyan-100/85 sm:text-sm">
                     {group.name}
                   </span>
                 </div>
@@ -107,6 +107,15 @@ export function TodayMatches({ fixtures = [] }: TodayMatchesProps) {
               </div>
 
               <div className="overflow-hidden rounded-xl border border-cyan-300/15 bg-[#070b12] shadow-[0_16px_38px_rgba(0,0,0,0.28)]">
+                <div className="hidden min-w-0 grid-cols-[104px_minmax(220px,1fr)_104px_minmax(220px,1fr)_44px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-4 py-3 text-xs font-black uppercase tracking-wide text-gray-300 md:grid">
+                  <div>
+                    {t("matches.dateFilter")} / {t("football.table.time")}
+                  </div>
+                  <div className="text-right">{t("football.table.home")}</div>
+                  <div className="text-center">VS</div>
+                  <div className="text-left">{t("football.table.away")}</div>
+                  <div className="text-center">{labels.action}</div>
+                </div>
                 {group.matches.map((match) => (
                   <Link
                     key={match.id}
@@ -289,6 +298,7 @@ function getBoardLabels(locale: string) {
       vs: "VS",
       detail: "รายละเอียด",
       matches: "คู่",
+      action: "ดู",
     };
   }
 
@@ -297,6 +307,7 @@ function getBoardLabels(locale: string) {
     vs: "VS",
     detail: "Details",
     matches: "matches",
+    action: "View",
   };
 }
 

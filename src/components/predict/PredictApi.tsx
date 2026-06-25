@@ -1172,81 +1172,70 @@ export function PredictApi() {
                   description={t("prediction.noMatchesAfterFilterDescription")}
                 />
               ) : (
-                <div className="overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#07080b] shadow-[0_14px_44px_rgba(0,0,0,0.24)]">
-                  {/* Desktop Table Header */}
-                  <div className="hidden md:grid grid-cols-[118px_minmax(160px,1fr)_64px_minmax(160px,1fr)_160px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-5 py-3 text-xs font-black uppercase tracking-wide text-gray-300">
-                    <div className="pl-1">
-                      {t("matches.dateFilter")} / {t("football.table.time")}
-                    </div>
-                    <div className="text-right pr-3">{t("football.table.home")}</div>
-                    <div className="text-center">VS</div>
-                    <div className="text-left pl-3">{t("football.table.away")}</div>
-                    <div className="text-right pr-4">{t("prediction.predictResult")}</div>
-                  </div>
-                  <div>
+                <div className="space-y-3">
                     {groupedMatches.map((group) => (
-                      <div key={group.key}>
-                        <div className="relative overflow-hidden border-b border-cyan-300/10 bg-gradient-to-r from-cyan-300/[0.12] via-[#0b111a] to-blue-500/[0.08] px-4 py-3.5 sm:px-5">
-                          <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-cyan-300 via-sky-400 to-blue-500" />
-                          <div className="absolute right-0 top-0 h-full w-40 bg-[linear-gradient(135deg,transparent_0%,rgba(34,211,238,0.08)_42%,transparent_43%,transparent_58%,rgba(59,130,246,0.08)_59%,transparent_100%)]" />
-                          <div className="relative flex min-w-0 items-center justify-between gap-3">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="relative">
-                                <span className="absolute -inset-1 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] shadow-[0_0_22px_rgba(34,211,238,0.12)]" />
-                                <span className="relative block">
-                                  <ApiLeagueLogo
-                                    name={group.league.name}
-                                    logo={group.league.logo}
-                                    size="sm"
-                                  />
-                                </span>
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex min-w-0 items-center gap-2">
-                                  <p className="min-w-0 truncate text-base font-black uppercase tracking-widest text-white">
-                                    {group.league.name}
-                                  </p>
-                                </div>
-                                <div className="mt-1 h-0.5 w-20 rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-transparent" />
+                      <div key={group.key} className="space-y-2">
+                        <div className="flex items-center justify-between gap-3 px-1 py-2">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <ApiLeagueLogo
+                              name={group.league.name}
+                              logo={group.league.logo}
+                              size="xl"
+                            />
+                            <div className="min-w-0">
+                              <div className="flex min-w-0 items-center gap-2">
+                                <p className="min-w-0 truncate text-[13px] font-black uppercase tracking-[0.11em] text-cyan-100/85 sm:text-sm">
+                                  {group.league.name}
+                                </p>
                               </div>
                             </div>
-                            <span className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-cyan-300/20 bg-black/25 px-2.5 font-mono text-xs font-black text-cyan-100 shadow-[inset_0_0_18px_rgba(34,211,238,0.08)]">
-                              <span>{group.matches.length}</span>
-                              <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
-                                {t("matches.metricMatches")}
-                              </span>
-                            </span>
                           </div>
+                          <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-cyan-300/20 bg-cyan-300/[0.06] px-2.5 font-mono text-xs font-black text-cyan-100/85">
+                            <span>{group.matches.length}</span>
+                            <span className="font-sans text-[10px] uppercase tracking-wide text-cyan-200/75">
+                              {t("matches.metricMatches")}
+                            </span>
+                          </span>
                         </div>
-                        <div className="divide-y divide-white/[0.06]">
-                          {group.matches.map((match, index) => {
-                            const hasPredicted =
-                              match.hasPredicted || predictedMatchIds.has(match.id);
-                            const predictMatchHref = buildPredictMatchHref(
-                              locale,
-                              match.id,
-                              match.home.id ?? "",
-                              match.away.id ?? ""
-                            );
+                        <div className="overflow-hidden rounded-2xl border border-cyan-300/15 bg-[#07080b] shadow-[0_14px_44px_rgba(0,0,0,0.24)]">
+                          <div className="hidden md:grid grid-cols-[190px_minmax(150px,1fr)_58px_minmax(150px,1fr)_138px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-4 py-3 text-xs font-black uppercase tracking-wide text-gray-300">
+                            <div className="pl-1">
+                              {t("matches.dateFilter")} / {t("football.table.time")}
+                            </div>
+                            <div className="text-right pr-2">{t("football.table.home")}</div>
+                            <div className="text-center">VS</div>
+                            <div className="text-left pl-2">{t("football.table.away")}</div>
+                            <div className="text-right pr-1">{t("prediction.predictResult")}</div>
+                          </div>
+                          <div className="divide-y divide-white/[0.06]">
+                            {group.matches.map((match, index) => {
+                              const hasPredicted =
+                                match.hasPredicted || predictedMatchIds.has(match.id);
+                              const predictMatchHref = buildPredictMatchHref(
+                                locale,
+                                match.id,
+                                match.home.id ?? "",
+                                match.away.id ?? ""
+                              );
 
-                            return (
-                              <PredictMatchRow
-                                key={match.id}
-                                match={match}
-                                index={index}
-                                locale={locale}
-                                t={t}
-                                isLoggedIn={effectiveIsLoggedIn}
-                                hasPredicted={hasPredicted}
-                                predictMatchHref={predictMatchHref}
-                                copy={copy}
-                              />
-                            );
-                          })}
+                              return (
+                                <PredictMatchRow
+                                  key={match.id}
+                                  match={match}
+                                  index={index}
+                                  locale={locale}
+                                  t={t}
+                                  isLoggedIn={effectiveIsLoggedIn}
+                                  hasPredicted={hasPredicted}
+                                  predictMatchHref={predictMatchHref}
+                                  copy={copy}
+                                />
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     ))}
-                  </div>
                 </div>
               )}
             </div>

@@ -121,13 +121,13 @@ export function WorldFootballFeature({
             </div>
 
             {activeTab === "matches" ? (
-              <div className="flex max-h-[232px] flex-col gap-2 overflow-y-auto pr-1 scrollbar-thin">
+              <div className="flex max-h-[360px] flex-col gap-2 overflow-y-auto pr-1 scrollbar-thin sm:max-h-[232px]">
                 {wcTodayMatches.length > 0 ? (
                   wcTodayMatches.map((match) => (
                     <Link
                       key={match.id}
                       href={`/${locale}/matches/detail/${match.id}`}
-                      className="grid min-h-[68px] min-w-0 grid-cols-[minmax(0,1fr)_70px_minmax(0,1fr)] items-center gap-2 rounded-lg border border-gray-800/60 bg-black/20 px-2.5 py-2 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)]"
+                      className="grid min-w-0 grid-cols-1 gap-2 rounded-lg border border-gray-800/60 bg-black/20 px-2.5 py-2.5 transition-colors duration-150 hover:border-cyan-500/35 hover:bg-black/40 sm:min-h-[68px] sm:grid-cols-[minmax(0,1fr)_82px_minmax(0,1fr)] sm:items-center sm:py-2"
                     >
                       {/* Home team */}
                       <div className="flex min-w-0 items-center gap-2">
@@ -155,7 +155,7 @@ export function WorldFootballFeature({
                       </div>
 
                       {/* Away team */}
-                      <div className="flex min-w-0 items-center justify-end gap-2 text-right">
+                      <div className="flex min-w-0 items-center justify-start gap-2 text-left sm:justify-end sm:text-right">
                         <span className="min-w-0 truncate text-sm font-bold text-gray-200">
                           {match.away.name}
                         </span>
@@ -258,7 +258,7 @@ export function WorldFootballFeature({
           <div className="flex flex-wrap gap-2">
             <Link
               href={`/${locale}/world-cup-2026`}
-              className="group inline-flex min-h-11 max-w-full items-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100 transition-colors duration-150 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white"
+              className="group inline-flex min-h-11 w-full max-w-full items-center justify-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-400/10 px-3 py-2 text-sm font-bold text-cyan-100 transition-colors duration-150 hover:border-cyan-200/60 hover:bg-cyan-400/15 hover:text-white sm:w-auto"
             >
               <Rows3 size={18} className="relative shrink-0" />
               <span className="relative min-w-0 truncate">{t("ctaGroups")}</span>
@@ -271,7 +271,7 @@ export function WorldFootballFeature({
         </div>
 
         {/* Right Panel: Globe & Host Info Showcase */}
-        <div className="relative min-h-[240px] overflow-hidden rounded-lg border border-gray-800 bg-[#070a10] md:min-h-[320px]">
+        <div className="relative hidden min-h-[240px] overflow-hidden rounded-lg border border-gray-800 bg-[#070a10] md:block md:min-h-[320px]">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_48%_22%,rgba(245,158,11,0.24),transparent_24%),radial-gradient(circle_at_22%_68%,rgba(239,68,68,0.18),transparent_25%),radial-gradient(circle_at_78%_66%,rgba(16,185,129,0.2),transparent_27%),linear-gradient(rgba(34,211,238,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(34,211,238,0.06)_1px,transparent_1px)] bg-[size:100%_100%,100%_100%,100%_100%,32px_32px,32px_32px]" />
           <div className="absolute left-1/2 top-[43%] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-400/25 bg-[radial-gradient(circle_at_35%_30%,rgba(255,255,255,0.22),rgba(34,211,238,0.14)_26%,rgba(16,185,129,0.12)_52%,rgba(10,10,15,0.92)_76%)] shadow-[0_0_42px_rgba(34,211,238,0.2)] world-football-globe md:top-[45%] md:h-52 md:w-52 md:shadow-[0_0_58px_rgba(34,211,238,0.22)]" />
           <div className="absolute left-1/2 top-[43%] h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-dashed border-cyan-300/22 world-football-orbit md:top-[45%] md:h-60 md:w-60" />

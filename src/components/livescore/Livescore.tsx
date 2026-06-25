@@ -51,6 +51,7 @@ interface LivescoreProps {
 export function Livescore({ initialPayload, locale }: LivescoreProps) {
   const t = useTranslations();
   const statusLabels = useMemo(() => buildFootballStatusLabels(t), [t]);
+  const actionCopy = getLivescoreActionCopy(locale);
   const [league, setLeague] = useState("");
   const [search, setSearch] = useState("");
   const [payload, setPayload] = useState(initialPayload);
@@ -266,20 +267,19 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
             const leagueMatches = filtered.filter((m) => m.league.name === leagueName);
             const leagueInfo = leagueMatches[0]?.league;
             return (
-              <div key={leagueName} className="overflow-hidden rounded-xl border border-gray-800/90 bg-[#070a10]">
-                <div className="flex items-center justify-between gap-3 border-b border-gray-800/80 bg-[#0c121d] px-3 py-3 sm:px-4">
+              <div key={leagueName} className="space-y-2">
+                <div className="flex items-center justify-between gap-3 px-1 py-1">
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="h-9 w-0.5 rounded-full bg-gradient-to-b from-green-300 via-cyan-300 to-fuchsia-300" />
                     <ApiLeagueLogo
                       name={leagueName}
                       logo={leagueInfo?.logo}
-                      size="sm"
+                      size="xl"
                     />
                     <div className="min-w-0">
-                      <h3 className="truncate text-sm font-black text-white">
+                      <h3 className="truncate text-sm font-black tracking-wide text-white">
                         {leagueName}
                       </h3>
-                      <span className="block truncate text-xs font-medium text-gray-500">
+                      <span className="block truncate text-xs font-semibold text-cyan-100/60">
                         {leagueInfo?.country}
                       </span>
                     </div>
@@ -288,16 +288,28 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                     {leagueMatches.length} {t("matches.metricMatches")}
                   </span>
                 </div>
-                <div className="divide-y divide-gray-800/70">
-                  {leagueMatches.map((match) => {
-                    const detailHref = buildMatchDetailHref(match, locale);
+                <div className="overflow-hidden rounded-xl border border-gray-800/90 bg-[#070a10]">
+                  <div className="hidden lg:grid grid-cols-[180px_minmax(0,1fr)_190px] items-center gap-3 border-b border-cyan-300/10 bg-[#0d111a] px-4 py-3 text-xs font-black uppercase tracking-wide text-gray-300">
+                    <div>
+                      {t("matches.dateFilter")} / {t("football.table.time")}
+                    </div>
+                    <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_76px_minmax(0,1fr)] items-center gap-3">
+                      <div className="text-right">{t("football.table.home")}</div>
+                      <div className="text-center">VS</div>
+                      <div className="text-left">{t("football.table.away")}</div>
+                    </div>
+                    <div className="text-right">{actionCopy.header}</div>
+                  </div>
+                  <div className="divide-y divide-gray-800/70">
+                    {leagueMatches.map((match) => {
+                      const detailHref = buildMatchDetailHref(match, locale);
 
-                    return (
-                      <Link
-                        key={match.id}
-                        href={detailHref}
-                        className="group block bg-[#070a10] px-3 py-3 transition-colors duration-150 hover:bg-[#101722] sm:px-4"
-                      >
+                      return (
+                        <Link
+                          key={match.id}
+                          href={detailHref}
+                          className="group block bg-[#070a10] px-3 py-3 transition-colors duration-150 hover:bg-[#101722] sm:px-4"
+                        >
                         <div className="grid items-center gap-3 lg:grid-cols-[180px_minmax(0,1fr)_190px]">
                           <div className="flex min-w-0 items-center gap-3">
                             <div className="flex min-w-[64px] flex-col gap-0.5">
@@ -306,12 +318,6 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                               </span>
                               <span className="truncate text-[11px] font-semibold text-gray-500">
                                 {formatDate(match.kickoffTime, locale)}
-                              </span>
-                            </div>
-                            <div className="hidden min-w-0 items-center gap-1.5 rounded-full border border-gray-800/80 bg-black/20 px-2 py-1 sm:flex">
-                              <ApiLeagueLogo name={match.league.name} logo={match.league.logo} size="xs" />
-                              <span className="max-w-[92px] truncate text-[11px] font-semibold text-gray-400">
-                                {match.league.name}
                               </span>
                             </div>
                           </div>
@@ -353,7 +359,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                               "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-lg border border-cyan-400/20 bg-cyan-400/[0.05] px-2.5 text-xs font-bold text-cyan-100 transition-colors",
                               "group-hover:border-cyan-300/50 group-hover:text-cyan-50"
                             )}>
-                              <span className="hidden sm:inline">{t("matches.matchCenter")}</span>
+                              <span className="hidden sm:inline">{actionCopy.button}</span>
                               <ChevronRight size={14} aria-hidden="true" />
                             </span>
                           </div>
@@ -361,6 +367,7 @@ export function Livescore({ initialPayload, locale }: LivescoreProps) {
                       </Link>
                     );
                   })}
+                </div>
                 </div>
               </div>
             );
@@ -380,4 +387,21 @@ function buildMatchDetailHref(match: ApiFootballFixture, locale: string): string
 function formatElapsed(match: ApiFootballFixture): string {
   if (match.elapsed === null) return match.statusShort;
   return `${match.elapsed}${match.statusExtra ? `+${match.statusExtra}` : ""}'`;
+}
+
+function getLivescoreActionCopy(locale: string) {
+  switch (locale) {
+    case "th":
+      return { header: "สถานะ / ดู", button: "ดูแมตช์" };
+    case "lo":
+      return { header: "ສະຖານະ / ເບິ່ງ", button: "ເບິ່ງແມັດ" };
+    case "my":
+      return { header: "အခြေအနေ / ကြည့်ရန်", button: "ပွဲကြည့်ရန်" };
+    case "km":
+      return { header: "ស្ថានភាព / មើល", button: "មើលប្រកួត" };
+    case "zh":
+      return { header: "状态 / 查看", button: "查看比赛" };
+    default:
+      return { header: "Status / View", button: "View match" };
+  }
 }
