@@ -111,6 +111,20 @@ const initialState: UserState = {
   totalReferralEarnings: 1000,
 };
 
+function clampPredictionStats(total: number, correct: number) {
+  const safeTotal = Math.max(Number.isFinite(total) ? total : 0, 0);
+  const safeCorrect = Math.min(
+    Math.max(Number.isFinite(correct) ? correct : 0, 0),
+    safeTotal
+  );
+
+  return {
+    totalPredictions: safeTotal,
+    correctPredictions: safeCorrect,
+    accuracy: safeTotal > 0 ? Math.round((safeCorrect / safeTotal) * 100) : 0,
+  };
+}
+
 export const useUserStore = create<UserState & UserActions>()(
   persist(
     (set, get) => ({
@@ -187,15 +201,13 @@ export const useUserStore = create<UserState & UserActions>()(
         set((s) => {
           const newTotal = s.totalPredictions + 1;
           const newCorrect = correct ? s.correctPredictions + 1 : s.correctPredictions;
-          const newAccuracy = Math.round((newCorrect / newTotal) * 100);
+          const predictionStats = clampPredictionStats(newTotal, newCorrect);
           const newStreak = correct ? s.streak + 1 : 0;
           const newBestStreak = Math.max(s.bestStreak, newStreak);
           const newXP = s.xp + pointsEarned;
           const newLevel = Math.floor(newXP / 1000) + 1;
           return {
-            totalPredictions: newTotal,
-            correctPredictions: newCorrect,
-            accuracy: newAccuracy,
+            ...predictionStats,
             streak: newStreak,
             bestStreak: newBestStreak,
             xp: newXP,
@@ -205,11 +217,7 @@ export const useUserStore = create<UserState & UserActions>()(
         }),
 
       updateAccuracy: (total, correct) =>
-        set({
-          totalPredictions: total,
-          correctPredictions: correct,
-          accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
-        }),
+        set(clampPredictionStats(total, correct)),
 
       updatePreference: (key, value) =>
         set((s) => ({ preferences: { ...s.preferences, [key]: value } })),

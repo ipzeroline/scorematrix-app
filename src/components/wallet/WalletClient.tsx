@@ -22,6 +22,7 @@ import {
   CATEGORY_TYPES,
   fetchActivityFeed,
   isKnownActivityType,
+  sortActivitiesByIdDesc,
   type ActivityCategory,
   type ActivityItem,
   type ActivityType,
@@ -211,7 +212,7 @@ function ActivityHistory({
         });
         if (signal.cancelled) return;
         setHasMore(result.hasMore);
-        setItems(filterByCategory(result.items));
+        setItems(sortActivitiesByIdDesc(filterByCategory(result.items)));
       } catch (error) {
         if (signal.cancelled) return;
         if (!isAuthSessionExpiredError(error)) {
@@ -255,7 +256,9 @@ function ActivityHistory({
         });
         if (signal.cancelled) return;
         setHasMore(result.hasMore);
-        setItems((prev) => [...prev, ...filterByCategory(result.items)]);
+        setItems((prev) =>
+          sortActivitiesByIdDesc([...prev, ...filterByCategory(result.items)])
+        );
       } catch (error) {
         if (!isAuthSessionExpiredError(error)) {
           console.error("Error loading more activities:", error);

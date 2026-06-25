@@ -22,6 +22,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import {
   getCreditPurchases,
+  sortCreditPurchasesByIdDesc,
   type CreditPurchaseItem,
 } from "@/lib/credit-purchases-api";
 import { isAuthSessionExpiredError } from "@/lib/api-client";
@@ -58,7 +59,7 @@ export function CreditPurchaseHistoryClient() {
           locale,
         });
         if (signal.cancelled) return;
-        setItems(result.items);
+        setItems(sortCreditPurchasesByIdDesc(result.items));
         setTotalSpentThb(result.totalSpentThb);
         setHasMore(result.hasMore);
         setPage(1);
@@ -92,7 +93,9 @@ export function CreditPurchaseHistoryClient() {
         limit: PAGE_SIZE,
         locale,
       });
-      setItems((current) => [...current, ...result.items]);
+      setItems((current) =>
+        sortCreditPurchasesByIdDesc([...current, ...result.items])
+      );
       setTotalSpentThb(result.totalSpentThb);
       setHasMore(result.hasMore);
       setPage(nextPage);

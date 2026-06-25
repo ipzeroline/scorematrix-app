@@ -464,14 +464,7 @@ export default function LeagueDetailPage() {
       predictionsCount: currentPredictions,
       correctPredictions: currentCorrectPredictions,
       level: currentLevel,
-    }),
-    league,
-    {
-      canManageLeague,
-      userId: currentUserId,
-      username: currentUsername,
-      displayName: currentDisplayName,
-    }
+    })
   );
   const displayedMemberCount = Math.max(league.memberCount, standings.length);
   const filteredHistory = filterLeagueHistory(league.history, historySearch);
@@ -2456,7 +2449,10 @@ function buildDisplayStandings(
               standing.predictionsCount ?? currentUser.predictionsCount,
             correctPredictions:
               standing.correctPredictions ?? currentUser.correctPredictions,
-            wins: standing.wins ?? currentUser.correctPredictions,
+            wins:
+              standing.wins ??
+              standing.correctPredictions ??
+              currentUser.correctPredictions,
             level: standing.level ?? currentUser.level,
           }
         : standing
@@ -2504,22 +2500,21 @@ function isCurrentUserStanding(
   return standingNames.some((name) => currentNames.includes(name));
 }
 
-function sortLeagueStandingsForDisplay(
-  standings: LeagueStanding[],
-  league: LeagueDetail,
-  currentUser: {
-    canManageLeague: boolean;
-    userId: string;
-    username: string;
-    displayName: string;
-  }
-) {
+function sortLeagueStandingsForDisplay(standings: LeagueStanding[]) {
   return standings
     .map((standing, index) => ({ standing, index }))
     .sort((left, right) => {
-      const leftIsOwner = isOwnerStanding(left.standing, league, currentUser);
-      const rightIsOwner = isOwnerStanding(right.standing, league, currentUser);
-      if (leftIsOwner !== rightIsOwner) return leftIsOwner ? -1 : 1;
+      if (left.standing.rank !== right.standing.rank) {
+        return left.standing.rank - right.standing.rank;
+      }
+
+      if (left.standing.points !== right.standing.points) {
+        return right.standing.points - left.standing.points;
+      }
+
+      if (left.standing.accuracy !== right.standing.accuracy) {
+        return right.standing.accuracy - left.standing.accuracy;
+      }
 
       const leftJoinedAt = readTimestamp(left.standing.joinedAt);
       const rightJoinedAt = readTimestamp(right.standing.joinedAt);

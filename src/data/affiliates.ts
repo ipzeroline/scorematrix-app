@@ -12,6 +12,14 @@ export type AffiliateTier = {
   rewardCredits: number;
 };
 
+export type AffiliateMission = {
+  id: "ref-1" | "ref-5" | "ref-10";
+  translationKey: "ref1" | "ref5" | "ref10";
+  condition: "qualified_prediction" | "qualified_referral_count";
+  count: number;
+  rewardPoints: number;
+};
+
 export const affiliateProgram = {
   code: "CYBERFAN99",
   totalClicks: 428,
@@ -28,6 +36,30 @@ export const affiliateTiers: AffiliateTier[] = [
   { referrals: 5, rewardPoints: 3500, rewardCredits: 50 },
   { referrals: 10, rewardPoints: 9000, rewardCredits: 150 },
   { referrals: 25, rewardPoints: 30000, rewardCredits: 500 },
+];
+
+export const affiliateMissions: AffiliateMission[] = [
+  {
+    id: "ref-1",
+    translationKey: "ref1",
+    condition: "qualified_prediction",
+    count: 1,
+    rewardPoints: 50,
+  },
+  {
+    id: "ref-5",
+    translationKey: "ref5",
+    condition: "qualified_referral_count",
+    count: 5,
+    rewardPoints: 200,
+  },
+  {
+    id: "ref-10",
+    translationKey: "ref10",
+    condition: "qualified_referral_count",
+    count: 10,
+    rewardPoints: 500,
+  },
 ];
 
 export const affiliateReferrals: AffiliateReferral[] = [

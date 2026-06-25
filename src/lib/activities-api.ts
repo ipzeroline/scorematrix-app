@@ -83,8 +83,8 @@ type FetchActivityFeedOptions = {
 };
 
 /**
- * Loads one page of activity, newest-first. A `type` narrows to a single type
- * via its owning endpoint; otherwise the unified /activities feed is used.
+ * Loads one page of wallet activity ordered by transaction id descending.
+ * A `type` narrows to a single type via its owning endpoint.
  */
 export async function fetchActivityFeed({
   type,
@@ -101,7 +101,7 @@ export async function fetchActivityFeed({
     `/points/transactions?${params.toString()}`,
     { locale }
   );
-  const normalizedItems = normalizeActivities(response).sort(byCreatedAtDesc);
+  const normalizedItems = sortActivitiesByIdDesc(normalizeActivities(response));
 
   return {
     items: type
@@ -111,10 +111,22 @@ export async function fetchActivityFeed({
   };
 }
 
-function byCreatedAtDesc(a: ActivityItem, b: ActivityItem): number {
-  const ta = a.createdAt ? Date.parse(a.createdAt) : 0;
-  const tb = b.createdAt ? Date.parse(b.createdAt) : 0;
-  return tb - ta;
+export function sortActivitiesByIdDesc(items: ActivityItem[]) {
+  return [...items].sort((a, b) => compareActivityIdDesc(a.id, b.id));
+}
+
+function compareActivityIdDesc(a: string, b: string): number {
+  const numericA = Number(a);
+  const numericB = Number(b);
+
+  if (Number.isFinite(numericA) && Number.isFinite(numericB)) {
+    return numericB - numericA;
+  }
+
+  return b.localeCompare(a, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 }
 
 /**

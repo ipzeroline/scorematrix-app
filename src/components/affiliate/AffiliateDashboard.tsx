@@ -23,6 +23,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
+  affiliateMissions,
+  type AffiliateMission,
+  type AffiliateReferral,
+} from "@/data/affiliates";
+import {
   EMPTY_REFERRALS_VIEW_DATA,
   getReferrals,
   mapApiReferrals,
@@ -84,6 +89,10 @@ export function AffiliateDashboard() {
   );
   const totalRewards =
     program.totalPointsEarned + program.totalCreditsEarned;
+  const qualifiedReferralCount = getQualifiedReferralCount(
+    referrals,
+    program.qualifiedSignups
+  );
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 pb-8 sm:space-y-6">
@@ -169,6 +178,88 @@ export function AffiliateDashboard() {
         <HeroStat icon={Users} label={t("signups")} value={program.totalSignups.toLocaleString()} helper={t("recentActivity")} tone="text-green-300" />
         <HeroStat icon={UserPlus} label={t("qualified")} value={program.qualifiedSignups.toLocaleString()} helper={t("milestoneProgress")} tone="text-amber-300" />
         <HeroStat icon={TrendingUp} label={t("conversion")} value={`${program.conversionRate}%`} helper={t("performancePanel")} tone="text-purple-300" />
+      </section>
+
+      <section className="space-y-4">
+        <PanelHeader
+          icon={Target}
+          eyebrow={t("missions.eyebrow")}
+          title={t("missions.title")}
+          description={t("missions.description")}
+          action={
+            <Badge variant="gold" size="md">
+              {t("missions.total", { count: affiliateMissions.length })}
+            </Badge>
+          }
+        />
+        <div className="grid gap-3 md:grid-cols-3">
+          {affiliateMissions.map((mission) => {
+            const missionState = getMissionState(mission, qualifiedReferralCount);
+            const completed = missionState.completed;
+
+            return (
+              <Card
+                key={mission.id}
+                className={cn(
+                  "relative overflow-hidden p-4 sm:p-5",
+                  completed
+                    ? "border-green-400/25 bg-green-400/[0.07]"
+                    : "border-white/10 bg-[#0b111d]"
+                )}
+              >
+                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-300/60 to-transparent" />
+                <div className="flex items-start justify-between gap-3">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-200">
+                    <Award size={20} />
+                  </span>
+                  {completed ? (
+                    <CheckCircle2 size={19} className="shrink-0 text-green-300" />
+                  ) : (
+                    <Badge variant="default" size="sm">
+                      {missionState.current}/{mission.count}
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+                  {mission.id}
+                </p>
+                <h3 className="mt-1 text-lg font-black text-white">
+                  {t(`missions.items.${mission.translationKey}.title`)}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-gray-400">
+                  {t(`missions.items.${mission.translationKey}.description`)}
+                </p>
+                <p className="mt-3 rounded-xl border border-cyan-400/10 bg-cyan-400/[0.04] px-3 py-2 text-xs font-semibold leading-5 text-cyan-100/80">
+                  {t(`missions.conditions.${mission.condition}`)}
+                </p>
+                <div className="mt-4 rounded-xl border border-white/10 bg-black/24 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                      {t("missions.reward")}
+                    </span>
+                    <span className="font-mono text-sm font-black text-white">
+                      +{mission.rewardPoints.toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-5 text-gray-400">
+                    {t(`missions.items.${mission.translationKey}.reward`)}
+                  </p>
+                </div>
+                <div className="mt-4 rounded-full border border-gray-800 bg-black/30 p-1">
+                  <div
+                    className={cn(
+                      "h-2 rounded-full",
+                      completed
+                        ? "bg-gradient-to-r from-green-300 to-cyan-300"
+                        : "bg-gradient-to-r from-cyan-400 to-amber-300"
+                    )}
+                    style={{ width: `${missionState.progress}%` }}
+                  />
+                </div>
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_400px]">
@@ -434,6 +525,29 @@ function extractReferralCode(shareUrl: string) {
 
 function nextTierCount(tiers: { referrals: number }[]) {
   return tiers.reduce((max, tier) => Math.max(max, tier.referrals), 0);
+}
+
+function getQualifiedReferralCount(
+  referrals: AffiliateReferral[],
+  qualifiedSignups: number
+) {
+  const qualifiedFromRows = referrals.filter((referral) =>
+    referral.status === "qualified" || referral.status === "rewarded"
+  ).length;
+
+  return Math.max(qualifiedFromRows, qualifiedSignups);
+}
+
+function getMissionState(
+  mission: AffiliateMission,
+  qualifiedReferralCount: number
+) {
+  const current = Math.min(qualifiedReferralCount, mission.count);
+  return {
+    current,
+    completed: qualifiedReferralCount >= mission.count,
+    progress: Math.min(100, Math.round((current / mission.count) * 100)),
+  };
 }
 
 function ReferralStatus({

@@ -204,40 +204,40 @@
   },
   "wallet": {
     "title": "ပိုက်ဆံအိတ်နှင့် အမှတ်များ",
-    "commandCenter": "Wallet Command",
-    "skillNotice": "Skill economy",
-    "walletHint": "Manage points, credits, and transaction history from one focused wallet hub.",
-    "viewPurchaseHistory": "Credit Purchase History",
-    "activityLedger": "Activity ledger",
-    "activityHint": "Track your latest predictions, points, XP, items, and rewards.",
-    "purchaseHistoryCommand": "Credit Ledger",
-    "purchaseHistoryTitle": "Credit Purchase History",
-    "purchaseHistoryHint": "Review credit purchases, payment status, credited amounts, and total spend.",
-    "backToWallet": "Back to wallet",
-    "totalSpent": "Total spent",
-    "completedPurchases": "Completed purchases",
-    "creditsReceived": "Credits received",
-    "purchaseLedger": "Purchase ledger",
-    "purchaseLedgerHint": "Filter by status to audit completed, pending, failed, or refunded purchases.",
-    "purchaseHistoryError": "Unable to load credit purchase history",
-    "noPurchaseHistory": "No credit purchases yet",
-    "noPurchaseHistoryHint": "Completed credit purchases will appear here with status and credited amount.",
-    "amountPaid": "Amount paid",
-    "bonusCredits": "Bonus credits",
-    "purchaseDateUnavailable": "Purchase date unavailable",
+    "commandCenter": "ပိုက်ဆံအိတ်စင်တာ",
+    "skillNotice": "ကျွမ်းကျင်မှုအခြေပြု စီးပွားရေး",
+    "walletHint": "အမှတ်များ၊ ခရက်ဒစ်များနှင့် ငွေလွှဲမှတ်တမ်းများကို ပိုက်ဆံအိတ်စင်တာတစ်ခုထဲတွင် စီမံပါ။",
+    "viewPurchaseHistory": "ခရက်ဒစ်ဝယ်ယူမှုမှတ်တမ်း",
+    "activityLedger": "လှုပ်ရှားမှုစာရင်း",
+    "activityHint": "သင်၏ နောက်ဆုံးခန့်မှန်းချက်များ၊ အမှတ်များ၊ XP၊ ပစ္စည်းများနှင့် ဆုများကို ကြည့်ရှုပါ။",
+    "purchaseHistoryCommand": "ခရက်ဒစ်စာရင်း",
+    "purchaseHistoryTitle": "ခရက်ဒစ်ဝယ်ယူမှုမှတ်တမ်း",
+    "purchaseHistoryHint": "ခရက်ဒစ်ဝယ်ယူမှုများ၊ ငွေပေးချေမှုအခြေအနေ၊ ရရှိသောခရက်ဒစ်နှင့် စုစုပေါင်းသုံးစွဲမှုကို စစ်ဆေးပါ။",
+    "backToWallet": "ပိုက်ဆံအိတ်သို့ ပြန်သွားရန်",
+    "totalSpent": "စုစုပေါင်းသုံးစွဲမှု",
+    "completedPurchases": "ပြီးမြောက်သောဝယ်ယူမှုများ",
+    "creditsReceived": "ရရှိသောခရက်ဒစ်",
+    "purchaseLedger": "ဝယ်ယူမှုစာရင်း",
+    "purchaseLedgerHint": "ပြီးမြောက်၊ စောင့်ဆိုင်း၊ မအောင်မြင် သို့မဟုတ် ပြန်အမ်းထားသော ဝယ်ယူမှုများကို စစ်ဆေးရန် အခြေအနေဖြင့် စစ်ထုတ်ပါ။",
+    "purchaseHistoryError": "ခရက်ဒစ်ဝယ်ယူမှုမှတ်တမ်းကို ဖွင့်၍မရပါ",
+    "noPurchaseHistory": "ခရက်ဒစ်ဝယ်ယူမှုမှတ်တမ်း မရှိသေးပါ",
+    "noPurchaseHistoryHint": "ခရက်ဒစ်ဝယ်ယူမှု ပြီးမြောက်ပါက အခြေအနေနှင့် ရရှိသောခရက်ဒစ်နှင့်အတူ ဤနေရာတွင် ပြပါမည်။",
+    "amountPaid": "ပေးချေထားသောပမာဏ",
+    "bonusCredits": "ဘောနပ်စ်ခရက်ဒစ်",
+    "purchaseDateUnavailable": "ဝယ်ယူသည့်နေ့စွဲ မရှိပါ",
     "purchaseStatuses": {
-      "all": "All",
-      "completed": "Completed",
-      "pending": "Pending",
-      "failed": "Failed",
-      "refunded": "Refunded"
+      "all": "အားလုံး",
+      "completed": "ပြီးမြောက်",
+      "pending": "စောင့်ဆိုင်း",
+      "failed": "မအောင်မြင်",
+      "refunded": "ပြန်အမ်းပြီး"
     },
     "paymentMethods": {
       "promptpay": "PromptPay",
-      "credit_card": "Credit card",
+      "credit_card": "ခရက်ဒစ်ကတ်",
       "truemoney": "TrueMoney",
       "rabbit_linepay": "Rabbit LINE Pay",
-      "unknown": "Unknown method"
+      "unknown": "မသိသောနည်းလမ်း"
     },
     "importantLabel": "အရေးကြီး:",
     "legalPrefix": "ခန့်မှန်းအမှတ်များနှင့် ခရက်ဒစ်များသည်",
@@ -1453,6 +1453,34 @@
     "totalRewards": "Total rewards",
     "howItWorks": "How it works",
     "howItWorksHint": "Follow three steps to turn invited friends into platform points and credits.",
+    "missions": {
+      "eyebrow": "Affiliate missions",
+      "title": "Referral missions",
+      "description": "Referral ရည်မှန်းချက်များ ပြည့်အောင်လုပ်ပြီး mission ဆုများကို ဖွင့်ပါ။",
+      "total": "{count} missions",
+      "reward": "ဆု",
+      "conditions": {
+        "qualified_prediction": "သင့်လင့်ခ်ဖြင့် စာရင်းသွင်းပြီး အနည်းဆုံး ခန့်မှန်းချက် 1 ကြိမ် မှန်သော သူငယ်ချင်းများကိုသာ ရေတွက်သည်။",
+        "qualified_referral_count": "Affiliate သတ်မှတ်ချက်များ ပြည့်ပြီးသော သူငယ်ချင်းအရေအတွက်ကို ရေတွက်သည်။"
+      },
+      "items": {
+        "ref1": {
+          "title": "သူငယ်ချင်းဖိတ်ရန်",
+          "description": "သူငယ်ချင်းသည် သင့်လင့်ခ်ဖြင့် စာရင်းသွင်းပြီး ခန့်မှန်းချက်မှန်ရမည်။",
+          "reward": "50 free points each (referrer + friend)"
+        },
+        "ref5": {
+          "title": "5 ဦးအဖွဲ့",
+          "description": "ဖိတ်ထားသော သူငယ်ချင်း 5 ဦး သတ်မှတ်ချက်ပြည့်ရမည်။",
+          "reward": "200 bonus points"
+        },
+        "ref10": {
+          "title": "10 ဦးအဖွဲ့",
+          "description": "ဖိတ်ထားသော သူငယ်ချင်း 10 ဦး သတ်မှတ်ချက်ပြည့်ရမည်။",
+          "reward": "500 bonus points + exclusive badge"
+        }
+      }
+    },
     "yourCode": "သင့် referral code",
     "copyLink": "ဖိတ်ကြားလင့်ခ် ကူးရန်",
     "copied": "ကူးပြီးပြီ",

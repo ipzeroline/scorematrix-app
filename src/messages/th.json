@@ -204,13 +204,13 @@
   },
   "wallet": {
     "title": "กระเป๋าและแต้ม",
-    "commandCenter": "Wallet Command",
+    "commandCenter": "ศูนย์กระเป๋า",
     "skillNotice": "เศรษฐกิจแบบทักษะ",
     "walletHint": "จัดการแต้ม เครดิต และประวัติธุรกรรมทั้งหมดในศูนย์กลางเดียว",
     "viewPurchaseHistory": "ประวัติการซื้อเครดิต",
     "activityLedger": "บัญชีความเคลื่อนไหว",
     "activityHint": "ติดตามการทายผล แต้ม XP ไอเทม และรางวัลล่าสุดของคุณ",
-    "purchaseHistoryCommand": "Credit Ledger",
+    "purchaseHistoryCommand": "บัญชีเครดิต",
     "purchaseHistoryTitle": "ประวัติการซื้อเครดิต",
     "purchaseHistoryHint": "ตรวจสอบรายการซื้อเครดิต สถานะการชำระเงิน เครดิตที่ได้รับ และยอดใช้จ่ายรวม",
     "backToWallet": "กลับกระเป๋า",
@@ -1453,6 +1453,34 @@
     "totalRewards": "รางวัลรวม",
     "howItWorks": "วิธีทำงาน",
     "howItWorksHint": "ทำตาม 3 ขั้นตอนเพื่อเปลี่ยนการชวนเพื่อนเป็นแต้มและเครดิตในระบบ",
+    "missions": {
+      "eyebrow": "Affiliate missions",
+      "title": "มิชชั่นชวนเพื่อน",
+      "description": "ทำเป้าหมายการชวนเพื่อนให้ครบเพื่อปลดล็อกรางวัลตามลำดับ",
+      "total": "{count} มิชชั่น",
+      "reward": "รางวัล",
+      "conditions": {
+        "qualified_prediction": "นับเฉพาะเพื่อนที่สมัครผ่านลิงก์ของคุณและมีผลทายถูกอย่างน้อย 1 ครั้ง",
+        "qualified_referral_count": "นับจำนวนเพื่อนที่ผ่านเงื่อนไข affiliate สำเร็จแล้ว"
+      },
+      "items": {
+        "ref1": {
+          "title": "แนะนำเพื่อน",
+          "description": "เพื่อนสมัครด้วยลิงค์ของคุณและทายถูก",
+          "reward": "50 free points each (referrer + friend)"
+        },
+        "ref5": {
+          "title": "5 ขุนพล",
+          "description": "มีเพื่อนผ่านเงื่อนไขครบ 5 คน",
+          "reward": "200 bonus points"
+        },
+        "ref10": {
+          "title": "10 ขุนพล",
+          "description": "มีเพื่อนผ่านเงื่อนไขครบ 10 คน",
+          "reward": "500 bonus points + exclusive badge"
+        }
+      }
+    },
     "yourCode": "รหัสชวนเพื่อนของคุณ",
     "copyLink": "คัดลอกลิงก์ชวนเพื่อน",
     "copied": "คัดลอกแล้ว",

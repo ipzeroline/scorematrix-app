@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, AlertTriangle, Brain, Calendar, ChevronLeft, ChevronRight, Eye, Flame, Gauge, Goal, Search, ShieldAlert, Sparkles, Target, Users } from "lucide-react";
+import { Activity, AlertTriangle, Brain, Calendar, ChevronLeft, ChevronRight, Eye, Flame, Gauge, Search, ShieldAlert, Sparkles, Target, Users } from "lucide-react";
 import { ApiLeagueLogo } from "@/components/shared/ApiLeagueLogo";
 import { ApiTeamLogo } from "@/components/shared/ApiTeamLogo";
 import { Badge } from "@/components/ui/Badge";
@@ -285,7 +285,7 @@ export function AIInsightListClient({
                     logo={featuredInsight.homeTeam.logo}
                     favorite={featuredInsight.favoriteTeam === "home"}
                   />
-                  <ScoreBlock insight={featuredInsight} copy={copy} featured />
+                  <ScoreBlock insight={featuredInsight} featured />
                   <TeamSide
                     name={featuredInsight.awayTeam.name}
                     logo={featuredInsight.awayTeam.logo}
@@ -296,25 +296,17 @@ export function AIInsightListClient({
 
                 <div className="mt-5 grid gap-2 sm:grid-cols-2">
                   <HeroSignalTile
-                    label={copy.labels.likelyScore}
-                    value={formatScorePrediction(featuredInsight.predictedScore) ?? "-"}
-                    icon={Goal}
-                    tone="text-cyan-200"
-                  />
-                  <HeroSignalTile
                     label={copy.labels.confidence}
                     value={formatPercentMetric(featuredInsight.confidenceScore)}
                     icon={Gauge}
                     tone="text-cyan-300"
                   />
-                  {featuredInsight.predictedScore ? null : (
-                    <HeroSignalTile
-                      label={copy.labels.heat}
-                      value={formatHeatMetric(resolveHeatValue(featuredInsight))}
-                      icon={Flame}
-                      tone="text-amber-300"
-                    />
-                  )}
+                  <HeroSignalTile
+                    label={copy.labels.heat}
+                    value={formatHeatMetric(resolveHeatValue(featuredInsight))}
+                    icon={Flame}
+                    tone="text-amber-300"
+                  />
                 </div>
 
                 <div className="mt-3 rounded-xl border border-gray-800 bg-[#0b0d13] px-3 py-2.5">
@@ -322,12 +314,6 @@ export function AIInsightListClient({
                     <span className="text-slate-500">{copy.labels.keyFactors}</span>
                     <span className="min-w-0 truncate text-right font-semibold text-slate-200">
                       {featuredInsight.keyFactors[0] ?? featuredInsight.apiAdvice ?? featuredInsight.apiWinner ?? "-"}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between gap-3 text-sm">
-                    <span className="text-slate-500">{copy.labels.predictedConfidence}</span>
-                    <span className="font-mono font-semibold text-cyan-200">
-                      {formatPercentMetric(featuredInsight.predictedScore?.confidence ?? null)}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-3 text-sm">
@@ -577,7 +563,7 @@ function InsightCard({
               logo={insight.homeTeam.logo}
               favorite={insight.favoriteTeam === "home"}
             />
-            <ScoreBlock insight={insight} copy={copy} />
+            <ScoreBlock insight={insight} />
             <TeamSide
               name={insight.awayTeam.name}
               logo={insight.awayTeam.logo}
@@ -601,9 +587,6 @@ function InsightCard({
             ) : null}
             {hasProbabilityData(insight) ? (
               <ProbabilityRow insight={insight} copy={copy} />
-            ) : null}
-            {formatScorePrediction(insight.predictedScore) ? (
-              <PredictedScoreRow predictedScore={insight.predictedScore} copy={copy} />
             ) : null}
             {hasHeatData(insight) ? (
               <HeatRow insight={insight} copy={copy} />
@@ -790,15 +773,12 @@ function TeamSide({
 
 function ScoreBlock({
   insight,
-  copy,
   featured = false,
 }: {
   insight: AIInsightListItem;
-  copy: ReturnType<typeof getAIInsightPageCopy>;
   featured?: boolean;
 }) {
   const hasScore = insight.score.home !== null && insight.score.away !== null;
-  const predictedScore = formatScorePrediction(insight.predictedScore);
 
   return (
     <div className="text-center">
@@ -811,16 +791,6 @@ function ScoreBlock({
       </div>
       {insight.status === MatchStatus.LIVE && insight.elapsed !== null ? (
         <div className="mt-1 font-mono text-xs font-bold text-green-400">{`${insight.elapsed}'`}</div>
-      ) : null}
-      {predictedScore ? (
-        <div className="mt-2 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.075] px-2 py-1.5 shadow-[0_0_22px_rgba(34,211,238,0.08)]">
-          <p className="whitespace-nowrap text-[9px] font-black uppercase tracking-[0.06em] text-cyan-200">
-            {copy.labels.likelyScore}
-          </p>
-          <p className={`font-mono font-black text-cyan-100 ${featured ? "text-xl" : "text-base"}`}>
-            {predictedScore}
-          </p>
-        </div>
       ) : null}
     </div>
   );
@@ -1041,43 +1011,6 @@ function H2HRow({
   );
 }
 
-function PredictedScoreRow({
-  predictedScore,
-  copy,
-}: {
-  predictedScore: ApiFootballPredictedScore | null;
-  copy: ReturnType<typeof getAIInsightPageCopy>;
-}) {
-  if (!predictedScore) return null;
-  const score = formatScorePrediction(predictedScore);
-  if (!score) return null;
-
-  return (
-    <div className="mb-2 rounded-xl border border-cyan-300/18 bg-cyan-300/[0.055] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-      <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-        <PredictedScoreMeta label={copy.labels.predictedSource} value={formatSource(predictedScore.source)} />
-        <PredictedScoreMeta
-          label={copy.labels.predictedConfidence}
-          value={formatPercentMetric(predictedScore.confidence ?? null)}
-        />
-        <PredictedScoreMeta
-          label={copy.labels.expectedGoals}
-          value={formatExpectedGoals(predictedScore.raw)}
-        />
-      </div>
-    </div>
-  );
-}
-
-function PredictedScoreMeta({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 rounded-lg border border-cyan-300/10 bg-[#050b13]/75 px-2 py-1.5">
-      <p className="truncate text-slate-500">{label}</p>
-      <p className="mt-0.5 truncate font-mono font-bold text-slate-200">{value}</p>
-    </div>
-  );
-}
-
 function formatStanding(
   standing: { rank: number | null; points: number | null } | null | undefined
 ) {
@@ -1118,41 +1051,6 @@ function formatKickoffTime(value: string, locale: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
-}
-
-function formatScorePrediction(
-  value: ApiFootballPredictedScore | null
-) {
-  if (!value) return null;
-  const home = formatPredictedGoalValue(value.home);
-  const away = formatPredictedGoalValue(value.away);
-  if (home === null && away === null) return null;
-  return `${home ?? "?"} - ${away ?? "?"}`;
-}
-
-function formatSource(value: string | null | undefined) {
-  if (!value) return "-";
-  return value.replaceAll("_", " ");
-}
-
-function formatExpectedGoals(value: ApiFootballPredictedScore["raw"]) {
-  const home = formatDecimalMetric(value?.homeXg);
-  const away = formatDecimalMetric(value?.awayXg);
-  if (home === "-" && away === "-") return "-";
-  return `${home} / ${away}`;
-}
-
-function formatDecimalMetric(value: number | null | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "-";
-}
-
-function formatPredictedGoalValue(value: number | string | null) {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Number.isInteger(value) ? String(value) : value.toFixed(1);
-  }
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
 }
 
 function dayKey(date: Date) {

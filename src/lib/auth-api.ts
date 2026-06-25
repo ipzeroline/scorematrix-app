@@ -621,6 +621,15 @@ function normalizeCurrentUserData(user: CurrentUserData): CurrentUserData {
   const stats = normalizeCurrentUserStats(user.stats);
   const preferences = normalizeCurrentUserPreferences(user.preferences);
   const entitlements = normalizeCurrentUserEntitlements(user.entitlements);
+  const totalPredictions = pickValue(
+    user.totalPredictions,
+    stats?.totalPredictions,
+    user.total_predictions
+  );
+  const correctPredictions = clampCorrectPredictions(
+    pickValue(user.correctPredictions, stats?.correctPredictions, user.correct_predictions),
+    totalPredictions
+  );
 
   return {
     ...user,
@@ -642,8 +651,8 @@ function normalizeCurrentUserData(user: CurrentUserData): CurrentUserData {
     rank: pickValue(user.rank, stats?.rank),
     xp: pickValue(user.xp, stats?.xp),
     level: pickValue(user.level, stats?.level),
-    totalPredictions: pickValue(user.totalPredictions, stats?.totalPredictions, user.total_predictions),
-    correctPredictions: pickValue(user.correctPredictions, stats?.correctPredictions, user.correct_predictions),
+    totalPredictions,
+    correctPredictions,
     bestStreak: pickValue(user.bestStreak, stats?.bestStreak, user.best_streak),
     achievementsUnlocked: pickValue(
       user.achievementsUnlocked,
@@ -665,13 +674,19 @@ function normalizeCurrentUserEntitlements(
 function normalizeCurrentUserStats(stats?: CurrentUserStats | null) {
   if (!stats) return stats;
 
+  const totalPredictions = pickValue(stats.totalPredictions, stats.total_predictions);
+  const correctPredictions = clampCorrectPredictions(
+    pickValue(stats.correctPredictions, stats.correct_predictions),
+    totalPredictions
+  );
+
   return {
     ...stats,
     freePoints: pickValue(stats.freePoints, stats.free_points),
     premiumCredits: pickValue(stats.premiumCredits, stats.premium_credits),
     bestStreak: pickValue(stats.bestStreak, stats.best_streak),
-    totalPredictions: pickValue(stats.totalPredictions, stats.total_predictions),
-    correctPredictions: pickValue(stats.correctPredictions, stats.correct_predictions),
+    totalPredictions,
+    correctPredictions,
     missionsCompleted: pickValue(stats.missionsCompleted, stats.missions_completed),
     achievementsUnlocked: pickValue(stats.achievementsUnlocked, stats.achievements_unlocked),
     streakShields: pickValue(stats.streakShields, stats.streak_shields),
@@ -683,6 +698,19 @@ function normalizeCurrentUserStats(stats?: CurrentUserStats | null) {
       stats.total_referral_earnings
     ),
   };
+}
+
+function clampCorrectPredictions(
+  correct: number | string | null | undefined,
+  total: number | string | null | undefined
+) {
+  const correctNumber = Number(correct);
+  const totalNumber = Number(total);
+
+  if (!Number.isFinite(correctNumber)) return correct;
+  if (!Number.isFinite(totalNumber) || totalNumber < 0) return correct;
+
+  return Math.min(Math.max(correctNumber, 0), Math.max(totalNumber, 0));
 }
 
 function normalizeCurrentUserPreferences(preferences?: CurrentUserPreferences | null) {

@@ -276,9 +276,9 @@ function H2HSummaryBoard({
 }) {
   const total = summary.totalMatches || 1;
   const segments = [
-    { label: homeName, value: summary.homeWins, className: "bg-cyan-400" },
+    { label: `${homeName} ${details.wins}`, value: summary.homeWins, className: "bg-cyan-400" },
     { label: details.drawOption, value: summary.draws, className: "bg-amber-400" },
-    { label: awayName, value: summary.awayWins, className: "bg-magenta" },
+    { label: `${awayName} ${details.wins}`, value: summary.awayWins, className: "bg-magenta" },
   ];
 
   return (
@@ -308,7 +308,7 @@ function H2HSummaryBoard({
       <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
         <div>
           <p className="font-mono text-lg font-black text-cyan-300">{summary.homeWins}</p>
-          <p className="truncate text-gray-500">{homeName}</p>
+          <p className="line-clamp-2 text-gray-500">{homeName} {details.wins}</p>
         </div>
         <div>
           <p className="font-mono text-lg font-black text-amber-300">{summary.draws}</p>
@@ -316,7 +316,7 @@ function H2HSummaryBoard({
         </div>
         <div>
           <p className="font-mono text-lg font-black text-magenta">{summary.awayWins}</p>
-          <p className="truncate text-gray-500">{awayName}</p>
+          <p className="line-clamp-2 text-gray-500">{awayName} {details.wins}</p>
         </div>
       </div>
 

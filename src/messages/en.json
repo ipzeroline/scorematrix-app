@@ -1465,6 +1465,34 @@
     "totalRewards": "Total rewards",
     "howItWorks": "How it works",
     "howItWorksHint": "Follow three steps to turn invited friends into platform points and credits.",
+    "missions": {
+      "eyebrow": "Affiliate missions",
+      "title": "Referral missions",
+      "description": "Complete referral goals to unlock each mission reward.",
+      "total": "{count} missions",
+      "reward": "Reward",
+      "conditions": {
+        "qualified_prediction": "Counts only friends who signed up with your link and made at least one correct prediction.",
+        "qualified_referral_count": "Counts friends who have fully completed the affiliate qualification rules."
+      },
+      "items": {
+        "ref1": {
+          "title": "Invite a friend",
+          "description": "A friend signs up with your link and makes a correct prediction.",
+          "reward": "50 free points each (referrer + friend)"
+        },
+        "ref5": {
+          "title": "Squad of 5",
+          "description": "5 invited friends complete the qualification rules.",
+          "reward": "200 bonus points"
+        },
+        "ref10": {
+          "title": "Squad of 10",
+          "description": "10 invited friends complete the qualification rules.",
+          "reward": "500 bonus points + exclusive badge"
+        }
+      }
+    },
     "yourCode": "Your referral code",
     "copyLink": "Copy invite link",
     "copied": "Copied",

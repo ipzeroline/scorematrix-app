@@ -61,16 +61,28 @@ export async function getCreditPurchases({
   );
 
   return {
-    items: normalizeCreditPurchases(response).sort(byCreatedAtDesc),
+    items: sortCreditPurchasesByIdDesc(normalizeCreditPurchases(response)),
     totalSpentThb: pickTotalSpent(response),
     hasMore: hasMorePages(response, page),
   };
 }
 
-function byCreatedAtDesc(a: CreditPurchaseItem, b: CreditPurchaseItem): number {
-  const ta = a.createdAt ? Date.parse(a.createdAt) : 0;
-  const tb = b.createdAt ? Date.parse(b.createdAt) : 0;
-  return tb - ta;
+export function sortCreditPurchasesByIdDesc(items: CreditPurchaseItem[]) {
+  return [...items].sort((a, b) => compareCreditPurchaseIdDesc(a.id, b.id));
+}
+
+function compareCreditPurchaseIdDesc(a: string, b: string): number {
+  const numericA = Number(a);
+  const numericB = Number(b);
+
+  if (Number.isFinite(numericA) && Number.isFinite(numericB)) {
+    return numericB - numericA;
+  }
+
+  return b.localeCompare(a, undefined, {
+    numeric: true,
+    sensitivity: "base",
+  });
 }
 
 function normalizeCreditPurchases(payload: unknown): CreditPurchaseItem[] {

@@ -9,6 +9,8 @@ export interface LeaderboardEntry {
   accuracy: number;
   streak: number;
   level: number;
+  totalPredictions?: number;
+  correctPredictions?: number;
 }
 
 export interface Leaderboard {

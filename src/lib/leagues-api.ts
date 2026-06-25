@@ -734,6 +734,27 @@ function normalizeLeagueStanding(
 
   if (!userId) return null;
 
+  const predictionsCount =
+    readNumber(
+      record.predictionsCount,
+      record.predictions_count,
+      record.totalPredictions,
+      record.total_predictions,
+      record.predictions,
+      statsRecord?.predictionsCount,
+      statsRecord?.predictions_count,
+      statsRecord?.totalPredictions,
+      statsRecord?.total_predictions,
+      statsRecord?.predictions
+    ) ?? null;
+  const correctPredictions =
+    readNumber(
+      record.correctPredictions,
+      record.correct_predictions,
+      statsRecord?.correctPredictions,
+      statsRecord?.correct_predictions
+    ) ?? null;
+
   return {
     rank: readNumber(record.rank, record.position, record.place) ?? index + 1,
     userId,
@@ -783,29 +804,11 @@ function normalizeLeagueStanding(
         statsRecord?.accuracyRate,
         statsRecord?.accuracy_rate
       ) ?? 0,
-    predictionsCount:
-      readNumber(
-        record.predictionsCount,
-        record.predictions_count,
-        record.totalPredictions,
-        record.total_predictions,
-        record.predictions,
-        statsRecord?.predictionsCount,
-        statsRecord?.predictions_count,
-        statsRecord?.totalPredictions,
-        statsRecord?.total_predictions,
-        statsRecord?.predictions
-      ) ?? null,
-    correctPredictions:
-      readNumber(
-        record.correctPredictions,
-        record.correct_predictions,
-        statsRecord?.correctPredictions,
-        statsRecord?.correct_predictions
-      ) ?? null,
+    predictionsCount,
+    correctPredictions,
     wins:
       readNumber(record.wins, record.win, statsRecord?.wins, statsRecord?.win) ??
-      null,
+      correctPredictions,
     level:
       readNumber(record.level, userRecord?.level, statsRecord?.level) ?? null,
     joinedAt:

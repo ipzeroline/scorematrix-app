@@ -12,6 +12,8 @@ export type ApiLeaderboardEntry = {
   accuracy: number;
   streak: number;
   level: number;
+  totalPredictions?: number;
+  correctPredictions?: number;
 };
 
 export type LeaderboardResponse = {
@@ -66,6 +68,11 @@ export function normalizeLeaderboardResponse(
 }
 
 export function mapApiLeaderboardEntry(entry: ApiLeaderboardEntry): LeaderboardEntry {
+  const predictionStats = clampPredictionStats(
+    entry.totalPredictions,
+    entry.correctPredictions
+  );
+
   return {
     rank: Number(entry.rank ?? 0),
     userId: String(entry.userId ?? ""),
@@ -75,6 +82,12 @@ export function mapApiLeaderboardEntry(entry: ApiLeaderboardEntry): LeaderboardE
     accuracy: Number(entry.accuracy ?? 0),
     streak: Number(entry.streak ?? 0),
     level: Number(entry.level ?? 1),
+    ...(predictionStats
+      ? {
+          totalPredictions: predictionStats.totalPredictions,
+          correctPredictions: predictionStats.correctPredictions,
+        }
+      : {}),
   };
 }
 
@@ -178,6 +191,25 @@ function normalizeApiLeaderboardEntry(entry: unknown): ApiLeaderboardEntry {
   const value = isRecord(entry) ? entry : {};
   const user = firstRecord(value.user, value.member, value.profile, value.player);
   const userId = value.userId ?? value.user_id ?? value.id ?? user?.userId ?? user?.user_id ?? user?.id ?? "";
+  const totalPredictions = optionalNumber(
+    value.totalPredictions ??
+      value.total_predictions ??
+      value.predictions ??
+      value.predictionCount ??
+      value.prediction_count ??
+      user?.totalPredictions ??
+      user?.total_predictions
+  );
+  const correctPredictions = clampCorrectPredictions(
+    value.correctPredictions ??
+      value.correct_predictions ??
+      value.wins ??
+      value.winCount ??
+      value.win_count ??
+      user?.correctPredictions ??
+      user?.correct_predictions,
+    totalPredictions
+  );
 
   return {
     rank: toNumber(value.rank, 0),
@@ -197,7 +229,32 @@ function normalizeApiLeaderboardEntry(entry: unknown): ApiLeaderboardEntry {
     accuracy: toNumber(value.accuracy, 0),
     streak: toNumber(value.streak ?? value.current_streak, 0),
     level: toNumber(value.level, 1),
+    totalPredictions,
+    correctPredictions,
   };
+}
+
+function clampPredictionStats(total?: number, correct?: number) {
+  if (total === undefined && correct === undefined) return null;
+
+  const safeTotal = Math.max(Number.isFinite(total) ? Number(total) : 0, 0);
+  const safeCorrect = Math.min(
+    Math.max(Number.isFinite(correct) ? Number(correct) : 0, 0),
+    safeTotal
+  );
+
+  return {
+    totalPredictions: safeTotal,
+    correctPredictions: safeCorrect,
+  };
+}
+
+function clampCorrectPredictions(correct: unknown, total?: number) {
+  const correctNumber = Number(correct);
+  if (!Number.isFinite(correctNumber)) return undefined;
+  if (total === undefined) return Math.max(correctNumber, 0);
+
+  return Math.min(Math.max(correctNumber, 0), Math.max(total, 0));
 }
 
 function pickAvatarUrl(

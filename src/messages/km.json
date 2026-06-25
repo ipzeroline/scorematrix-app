@@ -204,40 +204,40 @@
   },
   "wallet": {
     "title": "កាបូបពិន្ទុ និងក្រេឌីត",
-    "commandCenter": "Wallet Command",
-    "skillNotice": "Skill economy",
-    "walletHint": "Manage points, credits, and transaction history from one focused wallet hub.",
-    "viewPurchaseHistory": "Credit Purchase History",
-    "activityLedger": "Activity ledger",
-    "activityHint": "Track your latest predictions, points, XP, items, and rewards.",
-    "purchaseHistoryCommand": "Credit Ledger",
-    "purchaseHistoryTitle": "Credit Purchase History",
-    "purchaseHistoryHint": "Review credit purchases, payment status, credited amounts, and total spend.",
-    "backToWallet": "Back to wallet",
-    "totalSpent": "Total spent",
-    "completedPurchases": "Completed purchases",
-    "creditsReceived": "Credits received",
-    "purchaseLedger": "Purchase ledger",
-    "purchaseLedgerHint": "Filter by status to audit completed, pending, failed, or refunded purchases.",
-    "purchaseHistoryError": "Unable to load credit purchase history",
-    "noPurchaseHistory": "No credit purchases yet",
-    "noPurchaseHistoryHint": "Completed credit purchases will appear here with status and credited amount.",
-    "amountPaid": "Amount paid",
-    "bonusCredits": "Bonus credits",
-    "purchaseDateUnavailable": "Purchase date unavailable",
+    "commandCenter": "មជ្ឈមណ្ឌលកាបូប",
+    "skillNotice": "សេដ្ឋកិច្ចផ្អែកលើជំនាញ",
+    "walletHint": "គ្រប់គ្រងពិន្ទុ ក្រេឌីត និងប្រវត្តិប្រតិបត្តិការទាំងអស់ក្នុងមជ្ឈមណ្ឌលកាបូបតែមួយ។",
+    "viewPurchaseHistory": "ប្រវត្តិទិញក្រេឌីត",
+    "activityLedger": "បញ្ជីសកម្មភាព",
+    "activityHint": "តាមដានការទស្សន៍ទាយ ពិន្ទុ XP វត្ថុ និងរង្វាន់ចុងក្រោយរបស់អ្នក។",
+    "purchaseHistoryCommand": "បញ្ជីក្រេឌីត",
+    "purchaseHistoryTitle": "ប្រវត្តិទិញក្រេឌីត",
+    "purchaseHistoryHint": "ពិនិត្យការទិញក្រេឌីត ស្ថានភាពបង់ប្រាក់ ចំនួនក្រេឌីតដែលបានទទួល និងចំណាយសរុប។",
+    "backToWallet": "ត្រឡប់ទៅកាបូប",
+    "totalSpent": "ចំណាយសរុប",
+    "completedPurchases": "ការទិញបានសម្រេច",
+    "creditsReceived": "ក្រេឌីតដែលបានទទួល",
+    "purchaseLedger": "បញ្ជីការទិញ",
+    "purchaseLedgerHint": "ច្រោះតាមស្ថានភាព ដើម្បីពិនិត្យការទិញដែលបានសម្រេច កំពុងរង់ចាំ បរាជ័យ ឬបានសងប្រាក់។",
+    "purchaseHistoryError": "មិនអាចផ្ទុកប្រវត្តិទិញក្រេឌីតបានទេ",
+    "noPurchaseHistory": "មិនទាន់មានប្រវត្តិទិញក្រេឌីត",
+    "noPurchaseHistoryHint": "នៅពេលការទិញក្រេឌីតបានសម្រេច វានឹងបង្ហាញនៅទីនេះជាមួយស្ថានភាព និងចំនួនក្រេឌីត។",
+    "amountPaid": "ចំនួនបានបង់",
+    "bonusCredits": "ក្រេឌីតបន្ថែម",
+    "purchaseDateUnavailable": "មិនមានកាលបរិច្ឆេទទិញ",
     "purchaseStatuses": {
-      "all": "All",
-      "completed": "Completed",
-      "pending": "Pending",
-      "failed": "Failed",
-      "refunded": "Refunded"
+      "all": "ទាំងអស់",
+      "completed": "បានសម្រេច",
+      "pending": "កំពុងរង់ចាំ",
+      "failed": "បរាជ័យ",
+      "refunded": "បានសងប្រាក់"
     },
     "paymentMethods": {
       "promptpay": "PromptPay",
-      "credit_card": "Credit card",
+      "credit_card": "កាតឥណទាន",
       "truemoney": "TrueMoney",
       "rabbit_linepay": "Rabbit LINE Pay",
-      "unknown": "Unknown method"
+      "unknown": "មិនស្គាល់វិធីបង់ប្រាក់"
     },
     "importantLabel": "សំខាន់:",
     "legalPrefix": "ពិន្ទុទស្សន៍ទាយ និងក្រេឌីតមាន",
@@ -1462,6 +1462,34 @@
     "totalRewards": "Total rewards",
     "howItWorks": "How it works",
     "howItWorksHint": "Follow three steps to turn invited friends into platform points and credits.",
+    "missions": {
+      "eyebrow": "Affiliate missions",
+      "title": "មីសិនអញ្ជើញមិត្ត",
+      "description": "បំពេញគោលដៅអញ្ជើញមិត្ត ដើម្បីបើករង្វាន់មីសិននីមួយៗ។",
+      "total": "{count} មីសិន",
+      "reward": "រង្វាន់",
+      "conditions": {
+        "qualified_prediction": "រាប់តែមិត្តដែលបានสมัครតាមតំណរបស់អ្នក ហើយទាយត្រូវយ៉ាងហោចណាស់ 1 ដង។",
+        "qualified_referral_count": "រាប់ចំនួនមិត្តដែលបានបំពេញលក្ខខណ្ឌ affiliate រួចរាល់។"
+      },
+      "items": {
+        "ref1": {
+          "title": "ណែនាំមិត្ត",
+          "description": "មិត្តភក្តិសมัครតាមតំណរបស់អ្នក ហើយទាយត្រូវ។",
+          "reward": "50 free points each (referrer + friend)"
+        },
+        "ref5": {
+          "title": "ក្រុម 5 នាក់",
+          "description": "មិត្ត 5 នាក់បំពេញលក្ខខណ្ឌគ្រប់គ្រាន់។",
+          "reward": "200 bonus points"
+        },
+        "ref10": {
+          "title": "ក្រុម 10 នាក់",
+          "description": "មិត្ត 10 នាក់បំពេញលក្ខខណ្ឌគ្រប់គ្រាន់។",
+          "reward": "500 bonus points + exclusive badge"
+        }
+      }
+    },
     "yourCode": "កូដអញ្ជើញរបស់អ្នក",
     "copyLink": "ចម្លងតំណអញ្ជើញ",
     "copied": "បានចម្លង",

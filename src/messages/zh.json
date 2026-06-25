@@ -1452,6 +1452,34 @@
     "totalRewards": "总奖励",
     "howItWorks": "使用方式",
     "howItWorksHint": "通过三个步骤，把邀请好友转化为平台积分和点数。",
+    "missions": {
+      "eyebrow": "Affiliate missions",
+      "title": "邀请任务",
+      "description": "完成邀请目标，逐步解锁每个任务奖励。",
+      "total": "{count} 个任务",
+      "reward": "奖励",
+      "conditions": {
+        "qualified_prediction": "仅统计通过你的链接注册并至少预测正确 1 次的好友。",
+        "qualified_referral_count": "统计已完成 affiliate 资格条件的好友数量。"
+      },
+      "items": {
+        "ref1": {
+          "title": "邀请好友",
+          "description": "好友通过你的链接注册并预测正确。",
+          "reward": "50 free points each (referrer + friend)"
+        },
+        "ref5": {
+          "title": "5 人战队",
+          "description": "5 位好友完成资格条件。",
+          "reward": "200 bonus points"
+        },
+        "ref10": {
+          "title": "10 人战队",
+          "description": "10 位好友完成资格条件。",
+          "reward": "500 bonus points + exclusive badge"
+        }
+      }
+    },
     "yourCode": "你的推荐码",
     "copyLink": "复制邀请链接",
     "copied": "已复制",

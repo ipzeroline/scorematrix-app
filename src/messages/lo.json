@@ -204,40 +204,40 @@
   },
   "wallet": {
     "title": "ກະເປົາຄະແນນ ແລະເຄຣດິດ",
-    "commandCenter": "Wallet Command",
-    "skillNotice": "Skill economy",
-    "walletHint": "Manage points, credits, and transaction history from one focused wallet hub.",
-    "viewPurchaseHistory": "Credit Purchase History",
-    "activityLedger": "Activity ledger",
-    "activityHint": "Track your latest predictions, points, XP, items, and rewards.",
-    "purchaseHistoryCommand": "Credit Ledger",
-    "purchaseHistoryTitle": "Credit Purchase History",
-    "purchaseHistoryHint": "Review credit purchases, payment status, credited amounts, and total spend.",
-    "backToWallet": "Back to wallet",
-    "totalSpent": "Total spent",
-    "completedPurchases": "Completed purchases",
-    "creditsReceived": "Credits received",
-    "purchaseLedger": "Purchase ledger",
-    "purchaseLedgerHint": "Filter by status to audit completed, pending, failed, or refunded purchases.",
-    "purchaseHistoryError": "Unable to load credit purchase history",
-    "noPurchaseHistory": "No credit purchases yet",
-    "noPurchaseHistoryHint": "Completed credit purchases will appear here with status and credited amount.",
-    "amountPaid": "Amount paid",
-    "bonusCredits": "Bonus credits",
-    "purchaseDateUnavailable": "Purchase date unavailable",
+    "commandCenter": "ສູນກະເປົາ",
+    "skillNotice": "ເສດຖະກິດຕາມທັກສະ",
+    "walletHint": "ຈັດການຄະແນນ ເຄຣດິດ ແລະປະຫວັດທຸລະກຳທັງໝົດໃນສູນກະເປົາດຽວ.",
+    "viewPurchaseHistory": "ປະຫວັດການຊື້ເຄຣດິດ",
+    "activityLedger": "ບັນຊີກິດຈະກຳ",
+    "activityHint": "ຕິດຕາມການທາຍຜົນ ຄະແນນ XP ໄອເທັມ ແລະລາງວັນຫຼ້າສຸດຂອງທ່ານ.",
+    "purchaseHistoryCommand": "ບັນຊີເຄຣດິດ",
+    "purchaseHistoryTitle": "ປະຫວັດການຊື້ເຄຣດິດ",
+    "purchaseHistoryHint": "ກວດສອບລາຍການຊື້ເຄຣດິດ ສະຖານະການຊຳລະ ຈຳນວນເຄຣດິດທີ່ໄດ້ຮັບ ແລະຍອດໃຊ້ຈ່າຍລວມ.",
+    "backToWallet": "ກັບໄປກະເປົາ",
+    "totalSpent": "ຍອດໃຊ້ຈ່າຍລວມ",
+    "completedPurchases": "ການຊື້ທີ່ສຳເລັດ",
+    "creditsReceived": "ເຄຣດິດທີ່ໄດ້ຮັບ",
+    "purchaseLedger": "ບັນຊີການຊື້",
+    "purchaseLedgerHint": "ກອງຕາມສະຖານະເພື່ອກວດລາຍການທີ່ສຳເລັດ ລໍຖ້າ ບໍ່ສຳເລັດ ຫຼືຄືນເງິນ.",
+    "purchaseHistoryError": "ບໍ່ສາມາດໂຫຼດປະຫວັດການຊື້ເຄຣດິດໄດ້",
+    "noPurchaseHistory": "ຍັງບໍ່ມີປະຫວັດການຊື້ເຄຣດິດ",
+    "noPurchaseHistoryHint": "ເມື່ອຊື້ເຄຣດິດສຳເລັດ ລາຍການຈະສະແດງຢູ່ທີ່ນີ້ພ້ອມສະຖານະ ແລະຈຳນວນເຄຣດິດ.",
+    "amountPaid": "ຍອດຊຳລະ",
+    "bonusCredits": "ເຄຣດິດໂບນັດ",
+    "purchaseDateUnavailable": "ບໍ່ພົບວັນທີການຊື້",
     "purchaseStatuses": {
-      "all": "All",
-      "completed": "Completed",
-      "pending": "Pending",
-      "failed": "Failed",
-      "refunded": "Refunded"
+      "all": "ທັງໝົດ",
+      "completed": "ສຳເລັດ",
+      "pending": "ລໍຖ້າ",
+      "failed": "ບໍ່ສຳເລັດ",
+      "refunded": "ຄືນເງິນ"
     },
     "paymentMethods": {
       "promptpay": "PromptPay",
-      "credit_card": "Credit card",
+      "credit_card": "ບັດເຄຣດິດ",
       "truemoney": "TrueMoney",
       "rabbit_linepay": "Rabbit LINE Pay",
-      "unknown": "Unknown method"
+      "unknown": "ບໍ່ລະບຸຊ່ອງທາງ"
     },
     "importantLabel": "ສຳຄັນ:",
     "legalPrefix": "ຄະແນນທາຍຜົນ ແລະເຄຣດິດມີ",
@@ -1453,6 +1453,34 @@
     "totalRewards": "ລາງວັນລວມ",
     "howItWorks": "ວິທີເຮັດວຽກ",
     "howItWorksHint": "ເຮັດຕາມ 3 ຂັ້ນຕອນເພື່ອປ່ຽນການຊວນໝູ່ເປັນຄະແນນ ແລະເຄຣດິດໃນລະບົບ",
+    "missions": {
+      "eyebrow": "Affiliate missions",
+      "title": "ມິດຊັນຊວນໝູ່",
+      "description": "ເຮັດເປົ້າໝາຍຊວນໝູ່ໃຫ້ຄົບເພື່ອປົດລັອກລາງວັນແຕ່ລະຂັ້ນ",
+      "total": "{count} ມິດຊັນ",
+      "reward": "ລາງວັນ",
+      "conditions": {
+        "qualified_prediction": "ນັບສະເພາະໝູ່ທີ່ສະໝັກຜ່ານລິ້ງຂອງທ່ານ ແລະທາຍຖືກຢ່າງນ້ອຍ 1 ຄັ້ງ",
+        "qualified_referral_count": "ນັບຈຳນວນໝູ່ທີ່ຜ່ານເງື່ອນໄຂ affiliate ສຳເລັດແລ້ວ"
+      },
+      "items": {
+        "ref1": {
+          "title": "ແນະນຳໝູ່",
+          "description": "ໝູ່ສະໝັກຜ່ານລິ້ງຂອງທ່ານ ແລະທາຍຖືກ",
+          "reward": "50 free points each (referrer + friend)"
+        },
+        "ref5": {
+          "title": "5 ຂຸນພົນ",
+          "description": "ມີໝູ່ຜ່ານເງື່ອນໄຂຄົບ 5 ຄົນ",
+          "reward": "200 bonus points"
+        },
+        "ref10": {
+          "title": "10 ຂຸນພົນ",
+          "description": "ມີໝູ່ຜ່ານເງື່ອນໄຂຄົບ 10 ຄົນ",
+          "reward": "500 bonus points + exclusive badge"
+        }
+      }
+    },
     "yourCode": "ລະຫັດຊວນໝູ່ຂອງທ່ານ",
     "copyLink": "ຄັດລອກລິ້ງຊວນ",
     "copied": "ຄັດລອກແລ້ວ",

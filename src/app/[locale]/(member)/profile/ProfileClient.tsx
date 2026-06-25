@@ -42,6 +42,20 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+function clampPredictionStats(total: number, correct: number) {
+  const safeTotal = Math.max(Number.isFinite(total) ? total : 0, 0);
+  const safeCorrect = Math.min(
+    Math.max(Number.isFinite(correct) ? correct : 0, 0),
+    safeTotal
+  );
+
+  return {
+    totalPredictions: safeTotal,
+    correctPredictions: safeCorrect,
+    accuracy: safeTotal > 0 ? Math.round((safeCorrect / safeTotal) * 100) : 0,
+  };
+}
+
 export default function ProfilePage() {
   const t = useTranslations("profile");
   const { locale } = useParams<{ locale: string }>();
@@ -171,6 +185,10 @@ export default function ProfilePage() {
             profile.correctPredictions,
             profile.correct_predictions
           ) ?? currentUser.correctPredictions;
+        const predictionStats = clampPredictionStats(
+          totalPredictions,
+          correctPredictions
+        );
 
         useUserStore.setState({
           userId: pickString(profile.id, profile.code) ?? currentUser.userId,
@@ -229,13 +247,11 @@ export default function ProfilePage() {
           bestStreak:
             pickNumber(stats?.bestStreak, profile.bestStreak, profile.best_streak) ??
             currentUser.bestStreak,
-          totalPredictions,
-          correctPredictions,
+          totalPredictions: predictionStats.totalPredictions,
+          correctPredictions: predictionStats.correctPredictions,
           accuracy:
             pickNumber(stats?.accuracy, profile.accuracy) ??
-            (totalPredictions > 0
-              ? Math.round((correctPredictions / totalPredictions) * 100)
-              : currentUser.accuracy),
+            predictionStats.accuracy,
           missionsCompleted:
             pickNumber(stats?.missionsCompleted) ?? currentUser.missionsCompleted,
           achievementsUnlocked:

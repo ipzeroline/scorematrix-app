@@ -989,20 +989,20 @@ export function PredictApi() {
                 key={item.label}
                 title={item.label}
                 aria-label={`${item.label}: ${item.value}`}
-                className="group relative flex min-h-[64px] items-center justify-between gap-2 overflow-hidden rounded-xl border border-white/10 bg-[#0c111a] p-3 transition-colors hover:border-cyan-300/25"
+                className="group relative flex min-h-[92px] flex-col justify-between gap-3 overflow-hidden rounded-xl border border-white/10 bg-[#0c111a] p-3 transition-colors hover:border-cyan-300/25"
               >
                 <div className="flex min-w-0 items-center gap-2.5">
                   <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/[0.03]", item.color)}>
                     <Icon size={17} />
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-black leading-5 text-white">
+                    <p className="line-clamp-2 text-sm font-black leading-5 text-white">
                       {item.shortLabel}
                     </p>
                     <span className={cn("mt-1 block h-1 w-8 rounded-full", item.indicatorBg, item.glowColor)} />
                   </div>
                 </div>
-                <p className={cn("shrink-0 font-mono text-2xl font-black leading-none md:text-3xl", item.color)}>
+                <p className={cn("self-end font-mono text-2xl font-black leading-none md:text-3xl", item.color)}>
                   {item.value}
                 </p>
               </div>
